@@ -18,7 +18,7 @@ var (
 )
 
 var (
-	HttpPort Uint64	
+	HttpPort uint64
 )
 
 func init() {
