@@ -5,6 +5,7 @@ import (
 	"github.com/sparkscience/logjam/backend/srv/log"
 
 	"fmt"
+	"net/http"
 )
 
 func main() {
@@ -25,4 +26,22 @@ func main() {
 	}
 
 	fmt.Println("Hello world! — I am logjam! ✨")
+
+//@TODO
+/*
+	{
+		var handler http.Handler = ????
+
+		log.Log("starting HTTP server")
+
+		err := http.ListenAndServe(httpAddr, handler)
+		if nil != err {
+			log.Error("problem with HTTP server:", err)
+/////////////////////// RETURN
+			return
+		}
+
+		log.Log("HTTP stopped")
+	}
+*/
 }
