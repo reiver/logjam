@@ -30,6 +30,9 @@ func main() {
 //@TODO
 /*
 	{
+		var httpAddr string = fmt.Sprintf(":%d", arg.HttpPort)
+		log.Log("HTTP address:", httpAddr)
+
 		var handler http.Handler = ????
 
 		log.Log("starting HTTP server")
