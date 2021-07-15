@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/sparkscience/logjam/backend/arg"
-	handler "github.com/sparkscience/logjam/backend/srv/handler"
+	handler "github.com/sparkscience/logjam/backend/lib/handler"
 	logsrv "github.com/sparkscience/logjam/backend/srv/log"
 
 	"fmt"
