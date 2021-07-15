@@ -8,13 +8,24 @@ import (
 	"net/http"
 )
 
-func httpHandler(w http.ResponseWriter, req *http.Request) {
+type httpHandler struct {
+}
+
+func (receiver httpHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	log := logsrv.Begin()
 	defer log.End()
 	log.Trace("Received a request!")
 	w.Write([]byte("Hello World"))
 	log.Trace("Finished output to client!")
 }
+
+// func httpHandler(w http.ResponseWriter, req *http.Request) {
+// 	log := logsrv.Begin()
+// 	defer log.End()
+// 	log.Trace("Received a request!")
+// 	w.Write([]byte("Hello World"))
+// 	log.Trace("Finished output to client!")
+// }
 
 func main() {
 	log := logsrv.Begin()
@@ -39,14 +50,14 @@ func main() {
 		var httpAddr string = fmt.Sprintf(":%d", arg.HttpPort)
 		log.Log("HTTP address:", httpAddr)
 
-		http.HandleFunc("/", httpHandler)
+		// http.HandleFunc("/", httpHandler)
+		var handler http.Handler = httpHandler{}
 
 		log.Log("starting HTTP server")
 
-		err := http.ListenAndServe(httpAddr, nil)
+		err := http.ListenAndServe(httpAddr, handler)
 		if nil != err {
 			log.Error("problem with HTTP server:", err)
-			/////////////////////// RETURN
 			return
 		}
 
