@@ -1,8 +1,7 @@
 package logsrv
 
 import (
-//@TODO: logger needs to implement the .Level() method still.
-//	"github.com/sparkscience/logjam/backend/arg"
+	"github.com/sparkscience/logjam/backend/arg"
 
 	"github.com/mmcomp/go-log"
 
@@ -16,8 +15,6 @@ var (
 )
 
 func init() {
-//@TODO: logger needs to implement the .Level() method still.
-/*
 	switch {
 	case arg.VeryVeryVeryVeryVeryVerbose:
 		Logger = Logger.Level(6)
@@ -34,7 +31,6 @@ func init() {
 	default:
 		Logger = Logger.Level(0)
 	}
-*/
 }
 
 func Begin(a ...interface{}) log.Logger {

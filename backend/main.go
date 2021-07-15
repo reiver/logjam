@@ -2,11 +2,19 @@ package main
 
 import (
 	"github.com/sparkscience/logjam/backend/arg"
-	"github.com/sparkscience/logjam/backend/srv/log"
+	logsrv "github.com/sparkscience/logjam/backend/srv/log"
 
 	"fmt"
 	"net/http"
 )
+
+func httpHandler(w http.ResponseWriter, req *http.Request) {
+	log := logsrv.Begin()
+	defer log.End()
+	log.Trace("Received a request!")
+	w.Write([]byte("Hello World"))
+	log.Trace("Finished output to client!")
+}
 
 func main() {
 	log := logsrv.Begin()
@@ -21,30 +29,27 @@ func main() {
 		log.Warn("warn test")
 		log.Alert("alert test")
 		log.Error("error test")
-/////////////// RETURN
+		/////////////// RETURN
 		return
 	}
 
 	fmt.Println("Hello world! — I am logjam! ✨")
 
-//@TODO
-/*
 	{
 		var httpAddr string = fmt.Sprintf(":%d", arg.HttpPort)
 		log.Log("HTTP address:", httpAddr)
 
-		var handler http.Handler = ????
+		http.HandleFunc("/", httpHandler)
 
 		log.Log("starting HTTP server")
 
-		err := http.ListenAndServe(httpAddr, handler)
+		err := http.ListenAndServe(httpAddr, nil)
 		if nil != err {
 			log.Error("problem with HTTP server:", err)
-/////////////////////// RETURN
+			/////////////////////// RETURN
 			return
 		}
 
 		log.Log("HTTP stopped")
 	}
-*/
 }
