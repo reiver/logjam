@@ -2,22 +2,12 @@ package main
 
 import (
 	"github.com/sparkscience/logjam/backend/arg"
+	handler "github.com/sparkscience/logjam/backend/srv/handler"
 	logsrv "github.com/sparkscience/logjam/backend/srv/log"
 
 	"fmt"
 	"net/http"
 )
-
-type httpHandler struct {
-}
-
-func (receiver httpHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	log := logsrv.Begin()
-	defer log.End()
-	log.Trace("Received a request!")
-	w.Write([]byte("Hello World"))
-	log.Trace("Finished output to client!")
-}
 
 func main() {
 	log := logsrv.Begin()
@@ -42,11 +32,11 @@ func main() {
 		var httpAddr string = fmt.Sprintf(":%d", arg.HttpPort)
 		log.Log("HTTP address:", httpAddr)
 
-		var handler http.Handler = httpHandler{}
+		// var handler http.Handler = httpHandler{}
 
 		log.Log("starting HTTP server")
 
-		err := http.ListenAndServe(httpAddr, handler)
+		err := http.ListenAndServe(httpAddr, handler.Handler)
 		if nil != err {
 			log.Error("problem with HTTP server:", err)
 			return
