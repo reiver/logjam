@@ -19,14 +19,6 @@ func (receiver httpHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) 
 	log.Trace("Finished output to client!")
 }
 
-// func httpHandler(w http.ResponseWriter, req *http.Request) {
-// 	log := logsrv.Begin()
-// 	defer log.End()
-// 	log.Trace("Received a request!")
-// 	w.Write([]byte("Hello World"))
-// 	log.Trace("Finished output to client!")
-// }
-
 func main() {
 	log := logsrv.Begin()
 	defer log.End()
@@ -50,7 +42,6 @@ func main() {
 		var httpAddr string = fmt.Sprintf(":%d", arg.HttpPort)
 		log.Log("HTTP address:", httpAddr)
 
-		// http.HandleFunc("/", httpHandler)
 		var handler http.Handler = httpHandler{}
 
 		log.Log("starting HTTP server")
