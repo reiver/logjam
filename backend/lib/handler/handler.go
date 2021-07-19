@@ -6,6 +6,7 @@ import (
 
 	"github.com/gorilla/websocket"
 
+	"github.com/sparkscience/logjam/backend/lib/message"
 	logsrv "github.com/sparkscience/logjam/backend/srv/log"
 )
 
@@ -47,7 +48,7 @@ func reader(conn *websocket.Conn) {
 			continue
 		}
 		log.Inform("Read from socket : ", string(p))
-		var dat map[string]interface{}
+		var dat message.MessageContract //map[string]interface{}
 		if err := json.Unmarshal(p, &dat); err != nil {
 			log.Error("JSON Unmarshal Error : ", err)
 			continue
