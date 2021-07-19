@@ -12,14 +12,20 @@ import (
 type httpHandler struct {
 }
 
+type mySocket struct {
+	Socket        *websocket.Conn
+	Id            uint64
+	IsBroadcaster bool
+}
+
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
 	CheckOrigin:     func(r *http.Request) bool { return true },
 }
 var Handler httpHandler
-var ConnectedSockets map[int64]*websocket.Conn = make(map[int64]*websocket.Conn)
-var ConnectedSocketsIndex int64 = 0
+var ConnectedSockets map[uint64]mySocket = make(map[uint64]mySocket)
+var ConnectedSocketsIndex uint64 = 0
 
 func reader(conn *websocket.Conn) {
 	log := logsrv.Begin()
@@ -29,7 +35,7 @@ func reader(conn *websocket.Conn) {
 		if err != nil {
 			if err.Error() == "websocket: close 1005 (no status)" {
 				for key, value := range ConnectedSockets {
-					if value == conn {
+					if value.Socket == conn {
 						log.Inform("Removed socket index : ", key)
 						delete(ConnectedSockets, key)
 					}
@@ -62,7 +68,11 @@ func (receiver httpHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) 
 		log.Error("Upgrade Error : ", err)
 	}
 	log.Trace("Client Connected")
-	ConnectedSockets[ConnectedSocketsIndex] = ws
+	ConnectedSockets[ConnectedSocketsIndex] = mySocket{
+		Socket:        ws,
+		Id:            ConnectedSocketsIndex,
+		IsBroadcaster: false,
+	}
 	ConnectedSocketsIndex++
 	reader(ws)
 }
