@@ -32,8 +32,6 @@ func main() {
 		var httpAddr string = fmt.Sprintf(":%d", arg.HttpPort)
 		log.Log("HTTP address:", httpAddr)
 
-		// var handler http.Handler = httpHandler{}
-
 		log.Log("starting HTTP server")
 
 		err := http.ListenAndServe(httpAddr, handler.Handler)
