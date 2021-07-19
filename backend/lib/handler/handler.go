@@ -28,6 +28,10 @@ var Handler httpHandler
 var ConnectedSockets map[uint64]mySocket = make(map[uint64]mySocket)
 var ConnectedSocketsIndex uint64 = 0
 
+func parseMessage(socket mySocket, theMessage message.MessageContract) {
+	// if theMessage.Type ==
+}
+
 func reader(conn *websocket.Conn) {
 	log := logsrv.Begin()
 	defer log.End()
