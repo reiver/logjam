@@ -25,12 +25,12 @@ var upgrader = websocket.Upgrader{
 	CheckOrigin:     func(r *http.Request) bool { return true },
 }
 var Handler httpHandler
-var ConnectedSockets map[uint64]mySocket = make(map[uint64]mySocket)
+var ConnectedSockets map[*websocket.Conn]mySocket = make(map[*websocket.Conn]mySocket)
 var ConnectedSocketsIndex uint64 = 0
 
-func parseMessage(socket mySocket, theMessage message.MessageContract) {
-	// if theMessage.Type ==
-}
+// func parseMessage(socket mySocket, theMessage message.MessageContract) {
+// 	// if theMessage.Type ==
+// }
 
 func reader(conn *websocket.Conn) {
 	log := logsrv.Begin()
@@ -39,12 +39,7 @@ func reader(conn *websocket.Conn) {
 		messageType, p, err := conn.ReadMessage()
 		if err != nil {
 			if err.Error() == "websocket: close 1005 (no status)" {
-				for key, value := range ConnectedSockets {
-					if value.Socket == conn {
-						log.Inform("Removed socket index : ", key)
-						delete(ConnectedSockets, key)
-					}
-				}
+				delete(ConnectedSockets, conn)
 				log.Inform("Socket closed!")
 				return
 			}
@@ -52,7 +47,7 @@ func reader(conn *websocket.Conn) {
 			continue
 		}
 		log.Inform("Read from socket : ", string(p))
-		var dat message.MessageContract //map[string]interface{}
+		var dat message.MessageContract
 		if err := json.Unmarshal(p, &dat); err != nil {
 			log.Error("JSON Unmarshal Error : ", err)
 			continue
@@ -73,7 +68,7 @@ func (receiver httpHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) 
 		log.Error("Upgrade Error : ", err)
 	}
 	log.Trace("Client Connected")
-	ConnectedSockets[ConnectedSocketsIndex] = mySocket{
+	ConnectedSockets[ws] = mySocket{
 		Socket:        ws,
 		Id:            ConnectedSocketsIndex,
 		IsBroadcaster: false,
