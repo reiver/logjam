@@ -3,6 +3,7 @@ package websockethandler
 import (
 	"encoding/json"
 	"net/http"
+	"strings"
 
 	"github.com/gorilla/websocket"
 
@@ -34,7 +35,7 @@ func reader(conn *websocket.Conn) {
 	for {
 		messageType, p, err := conn.ReadMessage()
 		if err != nil {
-			if err.Error() == "websocket: close 1005 (no status)" {
+			if strings.Contains(err.Error(), "websocket: close") {
 				webSocketMaps.Delete(conn)
 				log.Inform("Socket closed!")
 				return
