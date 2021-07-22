@@ -1,4 +1,4 @@
-package handler
+package websockethandler
 
 import (
 	"encoding/json"
@@ -14,21 +14,15 @@ import (
 type httpHandler struct {
 }
 
-// type mySocket struct {
-// 	Socket        *websocket.Conn
-// 	Id            uint64
-// 	IsBroadcaster bool
-// }
-
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
 	CheckOrigin:     func(r *http.Request) bool { return true },
 }
 var Handler httpHandler
-var webSocketMaps websocketmap.WebSocketMapType 
-// var ConnectedSockets map[*websocket.Conn]mySocket = make(map[*websocket.Conn]mySocket)
-// var ConnectedSocketsIndex uint64 = 0
+var webSocketMaps websocketmap.WebSocketMapType = websocketmap.WebSocketMapType{
+	Connections: make(map[*websocket.Conn]websocketmap.MySocket),
+}
 
 // func parseMessage(socket mySocket, theMessage message.MessageContract) {
 // 	// if theMessage.Type ==
@@ -41,7 +35,6 @@ func reader(conn *websocket.Conn) {
 		messageType, p, err := conn.ReadMessage()
 		if err != nil {
 			if err.Error() == "websocket: close 1005 (no status)" {
-				// delete(ConnectedSockets, conn)
 				webSocketMaps.Delete(conn)
 				log.Inform("Socket closed!")
 				return
@@ -65,18 +58,13 @@ func reader(conn *websocket.Conn) {
 func (receiver httpHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	log := logsrv.Begin()
 	defer log.End()
-	webSocketMaps = websocketmap.CreateWebsocketMap()
+	log.Highlight("Method", req.Method)
+	log.Highlight("Path", req.URL.Path)
 	ws, err := upgrader.Upgrade(w, req, nil)
 	if err != nil {
 		log.Error("Upgrade Error : ", err)
 	}
 	log.Trace("Client Connected")
 	webSocketMaps.Insert(ws)
-	// ConnectedSockets[ws] = mySocket{
-	// 	Socket:        ws,
-	// 	Id:            ConnectedSocketsIndex,
-	// 	IsBroadcaster: false,
-	// }
-	// ConnectedSocketsIndex++
 	reader(ws)
 }

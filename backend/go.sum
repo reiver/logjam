@@ -1,6 +1,6 @@
 github.com/gorilla/websocket v1.4.2 h1:+/TMaTYc4QFitKJxsQ7Yye35DkWvkdLcvGKqM+x0Ufc=
 github.com/gorilla/websocket v1.4.2/go.mod h1:YR8l580nyteQvAITg2hZ9XVh4b55+EU/adAjf1fMHhE=
-github.com/mmcomp/go-log v0.0.0-20210715101530-c59f1f6d8163 h1:BO/9cJ4xH+9ofAPG4csXj/UOiDgme8bN+aA37pBkrsE=
-github.com/mmcomp/go-log v0.0.0-20210715101530-c59f1f6d8163/go.mod h1:i8FWyCykjMADh+wE8ZDh56AJmRh2Sx7nHfsJs+39bzc=
+github.com/mmcomp/go-httprouter v0.0.0-20210722065049-132122476e94 h1:pUHeAskeu+3wyKMDKqQq35VEUtlKd1RNYzhGuTHqdbo=
+github.com/mmcomp/go-httprouter v0.0.0-20210722065049-132122476e94/go.mod h1:NVedyMu1sEntEWBwJsMriX2gK0Qzsu17Q37QxvwPRNE=
 github.com/mmcomp/go-log v0.0.0-20210715133403-ea696e01f947 h1:SoTP/pKBpKdFi109QySZdxsdy+Rvtvf2Il+QIiyvHJE=
 github.com/mmcomp/go-log v0.0.0-20210715133403-ea696e01f947/go.mod h1:i8FWyCykjMADh+wE8ZDh56AJmRh2Sx7nHfsJs+39bzc=
