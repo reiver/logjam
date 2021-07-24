@@ -10,4 +10,4 @@ import "net/http"
 // func (receiver httpHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 // 	w.Write([]byte("Hello!"))
 // }
-var Handler = http.FileServer(http.Dir("/public/statics/files"))
+var Handler = http.FileServer(http.Dir("/media/mehrdad/one/Projects/logjam/backend/public/statics"))
