@@ -7,6 +7,7 @@
     <button id="audience-btn" onclick="audience();">Audience</button><br />
 
     <h3 id="source-stream"></h3>
+    <h4 id="user-name"></h4>
     <video id="local_video" autoplay playsinline></video><br />
     <video id="local_share" autoplay playsinline></video><br />
 
@@ -263,6 +264,7 @@
             if (!msg.error) {
               loggedIn = true;
               myUsername = msg.data
+              $("#user-name").text("You are " +myUsername);
             } else {
               alert(msg.error);
             }

@@ -92,6 +92,9 @@ func parseMessage(socket websocketmap.MySocket, messageJSON []byte, messageType 
 					if err == nil {
 						// broadcaster.Socket.WriteMessage(messageType, broadResponseJSON)
 						targetSocket := decideWhomToConnect(broadcaster)
+						if targetSocket.Socket != broadcaster.Socket {
+							broadResponse.Type = "add_broadcast_audience"
+						}
 						webSocketMaps.InsertConnected(targetSocket.Socket, socket.Socket)
 						targetSocket.Socket.WriteMessage(messageType, broadResponseJSON)
 					} else {
