@@ -2,7 +2,10 @@ package main
 
 import (
 	"github.com/sparkscience/logjam/backend/arg"
-	"github.com/sparkscience/logjam/backend/srv/log"
+	"github.com/sparkscience/logjam/backend/public/statics"
+	websockets "github.com/sparkscience/logjam/backend/public/ws"
+	httproutersrv "github.com/sparkscience/logjam/backend/srv/http/router"
+	logsrv "github.com/sparkscience/logjam/backend/srv/log"
 
 	"fmt"
 	"net/http"
@@ -21,30 +24,26 @@ func main() {
 		log.Warn("warn test")
 		log.Alert("alert test")
 		log.Error("error test")
-/////////////// RETURN
+		/////////////// RETURN
 		return
 	}
 
-	fmt.Println("Hello world! — I am logjam! ✨")
+	log.Log("Hello world! — I am logjam! ✨")
+	log.Log("Websocket listening on ", websockets.Path)
+	log.Log("Static listening on ", statics.Path)
 
-//@TODO
-/*
 	{
 		var httpAddr string = fmt.Sprintf(":%d", arg.HttpPort)
 		log.Log("HTTP address:", httpAddr)
 
-		var handler http.Handler = ????
-
 		log.Log("starting HTTP server")
 
-		err := http.ListenAndServe(httpAddr, handler)
+		err := http.ListenAndServe(httpAddr, httproutersrv.Router)
 		if nil != err {
 			log.Error("problem with HTTP server:", err)
-/////////////////////// RETURN
 			return
 		}
 
 		log.Log("HTTP stopped")
 	}
-*/
 }
