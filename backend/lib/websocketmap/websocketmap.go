@@ -38,10 +38,59 @@ func (receiver *WebSocketMapType) Insert(conn *websocket.Conn) {
 	ConnectedSocketsIndex++
 }
 
-// func CreateWebsocketMap() WebSocketMapType {
-// 	websocketmap := WebSocketMapType{
-// 		Connections: make(map[*websocket.Conn]MySocket),
-// 	}
+func (receiver *WebSocketMapType) RemoveBroadcasters() {
+	receiver.mutex.Lock()
+	defer receiver.mutex.Unlock()
 
-// 	return websocketmap
-// }
+	for conn := range receiver.Connections {
+		if receiver.Connections[conn].IsBroadcaster {
+			mySocket := receiver.Connections[conn]
+			mySocket.IsBroadcaster = false
+			receiver.Connections[conn] = mySocket
+		}
+	}
+}
+
+func (receiver *WebSocketMapType) SetBroadcaster(conn *websocket.Conn) {
+	receiver.mutex.Lock()
+	defer receiver.mutex.Unlock()
+
+	mySocket := receiver.Connections[conn]
+	mySocket.IsBroadcaster = true
+	receiver.Connections[conn] = mySocket
+}
+
+func (receiver *WebSocketMapType) RemoveBroadcaster(conn *websocket.Conn) {
+	receiver.mutex.Lock()
+	defer receiver.mutex.Unlock()
+
+	mySocket := receiver.Connections[conn]
+	mySocket.IsBroadcaster = false
+	receiver.Connections[conn] = mySocket
+}
+
+func (receiver *WebSocketMapType) GetBroadcaster() (*websocket.Conn, bool) {
+	receiver.mutex.Lock()
+	defer receiver.mutex.Unlock()
+
+	for conn := range receiver.Connections {
+		if receiver.Connections[conn].IsBroadcaster {
+			return conn, true
+		}
+	}
+
+	return nil, false
+}
+
+func (receiver *WebSocketMapType) GetSocketByID(ID uint64) (*websocket.Conn, bool) {
+	receiver.mutex.Lock()
+	defer receiver.mutex.Unlock()
+
+	for conn := range receiver.Connections {
+		if receiver.Connections[conn].ID == ID {
+			return conn, true
+		}
+	}
+
+	return nil, false
+}

@@ -3,6 +3,7 @@ package websockethandler
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/gorilla/websocket"
@@ -25,9 +26,80 @@ var webSocketMaps websocketmap.WebSocketMapType = websocketmap.WebSocketMapType{
 	Connections: make(map[*websocket.Conn]websocketmap.MySocket),
 }
 
-// func parseMessage(socket mySocket, theMessage message.MessageContract) {
-// 	// if theMessage.Type ==
-// }
+func parseMessage(socket websocketmap.MySocket, messageJSON []byte, messageType int) {
+	log := logsrv.Begin()
+	defer log.End()
+
+	var theMessage message.MessageContract
+	{
+		err := json.Unmarshal(messageJSON, &theMessage)
+		if err != nil {
+			log.Error("Error unmarshal message ", err)
+			// return
+		}
+		log.Highlight("TheMessage  Type : ", theMessage.Type, " Data : ", theMessage.Data, " Target : ", theMessage.Target)
+	}
+
+	var response message.MessageContract
+	switch theMessage.Type {
+	case "start":
+		response.Type = "start"
+		response.Data = strconv.FormatInt(int64(socket.ID), 10)
+		responseJSON, err := json.Marshal(response)
+		if err == nil {
+			socket.Socket.WriteMessage(messageType, responseJSON)
+		} else {
+			log.Error("Marshal Error of `start` response", err)
+		}
+	case "role":
+		response.Type = "role"
+		if theMessage.Data == "broadcast" {
+			log.Highlight("New Broadcaster : ", socket.ID)
+			response.Data = "yes:broadcast"
+			webSocketMaps.RemoveBroadcasters()
+			webSocketMaps.SetBroadcaster(socket.Socket)
+		} else {
+			log.Highlight("New Audiance : ", socket.ID)
+			if socket.IsBroadcaster {
+				response.Data = "no:broadcast"
+				webSocketMaps.RemoveBroadcaster(socket.Socket)
+			} else {
+				response.Data = "yes:audience"
+				broadcaster, ok := webSocketMaps.GetBroadcaster()
+				if !ok {
+					response.Data = "no:audience"
+				} else {
+					var broadResponse message.MessageContract
+					broadResponse.Type = "add_audience"
+					broadResponse.Data = strconv.FormatInt(int64(socket.ID), 10)
+					broadResponseJSON, err := json.Marshal(broadResponse)
+					if err == nil {
+						broadcaster.WriteMessage(messageType, broadResponseJSON)
+					} else {
+						log.Error("Marshal Error of `add_audience` broadResponse", err)
+					}
+				}
+			}
+		}
+		responseJSON, err := json.Marshal(response)
+		if err == nil {
+			socket.Socket.WriteMessage(messageType, responseJSON)
+		} else {
+			log.Error("Marshal Error of `role` response", err)
+		}
+	default:
+		ID, err := strconv.ParseUint(theMessage.Target, 10, 64)
+		if err != nil {
+			log.Error("Inavlid Target : ", theMessage.Target)
+			return
+		}
+		target, ok := webSocketMaps.GetSocketByID(ID)
+		if ok {
+			log.Inform("Default sending to ", ID, " ", string(messageJSON))
+			target.WriteMessage(messageType, messageJSON)
+		}
+	}
+}
 
 func reader(conn *websocket.Conn) {
 	log := logsrv.Begin()
@@ -44,15 +116,7 @@ func reader(conn *websocket.Conn) {
 			continue
 		}
 		log.Inform("Read from socket : ", string(p))
-		var dat message.MessageContract
-		if err := json.Unmarshal(p, &dat); err != nil {
-			log.Error("JSON Unmarshal Error : ", err)
-			continue
-		}
-		log.Inform("Data from socket : ", dat)
-		if err := conn.WriteMessage(messageType, p); err != nil {
-			log.Error("Error writing to socket : ", err)
-		}
+		parseMessage(webSocketMaps.Connections[conn], p, messageType)
 	}
 }
 

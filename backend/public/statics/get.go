@@ -5,7 +5,7 @@ import (
 	httproutersrv "github.com/sparkscience/logjam/backend/srv/http/router"
 )
 
-const Path = "/files"
+const Path = "/"
 
 func init() {
 	httproutersrv.Router.DelegatePath(statichandler.Handler, Path, "GET")
