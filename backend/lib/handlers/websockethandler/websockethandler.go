@@ -26,6 +26,23 @@ var webSocketMaps websocketmap.WebSocketMapType = websocketmap.WebSocketMapType{
 	Connections: make(map[*websocket.Conn]websocketmap.MySocket),
 }
 
+func decideWhomToConnect(broadcaster websocketmap.MySocket) websocketmap.MySocket {
+	if len(broadcaster.ConnectedSockets) < 2 {
+		return broadcaster
+	}
+
+	var toCheckSocket websocketmap.MySocket = broadcaster
+	for subSocket := range toCheckSocket.ConnectedSockets {
+		theSubSocket := webSocketMaps.Connections[subSocket]
+		if len(theSubSocket.ConnectedSockets) < 2 {
+			return theSubSocket
+		}
+		toCheckSocket = theSubSocket
+	}
+
+	return toCheckSocket
+}
+
 func parseMessage(socket websocketmap.MySocket, messageJSON []byte, messageType int) {
 	log := logsrv.Begin()
 	defer log.End()
@@ -35,7 +52,6 @@ func parseMessage(socket websocketmap.MySocket, messageJSON []byte, messageType 
 		err := json.Unmarshal(messageJSON, &theMessage)
 		if err != nil {
 			log.Error("Error unmarshal message ", err)
-			// return
 		}
 		log.Highlight("TheMessage  Type : ", theMessage.Type, " Data : ", theMessage.Data, " Target : ", theMessage.Target)
 	}
@@ -74,7 +90,10 @@ func parseMessage(socket websocketmap.MySocket, messageJSON []byte, messageType 
 					broadResponse.Data = strconv.FormatInt(int64(socket.ID), 10)
 					broadResponseJSON, err := json.Marshal(broadResponse)
 					if err == nil {
-						broadcaster.WriteMessage(messageType, broadResponseJSON)
+						// broadcaster.Socket.WriteMessage(messageType, broadResponseJSON)
+						targetSocket := decideWhomToConnect(broadcaster)
+						webSocketMaps.InsertConnected(targetSocket.Socket, socket.Socket)
+						targetSocket.Socket.WriteMessage(messageType, broadResponseJSON)
 					} else {
 						log.Error("Marshal Error of `add_audience` broadResponse", err)
 					}
@@ -96,7 +115,7 @@ func parseMessage(socket websocketmap.MySocket, messageJSON []byte, messageType 
 		target, ok := webSocketMaps.GetSocketByID(ID)
 		if ok {
 			log.Inform("Default sending to ", ID, " ", string(messageJSON))
-			target.WriteMessage(messageType, messageJSON)
+			target.Socket.WriteMessage(messageType, messageJSON)
 		}
 	}
 }
