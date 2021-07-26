@@ -36,8 +36,20 @@
         socket;
       var myPeerConnectionConfig = {
         iceServers: [
-          {'urls': 'stun:stun.l.google.com:19302'},
-          {"urls": "turn:numb.viagenie.ca", "username":"m.mirsamie@gmail.com", "credential":"159951"},
+          // {'urls': 'stun:stun.l.google.com:19302'},
+          // {"urls": "turn:numb.viagenie.ca", "username":"m.mirsamie@gmail.com", "credential":"159951"},
+          // {
+          //   url: 'stun:stun.1und1.de:3478'
+          // },
+          // {
+          //   url: 'stun:stun.gmx.net:3478'
+          // },
+          {
+            url: 'stun:stun.l.google.com:19302'
+          },
+          {
+            url: 'stun:stun1.l.google.com:19302'
+          },
           {
             url: "turn:numb.viagenie.ca",
             credential: "muazkh",
@@ -217,6 +229,7 @@
           msg.type = (msg.Type && !msg.type) ? msg.Type : msg.type;
           console.log("Message", msg);
           if (msg.type == "video-offer") {
+            console.log("Video Offer Rec!");
             let targetUsername = msg.name;
             var desc = new RTCSessionDescription(msg.sdp);
             let myPeerConnection = createPeerConnection(targetUsername, true);
