@@ -11,10 +11,13 @@ import (
 
 	"github.com/sparkscience/logjam/backend/lib/message"
 	"github.com/sparkscience/logjam/backend/lib/websocketmap"
-	logsrv "github.com/sparkscience/logjam/backend/srv/log"
+
+	// logsrv "github.com/sparkscience/logjam/backend/srv/log"
+	logger "github.com/mmcomp/go-log"
 )
 
 type httpHandler struct {
+	Logger logger.Logger
 }
 
 var upgrader = websocket.Upgrader{
@@ -22,7 +25,13 @@ var upgrader = websocket.Upgrader{
 	WriteBufferSize: 1024,
 	CheckOrigin:     func(r *http.Request) bool { return true },
 }
-var Handler httpHandler
+
+func Handler(logger logger.Logger) http.Handler {
+	return httpHandler{
+		Logger: logger,
+	}
+}
+
 var webSocketMaps websocketmap.WebSocketMapType = websocketmap.WebSocketMapType{
 	Connections: make(map[*websocket.Conn]websocketmap.MySocket),
 }
@@ -39,7 +48,7 @@ func getMapElementByIndex(theMap map[*websocket.Conn]websocketmap.MySocket, indx
 }
 
 func checkFirstSubsockets(toCheckSocket websocketmap.MySocket) (websocketmap.MySocket, error) {
-	log := logsrv.Begin()
+	log := logger.Default.Begin()
 	defer log.End()
 
 	subSockets, err := getMapElementByIndex(toCheckSocket.ConnectedSockets, 0)
@@ -54,7 +63,7 @@ func checkFirstSubsockets(toCheckSocket websocketmap.MySocket) (websocketmap.MyS
 }
 
 func checkSecondSubsockets(toCheckSocket websocketmap.MySocket) (websocketmap.MySocket, error) {
-	log := logsrv.Begin()
+	log := logger.Begin()
 	defer log.End()
 
 	subSockets, err := getMapElementByIndex(toCheckSocket.ConnectedSockets, 1)
@@ -69,7 +78,7 @@ func checkSecondSubsockets(toCheckSocket websocketmap.MySocket) (websocketmap.My
 }
 
 func decideWhomToConnect(broadcaster websocketmap.MySocket) websocketmap.MySocket {
-	log := logsrv.Begin()
+	log := logger.Begin()
 	defer log.End()
 
 	if len(broadcaster.ConnectedSockets) < 2 {
@@ -90,7 +99,7 @@ func decideWhomToConnect(broadcaster websocketmap.MySocket) websocketmap.MySocke
 }
 
 func parseMessage(socket websocketmap.MySocket, messageJSON []byte, messageType int) {
-	log := logsrv.Begin()
+	log := logger.Begin()
 	defer log.End()
 
 	var theMessage message.MessageContract
@@ -172,7 +181,7 @@ func parseMessage(socket websocketmap.MySocket, messageJSON []byte, messageType 
 }
 
 func reader(conn *websocket.Conn) {
-	log := logsrv.Begin()
+	log := logger.Begin()
 	defer log.End()
 	for {
 		messageType, p, err := conn.ReadMessage()
@@ -191,7 +200,7 @@ func reader(conn *websocket.Conn) {
 }
 
 func (receiver httpHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	log := logsrv.Begin()
+	log := receiver.Logger.Begin()
 	defer log.End()
 	log.Highlight("Method", req.Method)
 	log.Highlight("Path", req.URL.Path)
