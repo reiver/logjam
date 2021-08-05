@@ -15,19 +15,19 @@ type MySocket struct {
 
 var ConnectedSocketsIndex uint64 = 0
 
-type WebSocketMapType struct {
+type Type struct {
 	mutex       sync.Mutex
 	Connections map[*websocket.Conn]MySocket
 }
 
-func (receiver *WebSocketMapType) Delete(conn *websocket.Conn) {
+func (receiver *Type) Delete(conn *websocket.Conn) {
 	receiver.mutex.Lock()
 	defer receiver.mutex.Unlock()
 
 	delete(receiver.Connections, conn)
 }
 
-func (receiver *WebSocketMapType) Insert(conn *websocket.Conn) {
+func (receiver *Type) Insert(conn *websocket.Conn) {
 	receiver.mutex.Lock()
 	defer receiver.mutex.Unlock()
 
@@ -40,7 +40,7 @@ func (receiver *WebSocketMapType) Insert(conn *websocket.Conn) {
 	ConnectedSocketsIndex++
 }
 
-func (receiver *WebSocketMapType) InsertConnected(conn *websocket.Conn, connectedConn *websocket.Conn) {
+func (receiver *Type) InsertConnected(conn *websocket.Conn, connectedConn *websocket.Conn) {
 	receiver.mutex.Lock()
 	defer receiver.mutex.Unlock()
 
@@ -55,7 +55,7 @@ func (receiver *WebSocketMapType) InsertConnected(conn *websocket.Conn, connecte
 	}
 }
 
-func (receiver *WebSocketMapType) DeleteConnected(conn *websocket.Conn, connectedConn *websocket.Conn) {
+func (receiver *Type) DeleteConnected(conn *websocket.Conn, connectedConn *websocket.Conn) {
 	receiver.mutex.Lock()
 	defer receiver.mutex.Unlock()
 
@@ -70,7 +70,7 @@ func (receiver *WebSocketMapType) DeleteConnected(conn *websocket.Conn, connecte
 	}
 }
 
-func (receiver *WebSocketMapType) RemoveBroadcasters() {
+func (receiver *Type) RemoveBroadcasters() {
 	receiver.mutex.Lock()
 	defer receiver.mutex.Unlock()
 
@@ -83,7 +83,7 @@ func (receiver *WebSocketMapType) RemoveBroadcasters() {
 	}
 }
 
-func (receiver *WebSocketMapType) SetBroadcaster(conn *websocket.Conn) {
+func (receiver *Type) SetBroadcaster(conn *websocket.Conn) {
 	receiver.mutex.Lock()
 	defer receiver.mutex.Unlock()
 
@@ -92,7 +92,7 @@ func (receiver *WebSocketMapType) SetBroadcaster(conn *websocket.Conn) {
 	receiver.Connections[conn] = mySocket
 }
 
-func (receiver *WebSocketMapType) RemoveBroadcaster(conn *websocket.Conn) {
+func (receiver *Type) RemoveBroadcaster(conn *websocket.Conn) {
 	receiver.mutex.Lock()
 	defer receiver.mutex.Unlock()
 
@@ -101,7 +101,7 @@ func (receiver *WebSocketMapType) RemoveBroadcaster(conn *websocket.Conn) {
 	receiver.Connections[conn] = mySocket
 }
 
-func (receiver *WebSocketMapType) GetBroadcaster() (MySocket, bool) {
+func (receiver *Type) GetBroadcaster() (MySocket, bool) {
 	receiver.mutex.Lock()
 	defer receiver.mutex.Unlock()
 
@@ -114,7 +114,7 @@ func (receiver *WebSocketMapType) GetBroadcaster() (MySocket, bool) {
 	return MySocket{}, false
 }
 
-func (receiver *WebSocketMapType) GetSocketByID(ID uint64) (MySocket, bool) {
+func (receiver *Type) GetSocketByID(ID uint64) (MySocket, bool) {
 	receiver.mutex.Lock()
 	defer receiver.mutex.Unlock()
 

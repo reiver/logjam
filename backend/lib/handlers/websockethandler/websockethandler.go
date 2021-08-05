@@ -2,7 +2,6 @@ package websockethandler
 
 import (
 	"encoding/json"
-	"errors"
 	"net/http"
 	"strconv"
 	"strings"
@@ -12,7 +11,6 @@ import (
 	"github.com/sparkscience/logjam/backend/lib/message"
 	"github.com/sparkscience/logjam/backend/lib/websocketmap"
 
-	// logsrv "github.com/sparkscience/logjam/backend/srv/log"
 	logger "github.com/mmcomp/go-log"
 )
 
@@ -32,74 +30,28 @@ func Handler(logger logger.Logger) http.Handler {
 	}
 }
 
-var webSocketMaps websocketmap.WebSocketMapType = websocketmap.WebSocketMapType{
+var webSocketMaps websocketmap.Type = websocketmap.Type{
 	Connections: make(map[*websocket.Conn]websocketmap.MySocket),
 }
 
-func getMapElementByIndex(theMap map[*websocket.Conn]websocketmap.MySocket, indx int64) (websocketmap.MySocket, error) {
-	var i int64 = 0
-	for socket := range theMap {
-		if i == indx {
-			return theMap[socket], nil
-		}
-		i++
-	}
-	return websocketmap.MySocket{}, errors.New("not found")
+// func getMapElementByIndex(theMap map[*websocket.Conn]websocketmap.MySocket, indx int64) (websocketmap.MySocket, error) {
+// 	var i int64 = 0
+// 	for socket := range theMap {
+// 		if i == indx {
+// 			return theMap[socket], nil
+// 		}
+// 		i++
+// 	}
+// 	return websocketmap.MySocket{}, errors.New("not found")
+// }
+
+func (receiver httpHandler) decideWhomToConnect(broadcaster websocketmap.MySocket) websocketmap.MySocket {
+
+	return broadcaster
 }
 
-func checkFirstSubsockets(toCheckSocket websocketmap.MySocket) (websocketmap.MySocket, error) {
-	log := logger.Default.Begin()
-	defer log.End()
-
-	subSockets, err := getMapElementByIndex(toCheckSocket.ConnectedSockets, 0)
-	if err == nil {
-		log.Inform("Checking Socket Id ", subSockets.ID)
-		if len(subSockets.ConnectedSockets) < 2 {
-			return subSockets, nil
-		}
-		return checkFirstSubsockets(subSockets)
-	}
-	return websocketmap.MySocket{}, errors.New("not found")
-}
-
-func checkSecondSubsockets(toCheckSocket websocketmap.MySocket) (websocketmap.MySocket, error) {
-	log := logger.Begin()
-	defer log.End()
-
-	subSockets, err := getMapElementByIndex(toCheckSocket.ConnectedSockets, 1)
-	if err == nil {
-		log.Inform("Checking Socket Id ", subSockets.ID)
-		if len(subSockets.ConnectedSockets) < 2 {
-			return subSockets, nil
-		}
-		return checkSecondSubsockets(subSockets)
-	}
-	return websocketmap.MySocket{}, errors.New("not found")
-}
-
-func decideWhomToConnect(broadcaster websocketmap.MySocket) websocketmap.MySocket {
-	log := logger.Begin()
-	defer log.End()
-
-	if len(broadcaster.ConnectedSockets) < 2 {
-		log.Inform("Broadcaster has capacicty yet")
-		return broadcaster
-	}
-
-	log.Inform("Broadcaster has not capacicty finding new canadidate")
-
-	resultSocket, err := checkFirstSubsockets(broadcaster)
-	if err != nil {
-		resultSocket, err = checkSecondSubsockets(broadcaster)
-		if err != nil {
-			return broadcaster
-		}
-	}
-	return resultSocket
-}
-
-func parseMessage(socket websocketmap.MySocket, messageJSON []byte, messageType int) {
-	log := logger.Begin()
+func (receiver httpHandler) parseMessage(socket websocketmap.MySocket, messageJSON []byte, messageType int) {
+	log := receiver.Logger.Begin()
 	defer log.End()
 
 	var theMessage message.MessageContract
@@ -146,7 +98,7 @@ func parseMessage(socket websocketmap.MySocket, messageJSON []byte, messageType 
 					broadResponseJSON, err := json.Marshal(broadResponse)
 					if err == nil {
 						// broadcaster.Socket.WriteMessage(messageType, broadResponseJSON)
-						targetSocket := decideWhomToConnect(broadcaster)
+						targetSocket := receiver.decideWhomToConnect(broadcaster)
 						// targetSocket := broadcaster
 						if targetSocket.Socket != broadcaster.Socket {
 							broadResponse.Type = "add_broadcast_audience"
@@ -180,8 +132,8 @@ func parseMessage(socket websocketmap.MySocket, messageJSON []byte, messageType 
 	}
 }
 
-func reader(conn *websocket.Conn) {
-	log := logger.Begin()
+func (receiver httpHandler) reader(conn *websocket.Conn) {
+	log := receiver.Logger.Begin()
 	defer log.End()
 	for {
 		messageType, p, err := conn.ReadMessage()
@@ -195,7 +147,7 @@ func reader(conn *websocket.Conn) {
 			continue
 		}
 		// log.Inform("Read from socket : ", string(p))
-		parseMessage(webSocketMaps.Connections[conn], p, messageType)
+		receiver.parseMessage(webSocketMaps.Connections[conn], p, messageType)
 	}
 }
 
@@ -210,5 +162,5 @@ func (receiver httpHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) 
 	}
 	log.Trace("Client Connected")
 	webSocketMaps.Insert(ws)
-	reader(ws)
+	receiver.reader(ws)
 }
