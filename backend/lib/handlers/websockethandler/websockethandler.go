@@ -34,20 +34,58 @@ var webSocketMaps websocketmap.Type = websocketmap.Type{
 	Connections: make(map[*websocket.Conn]websocketmap.MySocket),
 }
 
-// func getMapElementByIndex(theMap map[*websocket.Conn]websocketmap.MySocket, indx int64) (websocketmap.MySocket, error) {
-// 	var i int64 = 0
-// 	for socket := range theMap {
-// 		if i == indx {
-// 			return theMap[socket], nil
-// 		}
-// 		i++
-// 	}
-// 	return websocketmap.MySocket{}, errors.New("not found")
-// }
+func (receiver httpHandler) levelSockets(level uint) []websocketmap.MySocket {
+
+	var output []websocketmap.MySocket = []websocketmap.MySocket{}
+	broadCaster, ok := webSocketMaps.GetBroadcaster()
+	if ok {
+		output = append(output, broadCaster)
+	}
+	if level == 1 || !ok {
+		return output
+	}
+	var index uint = 1
+	var currentLevelSockets []websocketmap.MySocket = output
+	for {
+		if len(currentLevelSockets) == 0 {
+			break
+		}
+		output = []websocketmap.MySocket{}
+		for _, socks := range currentLevelSockets {
+			for _, child := range socks.ConnectedSockets {
+				output = append(output, child)
+			}
+		}
+		if len(output) == 0 {
+			break
+		}
+		if index == level-1 {
+			return output
+		}
+		currentLevelSockets = output
+		output = []websocketmap.MySocket{}
+		index++
+	}
+	return output
+}
 
 func (receiver httpHandler) decideWhomToConnect(broadcaster websocketmap.MySocket) websocketmap.MySocket {
+	var level uint = 2
+	var levelSockets []websocketmap.MySocket = []websocketmap.MySocket{}
+	for {
+		levelSockets = receiver.levelSockets(level)
+		parentSockets := receiver.levelSockets(level - 1)
+		if len(levelSockets) == 0 {
+			return parentSockets[0]
+		}
+		for i := 0; i < len(parentSockets); i++ {
+			if len(parentSockets[i].ConnectedSockets) < 2 {
+				return parentSockets[i]
+			}
+		}
 
-	return broadcaster
+		level++
+	}
 }
 
 func (receiver httpHandler) parseMessage(socket websocketmap.MySocket, messageJSON []byte, messageType int) {
@@ -60,7 +98,7 @@ func (receiver httpHandler) parseMessage(socket websocketmap.MySocket, messageJS
 		if err != nil {
 			log.Error("Error unmarshal message ", err)
 		}
-		// log.Highlight("TheMessage  Type : ", theMessage.Type, " Data : ", theMessage.Data, " Target : ", theMessage.Target)
+		log.Highlight("TheMessage  Type : ", theMessage.Type, " Data : ", theMessage.Data, " Target : ", theMessage.Target)
 	}
 
 	var response message.MessageContract
@@ -77,12 +115,10 @@ func (receiver httpHandler) parseMessage(socket websocketmap.MySocket, messageJS
 	case "role":
 		response.Type = "role"
 		if theMessage.Data == "broadcast" {
-			log.Highlight("New Broadcaster : ", socket.ID)
 			response.Data = "yes:broadcast"
 			webSocketMaps.RemoveBroadcasters()
 			webSocketMaps.SetBroadcaster(socket.Socket)
 		} else {
-			log.Highlight("New Audiance : ", socket.ID)
 			if socket.IsBroadcaster {
 				response.Data = "no:broadcast"
 				webSocketMaps.RemoveBroadcaster(socket.Socket)
@@ -97,15 +133,21 @@ func (receiver httpHandler) parseMessage(socket websocketmap.MySocket, messageJS
 					broadResponse.Data = strconv.FormatInt(int64(socket.ID), 10)
 					broadResponseJSON, err := json.Marshal(broadResponse)
 					if err == nil {
-						// broadcaster.Socket.WriteMessage(messageType, broadResponseJSON)
 						targetSocket := receiver.decideWhomToConnect(broadcaster)
-						// targetSocket := broadcaster
 						if targetSocket.Socket != broadcaster.Socket {
 							broadResponse.Type = "add_broadcast_audience"
 						}
 						webSocketMaps.InsertConnected(targetSocket.Socket, socket.Socket)
 						log.Informf("Target Socket has %d sockets connected!", len(webSocketMaps.Connections[targetSocket.Socket].ConnectedSockets))
 						targetSocket.Socket.WriteMessage(messageType, broadResponseJSON)
+						level := 1
+						for {
+							if len(receiver.levelSockets(uint(level))) == 0 {
+								break
+							}
+							log.Highlightf("Level %d: %d", level, len(receiver.levelSockets(uint(level))))
+							level++
+						}
 					} else {
 						log.Error("Marshal Error of `add_audience` broadResponse", err)
 					}
@@ -126,7 +168,7 @@ func (receiver httpHandler) parseMessage(socket websocketmap.MySocket, messageJS
 		}
 		target, ok := webSocketMaps.GetSocketByID(ID)
 		if ok {
-			// log.Inform("Default sending to ", ID, " ", string(messageJSON))
+			log.Inform("Default sending to ", ID, " ", string(messageJSON))
 			target.Socket.WriteMessage(messageType, messageJSON)
 		}
 	}
@@ -146,7 +188,6 @@ func (receiver httpHandler) reader(conn *websocket.Conn) {
 			log.Error("Read from socket error : ", err.Error())
 			continue
 		}
-		// log.Inform("Read from socket : ", string(p))
 		receiver.parseMessage(webSocketMaps.Connections[conn], p, messageType)
 	}
 }
