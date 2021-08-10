@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
-	"strings"
 
 	"github.com/gorilla/websocket"
 
@@ -30,9 +29,7 @@ func Handler(logger logger.Logger) http.Handler {
 	}
 }
 
-var webSocketMaps websocketmap.Type = websocketmap.Type{
-	Connections: make(map[*websocket.Conn]websocketmap.MySocket),
-}
+var webSocketMaps websocketmap.Type = websocketmap.Type{}
 
 func (receiver httpHandler) levelSockets(level uint) []websocketmap.MySocket {
 
@@ -138,7 +135,7 @@ func (receiver httpHandler) parseMessage(socket websocketmap.MySocket, messageJS
 							broadResponse.Type = "add_broadcast_audience"
 						}
 						webSocketMaps.InsertConnected(targetSocket.Socket, socket.Socket)
-						log.Informf("Target Socket has %d sockets connected!", len(webSocketMaps.Connections[targetSocket.Socket].ConnectedSockets))
+						log.Informf("Target Socket has %d sockets connected!", len(webSocketMaps.Get(targetSocket.Socket).ConnectedSockets))
 						targetSocket.Socket.WriteMessage(messageType, broadResponseJSON)
 						level := 1
 						for {
@@ -180,15 +177,17 @@ func (receiver httpHandler) reader(conn *websocket.Conn) {
 	for {
 		messageType, p, err := conn.ReadMessage()
 		if err != nil {
-			if strings.Contains(err.Error(), "websocket: close") {
+			_, closedError := err.(*websocket.CloseError)
+			_, handshakeError := err.(*websocket.HandshakeError)
+			if closedError || handshakeError {
 				webSocketMaps.Delete(conn)
 				log.Inform("Socket closed!")
 				return
 			}
-			log.Error("Read from socket error : ", err.Error())
+			log.Error("Read from socket error : ", err)
 			continue
 		}
-		receiver.parseMessage(webSocketMaps.Connections[conn], p, messageType)
+		receiver.parseMessage(webSocketMaps.Get(conn), p, messageType)
 	}
 }
 
@@ -200,8 +199,9 @@ func (receiver httpHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) 
 	ws, err := upgrader.Upgrade(w, req, nil)
 	if err != nil {
 		log.Error("Upgrade Error : ", err)
+		return
 	}
-	log.Trace("Client Connected")
+	log.Log("Client Connected")
 	webSocketMaps.Insert(ws)
 	receiver.reader(ws)
 }

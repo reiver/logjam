@@ -17,21 +17,29 @@ var ConnectedSocketsIndex uint64 = 0
 
 type Type struct {
 	mutex       sync.Mutex
-	Connections map[*websocket.Conn]MySocket
+	connections map[*websocket.Conn]MySocket
+}
+
+func (receiver *Type) Get(conn *websocket.Conn) MySocket {
+	return receiver.connections[conn]
 }
 
 func (receiver *Type) Delete(conn *websocket.Conn) {
 	receiver.mutex.Lock()
 	defer receiver.mutex.Unlock()
 
-	delete(receiver.Connections, conn)
+	delete(receiver.connections, conn)
 }
 
 func (receiver *Type) Insert(conn *websocket.Conn) {
 	receiver.mutex.Lock()
 	defer receiver.mutex.Unlock()
 
-	receiver.Connections[conn] = MySocket{
+	if receiver.connections == nil {
+		receiver.connections = map[*websocket.Conn]MySocket{}
+	}
+
+	receiver.connections[conn] = MySocket{
 		Socket:           conn,
 		ID:               ConnectedSocketsIndex,
 		IsBroadcaster:    false,
@@ -44,14 +52,14 @@ func (receiver *Type) InsertConnected(conn *websocket.Conn, connectedConn *webso
 	receiver.mutex.Lock()
 	defer receiver.mutex.Unlock()
 
-	mySocket := receiver.Connections[conn]
+	mySocket := receiver.connections[conn]
 	connectedSockets := mySocket.ConnectedSockets
 
 	_, ok := connectedSockets[connectedConn]
 	if !ok {
-		connectedSockets[connectedConn] = receiver.Connections[connectedConn]
+		connectedSockets[connectedConn] = receiver.connections[connectedConn]
 		mySocket.ConnectedSockets = connectedSockets
-		receiver.Connections[conn] = mySocket
+		receiver.connections[conn] = mySocket
 	}
 }
 
@@ -59,14 +67,14 @@ func (receiver *Type) DeleteConnected(conn *websocket.Conn, connectedConn *webso
 	receiver.mutex.Lock()
 	defer receiver.mutex.Unlock()
 
-	mySocket := receiver.Connections[conn]
+	mySocket := receiver.connections[conn]
 	connectedSockets := mySocket.ConnectedSockets
 
 	_, ok := connectedSockets[connectedConn]
 	if ok {
 		delete(connectedSockets, connectedConn)
 		mySocket.ConnectedSockets = connectedSockets
-		receiver.Connections[conn] = mySocket
+		receiver.connections[conn] = mySocket
 	}
 }
 
@@ -74,11 +82,11 @@ func (receiver *Type) RemoveBroadcasters() {
 	receiver.mutex.Lock()
 	defer receiver.mutex.Unlock()
 
-	for conn := range receiver.Connections {
-		if receiver.Connections[conn].IsBroadcaster {
-			mySocket := receiver.Connections[conn]
+	for conn := range receiver.connections {
+		if receiver.connections[conn].IsBroadcaster {
+			mySocket := receiver.connections[conn]
 			mySocket.IsBroadcaster = false
-			receiver.Connections[conn] = mySocket
+			receiver.connections[conn] = mySocket
 		}
 	}
 }
@@ -87,27 +95,27 @@ func (receiver *Type) SetBroadcaster(conn *websocket.Conn) {
 	receiver.mutex.Lock()
 	defer receiver.mutex.Unlock()
 
-	mySocket := receiver.Connections[conn]
+	mySocket := receiver.connections[conn]
 	mySocket.IsBroadcaster = true
-	receiver.Connections[conn] = mySocket
+	receiver.connections[conn] = mySocket
 }
 
 func (receiver *Type) RemoveBroadcaster(conn *websocket.Conn) {
 	receiver.mutex.Lock()
 	defer receiver.mutex.Unlock()
 
-	mySocket := receiver.Connections[conn]
+	mySocket := receiver.connections[conn]
 	mySocket.IsBroadcaster = false
-	receiver.Connections[conn] = mySocket
+	receiver.connections[conn] = mySocket
 }
 
 func (receiver *Type) GetBroadcaster() (MySocket, bool) {
 	receiver.mutex.Lock()
 	defer receiver.mutex.Unlock()
 
-	for conn := range receiver.Connections {
-		if receiver.Connections[conn].IsBroadcaster {
-			return receiver.Connections[conn], true
+	for conn := range receiver.connections {
+		if receiver.connections[conn].IsBroadcaster {
+			return receiver.connections[conn], true
 		}
 	}
 
@@ -118,9 +126,9 @@ func (receiver *Type) GetSocketByID(ID uint64) (MySocket, bool) {
 	receiver.mutex.Lock()
 	defer receiver.mutex.Unlock()
 
-	for conn := range receiver.Connections {
-		if receiver.Connections[conn].ID == ID {
-			return receiver.Connections[conn], true
+	for conn := range receiver.connections {
+		if receiver.connections[conn].ID == ID {
+			return receiver.connections[conn], true
 		}
 	}
 
