@@ -94,6 +94,7 @@ func (receiver httpHandler) parseMessage(socket websocketmap.MySocket, messageJS
 		err := json.Unmarshal(messageJSON, &theMessage)
 		if err != nil {
 			log.Error("Error unmarshal message ", err)
+			return
 		}
 		log.Highlight("TheMessage  Type : ", theMessage.Type, " Data : ", theMessage.Data, " Target : ", theMessage.Target)
 	}
@@ -108,6 +109,7 @@ func (receiver httpHandler) parseMessage(socket websocketmap.MySocket, messageJS
 			socket.Socket.WriteMessage(messageType, responseJSON)
 		} else {
 			log.Error("Marshal Error of `start` response", err)
+			return
 		}
 	case "role":
 		response.Type = "role"
@@ -147,6 +149,7 @@ func (receiver httpHandler) parseMessage(socket websocketmap.MySocket, messageJS
 						}
 					} else {
 						log.Error("Marshal Error of `add_audience` broadResponse", err)
+						return
 					}
 				}
 			}
@@ -156,6 +159,7 @@ func (receiver httpHandler) parseMessage(socket websocketmap.MySocket, messageJS
 			socket.Socket.WriteMessage(messageType, responseJSON)
 		} else {
 			log.Error("Marshal Error of `role` response", err)
+			return
 		}
 	default:
 		ID, err := strconv.ParseUint(theMessage.Target, 10, 64)
