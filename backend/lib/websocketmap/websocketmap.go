@@ -137,3 +137,12 @@ func (receiver *Type) GetSocketByID(ID uint64) (MySocket, bool) {
 
 	return MySocket{}, false
 }
+
+func (receiver *Type) Reset() {
+	receiver.mutex.Lock()
+	defer receiver.mutex.Unlock()
+
+	for socket := range receiver.connections {
+		receiver.Delete(socket)
+	}
+}

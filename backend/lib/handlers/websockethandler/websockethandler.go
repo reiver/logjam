@@ -31,6 +31,10 @@ func Handler(logger logger.Logger) http.Handler {
 
 var webSocketMaps websocketmap.Type = websocketmap.Type{}
 
+func (receiver httpHandler) Reset() {
+	webSocketMaps.Reset()
+}
+
 func (receiver httpHandler) levelSockets(level uint) []websocketmap.MySocket {
 
 	var output []websocketmap.MySocket = []websocketmap.MySocket{}
