@@ -28,6 +28,9 @@ func (receiver *Type) Delete(conn *websocket.Conn) {
 	receiver.mutex.Lock()
 	defer receiver.mutex.Unlock()
 
+	for socket := range receiver.connections {
+		delete(receiver.connections[socket].ConnectedSockets, conn)
+	}
 	delete(receiver.connections, conn)
 }
 
