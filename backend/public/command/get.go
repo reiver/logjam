@@ -6,7 +6,7 @@ import (
 	logsrv "github.com/sparkscience/logjam/backend/srv/log"
 )
 
-const Path = "/command"
+const Path = "/v1/connections"
 const Method = "GET"
 
 func init() {
