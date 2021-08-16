@@ -191,7 +191,7 @@ func (receiver httpHandler) reader(conn *websocket.Conn) {
 				return
 			}
 			log.Error("Read from socket error : ", err)
-			continue
+			return
 		}
 		receiver.parseMessage(websocketmap.Map.Get(conn), p, messageType)
 	}
