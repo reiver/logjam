@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
-	"strings"
 
 	"github.com/gorilla/websocket"
 
@@ -30,14 +29,14 @@ func Handler(logger logger.Logger) http.Handler {
 	}
 }
 
-var webSocketMaps websocketmap.Type = websocketmap.Type{
-	Connections: make(map[*websocket.Conn]websocketmap.MySocket),
+func (receiver httpHandler) Reset() {
+	websocketmap.Map.Reset()
 }
 
 func (receiver httpHandler) levelSockets(level uint) []websocketmap.MySocket {
 
 	var output []websocketmap.MySocket = []websocketmap.MySocket{}
-	broadCaster, ok := webSocketMaps.GetBroadcaster()
+	broadCaster, ok := websocketmap.Map.GetBroadcaster()
 	if ok {
 		output = append(output, broadCaster)
 	}
@@ -97,6 +96,7 @@ func (receiver httpHandler) parseMessage(socket websocketmap.MySocket, messageJS
 		err := json.Unmarshal(messageJSON, &theMessage)
 		if err != nil {
 			log.Error("Error unmarshal message ", err)
+			return
 		}
 		log.Highlight("TheMessage  Type : ", theMessage.Type, " Data : ", theMessage.Data, " Target : ", theMessage.Target)
 	}
@@ -111,20 +111,21 @@ func (receiver httpHandler) parseMessage(socket websocketmap.MySocket, messageJS
 			socket.Socket.WriteMessage(messageType, responseJSON)
 		} else {
 			log.Error("Marshal Error of `start` response", err)
+			return
 		}
 	case "role":
 		response.Type = "role"
 		if theMessage.Data == "broadcast" {
 			response.Data = "yes:broadcast"
-			webSocketMaps.RemoveBroadcasters()
-			webSocketMaps.SetBroadcaster(socket.Socket)
+			websocketmap.Map.RemoveBroadcasters()
+			websocketmap.Map.SetBroadcaster(socket.Socket)
 		} else {
 			if socket.IsBroadcaster {
 				response.Data = "no:broadcast"
-				webSocketMaps.RemoveBroadcaster(socket.Socket)
+				websocketmap.Map.RemoveBroadcaster(socket.Socket)
 			} else {
 				response.Data = "yes:audience"
-				broadcaster, ok := webSocketMaps.GetBroadcaster()
+				broadcaster, ok := websocketmap.Map.GetBroadcaster()
 				if !ok {
 					response.Data = "no:audience"
 				} else {
@@ -137,8 +138,8 @@ func (receiver httpHandler) parseMessage(socket websocketmap.MySocket, messageJS
 						if targetSocket.Socket != broadcaster.Socket {
 							broadResponse.Type = "add_broadcast_audience"
 						}
-						webSocketMaps.InsertConnected(targetSocket.Socket, socket.Socket)
-						log.Informf("Target Socket has %d sockets connected!", len(webSocketMaps.Connections[targetSocket.Socket].ConnectedSockets))
+						websocketmap.Map.InsertConnected(targetSocket.Socket, socket.Socket)
+						log.Informf("Target Socket has %d sockets connected!", len(websocketmap.Map.Get(targetSocket.Socket).ConnectedSockets))
 						targetSocket.Socket.WriteMessage(messageType, broadResponseJSON)
 						level := 1
 						for {
@@ -150,6 +151,7 @@ func (receiver httpHandler) parseMessage(socket websocketmap.MySocket, messageJS
 						}
 					} else {
 						log.Error("Marshal Error of `add_audience` broadResponse", err)
+						return
 					}
 				}
 			}
@@ -159,6 +161,7 @@ func (receiver httpHandler) parseMessage(socket websocketmap.MySocket, messageJS
 			socket.Socket.WriteMessage(messageType, responseJSON)
 		} else {
 			log.Error("Marshal Error of `role` response", err)
+			return
 		}
 	default:
 		ID, err := strconv.ParseUint(theMessage.Target, 10, 64)
@@ -166,7 +169,7 @@ func (receiver httpHandler) parseMessage(socket websocketmap.MySocket, messageJS
 			log.Error("Inavlid Target : ", theMessage.Target)
 			return
 		}
-		target, ok := webSocketMaps.GetSocketByID(ID)
+		target, ok := websocketmap.Map.GetSocketByID(ID)
 		if ok {
 			log.Inform("Default sending to ", ID, " ", string(messageJSON))
 			target.Socket.WriteMessage(messageType, messageJSON)
@@ -180,15 +183,17 @@ func (receiver httpHandler) reader(conn *websocket.Conn) {
 	for {
 		messageType, p, err := conn.ReadMessage()
 		if err != nil {
-			if strings.Contains(err.Error(), "websocket: close") {
-				webSocketMaps.Delete(conn)
+			_, closedError := err.(*websocket.CloseError)
+			_, handshakeError := err.(*websocket.HandshakeError)
+			if closedError || handshakeError {
+				websocketmap.Map.Delete(conn)
 				log.Inform("Socket closed!")
 				return
 			}
-			log.Error("Read from socket error : ", err.Error())
+			log.Error("Read from socket error : ", err)
 			continue
 		}
-		receiver.parseMessage(webSocketMaps.Connections[conn], p, messageType)
+		receiver.parseMessage(websocketmap.Map.Get(conn), p, messageType)
 	}
 }
 
@@ -200,8 +205,9 @@ func (receiver httpHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) 
 	ws, err := upgrader.Upgrade(w, req, nil)
 	if err != nil {
 		log.Error("Upgrade Error : ", err)
+		return
 	}
-	log.Trace("Client Connected")
-	webSocketMaps.Insert(ws)
+	log.Log("Client Connected")
+	websocketmap.Map.Insert(ws)
 	receiver.reader(ws)
 }
