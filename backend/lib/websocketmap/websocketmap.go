@@ -20,6 +20,8 @@ type Type struct {
 	connections map[*websocket.Conn]MySocket
 }
 
+var Map Type = Type{}
+
 func (receiver *Type) Get(conn *websocket.Conn) MySocket {
 	return receiver.connections[conn]
 }
@@ -28,9 +30,11 @@ func (receiver *Type) Delete(conn *websocket.Conn) {
 	receiver.mutex.Lock()
 	defer receiver.mutex.Unlock()
 
-	for socket := range receiver.connections {
-		delete(receiver.connections[socket].ConnectedSockets, conn)
+	for socket := range receiver.connections[conn].ConnectedSockets {
+		socket.Close()
+		delete(receiver.connections[socket].ConnectedSockets, socket)
 	}
+	conn.Close()
 	delete(receiver.connections, conn)
 }
 
@@ -143,6 +147,12 @@ func (receiver *Type) Reset() {
 	defer receiver.mutex.Unlock()
 
 	for socket := range receiver.connections {
-		receiver.Delete(socket)
+		for childSocket := range receiver.connections[socket].ConnectedSockets {
+			childSocket.Close()
+			delete(receiver.connections[socket].ConnectedSockets, childSocket)
+		}
+		socket.Close()
+		delete(receiver.connections, socket)
 	}
+	ConnectedSocketsIndex = 0
 }
