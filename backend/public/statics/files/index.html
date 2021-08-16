@@ -163,9 +163,13 @@
           // console.log("ICE Change : ", event);
           if(myPeerConnection.iceConnectionState == 'disconnected') {
               console.log('Disconnected');
-              if ($("#audience-btn").prop("disabled")) {
-                audience();
-              }
+              $("#audience-btn").prop("disabled", false);
+              $("#broadcast-btn").prop("disabled", false);
+              // if ($("#audience-btn").prop("disabled")) {
+                setTimeout(() => {
+                  audience();
+                }, 1000);
+              // }
           }
         };
         myPeerConnection.onicegatheringstatechange = function (event) {};
