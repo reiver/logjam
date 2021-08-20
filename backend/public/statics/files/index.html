@@ -159,9 +159,24 @@
         //   }
         };
         myPeerConnection.onremovetrack = function (event) {};
-        myPeerConnection.oniceconnectionstatechange = function (event) {};
+        myPeerConnection.oniceconnectionstatechange = function (event) {
+          // console.log("ICE Change : ", event);
+          if(myPeerConnection.iceConnectionState == 'disconnected') {
+              console.log('Disconnected');
+              // $("#audience-btn").prop("disabled", false);
+              // $("#broadcast-btn").prop("disabled", false);
+              // if ($("#audience-btn").prop("disabled")) {
+                // setTimeout(() => {
+                //   audience();
+                // }, 1000);
+              // }
+          }
+        };
         myPeerConnection.onicegatheringstatechange = function (event) {};
         myPeerConnection.onsignalingstatechange = function (event) {};
+        myPeerConnection.onicecandidateerror = (event) => {
+          // console.log("Ice Error", event);
+        };
         myPeerConnections[targetUsername] = myPeerConnection;
         return myPeerConnection;
       }
@@ -210,7 +225,8 @@
               `[close] Connection died, , code=${event.code} reason=${event.reason}`
             );
           }
-          // login();
+          myUsername = "";
+          login();
         };
 
         socket.onerror = function (error) {
@@ -274,10 +290,15 @@
               console.log("Error", e);
             });
           } else if (msg.type == "start") {
+            console.log("START!!");
             if (!msg.error) {
               loggedIn = true;
               myUsername = msg.data
               $("#user-name").text("You are " +myUsername);
+              if ($("#audience-btn").prop("disabled")) {
+                console.log("reconnecting as audience");
+                audience();
+              }
             } else {
               alert(msg.error);
             }
