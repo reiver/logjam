@@ -98,7 +98,7 @@ func (receiver httpHandler) parseMessage(socket websocketmap.MySocket, messageJS
 			log.Error("Error unmarshal message ", err)
 			return
 		}
-		log.Highlight("TheMessage  Type : ", theMessage.Type, " Data : ", theMessage.Data, " Target : ", theMessage.Target)
+		// log.Highlight("TheMessage  Type : ", theMessage.Type, " Data : ", theMessage.Data, " Target : ", theMessage.Target)
 	}
 
 	var response message.MessageContract
@@ -134,19 +134,21 @@ func (receiver httpHandler) parseMessage(socket websocketmap.MySocket, messageJS
 					broadResponse.Data = strconv.FormatInt(int64(socket.ID), 10)
 					broadResponseJSON, err := json.Marshal(broadResponse)
 					if err == nil {
+						log.Highlight("Deciding to connect ...")
 						targetSocket := receiver.decideWhomToConnect(broadcaster)
+						log.Highlight("target ", targetSocket.ID)
 						if targetSocket.Socket != broadcaster.Socket {
 							broadResponse.Type = "add_broadcast_audience"
 						}
 						websocketmap.Map.InsertConnected(targetSocket.Socket, socket.Socket)
-						log.Informf("Target Socket has %d sockets connected!", len(websocketmap.Map.Get(targetSocket.Socket).ConnectedSockets))
+						// log.Informf("Target Socket has %d sockets connected!", len(websocketmap.Map.Get(targetSocket.Socket).ConnectedSockets))
 						targetSocket.Socket.WriteMessage(messageType, broadResponseJSON)
 						level := 1
 						for {
 							if len(receiver.levelSockets(uint(level))) == 0 {
 								break
 							}
-							log.Highlightf("Level %d: %d", level, len(receiver.levelSockets(uint(level))))
+							// log.Highlightf("Level %d: %d", level, len(receiver.levelSockets(uint(level))))
 							level++
 						}
 					} else {
@@ -171,7 +173,7 @@ func (receiver httpHandler) parseMessage(socket websocketmap.MySocket, messageJS
 		}
 		target, ok := websocketmap.Map.GetSocketByID(ID)
 		if ok {
-			log.Inform("Default sending to ", ID, " ", string(messageJSON))
+			// log.Inform("Default sending to ", ID, " ", string(messageJSON))
 			target.Socket.WriteMessage(messageType, messageJSON)
 		}
 	}
@@ -186,6 +188,7 @@ func (receiver httpHandler) reader(conn *websocket.Conn) {
 			_, closedError := err.(*websocket.CloseError)
 			_, handshakeError := err.(*websocket.HandshakeError)
 			if closedError || handshakeError {
+				log.Warn("Socket ", websocketmap.Map.Get(conn).ID, " Closed!")
 				websocketmap.Map.Delete(conn)
 				log.Inform("Socket closed!")
 				return

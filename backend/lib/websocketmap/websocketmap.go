@@ -1,6 +1,7 @@
 package websocketmap
 
 import (
+	"fmt"
 	"sync"
 
 	"github.com/gorilla/websocket"
@@ -30,12 +31,20 @@ func (receiver *Type) Delete(conn *websocket.Conn) {
 	receiver.mutex.Lock()
 	defer receiver.mutex.Unlock()
 
+	fmt.Println("Deleteing ", receiver.connections[conn].ID)
+	for socket := range receiver.connections {
+		delete(receiver.connections[socket].ConnectedSockets, conn)
+	}
 	for socket := range receiver.connections[conn].ConnectedSockets {
 		socket.Close()
-		delete(receiver.connections[socket].ConnectedSockets, socket)
+		fmt.Println("Deleting child ", receiver.connections[socket].ID)
+		delete(receiver.connections[conn].ConnectedSockets, socket)
 	}
-	conn.Close()
+	// conn.Close()
 	delete(receiver.connections, conn)
+	fmt.Println("Finish Deleting")
+	check := receiver.connections[conn]
+	fmt.Println("Check", check)
 }
 
 func (receiver *Type) Insert(conn *websocket.Conn) {
@@ -64,6 +73,9 @@ func (receiver *Type) InsertConnected(conn *websocket.Conn, connectedConn *webso
 
 	_, ok := connectedSockets[connectedConn]
 	if !ok {
+		if connectedSockets == nil {
+			connectedSockets = make(map[*websocket.Conn]MySocket)
+		}
 		connectedSockets[connectedConn] = receiver.connections[connectedConn]
 		mySocket.ConnectedSockets = connectedSockets
 		receiver.connections[conn] = mySocket
@@ -155,4 +167,11 @@ func (receiver *Type) Reset() {
 		delete(receiver.connections, socket)
 	}
 	ConnectedSocketsIndex = 0
+}
+
+func (receiver *Type) GetConnections() map[*websocket.Conn]MySocket {
+	receiver.mutex.Lock()
+	defer receiver.mutex.Unlock()
+
+	return receiver.connections
 }
