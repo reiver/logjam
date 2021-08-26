@@ -298,6 +298,9 @@
               if ($("#audience-btn").prop("disabled")) {
                 console.log("reconnecting as audience");
                 audience();
+              } else if ($("#broadcast-btn").prop("disabled")) {
+                console.log("reconnecting as broadcast");
+                broadcast();
               }
             } else {
               alert(msg.error);
@@ -314,12 +317,16 @@
               $("#source-stream").text("Broadcasting");
             } else {
               if (msg.data === "no:audience") {
-                $("#audience-btn").prop("disabled", false);
-                $("#broadcast-btn").prop("disabled", false);
-                $("#source-stream").text("");
-                alert("No broadcast to connect!");
+                // $("#audience-btn").prop("disabled", false);
+                // $("#broadcast-btn").prop("disabled", false);
+                // $("#source-stream").text("");
+                // alert("No broadcast to connect!");
+                setTimeout(() => {
+                  audience();
+                }, 1000);
               }
               document.getElementById("local_video").srcObject = null;
+
             }
           } else if (msg.type == "add_audience") {
             console.log("add_audience", msg.data);
