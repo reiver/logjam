@@ -20,9 +20,9 @@
     <script>
       let loggedIn = false;
       let myUsername,
-        adminUserName,
-        myRole = "student",
-        roomUsers = [];
+        myName,
+        targetName,
+        myRole = "audiance";
       let mediaConstraints = (window.constraints = {
         audio: true,
         video: true,
@@ -34,6 +34,28 @@
         myPeerConnections = [],
         iceCandidates = [],
         socket;
+      try {
+        myName = localStorage.getItem('logjam_myName');
+      } catch (e) {
+        console.log(e);
+      }
+      if (myName==='' || !myName) {
+        myName = makeid(20);
+        try {
+          localStorage.setItem('logjam_myName', myName);
+        } catch(e) {
+          console.log(e);
+        }
+      }
+      function makeid(length) {
+        var result           = '';
+        var characters       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        var charactersLength = characters.length;
+        for ( var i = 0; i < length; i++ ) {
+          result += characters.charAt(Math.floor(Math.random() * charactersLength));
+        }
+        return result;
+      }
       var myPeerConnectionConfig = {
         iceServers: [
           // {'urls': 'stun:stun.l.google.com:19302'},
@@ -105,13 +127,13 @@
         };
         myPeerConnection.ontrack = function (event) {
           console.log("TRACK", event);
-          if (myRole != "admin") {
+          if (myRole != "broadcast") {
             // if(event.transceiver.sender.track.mmcomp && event.transceiver.sender.track.mmcomp=="SHARE")
             if (!document.getElementById("local_video").srcObject) {
               document.getElementById("local_video").srcObject =
                 event.streams[0];
               localStream = event.streams[0];
-              $("#source-stream").text("Read " + targetUsername);
+              $("#source-stream").text("Read " + targetName ); //+ "[" + targetUsername + "]");
             }
           }
           // document.getElementById("received_video_" + targetUsername).srcObject = event.streams[0];
@@ -210,7 +232,7 @@
           socket.send(
             JSON.stringify({
               type: "start",
-              data: myUsername,
+              data: myName,
             })
           );
         };
@@ -225,7 +247,8 @@
               `[close] Connection died, , code=${event.code} reason=${event.reason}`
             );
           }
-          myUsername = "";
+          // myUsername = "";
+          myPeerConnections = [];
           login();
         };
 
@@ -247,6 +270,7 @@
           if (msg.type == "video-offer") {
             console.log("Video Offer Rec!");
             let targetUsername = msg.name;
+            targetName = msg.username;
             var desc = new RTCSessionDescription(msg.sdp);
             let myPeerConnection = createPeerConnection(targetUsername, true);
             try {
@@ -294,7 +318,7 @@
             if (!msg.error) {
               loggedIn = true;
               myUsername = msg.data
-              $("#user-name").text("You are " +myUsername);
+              $("#user-name").text("You are " + myName);// + "[" + myUsername + "]");
               if ($("#audience-btn").prop("disabled")) {
                 console.log("reconnecting as audience");
                 audience();

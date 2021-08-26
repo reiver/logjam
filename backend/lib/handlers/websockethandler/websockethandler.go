@@ -105,6 +105,7 @@ func (receiver httpHandler) parseMessage(socket websocketmap.MySocket, messageJS
 	switch theMessage.Type {
 	case "start":
 		response.Type = "start"
+		websocketmap.Map.SetName(socket.Socket, theMessage.Data)
 		response.Data = strconv.FormatInt(int64(socket.ID), 10)
 		responseJSON, err := json.Marshal(response)
 		if err == nil {
@@ -131,7 +132,7 @@ func (receiver httpHandler) parseMessage(socket websocketmap.MySocket, messageJS
 				} else {
 					var broadResponse message.MessageContract
 					broadResponse.Type = "add_audience"
-					broadResponse.Data = strconv.FormatInt(int64(socket.ID), 10)
+					broadResponse.Data = strconv.FormatInt(int64(socket.ID), 10) // + "," + socket.Name
 					broadResponseJSON, err := json.Marshal(broadResponse)
 					if err == nil {
 						log.Highlight("Deciding to connect ...")
@@ -174,6 +175,18 @@ func (receiver httpHandler) parseMessage(socket websocketmap.MySocket, messageJS
 		target, ok := websocketmap.Map.GetSocketByID(ID)
 		if ok {
 			// log.Inform("Default sending to ", ID, " ", string(messageJSON))
+			var fullMessage map[string]interface{}
+			err := json.Unmarshal(messageJSON, &fullMessage)
+			if err != nil {
+				log.Error("Error unmarshal message ", err)
+				return
+			}
+			fullMessage["username"] = socket.Name
+			messageJSON, err = json.Marshal(fullMessage)
+			if err != nil {
+				log.Error("Error marshal message ", err)
+				return
+			}
 			target.Socket.WriteMessage(messageType, messageJSON)
 		}
 	}
