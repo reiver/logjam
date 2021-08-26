@@ -12,6 +12,7 @@ type MySocket struct {
 	ID               uint64
 	IsBroadcaster    bool
 	ConnectedSockets map[*websocket.Conn]MySocket
+	Name             string
 }
 
 var ConnectedSocketsIndex uint64 = 0
@@ -174,4 +175,13 @@ func (receiver *Type) GetConnections() map[*websocket.Conn]MySocket {
 	defer receiver.mutex.Unlock()
 
 	return receiver.connections
+}
+
+func (receiver *Type) SetName(conn *websocket.Conn, name string) {
+	receiver.mutex.Lock()
+	defer receiver.mutex.Unlock()
+
+	socket := receiver.connections[conn]
+	socket.Name = name
+	receiver.connections[conn] = socket
 }
