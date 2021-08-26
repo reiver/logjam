@@ -2,7 +2,6 @@ package commandhandler
 
 import (
 	"net/http"
-	"strconv"
 
 	logger "github.com/mmcomp/go-log"
 	"github.com/sparkscience/logjam/backend/lib/websocketmap"
@@ -64,7 +63,7 @@ func (receiver httpHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) 
 		brodcaster, found := websocketmap.Map.GetBroadcaster()
 		if found {
 			log.Alert("Br Id ", brodcaster.ID)
-			output += strconv.FormatUint(brodcaster.ID, 10) + "<br/>\n"
+			output += /*strconv.FormatUint(brodcaster.ID, 10)*/ brodcaster.Name + "<br/>\n"
 			var level uint = 2
 			for {
 				sockets := receiver.levelSockets(level)
@@ -75,7 +74,7 @@ func (receiver httpHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) 
 
 				for i := 0; i < len(sockets); i++ {
 					socket := sockets[i]
-					output += strconv.FormatUint(socket.ID, 10)
+					output += "(" + socket.Name + "[" + websocketmap.Map.GetParent(socket.Socket).Name + "])" //strconv.FormatUint(socket.ID, 10)
 					output += ","
 				}
 				output += "<br/>\n"

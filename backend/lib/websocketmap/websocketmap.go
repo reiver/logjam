@@ -185,3 +185,18 @@ func (receiver *Type) SetName(conn *websocket.Conn, name string) {
 	socket.Name = name
 	receiver.connections[conn] = socket
 }
+
+func (receiver *Type) GetParent(conn *websocket.Conn) MySocket {
+	receiver.mutex.Lock()
+	defer receiver.mutex.Unlock()
+
+	for socket := range receiver.connections {
+		for child := range receiver.connections[socket].ConnectedSockets {
+			if child == conn {
+				return receiver.connections[socket]
+			}
+		}
+	}
+
+	return MySocket{}
+}
