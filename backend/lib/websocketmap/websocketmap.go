@@ -1,7 +1,6 @@
 package websocketmap
 
 import (
-	"fmt"
 	"sync"
 
 	"github.com/gorilla/websocket"
@@ -13,6 +12,7 @@ type MySocket struct {
 	IsBroadcaster    bool
 	ConnectedSockets map[*websocket.Conn]MySocket
 	Name             string
+	HasStream        bool
 }
 
 var ConnectedSocketsIndex uint64 = 0
@@ -32,20 +32,15 @@ func (receiver *Type) Delete(conn *websocket.Conn) {
 	receiver.mutex.Lock()
 	defer receiver.mutex.Unlock()
 
-	fmt.Println("Deleteing ", receiver.connections[conn].ID)
 	for socket := range receiver.connections {
 		delete(receiver.connections[socket].ConnectedSockets, conn)
 	}
 	for socket := range receiver.connections[conn].ConnectedSockets {
 		socket.Close()
-		fmt.Println("Deleting child ", receiver.connections[socket].ID)
 		delete(receiver.connections[conn].ConnectedSockets, socket)
 	}
-	// conn.Close()
+	conn.Close()
 	delete(receiver.connections, conn)
-	fmt.Println("Finish Deleting")
-	check := receiver.connections[conn]
-	fmt.Println("Check", check)
 }
 
 func (receiver *Type) Insert(conn *websocket.Conn) {
@@ -61,6 +56,7 @@ func (receiver *Type) Insert(conn *websocket.Conn) {
 		ID:               ConnectedSocketsIndex,
 		IsBroadcaster:    false,
 		ConnectedSockets: make(map[*websocket.Conn]MySocket),
+		HasStream:        false,
 	}
 	ConnectedSocketsIndex++
 }
@@ -117,6 +113,7 @@ func (receiver *Type) SetBroadcaster(conn *websocket.Conn) {
 
 	mySocket := receiver.connections[conn]
 	mySocket.IsBroadcaster = true
+	mySocket.HasStream = true
 	receiver.connections[conn] = mySocket
 }
 
@@ -199,4 +196,23 @@ func (receiver *Type) GetParent(conn *websocket.Conn) MySocket {
 	}
 
 	return MySocket{}
+}
+
+func (receiver *Type) SetStreamState(conn *websocket.Conn, hasStream bool) {
+	receiver.mutex.Lock()
+	defer receiver.mutex.Unlock()
+
+	socket := receiver.connections[conn]
+	socket.HasStream = hasStream
+	receiver.connections[conn] = socket
+	for socket := range receiver.connections {
+		for child := range receiver.connections[socket].ConnectedSockets {
+			if child == conn {
+				childSocket := receiver.connections[socket].ConnectedSockets[child]
+				childSocket.HasStream = hasStream
+				receiver.connections[socket].ConnectedSockets[child] = childSocket
+				return
+			}
+		}
+	}
 }

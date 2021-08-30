@@ -134,6 +134,12 @@
                 event.streams[0];
               localStream = event.streams[0];
               $("#source-stream").text("Read " + targetName ); //+ "[" + targetUsername + "]");
+              socket.send(
+                JSON.stringify({
+                  type: "stream",
+                  data: "true",
+                })
+              );
             }
           }
           // document.getElementById("received_video_" + targetUsername).srcObject = event.streams[0];
@@ -395,7 +401,17 @@
       window.addEventListener("beforeunload", function () {
         if (socket) socket.close();
       });
-      login();
+      var isWebRTCSupported = navigator.getUserMedia ||
+        navigator.webkitGetUserMedia ||
+        navigator.mozGetUserMedia ||
+        navigator.msGetUserMedia ||
+        window.RTCPeerConnection;
+
+      if (window.navigator.userAgent.indexOf("Edge") === -1 && isWebRTCSupported) {
+        login();
+      } else  {
+        alert('Unfortunetly your browser does not support this action!');
+      }
     </script>
   </body>
 </html>
