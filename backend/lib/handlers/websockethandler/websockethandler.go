@@ -52,7 +52,9 @@ func (receiver httpHandler) levelSockets(level uint) []websocketmap.MySocket {
 		output = []websocketmap.MySocket{}
 		for _, socks := range currentLevelSockets {
 			for _, child := range socks.ConnectedSockets {
-				output = append(output, child)
+				if child.HasStream {
+					output = append(output, child)
+				}
 			}
 		}
 		if len(output) == 0 {
@@ -166,6 +168,9 @@ func (receiver httpHandler) parseMessage(socket websocketmap.MySocket, messageJS
 			log.Error("Marshal Error of `role` response", err)
 			return
 		}
+	case "stream":
+		log.Alert("Stream Received ", socket.Name)
+		websocketmap.Map.SetStreamState(socket.Socket, true)
 	default:
 		ID, err := strconv.ParseUint(theMessage.Target, 10, 64)
 		if err != nil {

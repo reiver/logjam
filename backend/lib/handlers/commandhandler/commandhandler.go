@@ -74,7 +74,11 @@ func (receiver httpHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) 
 
 				for i := 0; i < len(sockets); i++ {
 					socket := sockets[i]
-					output += "(" + socket.Name + "[" + websocketmap.Map.GetParent(socket.Socket).Name + "])" //strconv.FormatUint(socket.ID, 10)
+					var hasStream string = "false"
+					if socket.HasStream {
+						hasStream = "true"
+					}
+					output += "(" + socket.Name + "[" + websocketmap.Map.GetParent(socket.Socket).Name + "] hasStream : " + hasStream + ")" //strconv.FormatUint(socket.ID, 10)
 					output += ","
 				}
 				output += "<br/>\n"
