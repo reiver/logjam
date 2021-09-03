@@ -203,7 +203,8 @@
         myPeerConnection.onicegatheringstatechange = function (event) {};
         myPeerConnection.onsignalingstatechange = function (event) {};
         myPeerConnection.onicecandidateerror = (event) => {
-          // console.log("Ice Error", event);
+          console.log("Ice Error", event);
+          socket.close();
         };
         myPeerConnections[targetUsername] = myPeerConnection;
         return myPeerConnection;

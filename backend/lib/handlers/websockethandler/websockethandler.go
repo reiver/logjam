@@ -2,8 +2,11 @@ package websockethandler
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
+	"os"
 	"strconv"
+	"time"
 
 	"github.com/gorilla/websocket"
 
@@ -89,9 +92,15 @@ func (receiver httpHandler) decideWhomToConnect(broadcaster websocketmap.MySocke
 	}
 }
 
+var filename string
+
 func (receiver httpHandler) parseMessage(socket websocketmap.MySocket, messageJSON []byte, messageType int) {
 	log := receiver.Logger.Begin()
 	defer log.End()
+	f, err := os.OpenFile(filename, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
+	if err == nil {
+		defer f.Close()
+	}
 
 	var theMessage message.MessageContract
 	{
@@ -122,24 +131,55 @@ func (receiver httpHandler) parseMessage(socket websocketmap.MySocket, messageJS
 			response.Data = "yes:broadcast"
 			websocketmap.Map.RemoveBroadcasters()
 			websocketmap.Map.SetBroadcaster(socket.Socket)
+			if _, err := os.Stat("./logs/" + socket.Name); os.IsNotExist(err) {
+				os.Mkdir("./logs/"+socket.Name, os.ModeDir)
+			}
+			currentTime := time.Now()
+			logName := currentTime.Format("2006-01-02_15-04-05")
+			filename = "./logs/" + socket.Name + "/" + logName + ".log"
+			f, err := os.OpenFile(filename, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
+			if err == nil {
+				log.Alert("Set output to file")
+				defer f.Close()
+			}
+			fmt.Fprintln(f, "Broadcast "+socket.Name+" Started")
 		} else {
+			log.Highlight("Filename : ", filename)
 			if socket.IsBroadcaster {
 				response.Data = "no:broadcast"
 				websocketmap.Map.RemoveBroadcaster(socket.Socket)
+
+				msg := "Broadcaster " + socket.Name + " removed broadcasting role from himself"
+				fmt.Fprintln(f, msg)
 			} else {
 				response.Data = "yes:audience"
 				broadcaster, ok := websocketmap.Map.GetBroadcaster()
+
+				msg := "Audiance " + socket.Name + " trying to receive stream"
+				fmt.Fprintln(f, msg)
+
 				if !ok {
 					response.Data = "no:audience"
+
+					msg := "Audiance " + socket.Name + " could not receive stream because there is no broadcaster now!"
+					fmt.Fprintln(f, msg)
 				} else {
 					var broadResponse message.MessageContract
 					broadResponse.Type = "add_audience"
 					broadResponse.Data = strconv.FormatInt(int64(socket.ID), 10) // + "," + socket.Name
 					broadResponseJSON, err := json.Marshal(broadResponse)
+
+					msg := "Audiance " + socket.Name + " is going to get connected"
+					fmt.Fprintln(f, msg)
+
 					if err == nil {
 						log.Highlight("Deciding to connect ...")
 						targetSocket := receiver.decideWhomToConnect(broadcaster)
 						log.Highlight("target ", targetSocket.ID)
+
+						msg := "Audiance " + socket.Name + " is starting to connect to " + targetSocket.Name
+						fmt.Fprintln(f, msg)
+
 						if targetSocket.Socket != broadcaster.Socket {
 							broadResponse.Type = "add_broadcast_audience"
 						}
@@ -171,6 +211,10 @@ func (receiver httpHandler) parseMessage(socket websocketmap.MySocket, messageJS
 	case "stream":
 		log.Alert("Stream Received ", socket.Name)
 		websocketmap.Map.SetStreamState(socket.Socket, true)
+
+		msg := "Audiance " + socket.Name + " is receiving stream!"
+		fmt.Fprintln(f, msg)
+
 	default:
 		ID, err := strconv.ParseUint(theMessage.Target, 10, 64)
 		if err != nil {
