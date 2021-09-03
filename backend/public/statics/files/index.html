@@ -140,6 +140,12 @@
                   data: "true",
                 })
               );
+              socket.send(
+                JSON.stringify({
+                  type: "log",
+                  data: "ontrack from " + targetName,
+                })
+              );
             }
           }
           // document.getElementById("received_video_" + targetUsername).srcObject = event.streams[0];
@@ -164,6 +170,12 @@
               })
               .catch(function (e) {
                 console.log("onnegotiationneeded audience error:", e);
+                socket.send(
+                  JSON.stringify({
+                    type: "log",
+                    data: "onnegotiationneeded audience error:" + JSON.stringify(e),
+                  })
+                );
               });
         //   } else if (veiw == "replicate") {
         //     myPeerConnection
@@ -188,6 +200,12 @@
         };
         myPeerConnection.onremovetrack = function (event) {};
         myPeerConnection.oniceconnectionstatechange = function (event) {
+          socket.send(
+            JSON.stringify({
+              type: "log",
+              data: "oniceconnectionstatechange :" + myPeerConnection.iceConnectionState,
+            })
+          );
           // console.log("ICE Change : ", event);
           if(myPeerConnection.iceConnectionState == 'disconnected') {
               console.log('Disconnected');
@@ -204,6 +222,12 @@
         myPeerConnection.onsignalingstatechange = function (event) {};
         myPeerConnection.onicecandidateerror = (event) => {
           console.log("Ice Error", event);
+          socket.send(
+            JSON.stringify({
+              type: "log",
+              data: "onicecandidateerror :" + JSON.stringify(event),
+            })
+          );
           socket.close();
         };
         myPeerConnections[targetUsername] = myPeerConnection;

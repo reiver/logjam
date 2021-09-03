@@ -214,7 +214,10 @@ func (receiver httpHandler) parseMessage(socket websocketmap.MySocket, messageJS
 
 		msg := "Audiance " + socket.Name + " is receiving stream!"
 		fmt.Fprintln(f, msg)
-
+	case "log":
+		log.Alert("Log Received ", socket.Name)
+		msg := "Audiance " + socket.Name + " client log :\n    " + theMessage.Data
+		fmt.Fprintln(f, msg)
 	default:
 		ID, err := strconv.ParseUint(theMessage.Target, 10, 64)
 		if err != nil {
