@@ -143,6 +143,7 @@ func (receiver httpHandler) parseMessage(socket websocketmap.MySocket, messageJS
 				defer f.Close()
 			}
 			fmt.Fprintln(f, "Broadcast "+socket.Name+" Started")
+			f.Sync()
 		} else {
 			log.Highlight("Filename : ", filename)
 			if socket.IsBroadcaster {
@@ -151,6 +152,7 @@ func (receiver httpHandler) parseMessage(socket websocketmap.MySocket, messageJS
 
 				msg := "Broadcaster " + socket.Name + " removed broadcasting role from himself"
 				fmt.Fprintln(f, msg)
+				f.Sync()
 			} else {
 				response.Data = "yes:audience"
 				broadcaster, ok := websocketmap.Map.GetBroadcaster()
