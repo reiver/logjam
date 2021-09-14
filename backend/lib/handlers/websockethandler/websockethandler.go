@@ -132,12 +132,12 @@ func (receiver httpHandler) parseMessage(socket websocketmap.MySocket, messageJS
 			websocketmap.Map.RemoveBroadcasters()
 			websocketmap.Map.SetBroadcaster(socket.Socket)
 			if _, err := os.Stat("./logs/" + socket.Name); os.IsNotExist(err) {
-				os.Mkdir("./logs/"+socket.Name, os.ModeDir)
+				os.Mkdir("./logs/"+socket.Name, 0755)
 			}
 			currentTime := time.Now()
 			logName := currentTime.Format("2006-01-02_15-04-05")
 			filename = "./logs/" + socket.Name + "/" + logName + ".log"
-			f, err := os.OpenFile(filename, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
+			f, err := os.OpenFile(filename, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
 			if err == nil {
 				log.Alert("Set output to file")
 				defer f.Close()
