@@ -14,13 +14,7 @@ func init() {
 	log := logsrv.Begin()
 	defer log.End()
 
-	// err := httproutersrv.Router.DelegatePath(statichandler.Handler(cfg.WebStaticsPath), Path, Method)
-	// if nil != err {
-	// 	log.Errorf("Could not register http.Handler for %q %q: %v", Method, Path, err)
-	// 	panic(err)
-	// }
-
-	err := httproutersrv.Router.DelegatePath(statichandler.Handler(cfg.LogsPath), "/logs", Method)
+	err := httproutersrv.Router.DelegatePath(statichandler.Handler(cfg.WebStaticsPath), Path, Method)
 	if nil != err {
 		log.Errorf("Could not register http.Handler for %q %q: %v", Method, Path, err)
 		panic(err)
