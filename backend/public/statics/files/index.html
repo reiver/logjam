@@ -226,6 +226,7 @@
           // console.log("ICE Change : ", event);
           if(myPeerConnection.iceConnectionState == 'disconnected') {
               console.log('Disconnected');
+              login();
               // $("#audience-btn").prop("disabled", false);
               // $("#broadcast-btn").prop("disabled", false);
               // if ($("#audience-btn").prop("disabled")) {
