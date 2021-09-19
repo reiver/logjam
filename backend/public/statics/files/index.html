@@ -119,7 +119,7 @@
 
       function createPeerConnection(targetUsername, veiw = "audience") {
         if (myPeerConnections[targetUsername]) {
-          console.log("Already Connected");
+          // console.log("Already Connected");
           return myPeerConnections[targetUsername];
         }
         // if(document.getElementById("received_video_" + targetUsername)==null){
@@ -129,7 +129,7 @@
         //     node.playsinline = true;
         //     document.body.appendChild(node);
         // }
-        console.log("Creat Peer", targetUsername);
+        // console.log("Creat Peer", targetUsername);
         myPeerConnection = new RTCPeerConnection(myPeerConnectionConfig);
         myPeerConnection.onicecandidate = function (event) {
           if (event.candidate) {
@@ -143,7 +143,7 @@
           }
         };
         myPeerConnection.ontrack = function (event) {
-          console.log("TRACK", event);
+          // console.log("TRACK", event);
           if (myRole != "broadcast") {
             // if(event.transceiver.sender.track.mmcomp && event.transceiver.sender.track.mmcomp=="SHARE")
             if (!document.getElementById("local_video").srcObject) {
@@ -168,7 +168,7 @@
           // document.getElementById("received_video_" + targetUsername).srcObject = event.streams[0];
         };
         myPeerConnection.onnegotiationneeded = function (event) {
-          console.log("onnegotiationneeded", veiw, event);
+          // console.log("onnegotiationneeded", veiw, event);
         //   if (veiw == "audience") {
             myPeerConnection
               .createOffer()
@@ -186,7 +186,7 @@
                 );
               })
               .catch(function (e) {
-                console.log("onnegotiationneeded audience error:", e);
+                // console.log("onnegotiationneeded audience error:", e);
                 socket.send(
                   JSON.stringify({
                     type: "log",
@@ -225,10 +225,10 @@
           );
           // console.log("ICE Change : ", event);
           if(myPeerConnection.iceConnectionState == 'disconnected') {
-              console.log('Disconnected');
-              setTimeout(() => {
-                login();
-              }, 1000);
+              // console.log('Disconnected');
+//              setTimeout(() => {
+//                login();
+//              }, 1000);
               // $("#audience-btn").prop("disabled", false);
               // $("#broadcast-btn").prop("disabled", false);
               // if ($("#audience-btn").prop("disabled")) {
@@ -241,7 +241,7 @@
         myPeerConnection.onicegatheringstatechange = function (event) {};
         myPeerConnection.onsignalingstatechange = function (event) {};
         myPeerConnection.onicecandidateerror = (event) => {
-          console.log("Ice Error", event);
+          // console.log("Ice Error", event);
           socket.send(
             JSON.stringify({
               type: "log",
@@ -254,20 +254,20 @@
         return myPeerConnection;
       }
       function connectUser(targetUsername) {
-        console.log("Connect User", targetUsername);
+        // console.log("Connect User", targetUsername);
         if (myPeerConnections[targetUsername]) {
-          console.log("Already Connected");
+          // console.log("Already Connected");
           return true;
         }
         let myPeerConnection = createPeerConnection(targetUsername);
 
-        console.log("localStream", localStream);
+        // console.log("localStream", localStream);
         if (localStream) {
           localStream.getTracks().forEach((track) => {
             // track["mmcomp"] = "VIDEO";
             myPeerConnection.addTrack(track, localStream);
           });
-          console.log("Added tracks to connection");
+          // console.log("Added tracks to connection");
         }
       }
       async function login() {
@@ -278,8 +278,8 @@
         }
         socket = new WebSocket(`${protocol}://${baseUrl}/ws`);
         socket.onopen = function (event) {
-          console.log("[open] Connection established");
-          console.log("Sending start to server");
+          // console.log("[open] Connection established");
+          // console.log("Sending start to server");
           socket.send(
             JSON.stringify({
               type: "start",
@@ -290,13 +290,13 @@
 
         socket.onclose = function (event) {
           if (event.wasClean) {
-            console.log(
-              `[close] Connection closed cleanly, code=${event.code} reason=${event.reason}`
-            );
+            // console.log(
+              // `[close] Connection closed cleanly, code=${event.code} reason=${event.reason}`
+            // );
           } else {
-            console.log(
-              `[close] Connection died, , code=${event.code} reason=${event.reason}`
-            );
+            // console.log(
+              // `[close] Connection died, , code=${event.code} reason=${event.reason}`
+            // );
           }
           // myUsername = "";
           myPeerConnections = [];
@@ -304,11 +304,11 @@
         };
 
         socket.onerror = function (error) {
-          console.log(`[error] ${error.message}`);
+          // console.log(`[error] ${error.message}`);
         };
 
         socket.onmessage = async function (event) {
-          console.log(`[message] Data received from server: ${event.data}`);
+          // console.log(`[message] Data received from server: ${event.data}`);
           let msg;
           try {
             msg = JSON.parse(event.data);
@@ -317,9 +317,9 @@
           }
           msg.data = (msg.Data && !msg.data) ? msg.Data : msg.data;
           msg.type = (msg.Type && !msg.type) ? msg.Type : msg.type;
-          console.log("Message", msg);
+          // console.log("Message", msg);
           if (msg.type == "video-offer") {
-            console.log("Video Offer Rec!");
+            // console.log("Video Offer Rec!");
             let targetUsername = msg.name;
             targetName = msg.username;
             var desc = new RTCSessionDescription(msg.sdp);
@@ -327,12 +327,12 @@
             try {
               await myPeerConnection.setRemoteDescription(desc);
             } catch (e) {
-              console.log("Error setRemoteDescription", e);
+              // console.log("Error setRemoteDescription", e);
             }
             try {
               var answer = await myPeerConnection.createAnswer();
             } catch (e) {
-              console.log("Error createAnswer", e);
+              // console.log("Error createAnswer", e);
             }
             try {
               await myPeerConnection.setLocalDescription(answer);
@@ -349,14 +349,14 @@
               console.log("Error setLocalDescription", e);
             }
           } else if (msg.type == "new-ice-candidate") {
-            console.log("ICE Canadidate Recieved!");
+            // console.log("ICE Canadidate Recieved!");
             iceCandidates.push(new RTCIceCandidate(msg.candidate));
-            console.log(iceCandidates);
+            // console.log(iceCandidates);
             if (myPeerConnection && myPeerConnection.remoteDescription) {
-              console.log("Adding canadidate");
+              // console.log("Adding canadidate");
               var candidate = iceCandidates.pop();
               myPeerConnection.addIceCandidate(candidate).catch(function (e) {
-                console.log("new-ice-candidate error:", e, candidate);
+                // console.log("new-ice-candidate error:", e, candidate);
               });
             }
           } else if (msg.type == "video-answer") {
@@ -365,29 +365,29 @@
               console.log("Error", e);
             });
           } else if (msg.type == "start") {
-            console.log("START!!");
+            // console.log("START!!");
             if (!msg.error) {
               loggedIn = true;
               myUsername = msg.data
               $("#user-name").text("You are " + myName);// + "[" + myUsername + "]");
               if ($("#audience-btn").prop("disabled")) {
-                console.log("reconnecting as audience");
+                // console.log("reconnecting as audience");
                 audience();
               } else if ($("#broadcast-btn").prop("disabled")) {
-                console.log("reconnecting as broadcast");
+                // console.log("reconnecting as broadcast");
                 broadcast();
               }
             } else {
               alert(msg.error);
             }
-            console.log("Start", msg, loggedIn);
+            // console.log("Start", msg, loggedIn);
           } else if (msg.type == "role") {
-            console.log("Role Message");
+            // console.log("Role Message");
             if (msg.data === "no:broadcast") {
               alert("You are not a broadcaster anymore!");
               socket.close();
             } else if (msg.data === "yes:broadcast") {
-              console.log("Load Stream local", localStream);
+              // console.log("Load Stream local", localStream);
               document.getElementById("local_video").srcObject = localStream;
               $("#source-stream").text("Broadcasting");
             } else {
@@ -404,10 +404,10 @@
 
             }
           } else if (msg.type == "add_audience") {
-            console.log("add_audience", msg.data);
+            // console.log("add_audience", msg.data);
             connectUser(msg.data);
           } else if (msg.type == "add_broadcast_audience") {
-            console.log("add_audience", msg.data);
+            // console.log("add_audience", msg.data);
             connectUser(msg.data);
           }
         };
@@ -420,7 +420,7 @@
           .getUserMedia(mediaConstraints)
           .then((ls) => {
             localStream = ls;
-            console.log("Local Stream", localStream);
+            // console.log("Local Stream", localStream);
             socket.send(
               JSON.stringify({
                 type: "role",
