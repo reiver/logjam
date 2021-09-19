@@ -225,7 +225,7 @@
           );
           // console.log("ICE Change : ", event);
           if(myPeerConnection.iceConnectionState == 'disconnected') {
-              // console.log('Disconnected');
+              console.log('Disconnected');
 //              setTimeout(() => {
 //                login();
 //              }, 1000);
@@ -290,13 +290,13 @@
 
         socket.onclose = function (event) {
           if (event.wasClean) {
-            // console.log(
-              // `[close] Connection closed cleanly, code=${event.code} reason=${event.reason}`
-            // );
+            console.log(
+              `[close] Connection closed cleanly, code=${event.code} reason=${event.reason}`
+            );
           } else {
-            // console.log(
-              // `[close] Connection died, , code=${event.code} reason=${event.reason}`
-            // );
+            console.log(
+              `[close] Connection died, , code=${event.code} reason=${event.reason}`
+            );
           }
           // myUsername = "";
           myPeerConnections = [];
