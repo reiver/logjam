@@ -3,6 +3,7 @@
     <title>Broadcast Example</title>
   </head>
   <body>
+    <input type="checkbox" onclick="toggleTurnUsage();" checked /> Use TURN <br/>
     <button id="broadcast-btn" onclick="broadcast();">Broadcast</button><br />
     <button id="audience-btn" onclick="audience();">Audience</button><br />
 
@@ -449,6 +450,20 @@
         $("#audience-btn").prop("disabled", true);
         $("#broadcast-btn").prop("disabled", false);
         document.getElementById("local_video").srcObject = null;
+      }
+      function toggleTurnUsage() {
+        const turnRecord = {
+          url: "turn:45.149.77.155:3478",
+          username: "admin",
+          credential: "mmcomp",
+        };
+        const turnStatus = myPeerConnectionConfig.iceServers.findIndex(s => s.url.indexOf('turn:') === 0) >= 0;
+        if (turnStatus) {
+          myPeerConnectionConfig.iceServers = myPeerConnectionConfig.iceServers.filter(s => s.url.indexOf('turn:') < 0);
+        } else {
+          myPeerConnectionConfig.iceServers.push(turnRecord);
+        }
+        console.log(myPeerConnectionConfig);
       }
       window.addEventListener("beforeunload", function () {
         if (socket) socket.close();
