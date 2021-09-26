@@ -5,6 +5,7 @@ import (
 
 	"github.com/sparkscience/logjam/backend/arg"
 	command "github.com/sparkscience/logjam/backend/public/command"
+	"github.com/sparkscience/logjam/backend/public/logfiles"
 	"github.com/sparkscience/logjam/backend/public/statics"
 	websockets "github.com/sparkscience/logjam/backend/public/ws"
 	httproutersrv "github.com/sparkscience/logjam/backend/srv/http/router"
@@ -52,6 +53,7 @@ func main() {
 	log.Log("Hello world! — I am logjam! ✨")
 	log.Log("Websocket listening on ", websockets.Path)
 	log.Log("Static listening on ", statics.Path)
+	log.Log("Log File listening on ", logfiles.Path)
 	log.Log("Command listening on ", command.Path)
 
 	{
