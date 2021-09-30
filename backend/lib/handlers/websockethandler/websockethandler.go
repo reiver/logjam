@@ -94,7 +94,7 @@ func (receiver httpHandler) decideWhomToConnect(broadcaster websocketmap.MySocke
 
 var filename string
 
-func (receiver httpHandler) parseMessage(socket websocketmap.MySocket, messageJSON []byte, messageType int) {
+func (receiver httpHandler) parseMessage(socket websocketmap.MySocket, messageJSON []byte, messageType int, userAgent string) {
 	log := receiver.Logger.Begin()
 	defer log.End()
 	f, err := os.OpenFile(filename, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
@@ -144,7 +144,7 @@ func (receiver httpHandler) parseMessage(socket websocketmap.MySocket, messageJS
 			}
 			fmt.Fprintln(f, "Broadcast "+socket.Name+" Started")
 		} else {
-			log.Highlight("Filename : ", filename)
+			log.Highlight("userAgent : ", userAgent)
 			if socket.IsBroadcaster {
 				response.Data = "no:broadcast"
 				websocketmap.Map.RemoveBroadcaster(socket.Socket)
@@ -155,7 +155,7 @@ func (receiver httpHandler) parseMessage(socket websocketmap.MySocket, messageJS
 				response.Data = "yes:audience"
 				broadcaster, ok := websocketmap.Map.GetBroadcaster()
 
-				msg := "Audiance " + socket.Name + " trying to receive stream"
+				msg := "Audiance " + socket.Name + " trying to receive stream\n" + "    " + userAgent
 				fmt.Fprintln(f, msg)
 
 				if !ok {
@@ -244,7 +244,7 @@ func (receiver httpHandler) parseMessage(socket websocketmap.MySocket, messageJS
 	}
 }
 
-func (receiver httpHandler) reader(conn *websocket.Conn) {
+func (receiver httpHandler) reader(conn *websocket.Conn, userAgent string) {
 	log := receiver.Logger.Begin()
 	defer log.End()
 	for {
@@ -261,7 +261,7 @@ func (receiver httpHandler) reader(conn *websocket.Conn) {
 			log.Error("Read from socket error : ", err)
 			return
 		}
-		receiver.parseMessage(websocketmap.Map.Get(conn), p, messageType)
+		receiver.parseMessage(websocketmap.Map.Get(conn), p, messageType, userAgent)
 	}
 }
 
@@ -277,5 +277,6 @@ func (receiver httpHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) 
 	}
 	log.Log("Client Connected")
 	websocketmap.Map.Insert(ws)
-	receiver.reader(ws)
+	userAgent := req.Header.Get("User-Agent")
+	receiver.reader(ws, userAgent)
 }
