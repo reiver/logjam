@@ -1,6 +1,6 @@
 package cfg
 
 const (
-	WebStaticsPath = "./public/statics/files"
+	WebStaticsPath = "./public/statics"
 	LogStaticsPath = "./"
 )

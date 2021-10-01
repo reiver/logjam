@@ -214,6 +214,9 @@ func (receiver httpHandler) parseMessage(socket websocketmap.MySocket, messageJS
 
 		msg := "Audiance " + socket.Name + " is receiving stream!"
 		fmt.Fprintln(f, msg)
+	case "turn_status":
+		msg := "Turn usage status of " + socket.Name + " is " + theMessage.Data
+		fmt.Fprintln(f, msg)
 	case "log":
 		log.Alert("Log Received ", socket.Name)
 		msg := "Audiance " + socket.Name + " client log :\n    " + theMessage.Data
