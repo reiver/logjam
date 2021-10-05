@@ -117,10 +117,32 @@
             credential: "YzYNCouZM1mhqhmseWk6"
           }
           */
+          /*
           {
             url: "turn:45.149.77.155:3478",
             username: "admin",
             credential: "mmcomp",
+          },
+          */
+          {
+            url: "turn:turn1.turn.group.video:3478",
+            username: "turnuser",
+            credential: "dJ4kP05PHcKN8Ubu",
+          },
+          {
+            url: "turn:turn2.turn.group.video:3478",
+            username: "turnuser",
+            credential: "XzfVP8cpNEy17hws",
+          },
+          {
+            url: "turns:turn1.turn.group.video:443",
+            username: "turnuser",
+            credential: "dJ4kP05PHcKN8Ubu",
+          },
+          {
+            url: "turns:turn2.turn.group.video:443",
+            username: "turnuser",
+            credential: "XzfVP8cpNEy17hws",
           },
         ],
       };
@@ -466,16 +488,40 @@
         document.getElementById("local_video").srcObject = null;
       }
       function toggleTurnUsage() {
+        /*
         const turnRecord = {
           url: "turn:45.149.77.155:3478",
           username: "admin",
           credential: "mmcomp",
         };
-        const turnStatus = myPeerConnectionConfig.iceServers.findIndex(s => s.url.indexOf('turn:') === 0) >= 0;
+        */
+        const turnRecord = [
+           {
+            url: "turn:turn1.turn.group.video:3478",
+            username: "turnuser",
+            credential: "dJ4kP05PHcKN8Ubu",
+          },
+          {
+            url: "turn:turn2.turn.group.video:3478",
+            username: "turnuser",
+            credential: "XzfVP8cpNEy17hws",
+          },
+          {
+            url: "turns:turn1.turn.group.video:443",
+            username: "turnuser",
+            credential: "dJ4kP05PHcKN8Ubu",
+          },
+          {
+            url: "turns:turn2.turn.group.video:443",
+            username: "turnuser",
+            credential: "XzfVP8cpNEy17hws",
+          },
+        ];
+        const turnStatus = myPeerConnectionConfig.iceServers.findIndex(s => s.url.indexOf('turn') === 0) >= 0;
         if (turnStatus) {
-          myPeerConnectionConfig.iceServers = myPeerConnectionConfig.iceServers.filter(s => s.url.indexOf('turn:') < 0);
+          myPeerConnectionConfig.iceServers = myPeerConnectionConfig.iceServers.filter(s => s.url.indexOf('turn') < 0);
         } else {
-          myPeerConnectionConfig.iceServers.push(turnRecord);
+          myPeerConnectionConfig.iceServers.push(...turnRecord);
         }
         console.log(myPeerConnectionConfig);
       }
