@@ -9,7 +9,7 @@
 
     <h3 id="source-stream"></h3>
     <h4 id="user-name"></h4>
-    <video id="local_video" autoplay playsinline></video><br />
+    <video id="local_video" autoplay playsinline muted></video><br />
     <video id="local_share" autoplay playsinline></video><br />
 
     <script
@@ -310,6 +310,13 @@
         socket.onopen = function (event) {
           // console.log("[open] Connection established");
           // console.log("Sending start to server");
+          if (confirm(`Do you want to change ${myName} as your name?`)) {
+            const newName = prompt('What is you name?');
+            if (newName) {
+              myName = newName;
+              localStorage.setItem('logjam_myName', myName);
+            }
+          }
           socket.send(
             JSON.stringify({
               type: "start",

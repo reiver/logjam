@@ -6,6 +6,15 @@
     <input type="checkbox" onclick="toggleTurnUsage();" checked /> Use TURN <br/>
     <button id="broadcast-btn" onclick="broadcast();" style="display: none;" >Broadcast</button><br />
     <button id="audience-btn" onclick="audience();">START</button><br />
+    <div>
+      <h3 style="text-align: center;">
+        Status Report
+      </h3>
+      <button onclick="sendLog('I can see');">I can see</button>
+      <button onclick="sendLog('I can`t see');">I can`t see</button>
+      <button onclick="sendLog('Image is frozen');">Image is frozen</button>
+      <button onclick="const status = prompt('What is the broadcast status?'); if (status) sendLog(status);">Other</button>
+    </div>
 
     <h3 id="source-stream"></h3>
     <h4 id="user-name"></h4>
@@ -17,7 +26,6 @@
       integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44="
       crossorigin="anonymous"
     ></script>
-    <!-- <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script> -->
     <script>
       let loggedIn = false;
       let myUsername,
@@ -59,14 +67,6 @@
       }
       var myPeerConnectionConfig = {
         iceServers: [
-          // {'urls': 'stun:stun.l.google.com:19302'},
-          // {"urls": "turn:numb.viagenie.ca", "username":"m.mirsamie@gmail.com", "credential":"159951"},
-          // {
-          //   url: 'stun:stun.1und1.de:3478'
-          // },
-          // {
-          //   url: 'stun:stun.gmx.net:3478'
-          // },
           {
             url: 'stun:stun.l.google.com:19302'
           },
@@ -85,45 +85,6 @@
           
             url: 'stun:stun4.l.google.com:19302'
           },
-          /*
-          {
-            url: "turn:numb.viagenie.ca",
-            credential: "muazkh",
-            username: "webrtc@live.com",
-          },
-          {
-            url: "turn:192.158.29.39:3478?transport=udp",
-            credential: "JZEOEt2V3Qb0y27GRntt2u2PAYA=",
-            username: "28224511:1379330808",
-          },
-          {
-            url: "turn:192.158.29.39:3478?transport=tcp",
-            credential: "JZEOEt2V3Qb0y27GRntt2u2PAYA=",
-            username: "28224511:1379330808",
-          },
-          {
-            url: "turn:turn.bistri.com:80",
-            credential: "homeo",
-            username: "homeo",
-          },
-          {
-            url: "turn:turn.anyfirewall.com:443?transport=tcp",
-            credential: "webrtc",
-            username: "webrtc",
-          },
-          {
-            url:"turn:13.250.13.83:3478?transport=udp",
-            username: "YzYNCouZM1mhqhmseWk6",
-            credential: "YzYNCouZM1mhqhmseWk6"
-          }
-          */
-          /*
-          {
-            url: "turn:45.149.77.155:3478",
-            username: "admin",
-            credential: "mmcomp",
-          },
-          */
           {
             url: "turn:turn1.turn.group.video:3478",
             username: "turnuser",
@@ -149,17 +110,8 @@
 
       function createPeerConnection(targetUsername, veiw = "audience") {
         if (myPeerConnections[targetUsername]) {
-          // console.log("Already Connected");
           return myPeerConnections[targetUsername];
         }
-        // if(document.getElementById("received_video_" + targetUsername)==null){
-        //     var node = document.createElement('video');
-        //     node.id = "received_video_" + targetUsername;
-        //     node.autoplay = true;
-        //     node.playsinline = true;
-        //     document.body.appendChild(node);
-        // }
-        // console.log("Creat Peer", targetUsername);
         myPeerConnection = new RTCPeerConnection(myPeerConnectionConfig);
         myPeerConnection.onicecandidate = function (event) {
           if (event.candidate) {
@@ -173,9 +125,7 @@
           }
         };
         myPeerConnection.ontrack = function (event) {
-          // console.log("TRACK", event);
           if (myRole != "broadcast") {
-            // if(event.transceiver.sender.track.mmcomp && event.transceiver.sender.track.mmcomp=="SHARE")
             if (!document.getElementById("local_video").srcObject) {
               document.getElementById("local_video").srcObject =
                 event.streams[0];
@@ -195,55 +145,31 @@
               );
             }
           }
-          // document.getElementById("received_video_" + targetUsername).srcObject = event.streams[0];
         };
         myPeerConnection.onnegotiationneeded = function (event) {
-          // console.log("onnegotiationneeded", veiw, event);
-        //   if (veiw == "audience") {
-            myPeerConnection
-              .createOffer()
-              .then(function (offer) {
-                return myPeerConnection.setLocalDescription(offer);
-              })
-              .then(function () {
-                socket.send(
-                  JSON.stringify({
-                    name: myUsername,
-                    target: targetUsername,
-                    type: "video-offer",
-                    sdp: myPeerConnection.localDescription,
-                  })
-                );
-              })
-              .catch(function (e) {
-                // console.log("onnegotiationneeded audience error:", e);
-                socket.send(
-                  JSON.stringify({
-                    type: "log",
-                    data: "onnegotiationneeded audience error:" + JSON.stringify(e),
-                  })
-                );
-              });
-        //   } else if (veiw == "replicate") {
-        //     myPeerConnection
-        //       .createOffer()
-        //       .then(function (offer) {
-        //         return myPeerConnection.setLocalDescription(offer);
-        //       })
-        //       .then(function () {
-        //         socket.send(
-        //           JSON.stringify({
-        //             name: myUsername,
-        //             target: targetUsername,
-        //             type: "replicate-offer",
-        //             sdp: myPeerConnection.localDescription,
-        //           })
-        //         );
-        //       })
-        //       .catch(function (e) {
-        //         console.log("onnegotiationneeded replicate error:", e);
-        //       });
-        //   }
+          myPeerConnection
+            .createOffer()
+            .then(function (offer) {
+              return myPeerConnection.setLocalDescription(offer);
+            })
+            .then(function () {
+              socket.send(
+                JSON.stringify({
+                  name: myUsername,
+                  target: targetUsername,
+                  type: "video-offer",
+                  sdp: myPeerConnection.localDescription,
+                })
+              );
+            })
+            .catch(function (e) {
+              socket.send(
+                JSON.stringify({
+                  type: "log",
+                  data: "onnegotiationneeded audience error:" + JSON.stringify(e),
+                })
+              );
+            });
         };
         myPeerConnection.onremovetrack = function (event) {};
         myPeerConnection.oniceconnectionstatechange = function (event) {
@@ -253,32 +179,19 @@
               data: "oniceconnectionstatechange :" + myPeerConnection.iceConnectionState,
             })
           );
-          // console.log("ICE Change : ", event);
           if(myPeerConnection.iceConnectionState == 'disconnected') {
               console.log('Disconnected', myPeerConnections);
-//              setTimeout(() => {
-//                login();
-//              }, 1000);
-              // $("#audience-btn").prop("disabled", false);
-              // $("#broadcast-btn").prop("disabled", false);
-              // if ($("#audience-btn").prop("disabled")) {
-                // setTimeout(() => {
-                //   audience();
-                // }, 1000);
-              // }
           }
         };
         myPeerConnection.onicegatheringstatechange = function (event) {};
         myPeerConnection.onsignalingstatechange = function (event) {};
         myPeerConnection.onicecandidateerror = (event) => {
-          // console.log("Ice Error", event);
           socket.send(
             JSON.stringify({
               type: "log",
               data: "onicecandidateerror :" + JSON.stringify(event),
             })
           );
-          //socket.close();
         };
         myPeerConnections[targetUsername] = myPeerConnection;
         return myPeerConnection;
@@ -310,6 +223,13 @@
         socket.onopen = function (event) {
           // console.log("[open] Connection established");
           // console.log("Sending start to server");
+          if (confirm(`Do you want to change ${myName} as your name?`)) {
+            const newName = prompt('What is you name?');
+            if (newName) {
+              myName = newName;
+              localStorage.setItem('logjam_myName', myName);
+            }
+          }
           socket.send(
             JSON.stringify({
               type: "start",
@@ -524,6 +444,14 @@
           myPeerConnectionConfig.iceServers.push(...turnRecord);
         }
         console.log(myPeerConnectionConfig);
+      }
+      function sendLog(log) {
+        socket.send(
+          JSON.stringify({
+            type: "log",
+            data: log,
+          })
+        );
       }
       window.addEventListener("beforeunload", function () {
         if (socket) socket.close();
