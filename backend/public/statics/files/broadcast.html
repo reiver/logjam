@@ -40,6 +40,13 @@
       } catch (e) {
         console.log(e);
       }
+      if (confirm(`Do you want to change ${myName} as your name?`)) {
+        const newName = prompt('What is you name?');
+        if (newName) {
+          myName = newName;
+          localStorage.setItem('logjam_myName', myName);
+        }
+      }
       if (myName==='' || !myName) {
         myName = makeid(20);
         try {
@@ -310,13 +317,6 @@
         socket.onopen = function (event) {
           // console.log("[open] Connection established");
           // console.log("Sending start to server");
-          if (confirm(`Do you want to change ${myName} as your name?`)) {
-            const newName = prompt('What is you name?');
-            if (newName) {
-              myName = newName;
-              localStorage.setItem('logjam_myName', myName);
-            }
-          }
           socket.send(
             JSON.stringify({
               type: "start",
