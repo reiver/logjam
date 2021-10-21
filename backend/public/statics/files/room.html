@@ -1,0 +1,242 @@
+<html>
+    <head>
+    </head>
+    <body>
+        Room Id : <input id="room-id" />
+        <button onclick="openRoom();">
+            Enter
+        </button><br/>
+        <video id="local_video" autoplay playsinline muted></video>
+        <div id="streams"></div>
+        <script>
+            let mediaConstraints = (window.constraints = {
+                audio: true,
+                video: true,
+            });
+            let myName;
+            let localStream;
+            let socket;
+            let room;
+            const myPeerConnectionConfig = {
+                iceServers: [
+                    {
+                        url: 'stun:stun.l.google.com:19302'
+                    },
+                    {
+                        url: 'stun:stun1.l.google.com:19302'
+                    },
+                    {
+                    
+                        url: 'stun:stun2.l.google.com:19302'
+                    },
+                    {
+                    
+                        url: 'stun:stun3.l.google.com:19302'
+                    },
+                    {
+                    
+                        url: 'stun:stun4.l.google.com:19302'
+                    },
+                    {
+                        url: "turn:45.149.77.155:3478",
+                        username: "admin",
+                        credential: "mmcomp",
+                    },
+                ],
+            };
+            const myPeerConnections = [];
+            function addVideo(targetUsername, streams) {
+                console.log('addVideo', targetUsername);
+                const streamsDiv = document.querySelector("#streams");
+                streamsDiv.innerHTML += `<video id="remote_video_${targetUsername}" autoplay playsinline></video><br />`;
+                const video = document.querySelector(`#remote_video_${targetUsername}`);
+                video.srcObject = streams[0];
+            }
+            function createPeerConnection(targetUsername) {
+                const myPeerConnection = new RTCPeerConnection(myPeerConnectionConfig);
+                myPeerConnection.onicecandidate = (event) => {
+                    console.log('onicecandidate', event);
+                    if (event.candidate) {
+                        socket.send(
+                            JSON.stringify({
+                                type: "new-ice-candidate",
+                                target: targetUsername,
+                                candidate: event.candidate,
+                            })
+                        );
+                    }
+                };
+                myPeerConnection.ontrack = (event) => {
+                    console.log("TRACK", event);
+                    if (!document.getElementById("local_video").srcObject) {
+                        document.getElementById("local_video").srcObject =
+                            event.streams[0];
+                        localStream = event.streams[0];
+                        console.log("Read from " + targetName );
+                    }
+                };
+                myPeerConnection.onnegotiationneeded = (event) => {
+                    console.log('onnegotiationneeded', event);
+                    myPeerConnection
+                        .createOffer()
+                        .then((offer) => {
+                            return myPeerConnection.setLocalDescription(offer);
+                        })
+                        .then(() => {
+                            socket.send(
+                                JSON.stringify({
+                                    name: myName,
+                                    target: targetUsername,
+                                    type: "video-offer",
+                                    sdp: myPeerConnection.localDescription,
+                                })
+                            );
+                        })
+                        .catch((e) => {
+                            
+                        });
+                };
+
+                return myPeerConnection;
+            }
+            function login() {
+                let baseUrl = window.location.href.split("//")[1].split("/")[0];
+                let protocol = "wss";
+                if (window.location.href.split("//")[0] == "http:") {
+                    protocol = "ws";
+                }
+                socket = new WebSocket(`${protocol}://${baseUrl}/room`);
+                socket.onopen = (event) => {
+                    socket.send(
+                        JSON.stringify({
+                            type: "start",
+                            data: myName,
+                        })
+                    );
+                };
+                socket.onmessage = async (event) => {
+                    let msg;
+                    try {
+                        msg = JSON.parse(event.data);
+                    } catch (e) {
+                        return;
+                    }
+                    msg.data = (msg.Data && !msg.data) ? msg.Data : msg.data;
+                    msg.type = (msg.Type && !msg.type) ? msg.Type : msg.type;
+                    console.log({msg});
+                    switch(msg.type) {
+                        case 'open-room':
+                            const otherUsers = msg.room.split(',');
+                            console.log({otherUsers});
+                            if(otherUsers.length > 0 && otherUsers[0]!='') {
+                                // connectUser(otherUsers[0]);
+                            }
+                            break;
+                        case 'video-offer':
+                            let targetUsername = msg.name;
+                            let targetName = msg.username;
+                            if (myPeerConnections.find(p => p.targetName === targetName)) {
+                                return;
+                            }
+                            var desc = new RTCSessionDescription(msg.sdp);
+                            let newPeerConnection = createPeerConnection(targetUsername);
+                            myPeerConnections.push({
+                                targetName,
+                                targetUsername,
+                                myPeerConnection: newPeerConnection,
+                            });
+                            await newPeerConnection.setRemoteDescription(desc);
+                            var answer = await newPeerConnection.createAnswer();
+                            await newPeerConnection.setLocalDescription(answer);
+
+                            socket.send(
+                                JSON.stringify({
+                                    name: myName,
+                                    target: targetUsername,
+                                    type: "video-answer",
+                                    sdp: newPeerConnection.localDescription,
+                                })
+                            );
+                            break;
+                        case 'new-ice-candidate':
+                            const find = myPeerConnections.find(p => p.targetName === msg.targetName);
+                            let aPeerConnection;
+                            if (!find) {
+                                aPeerConnection = createPeerConnection(targetUsername);
+                                myPeerConnections.push({
+                                    targetName,
+                                    targetUsername,
+                                    myPeerConnection: newPeerConnection,
+                                });
+                            } else {
+                                aPeerConnection = find.myPeerConnection;
+                            }
+   
+                            await aPeerConnection.addIceCandidate(candidate)
+
+                            break;
+                        case 'video-answer':
+                            const { myPeerConnection } = myPeerConnections.find(p => p.targetName === msg.targetName);
+                            var desc = new RTCSessionDescription(msg.sdp);
+                            await myPeerConnection.setRemoteDescription(desc);
+                            break;
+                        case 'new-user':
+                            connectUser(msg.data);
+                            break;
+                    }
+                };
+            }
+            function connectUser(targetUsername) {
+                console.log('connectUser', targetUsername)
+                if (myPeerConnections[targetUsername]) {
+                    return true;
+                }
+                const myPeerConnection = createPeerConnection(targetUsername);
+                myPeerConnections.push({
+                    targetName: targetUsername,
+                    targetUsername,
+                    myPeerConnection,
+                });
+
+                if (localStream) {
+                    localStream.getTracks().forEach((track) => {
+                        myPeerConnection.addTrack(track, localStream);
+                    });
+                }
+            }
+            function openRoom() {
+                room = document.querySelector("#room-id").value;
+                socket.send(
+                    JSON.stringify({
+                        name: myName,
+                        data: room,
+                        type: "open-room",
+                    })
+                );
+            }
+            window.addEventListener("beforeunload", function () {
+                if (socket) socket.close();
+            });
+            var isWebRTCSupported = navigator.getUserMedia ||
+                navigator.webkitGetUserMedia ||
+                navigator.mozGetUserMedia ||
+                navigator.msGetUserMedia ||
+                window.RTCPeerConnection;
+
+            if (window.navigator.userAgent.indexOf("Edge") === -1 && isWebRTCSupported) {
+                login();
+                navigator.mediaDevices
+                    .getUserMedia(mediaConstraints)
+                    .then((ls) => {
+                        localStream = ls;
+                        document.getElementById("local_video").srcObject = localStream;
+                    })
+                    .catch((e) => {
+                        console.log("Local St error", e);
+                    });
+            } else  {
+                alert('Unfortunetly your browser does not support this action!');
+            }
+        </script>
+    </body>
+</html>
