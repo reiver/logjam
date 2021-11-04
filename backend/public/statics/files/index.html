@@ -267,7 +267,7 @@
           }
           msg.data = (msg.Data && !msg.data) ? msg.Data : msg.data;
           msg.type = (msg.Type && !msg.type) ? msg.Type : msg.type;
-          // console.log("Message", msg);
+          console.log("Message", msg);
           if (msg.type == "video-offer") {
             // console.log("Video Offer Rec!");
             let targetUsername = msg.name;

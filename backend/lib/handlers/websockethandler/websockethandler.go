@@ -11,8 +11,7 @@ import (
 	"github.com/gorilla/websocket"
 
 	"github.com/sparkscience/logjam/backend/lib/message"
-	"github.com/sparkscience/logjam/backend/lib/websocketmap"
-	"github.com/sparkscience/logjam/backend/src/binarytree"
+	// "github.com/sparkscience/logjam/backend/lib/websocketmap"
 	binarytreesrv "github.com/sparkscience/logjam/backend/srv/binarytree"
 
 	logger "github.com/mmcomp/go-log"
@@ -28,6 +27,8 @@ var upgrader = websocket.Upgrader{
 	CheckOrigin:     func(r *http.Request) bool { return true },
 }
 
+var Map = binarytreesrv.GetMap()
+
 func Handler(logger logger.Logger) http.Handler {
 	return httpHandler{
 		Logger: logger,
@@ -36,7 +37,7 @@ func Handler(logger logger.Logger) http.Handler {
 
 var filename string
 
-func (receiver httpHandler) parseMessage(socket binarytreesrv.MySocket, messageJSON []byte, messageType int, userAgent string) {
+func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, messageJSON []byte, messageType int, userAgent string) {
 	log := receiver.Logger.Begin()
 	defer log.End()
 	f, err := os.OpenFile(filename, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
@@ -73,7 +74,8 @@ func (receiver httpHandler) parseMessage(socket binarytreesrv.MySocket, messageJ
 			response.Data = "yes:broadcast"
 			// websocketmap.Map.RemoveBroadcasters()
 			// websocketmap.Map.SetBroadcaster(socket.Socket)
-			binarytreesrv.Map.Insert(socket.Socket)
+			Map.ToggleHead(socket.Socket)
+			Map.ToggleCanConnect(socket.Socket)
 			if _, err := os.Stat("./logs/" + socket.Name); os.IsNotExist(err) {
 				os.Mkdir("./logs/"+socket.Name, 0755)
 			}
@@ -91,16 +93,17 @@ func (receiver httpHandler) parseMessage(socket binarytreesrv.MySocket, messageJ
 			if socket.IsBroadcaster {
 				response.Data = "no:broadcast"
 				// websocketmap.Map.RemoveBroadcaster(socket.Socket)
-				binarytreesrv.Map.ToggleHead(socket.Socket)
+				Map.ToggleHead(socket.Socket)
 
 				msg := "Broadcaster " + socket.Name + " removed broadcasting role from himself"
 				fmt.Fprintln(f, msg)
 			} else {
 				response.Data = "yes:audience"
-				broadcasterLevel := binarytreesrv.Map.LevelNodes(1)
+				broadcasterLevel := Map.LevelNodes(1)
 				// broadcaster, ok := websocketmap.Map.GetBroadcaster()
 				var broadcaster *binarytreesrv.MySocket
-				ok := len(broadcasterLevel) != 1
+				ok := len(broadcasterLevel) == 1
+				log.Alert("broadcasterLevel ", broadcasterLevel)
 
 				msg := "Audiance " + socket.Name + " trying to receive stream\n" + "    " + userAgent
 				fmt.Fprintln(f, msg)
@@ -122,7 +125,12 @@ func (receiver httpHandler) parseMessage(socket binarytreesrv.MySocket, messageJ
 
 					if err == nil {
 						log.Highlight("Deciding to connect ...")
-						targetSocket := receiver.decideWhomToConnect(broadcaster)
+						targetSocketNode, e := Map.InsertChild(socket.Socket, true) // receiver.decideWhomToConnect(broadcaster)
+						if e != nil {
+							log.Error("Insert Child Error ", e)
+							return
+						}
+						targetSocket := targetSocketNode.(*binarytreesrv.MySocket)
 						log.Highlight("target ", targetSocket.ID)
 
 						msg := "Audiance " + socket.Name + " is starting to connect to " + targetSocket.Name
@@ -131,12 +139,12 @@ func (receiver httpHandler) parseMessage(socket binarytreesrv.MySocket, messageJ
 						if targetSocket.Socket != broadcaster.Socket {
 							broadResponse.Type = "add_broadcast_audience"
 						}
-						websocketmap.Map.InsertConnected(targetSocket.Socket, socket.Socket)
+						// websocketmap.Map.InsertConnected(targetSocket.Socket, socket.Socket)
 						// log.Informf("Target Socket has %d sockets connected!", len(websocketmap.Map.Get(targetSocket.Socket).ConnectedSockets))
 						targetSocket.Socket.WriteMessage(messageType, broadResponseJSON)
 						level := 1
 						for {
-							if len(receiver.levelSockets(uint(level))) == 0 {
+							if len(Map.LevelNodes(uint(level))) == 0 {
 								break
 							}
 							// log.Highlightf("Level %d: %d", level, len(receiver.levelSockets(uint(level))))
@@ -158,7 +166,8 @@ func (receiver httpHandler) parseMessage(socket binarytreesrv.MySocket, messageJ
 		}
 	case "stream":
 		log.Alert("Stream Received ", socket.Name)
-		websocketmap.Map.SetStreamState(socket.Socket, true)
+		// websocketmap.Map.SetStreamState(socket.Socket, true)
+		Map.ToggleCanConnect(socket.Socket)
 
 		msg := "Audiance " + socket.Name + " is receiving stream!"
 		fmt.Fprintln(f, msg)
@@ -169,13 +178,56 @@ func (receiver httpHandler) parseMessage(socket binarytreesrv.MySocket, messageJ
 		log.Alert("Log Received ", socket.Name)
 		msg := "Audiance " + socket.Name + " client log :\n    " + theMessage.Data
 		fmt.Fprintln(f, msg)
+	case "tree":
+		log.Alert("Tree Received ", socket.Name)
+		treeData := binarytreesrv.GetTree(Map)
+		log.Inform("treeData ", treeData)
+		j, e := json.Marshal(treeData)
+		if e != nil {
+			log.Error(e)
+			return
+		}
+		output := string(j)
+		log.Inform("treeData ", output)
+		response.Type = "tree"
+		response.Data = output
+		responseJSON, err := json.Marshal(response)
+		if err == nil {
+			socket.Socket.WriteMessage(messageType, responseJSON)
+		} else {
+			log.Error("Marshal Error of `tree` response", err)
+			return
+		}
 	default:
+		log.Alert("Default Message")
 		ID, err := strconv.ParseUint(theMessage.Target, 10, 64)
 		if err != nil {
 			log.Error("Inavlid Target : ", theMessage.Target)
 			return
 		}
-		target, ok := websocketmap.Map.GetSocketByID(ID)
+		log.Alert("Target ", ID)
+		allockets := Map.GetAll()
+		var ok = false
+		var target binarytreesrv.MySocket
+		// target, ok := Map. .GetSocketByID(ID)
+		for _, node := range allockets {
+			log.Alert(node.(*binarytreesrv.MySocket).ID)
+			if node.(*binarytreesrv.MySocket).ID == ID {
+				ok = true
+				target = *node.(*binarytreesrv.MySocket)
+				break
+			} else {
+				for _, child := range node.GetAll() {
+					log.Alert(child.(*binarytreesrv.MySocket).ID)
+					if child.(*binarytreesrv.MySocket).ID == ID {
+						ok = true
+						target = *child.(*binarytreesrv.MySocket)
+						break
+					}
+				}
+			}
+		}
+		log.Alert("Find target ? ", ok)
 		if ok {
 			// log.Inform("Default sending to ", ID, " ", string(messageJSON))
 			var fullMessage map[string]interface{}
@@ -204,16 +256,20 @@ func (receiver httpHandler) reader(conn *websocket.Conn, userAgent string) {
 			_, closedError := err.(*websocket.CloseError)
 			_, handshakeError := err.(*websocket.HandshakeError)
 			if closedError || handshakeError {
-				log.Warn("Socket ", websocketmap.Map.Get(conn).ID, " Closed!")
-				websocketmap.Map.Delete(conn)
+				// log.Warn("Socket ", Map.Get(conn).(*binarytreesrv.MySocket).ID, " Closed!")
+				Map.Delete(conn)
 				log.Inform("Socket closed!")
 				return
 			}
 			log.Error("Read from socket error : ", err)
 			return
 		}
-		receiver.parseMessage(websocketmap.Map.Get(conn), p, messageType, userAgent)
+		log.Informf("Message from socket ID %d name %s ", Map.Get(conn).(*binarytreesrv.MySocket).ID, Map.Get(conn).(*binarytreesrv.MySocket).Name)
+		log.Inform("Message", string(p))
+		receiver.parseMessage(Map.Get(conn).(*binarytreesrv.MySocket), p, messageType, userAgent)
+		// log.Alert(messageType, p, Map.Get(conn))
 	}
+
 }
 
 func (receiver httpHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
@@ -227,7 +283,7 @@ func (receiver httpHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) 
 		return
 	}
 	log.Log("Client Connected")
-	websocketmap.Map.Insert(ws)
+	Map.Insert(ws)
 	userAgent := req.Header.Get("User-Agent")
 	receiver.reader(ws, userAgent)
 }

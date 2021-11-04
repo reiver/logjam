@@ -1,6 +1,9 @@
 package binarytreesrv
 
 import (
+	"fmt"
+	"strconv"
+
 	"github.com/gorilla/websocket"
 	"github.com/mmcomp/go-binarytree"
 )
@@ -18,14 +21,9 @@ type MySocket struct {
 	ConnectedSockets map[*websocket.Conn]MySocket
 }
 
-func (receiver *MySocket) Insert(node interface{}, socketIndex uint64) {
-	receiver.ConnectedSockets[node.(*websocket.Conn)] = MySocket{
-		Socket:           node.(*websocket.Conn),
-		ID:               socketIndex,
-		IsBroadcaster:    false,
-		HasStream:        false,
-		ConnectedSockets: make(map[*websocket.Conn]MySocket),
-	}
+func (receiver *MySocket) Insert(node binarytree.SingleNode) {
+	socket := node.(*MySocket)
+	receiver.ConnectedSockets[socket.Socket] = *socket
 }
 
 func (receiver *MySocket) Delete(node interface{}) {
@@ -68,4 +66,55 @@ func (receiver *MySocket) ToggleCanConnect() {
 
 func (receiver *MySocket) GetIndex() interface{} {
 	return receiver.Socket
+}
+
+func fillFunction(node interface{}, socketIndex uint64) binarytree.SingleNode {
+	conn := node.(*websocket.Conn)
+	result := MySocket{
+		Socket:           conn,
+		ID:               socketIndex,
+		Name:             "Socket " + strconv.FormatUint(socketIndex, 10),
+		ConnectedSockets: make(map[*websocket.Conn]MySocket),
+	}
+	return &result
+}
+
+func GetMap() binarytree.Tree {
+	Map.SetFillNode(fillFunction)
+	return Map
+}
+
+type TreeGraphElement struct {
+	Name     string             `json:"name"`
+	Parent   string             `json:"parent"`
+	Children []TreeGraphElement `json:"children"`
+}
+
+func addSubSockets(socket MySocket, children *[]TreeGraphElement, aMap binarytree.Tree) {
+	fmt.Println("Adding CHilds of ", socket.ID, socket.Name)
+	for child := range socket.ConnectedSockets {
+		childSocket := aMap.Get(child).(*MySocket)
+		*children = append(*children, TreeGraphElement{
+			Name:     childSocket.Name,
+			Parent:   "null",
+			Children: []TreeGraphElement{},
+		})
+		fmt.Println("Child ", childSocket.ID, childSocket.Name)
+		addSubSockets(*childSocket, &(*children)[len(*children)-1].Children, aMap)
+	}
+}
+func GetTree(aMap binarytree.Tree) []TreeGraphElement {
+	fmt.Println("GetTree()")
+	treeData := []TreeGraphElement{}
+	broadcasterLevel := aMap.LevelNodes(1)
+	fmt.Println("broadcasterLevel ", len(broadcasterLevel))
+	broadcaster := broadcasterLevel[0].(*MySocket)
+	fmt.Println("Broadcaster ", broadcaster.ID, broadcaster.Name)
+	treeData = append(treeData, TreeGraphElement{
+		Name:     broadcaster.Name,
+		Parent:   "null",
+		Children: []TreeGraphElement{},
+	})
+	addSubSockets(*broadcaster, &treeData[0].Children, aMap)
+	return treeData
 }
