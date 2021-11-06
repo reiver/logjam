@@ -125,7 +125,7 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 
 					if err == nil {
 						log.Highlight("Deciding to connect ...")
-						targetSocketNode, e := Map.InsertChild(socket.Socket, true) // receiver.decideWhomToConnect(broadcaster)
+						targetSocketNode, e := Map.InsertChild(socket.Socket, false) // receiver.decideWhomToConnect(broadcaster)
 						if e != nil {
 							log.Error("Insert Child Error ", e)
 							return

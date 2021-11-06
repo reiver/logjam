@@ -1,7 +1,7 @@
 github.com/gorilla/websocket v1.4.2 h1:+/TMaTYc4QFitKJxsQ7Yye35DkWvkdLcvGKqM+x0Ufc=
 github.com/gorilla/websocket v1.4.2/go.mod h1:YR8l580nyteQvAITg2hZ9XVh4b55+EU/adAjf1fMHhE=
-github.com/mmcomp/go-binarytree v0.0.0-20211104153538-d204118fc914 h1:tJgU/Itk9ossUKecDEn6Trbud5D9Re+y/ESrUx872l8=
-github.com/mmcomp/go-binarytree v0.0.0-20211104153538-d204118fc914/go.mod h1:aYJ6T6d764CDE6RQUCYYQbBqy1aBIEpuV//6SGR+S+A=
+github.com/mmcomp/go-binarytree v0.0.0-20211106090517-4c6438ee8a95 h1:cPVqepIvJbbTXNL7s9SKiT3XQFWavCF/gAioi9ouq10=
+github.com/mmcomp/go-binarytree v0.0.0-20211106090517-4c6438ee8a95/go.mod h1:aYJ6T6d764CDE6RQUCYYQbBqy1aBIEpuV//6SGR+S+A=
 github.com/mmcomp/go-httprouter v0.0.0-20210926145836-f315fe985361 h1:yOkbfnGRxNmuVIiiYYeOp705+dbdpF+fy4mSOETugAY=
 github.com/mmcomp/go-httprouter v0.0.0-20210926145836-f315fe985361/go.mod h1:NVedyMu1sEntEWBwJsMriX2gK0Qzsu17Q37QxvwPRNE=
 github.com/mmcomp/go-log v0.0.0-20210715133403-ea696e01f947 h1:SoTP/pKBpKdFi109QySZdxsdy+Rvtvf2Il+QIiyvHJE=

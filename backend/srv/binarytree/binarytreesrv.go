@@ -61,7 +61,9 @@ func (receiver *MySocket) ToggleHead() {
 }
 
 func (receiver *MySocket) ToggleCanConnect() {
+	fmt.Println("ToggleCanConnect ", receiver.ID)
 	receiver.HasStream = !receiver.HasStream
+	fmt.Println("HasStream ", receiver.HasStream)
 }
 
 func (receiver *MySocket) GetIndex() interface{} {

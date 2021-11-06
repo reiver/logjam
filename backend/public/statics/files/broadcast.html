@@ -21,6 +21,16 @@
         stroke: #ccc;
         stroke-width: 2px;
       }
+
+      .some-class {
+        border: solid 1px #999;
+        border-radius: 5px;
+        width: 49%;
+      }
+
+      body {
+        padding: 30px;
+      }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.min.js"></script>
   </head>
@@ -28,12 +38,15 @@
     <input type="checkbox" onclick="toggleTurnUsage();" checked /> Use TURN <br/>
     <button id="broadcast-btn" onclick="broadcast();">START</button><br />
     <button id="audience-btn" onclick="audience();" style="display: none;" >Audience</button><br />
-
+    <button onclick="refreshGraph();">Refresh Graph</button>
     <h3 id="source-stream"></h3>
     <h4 id="user-name"></h4>
-    <video id="local_video" autoplay playsinline muted></video><br />
-    <video id="local_share" autoplay playsinline></video><br />
-
+    <div style="display: flex;justify-content: space-between;">
+      <div class="some-class">
+        <video id="local_video" autoplay playsinline muted style="width: 100%"></video>
+      </div>
+      <div id="graph-div"  class="some-class"></div>
+    </div>
     <script
       src="https://code.jquery.com/jquery-2.2.4.min.js"
       integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44="
@@ -55,7 +68,7 @@
     var diagonal = d3.svg.diagonal()
         .projection(function(d) { return [d.y, d.x]; });
 
-    var svg = d3.select("body").append("svg")
+    var svg = d3.select("#graph-div").append("svg")
         .attr("width", width + margin.right + margin.left)
         .attr("height", height + margin.top + margin.bottom)
         .append("g")
@@ -206,6 +219,14 @@
         } catch(e) {
           console.log(e);
         }
+      }
+      function refreshGraph() {
+        socket.send(JSON.stringify({
+          type: "tree",
+          data: "",
+          target: "1",
+          name: ""
+        }));
       }
       function makeid(length) {
         var result           = '';
