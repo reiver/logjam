@@ -5,6 +5,7 @@ import (
 
 	"github.com/sparkscience/logjam/backend/arg"
 	command "github.com/sparkscience/logjam/backend/public/command"
+	"github.com/sparkscience/logjam/backend/public/graphapi"
 	"github.com/sparkscience/logjam/backend/public/logfiles"
 	"github.com/sparkscience/logjam/backend/public/statics"
 	websockets "github.com/sparkscience/logjam/backend/public/ws"
@@ -55,6 +56,7 @@ func main() {
 	log.Log("Static listening on ", statics.Path)
 	log.Log("Log File listening on ", logfiles.Path)
 	log.Log("Command listening on ", command.Path)
+	log.Log("Graphapi listening on ", graphapi.Path)
 
 	{
 		var httpAddr string = fmt.Sprintf(":%d", arg.HttpPort)
