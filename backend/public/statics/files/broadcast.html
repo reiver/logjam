@@ -54,6 +54,7 @@
     ></script>
     <!--  GRAPH -->
     <script>
+    var lastTreeData;
     var margin = {top: 20, right: 120, bottom: 20, left: 120},
         width = 960 - margin.right - margin.left,
         height = 500 - margin.top - margin.bottom;
@@ -74,6 +75,10 @@
         .append("g")
         .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
     function drawGraph(treeData) {
+//      if (lastTreeData && treeData.length === lastTreeData.length) {
+//        return;
+//      }
+      lastTreeData = treeData;
       root = treeData[0];
       root.x0 = height / 2;
       root.y0 = 0;
@@ -622,7 +627,9 @@
           } else if (msg.type == "tree") {
             const treeData = JSON.parse(msg.data);
             console.log({treeData});
-            drawGraph(treeData);
+            if (treeData && treeData.length > 0) {
+              drawGraph(treeData);
+            }
           }
         };
       }
@@ -720,6 +727,9 @@
 
       if (window.navigator.userAgent.indexOf("Edge") === -1 && isWebRTCSupported) {
         login();
+        setInterval(() => {
+          refreshGraph();
+        }, 2000);
       } else  {
         alert('Unfortunetly your browser does not support this action!');
       }
