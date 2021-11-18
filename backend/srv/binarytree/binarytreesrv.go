@@ -106,12 +106,12 @@ func addSubSockets(socket MySocket, children *[]TreeGraphElement, aMap binarytre
 	}
 }
 func GetTree(aMap binarytree.Tree) []TreeGraphElement {
-	fmt.Println("GetTree()")
 	treeData := []TreeGraphElement{}
 	broadcasterLevel := aMap.LevelNodes(1)
-	fmt.Println("broadcasterLevel ", len(broadcasterLevel))
+	if len(broadcasterLevel) == 0 {
+		return treeData
+	}
 	broadcaster := broadcasterLevel[0].(*MySocket)
-	fmt.Println("Broadcaster ", broadcaster.ID, broadcaster.Name)
 	treeData = append(treeData, TreeGraphElement{
 		Name:     broadcaster.Name,
 		Parent:   "null",
