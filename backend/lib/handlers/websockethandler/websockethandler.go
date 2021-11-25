@@ -60,6 +60,7 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 	case "start":
 		response.Type = "start"
 		// websocketmap.Map.SetName(socket.Socket, theMessage.Data)
+		socket.SetName(theMessage.Data)
 		response.Data = strconv.FormatInt(int64(socket.ID), 10)
 		responseJSON, err := json.Marshal(response)
 		if err == nil {
@@ -173,6 +174,7 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 		fmt.Fprintln(f, msg)
 	case "turn_status":
 		msg := "Turn usage status of " + socket.Name + " is " + theMessage.Data
+		socket.SetIsTurn(theMessage.Data == "on")
 		fmt.Fprintln(f, msg)
 	case "log":
 		log.Alert("Log Received ", socket.Name)
