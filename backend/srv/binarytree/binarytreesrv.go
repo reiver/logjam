@@ -18,6 +18,7 @@ type MySocket struct {
 	IsBroadcaster    bool
 	Name             string
 	HasStream        bool
+	IsTURN           bool
 	ConnectedSockets map[*websocket.Conn]MySocket
 }
 
@@ -70,12 +71,21 @@ func (receiver *MySocket) GetIndex() interface{} {
 	return receiver.Socket
 }
 
+func (receiver *MySocket) SetName(name string) {
+	receiver.Name = name
+}
+
+func (receiver *MySocket) SetIsTurn(isTurn bool) {
+	receiver.IsTURN = isTurn
+}
+
 func fillFunction(node interface{}, socketIndex uint64) binarytree.SingleNode {
 	conn := node.(*websocket.Conn)
 	result := MySocket{
 		Socket:           conn,
 		ID:               socketIndex,
 		Name:             "Socket " + strconv.FormatUint(socketIndex, 10),
+		IsTURN:           true,
 		ConnectedSockets: make(map[*websocket.Conn]MySocket),
 	}
 	return &result
@@ -96,8 +106,12 @@ func addSubSockets(socket MySocket, children *[]TreeGraphElement, aMap binarytre
 	fmt.Println("Adding CHilds of ", socket.ID, socket.Name)
 	for child := range socket.ConnectedSockets {
 		childSocket := aMap.Get(child).(*MySocket)
+		var turnState string = "no-TURN"
+		if childSocket.IsTURN {
+			turnState = "TURN"
+		}
 		*children = append(*children, TreeGraphElement{
-			Name:     childSocket.Name,
+			Name:     childSocket.Name + "[" + turnState + "]",
 			Parent:   "null",
 			Children: []TreeGraphElement{},
 		})
@@ -105,6 +119,7 @@ func addSubSockets(socket MySocket, children *[]TreeGraphElement, aMap binarytre
 		addSubSockets(*childSocket, &(*children)[len(*children)-1].Children, aMap)
 	}
 }
+
 func GetTree(aMap binarytree.Tree) []TreeGraphElement {
 	treeData := []TreeGraphElement{}
 	broadcasterLevel := aMap.LevelNodes(1)
@@ -112,8 +127,13 @@ func GetTree(aMap binarytree.Tree) []TreeGraphElement {
 		return treeData
 	}
 	broadcaster := broadcasterLevel[0].(*MySocket)
+	var turnState string = "no-TURN"
+	if broadcaster.IsTURN {
+		turnState = "TURN"
+	}
 	treeData = append(treeData, TreeGraphElement{
-		Name:     broadcaster.Name,
+
+		Name:     broadcaster.Name + "[" + turnState + "]",
 		Parent:   "null",
 		Children: []TreeGraphElement{},
 	})
