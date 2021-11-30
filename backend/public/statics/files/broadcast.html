@@ -12,6 +12,12 @@
         stroke-width: 3px;
       }
 
+      .turn-node circle {
+        fill: #fff;
+        stroke: #ff0000;
+        stroke-width: 3px;
+      }
+
       .node text {
         font: 12px sans-serif;
       }
@@ -88,7 +94,8 @@
       d3.select(self.frameElement).style("height", "500px");
     }
     function update(source) {
-
+      console.log( { source });
+      const isTurn = source.name.indexOf('[TURN]') > 0;
       // Compute the new tree layout.
       var nodes = tree.nodes(root).reverse(),
         links = tree.links(nodes);
@@ -189,6 +196,7 @@
     <!-- /GRAPH -->
     <!-- <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script> -->
     <script>
+      let lastTree;
       let loggedIn = false;
       let myUsername,
         myName,
@@ -627,6 +635,10 @@
           } else if (msg.type == "tree") {
             const treeData = JSON.parse(msg.data);
             console.log({treeData});
+            if (lastTree && lastTree === msg.data) {
+              return;
+            }
+            lastTree = msg.data;
             if (treeData && treeData.length > 0) {
               drawGraph(treeData);
             }

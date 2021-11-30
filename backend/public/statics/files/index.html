@@ -52,7 +52,7 @@
     <h4 id="user-name"></h4>
     <div style="display: flex;justify-content: space-between;">
       <div class="some-class">
-        <video id="local_video" autoplay playsinline></video><br />
+        <video id="local_video" autoplay playsinline  style="width: 100%"></video><br />
       </div>
       <div id="graph-div"  class="some-class"></div>
     </div>
@@ -195,6 +195,7 @@
     </script>
     <!-- /GRAPH -->
     <script>
+      let lastTree;
       let loggedIn = false;
       let myUsername,
         myName,
@@ -539,6 +540,10 @@
           } else if (msg.type == "tree") {
             const treeData = JSON.parse(msg.data);
             console.log({treeData});
+            if (lastTree && lastTree === msg.data) {
+              return;
+            }
+            lastTree = msg.data;
             if (treeData && treeData.length > 0) {
               drawGraph(treeData);
             }
