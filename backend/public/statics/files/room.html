@@ -5,8 +5,11 @@
   </head>
   <body>
     <input id="room" value="room1" />
-    <button onclick="openRoom();">
-        Open Room
+    <button onclick="openRoom();" id="room-btn">
+      Open Room
+    </button><br/>
+    <button onclick="leaveRoom();" id="lroom-btn" disabled>
+      Leave Room
     </button><br/>
     I am <span id="myName" ></span><br/>
     <video id="local_video" autoplay playsinline muted></video><br/>
@@ -385,6 +388,9 @@
       function openRoom(selectedRoom) {
         if (!selectedRoom) {
           selectedRoom = $("#room").val();
+          $("#room").prop("disabled", true);
+          $("#room-btn").prop("disabled", true);
+          $("#lroom-btn").prop("disabled", false);
         }
         room = selectedRoom;
         socket.send(
@@ -393,6 +399,12 @@
             data: selectedRoom,
           })
         );
+      }
+
+      function leaveRoom() {
+        $("#room").prop("disabled", false);
+        $("#room-btn").prop("disabled", false);
+        $("#lroom-btn").prop("disabled", true);
       }
 
       var isWebRTCSupported = navigator.getUserMedia ||
