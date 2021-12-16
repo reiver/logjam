@@ -43,6 +43,7 @@
   <body>
     <input type="checkbox" onclick="toggleTurnUsage();" checked /> Use TURN <br/>
     <button id="broadcast-btn" onclick="broadcast();">START</button><br />
+    <button id="sharescreen-btn" onclick="screenshare();" disabled>SHARE SCREEN</button><br />
     <button id="audience-btn" onclick="audience();" style="display: none;" >Audience</button><br />
     <button onclick="refreshGraph();">Refresh Graph</button>
     <h3 id="source-stream"></h3>
@@ -52,6 +53,9 @@
         <video id="local_video" autoplay playsinline muted style="width: 100%"></video>
       </div>
       <div id="graph-div"  class="some-class"></div>
+      <div class="some-class">
+        <video id="share_screen" autoplay playsinline muted style="width: 100%"></video>
+      </div>
     </div>
     <script
       src="https://code.jquery.com/jquery-2.2.4.min.js"
@@ -207,6 +211,7 @@
         video: true,
       });
       let localStream,
+        shareScreenStream,
         remoteStream,
         localScreenShare,
         myPeerConnection,
@@ -492,6 +497,13 @@
           });
           // console.log("Added tracks to connection");
         }
+        if (shareScreenStream) {
+          shareScreenStream.getTracks().forEach((track) => {
+            // track["mmcomp"] = "VIDEO";
+            myPeerConnection.addTrack(track, shareScreenStream);
+          });
+          // console.log("Added tracks to connection");
+        }
       }
       async function login() {
         let baseUrl = window.location.href.split("//")[1].split("/")[0];
@@ -649,6 +661,8 @@
       function broadcast() {
         $("#audience-btn").prop("disabled", false);
         $("#broadcast-btn").prop("disabled", true);
+        $("#sharescreen-btn").prop("disabled", false);
+        
         navigator.mediaDevices
           .getUserMedia(mediaConstraints)
           .then((ls) => {
@@ -670,6 +684,17 @@
           })
           .catch((e) => {
             console.log("Local St error", e);
+          });
+      }
+      function screenshare() {
+        navigator.mediaDevices
+          .getDisplayMedia(mediaConstraints)
+          .then((ls) => {
+            shareScreenStream = ls;
+            document.getElementById("share_screen").srcObject = shareScreenStream;
+          })
+          .catch((e) => {
+            console.log("Share Screen St error", e);
           });
       }
       function audience() {
