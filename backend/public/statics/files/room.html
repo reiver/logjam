@@ -138,14 +138,22 @@
                 console.error('onnegotiationneeded error ', { targetUsername }, e);
             });
         };
-        myPeerConnection.onremovetrack = function (event) {};
+        myPeerConnection.onremovetrack = function (event) {
+          console.log('onremovetrack', targetUsername);
+        };
         myPeerConnection.oniceconnectionstatechange = function (event) {
           if(myPeerConnection.iceConnectionState == 'disconnected') {
               console.log('Disconnected', targetUsername , myPeerConnections);
+              removeVideo(targetUsername);
+              delete myPeerConnections[targetUsername];
           }
         };
-        myPeerConnection.onicegatheringstatechange = function (event) {};
-        myPeerConnection.onsignalingstatechange = function (event) {};
+        myPeerConnection.onicegatheringstatechange = function (event) {
+          console.log('onicegatheringstatechange', targetUsername);
+        };
+        myPeerConnection.onsignalingstatechange = function (event) {
+          console.log('onsignalingstatechange', targetUsername);
+        };
         myPeerConnection.onicecandidateerror = (event) => {
 
         };
@@ -159,9 +167,13 @@
       function addVideo(targetUsername, stream) {
           if ($(`#remote_video-${targetUsername}`).length === 0) {
               console.log({stream});
-            $("#videos").append(`This is ${targetUsername} <br/><video id="remote_video-${targetUsername}" autoplay playsinline></video><br/>`);
+            $("#videos").append(`<div id="remote-${targetUsername}">This is ${targetUsername} <br/><video id="remote_video-${targetUsername}" autoplay playsinline></video></div>`);
             document.getElementById(`remote_video-${targetUsername}`).srcObject = stream;
           }
+      }
+
+      function removeVideo(targetUsername) {
+        $("#remote-"+targetUsername).remove();
       }
 
       async function login() {
@@ -233,7 +245,7 @@
                 console.log({ users });
                 for (const targetUsername of users) {
                     createPeerConnection(targetUsername);
-                    await sleep(5000);
+                    await sleep(1000);
                 }
                 break;
               case "video-offer":
