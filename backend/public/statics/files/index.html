@@ -55,6 +55,9 @@
         <video id="local_video" autoplay playsinline  style="width: 100%"></video><br />
       </div>
       <div id="graph-div"  class="some-class"></div>
+      <div class="some-class">
+        <video id="share_screen" autoplay playsinline  style="width: 100%"></video><br />
+      </div>
     </div>
     <script
       src="https://code.jquery.com/jquery-2.2.4.min.js"
@@ -206,6 +209,7 @@
         video: true,
       });
       let localStream,
+        shareScreenStream,
         remoteStream,
         localScreenShare,
         myPeerConnection,
@@ -310,7 +314,13 @@
         };
         myPeerConnection.ontrack = function (event) {
           if (myRole != "broadcast") {
-            if (!document.getElementById("local_video").srcObject) {
+            console.log('Stream Count', event.streams);
+            if (localStream && !shareScreenStream && localStream.id !== event.streams[0].id) {
+              shareScreenStream = event.streams[0];
+              document.getElementById("share_screen").srcObject =
+                event.streams[0];
+            }
+            else if (!localStream) {
               document.getElementById("local_video").srcObject =
                 event.streams[0];
               localStream = event.streams[0];
@@ -445,7 +455,7 @@
           }
           msg.data = (msg.Data && !msg.data) ? msg.Data : msg.data;
           msg.type = (msg.Type && !msg.type) ? msg.Type : msg.type;
-          console.log("Message", msg);
+          // console.log("Message", msg);
           if (msg.type == "video-offer") {
             // console.log("Video Offer Rec!");
             let targetUsername = msg.name;
@@ -539,7 +549,7 @@
             connectUser(msg.data);
           } else if (msg.type == "tree") {
             const treeData = JSON.parse(msg.data);
-            console.log({treeData});
+            // console.log({treeData});
             if (lastTree && lastTree === msg.data) {
               return;
             }
