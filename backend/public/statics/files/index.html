@@ -36,7 +36,7 @@
   </head>
   <body>
     <input type="checkbox" onclick="toggleTurnUsage();" checked /> Use TURN <br/>
-    <button id="broadcast-btn" onclick="broadcast();">Broadcast</button><br />
+    <button id="broadcast-btn" onclick="broadcast();" style="display: none;" >Broadcast</button><br />
     <button id="audience-btn" onclick="audience();">START</button><br />
     <div>
       <h3 style="text-align: center;">
@@ -53,7 +53,6 @@
     <div style="display: flex;justify-content: space-between;">
       <div class="some-class">
         <video id="local_video" autoplay playsinline  style="width: 100%"></video><br />
-        <video id="send_video" autoplay playsinline  style="width: 100%"></video><br />
       </div>
       <div id="graph-div"  class="some-class"></div>
       <div class="some-class">
@@ -211,11 +210,9 @@
       });
       let localStream,
         shareScreenStream,
-        sendStream,
         remoteStream,
         localScreenShare,
         myPeerConnection,
-        broadcasterPeerConnection,
         myPeerConnections = [],
         iceCandidates = [],
         socket;
@@ -299,55 +296,7 @@
         ],
       };
 
-      function createPeerConnection(targetUsername, view = "audience") {
-        if (view === 'alt') {
-          const tmpPeerConnection = new RTCPeerConnection(myPeerConnectionConfig);
-          tmpPeerConnection.onicecandidate = function (event) {
-            if (event.candidate) {
-              socket.send(
-                JSON.stringify({
-                  type: "new-ice-candidate",
-                  target: targetUsername,
-                  candidate: event.candidate,
-                })
-              );
-            }
-          };
-          tmpPeerConnection.ontrack = function (event) {
-            console.log('[onTrack]', event);
-          };
-          tmpPeerConnection.onnegotiationneeded = function (event) {
-            tmpPeerConnection
-              .createOffer()
-              .then(function (offer) {
-                return tmpPeerConnection.setLocalDescription(offer);
-              })
-              .then(function () {
-                socket.send(
-                  JSON.stringify({
-                    name: myUsername,
-                    target: targetUsername,
-                    type: "video-offer",
-                    sdp: tmpPeerConnection.localDescription,
-                  })
-                );
-              })
-              .catch(function (e) {
-                console.log('[onnegotiationneeded]', e);
-              });
-          };
-          tmpPeerConnection.onremovetrack = function (event) {};
-          tmpPeerConnection.oniceconnectionstatechange = function (event) {
-            if(tmpPeerConnection.iceConnectionState == 'disconnected') {
-                console.log('Disconnected', tmpPeerConnection);
-            }
-          };
-          tmpPeerConnection.onicegatheringstatechange = function (event) {};
-          tmpPeerConnection.onsignalingstatechange = function (event) {};
-          tmpPeerConnection.onicecandidateerror = (event) => {
-          };
-          return tmpPeerConnection;
-        }
+      function createPeerConnection(targetUsername, veiw = "audience") {
         if (myPeerConnections[targetUsername]) {
           return myPeerConnections[targetUsername];
         }
@@ -364,10 +313,6 @@
           }
         };
         myPeerConnection.ontrack = function (event) {
-          if (view === 'alt') {
-            console.log('ALT TRACK', event);
-            return;
-          }
           if (myRole != "broadcast") {
             console.log('Stream Count', event.streams);
             if (localStream && !shareScreenStream && localStream.id !== event.streams[0].id) {
@@ -446,18 +391,7 @@
         myPeerConnections[targetUsername] = myPeerConnection;
         return myPeerConnection;
       }
-      function connectUser(targetUsername, type='default') {
-        if (type === 'alt') {
-          broadcasterPeerConnection = createPeerConnection(targetUsername, type);
-
-          if (sendStream) {
-            sendStream.getTracks().forEach((track) => {
-              broadcasterPeerConnection.addTrack(track, sendStream);
-            });
-          }
-
-          return;
-        }
+      function connectUser(targetUsername) {
         // console.log("Connect User", targetUsername);
         if (myPeerConnections[targetUsername]) {
           // console.log("Already Connected");
@@ -521,8 +455,7 @@
           }
           msg.data = (msg.Data && !msg.data) ? msg.Data : msg.data;
           msg.type = (msg.Type && !msg.type) ? msg.Type : msg.type;
-          if (msg.type !== 'tree') 
-            console.log("Message", msg);
+          // console.log("Message", msg);
           if (msg.type == "video-offer") {
             // console.log("Video Offer Rec!");
             let targetUsername = msg.name;
@@ -566,7 +499,7 @@
             }
           } else if (msg.type == "video-answer") {
             var desc = new RTCSessionDescription(msg.sdp);
-            broadcasterPeerConnection.setRemoteDescription(desc).catch((e) => {
+            myPeerConnection.setRemoteDescription(desc).catch((e) => {
               console.log("Error", e);
             });
           } else if (msg.type == "start") {
@@ -624,25 +557,29 @@
             if (treeData && treeData.length > 0) {
               drawGraph(treeData);
             }
-          } else if (msg.type == "alt-broadcast") {
-            console.log({msg});
-            document.getElementById("send_video").srcObject = sendStream;
-            console.log('Start connecting to broadcaster');
-            connectUser(msg.data, 'alt');
           }
         };
       }
 
       function broadcast() {
+        $("#audience-btn").prop("disabled", false);
+        $("#broadcast-btn").prop("disabled", true);
         navigator.mediaDevices
           .getUserMedia(mediaConstraints)
           .then((ls) => {
-            sendStream = ls;
+            localStream = ls;
             // console.log("Local Stream", localStream);
             socket.send(
               JSON.stringify({
                 type: "role",
-                data: "alt-broadcast",
+                data: "broadcast",
+              })
+            );
+            const turnStatus = myPeerConnectionConfig.iceServers.findIndex(s => s.url.indexOf('turn:') === 0) >= 0;
+            socket.send(
+              JSON.stringify({
+                type: "turn_status",
+                data: turnStatus ? "on" : "off",
               })
             );
           })
