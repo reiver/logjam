@@ -345,7 +345,7 @@
         ],
       };
 
-      function createPeerConnection(targetUsername, view = "audience") {
+      function createPeerConnection(targetUsername, veiw = "audience") {
         if (myPeerConnections[targetUsername]) {
           // console.log("Already Connected");
           return myPeerConnections[targetUsername];
@@ -359,13 +359,11 @@
         // }
         // console.log("Creat Peer", targetUsername);
         myPeerConnection = new RTCPeerConnection(myPeerConnectionConfig);
-        myPeerConnection.view = view;
         myPeerConnection.onicecandidate = function (event) {
-          console.log('view', this.view);
           if (event.candidate) {
             socket.send(
               JSON.stringify({
-                type: this.view === 'alt' ? "alt-new-ice-candidate" : "new-ice-candidate",
+                type: "new-ice-candidate",
                 target: targetUsername,
                 candidate: event.candidate,
               })
@@ -585,8 +583,7 @@
             } catch (e) {
               console.log("Error setLocalDescription", e);
             }
-            myPeerConnection.view = 'alt';
-          } else if (msg.type == "new-ice-candidate" || msg.type == "alt-new-ice-candidate") {
+          } else if (msg.type == "new-ice-candidate") {
             // console.log("ICE Canadidate Recieved!");
             iceCandidates.push(new RTCIceCandidate(msg.candidate));
             // console.log(iceCandidates);
