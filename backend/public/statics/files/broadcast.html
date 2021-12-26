@@ -52,11 +52,8 @@
       <div class="some-class">
         Local:<br/>
         <video id="local_video" autoplay playsinline muted style="width: 100%"></video>
-<<<<<<< HEAD
         Alt broadcast:<br/>
         <video id="alt_video" autoplay playsinline muted style="width: 100%"></video>
-=======
->>>>>>> 60934a13cccea78d14f0b6dd09f9664f7a84b7e7
       </div>
       <div id="graph-div"  class="some-class"></div>
       <div class="some-class">
@@ -211,7 +208,7 @@
       let myUsername,
         myName,
         targetName,
-        myRole = "audiance";
+        myRole = "broadcast";
       let mediaConstraints = (window.constraints = {
         audio: true,
         video: true,
@@ -444,7 +441,7 @@
           }
         };
         myPeerConnection.ontrack = function (event) {
-          // console.log("TRACK", event);
+          console.log("TRACK", event, myRole);
           if (myRole != "broadcast") {
             // if(event.transceiver.sender.track.mmcomp && event.transceiver.sender.track.mmcomp=="SHARE")
             if (!document.getElementById("local_video").srcObject) {
@@ -464,6 +461,12 @@
                   data: "ontrack from " + targetName,
                 })
               );
+            }
+          } else {
+            if (!document.getElementById("alt_video").srcObject) {
+              document.getElementById("alt_video").srcObject =
+                event.streams[0];
+              remoteStream = event.streams[0];
             }
           }
           // document.getElementById("received_video_" + targetUsername).srcObject = event.streams[0];
@@ -623,7 +626,7 @@
         };
 
         socket.onmessage = async function (event) {
-          console.log(`[message] Data received from server: ${event.data}`);
+          // console.log(`[message] Data received from server: ${event.data}`);
           let msg;
           try {
             msg = JSON.parse(event.data);
@@ -632,7 +635,8 @@
           }
           msg.data = (msg.Data && !msg.data) ? msg.Data : msg.data;
           msg.type = (msg.Type && !msg.type) ? msg.Type : msg.type;
-          console.log("Message", msg);
+          if (msg.type !== 'tree') 
+            console.log("Message", msg);
           if (msg.type == "video-offer") {
             // console.log("Video Offer Rec!");
             let targetUsername = msg.name;
@@ -719,7 +723,7 @@
             connectUser(msg.data);
           } else if (msg.type == "tree") {
             const treeData = JSON.parse(msg.data);
-            console.log({treeData});
+            // console.log({treeData});
             if (lastTree && lastTree === msg.data) {
               return;
             }
@@ -727,6 +731,8 @@
             if (treeData && treeData.length > 0) {
               drawGraph(treeData);
             }
+          } else if (msg.type == "alt-broadcast") {
+            console.log({msg});
           }
         };
       }
