@@ -1,4 +1,16 @@
 <!DOCTYPE html>
+  <head>
+    <title>SparkScience Broadcast Demo</title>
+    <style>
+      .node {
+        cursor: pointer;
+      }
+
+      .node circle {
+        fill: #fff;
+        stroke: steelblue;
+        stroke-width: 3px;
+      }
 
 <head>
   <title>SparkScience Broadcast Demo</title>
@@ -60,273 +72,306 @@
       Local: <br/>
       <video id="send_video" autoplay playsinline muted style="width: 100%"></video><br />
     </div>
-    <div id="graph-div" class="some-class"></div>
-    <div class="some-class">
-      <video id="share_screen" autoplay playsinline style="width: 100%"></video><br />
+
+    <h3 id="source-stream"></h3>
+    <h4 id="user-name"></h4>
+    <div style="display: flex;justify-content: space-between;">
+      <div class="some-class">
+        <video id="local_video" autoplay playsinline  style="width: 100%"></video><br />
+      </div>
+      <div id="graph-div"  class="some-class"></div>
+      <div class="some-class">
+        <video id="share_screen" autoplay playsinline  style="width: 100%"></video><br />
+      </div>
     </div>
-  </div>
-  <script src="https://code.jquery.com/jquery-2.2.4.min.js"
-    integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script>
-  <!--  GRAPH -->
-  <script>
-    var lastTreeData;
-    var margin = { top: 20, right: 120, bottom: 20, left: 120 },
-      width = 960 - margin.right - margin.left,
-      height = 500 - margin.top - margin.bottom;
+    <script
+      src="https://code.jquery.com/jquery-2.2.4.min.js"
+      integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44="
+      crossorigin="anonymous"
+    ></script>
+<!--  GRAPH -->
+    <script>
+      var lastTreeData;
+      var margin = {top: 20, right: 120, bottom: 20, left: 120},
+          width = 960 - margin.right - margin.left,
+          height = 500 - margin.top - margin.bottom;
+          
+      var i = 0,
+          duration = 750,
+          root;
 
-    var i = 0,
-      duration = 750,
-      root;
+      var tree = d3.layout.tree()
+          .size([height, width]);
 
-    var tree = d3.layout.tree()
-      .size([height, width]);
+      var diagonal = d3.svg.diagonal()
+          .projection(function(d) { return [d.y, d.x]; });
 
-    var diagonal = d3.svg.diagonal()
-      .projection(function (d) { return [d.y, d.x]; });
+      var svg = d3.select("#graph-div").append("svg")
+          .attr("width", width + margin.right + margin.left)
+          .attr("height", height + margin.top + margin.bottom)
+          .append("g")
+          .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+      function drawGraph(treeData) {
 
-    var svg = d3.select("#graph-div").append("svg")
-      .attr("width", width + margin.right + margin.left)
-      .attr("height", height + margin.top + margin.bottom)
-      .append("g")
-      .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-    function drawGraph(treeData) {
+        lastTreeData = treeData;
+        root = treeData[0];
+        root.x0 = height / 2;
+        root.y0 = 0;
+          
+        update(root);
 
-      lastTreeData = treeData;
-      root = treeData[0];
-      root.x0 = height / 2;
-      root.y0 = 0;
+        d3.select(self.frameElement).style("height", "500px");
+      }
+      function update(source) {
 
-      update(root);
+        // Compute the new tree layout.
+        var nodes = tree.nodes(root).reverse(),
+          links = tree.links(nodes);
 
-      d3.select(self.frameElement).style("height", "500px");
-    }
-    function update(source) {
+        // Normalize for fixed-depth.
+        nodes.forEach(function(d) { d.y = d.depth * 180; });
 
-      // Compute the new tree layout.
-      var nodes = tree.nodes(root).reverse(),
-        links = tree.links(nodes);
+        // Update the nodes…
+        var node = svg.selectAll("g.node")
+          .data(nodes, function(d) { return d.id || (d.id = ++i); });
 
-      // Normalize for fixed-depth.
-      nodes.forEach(function (d) { d.y = d.depth * 180; });
+        // Enter any new nodes at the parent's previous position.
+        var nodeEnter = node.enter().append("g")
+          .attr("class", "node")
+          .attr("transform", function(d) { return "translate(" + source.y0 + "," + source.x0 + ")"; })
+          .on("click", click);
 
-      // Update the nodes…
-      var node = svg.selectAll("g.node")
-        .data(nodes, function (d) { return d.id || (d.id = ++i); });
+        nodeEnter.append("circle")
+          .attr("r", 1e-6)
+          .style("fill", function(d) { return d._children ? "lightsteelblue" : "#fff"; });
 
-      // Enter any new nodes at the parent's previous position.
-      var nodeEnter = node.enter().append("g")
-        .attr("class", "node")
-        .attr("transform", function (d) { return "translate(" + source.y0 + "," + source.x0 + ")"; })
-        .on("click", click);
+        nodeEnter.append("text")
+          .attr("x", function(d) { return d.children || d._children ? -13 : 13; })
+          .attr("dy", ".35em")
+          .attr("text-anchor", function(d) { return d.children || d._children ? "end" : "start"; })
+          .text(function(d) { return d.name; })
+          .style("fill-opacity", 1e-6);
 
-      nodeEnter.append("circle")
-        .attr("r", 1e-6)
-        .style("fill", function (d) { return d._children ? "lightsteelblue" : "#fff"; });
+        // Transition nodes to their new position.
+        var nodeUpdate = node.transition()
+          .duration(duration)
+          .attr("transform", function(d) { return "translate(" + d.y + "," + d.x + ")"; });
 
-      nodeEnter.append("text")
-        .attr("x", function (d) { return d.children || d._children ? -13 : 13; })
-        .attr("dy", ".35em")
-        .attr("text-anchor", function (d) { return d.children || d._children ? "end" : "start"; })
-        .text(function (d) { return d.name; })
-        .style("fill-opacity", 1e-6);
+        nodeUpdate.select("circle")
+          .attr("r", 10)
+          .style("fill", function(d) { return d._children ? "lightsteelblue" : "#fff"; });
 
-      // Transition nodes to their new position.
-      var nodeUpdate = node.transition()
-        .duration(duration)
-        .attr("transform", function (d) { return "translate(" + d.y + "," + d.x + ")"; });
+        nodeUpdate.select("text")
+          .style("fill-opacity", 1);
 
-      nodeUpdate.select("circle")
-        .attr("r", 10)
-        .style("fill", function (d) { return d._children ? "lightsteelblue" : "#fff"; });
+        // Transition exiting nodes to the parent's new position.
+        var nodeExit = node.exit().transition()
+          .duration(duration)
+          .attr("transform", function(d) { return "translate(" + source.y + "," + source.x + ")"; })
+          .remove();
 
-      nodeUpdate.select("text")
-        .style("fill-opacity", 1);
+        nodeExit.select("circle")
+          .attr("r", 1e-6);
 
-      // Transition exiting nodes to the parent's new position.
-      var nodeExit = node.exit().transition()
-        .duration(duration)
-        .attr("transform", function (d) { return "translate(" + source.y + "," + source.x + ")"; })
-        .remove();
+        nodeExit.select("text")
+          .style("fill-opacity", 1e-6);
 
-      nodeExit.select("circle")
-        .attr("r", 1e-6);
+        // Update the links…
+        var link = svg.selectAll("path.link")
+          .data(links, function(d) { return d.target.id; });
 
-      nodeExit.select("text")
-        .style("fill-opacity", 1e-6);
+        // Enter any new links at the parent's previous position.
+        link.enter().insert("path", "g")
+          .attr("class", "link")
+          .attr("d", function(d) {
+          var o = {x: source.x0, y: source.y0};
+          return diagonal({source: o, target: o});
+          });
 
-      // Update the links…
-      var link = svg.selectAll("path.link")
-        .data(links, function (d) { return d.target.id; });
+        // Transition links to their new position.
+        link.transition()
+          .duration(duration)
+          .attr("d", diagonal);
 
-      // Enter any new links at the parent's previous position.
-      link.enter().insert("path", "g")
-        .attr("class", "link")
-        .attr("d", function (d) {
-          var o = { x: source.x0, y: source.y0 };
-          return diagonal({ source: o, target: o });
-        });
+        // Transition exiting nodes to the parent's new position.
+        link.exit().transition()
+          .duration(duration)
+          .attr("d", function(d) {
+          var o = {x: source.x, y: source.y};
+          return diagonal({source: o, target: o});
+          })
+          .remove();
 
-      // Transition links to their new position.
-      link.transition()
-        .duration(duration)
-        .attr("d", diagonal);
-
-      // Transition exiting nodes to the parent's new position.
-      link.exit().transition()
-        .duration(duration)
-        .attr("d", function (d) {
-          var o = { x: source.x, y: source.y };
-          return diagonal({ source: o, target: o });
-        })
-        .remove();
-
-      // Stash the old positions for transition.
-      nodes.forEach(function (d) {
+        // Stash the old positions for transition.
+        nodes.forEach(function(d) {
         d.x0 = d.x;
         d.y0 = d.y;
-      });
-    }
+        });
+      }
 
-    // Toggle children on click.
-    function click(d) {
-      if (d.children) {
+      // Toggle children on click.
+      function click(d) {
+        if (d.children) {
         d._children = d.children;
         d.children = null;
-      } else {
+        } else {
         d.children = d._children;
         d._children = null;
-      }
-      update(d);
-    }  
-  </script>
-  <!-- /GRAPH -->
-  <script>
-    let lastTree;
-    let loggedIn = false;
-    let myUsername,
-      myName,
-      targetName,
-      myRole = "audiance",
-      mode = 'audiance';
-    let mediaConstraints = (window.constraints = {
-      audio: true,
-      video: true,
-    });
-    let localStream,
-      shareScreenStream,
-      sendStream,
-      remoteStream,
-      localScreenShare,
-      myPeerConnection,
-      broadcasterPeerConnection,
-      myPeerConnections = [],
-      iceCandidates = [],
-      altIceCandidates = [],
-      socket;
-    try {
-      myName = localStorage.getItem('logjam_myName');
-    } catch (e) {
-      console.log(e);
-    }
-    if (confirm(`Do you want to change ${myName} as your name?`)) {
-      const newName = prompt('What is you name?');
-      if (newName) {
-        myName = newName;
-        localStorage.setItem('logjam_myName', myName);
-      }
-    }
-    if (myName === '' || !myName) {
-      myName = makeid(20);
+        }
+        update(d);
+      }  
+    </script>
+    <!-- /GRAPH -->
+    <script>
+      let lastTree;
+      let loggedIn = false;
+      let myUsername,
+        myName,
+        targetName,
+        myRole = "audiance";
+      let mediaConstraints = (window.constraints = {
+        audio: true,
+        video: true,
+      });
+      let localStream,
+        shareScreenStream,
+        remoteStream,
+        localScreenShare,
+        myPeerConnection,
+        myPeerConnections = [],
+        iceCandidates = [],
+        socket;
       try {
-        localStorage.setItem('logjam_myName', myName);
+        myName = localStorage.getItem('logjam_myName');
       } catch (e) {
         console.log(e);
       }
-    }
-    function refreshGraph() {
-      socket.send(JSON.stringify({
-        type: "tree",
-        data: "",
-        target: "1",
-        name: ""
-      }));
-    }
-    function makeid(length) {
-      var result = '';
-      var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-      var charactersLength = characters.length;
-      for (var i = 0; i < length; i++) {
-        result += characters.charAt(Math.floor(Math.random() * charactersLength));
+      if (confirm(`Do you want to change ${myName} as your name?`)) {
+        const newName = prompt('What is you name?');
+        if (newName) {
+          myName = newName;
+          localStorage.setItem('logjam_myName', myName);
+        }
       }
-      return result;
-    }
-    var myPeerConnectionConfig = {
-      iceServers: [
-        {
-          url: 'stun:stun.l.google.com:19302'
-        },
-        {
-          url: 'stun:stun1.l.google.com:19302'
-        },
-        {
+      if (myName==='' || !myName) {
+        myName = makeid(20);
+        try {
+          localStorage.setItem('logjam_myName', myName);
+        } catch(e) {
+          console.log(e);
+        }
+      }
+      function refreshGraph() {
+        socket.send(JSON.stringify({
+          type: "tree",
+          data: "",
+          target: "1",
+          name: ""
+        }));
+      }
+      function makeid(length) {
+        var result           = '';
+        var characters       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        var charactersLength = characters.length;
+        for ( var i = 0; i < length; i++ ) {
+          result += characters.charAt(Math.floor(Math.random() * charactersLength));
+        }
+        return result;
+      }
+      var myPeerConnectionConfig = {
+        iceServers: [
+          {
+            url: 'stun:stun.l.google.com:19302'
+          },
+          {
+            url: 'stun:stun1.l.google.com:19302'
+          },
+          {
+          
+            url: 'stun:stun2.l.google.com:19302'
+          },
+          {
+          
+            url: 'stun:stun3.l.google.com:19302'
+          },
+          {
+          
+            url: 'stun:stun4.l.google.com:19302'
+          },
+          {
+            url: "turn:turn1.turn.group.video:3478",
+            username: "turnuser",
+            credential: "dJ4kP05PHcKN8Ubu",
+          },
+          {
+            url: "turn:turn2.turn.group.video:3478",
+            username: "turnuser",
+            credential: "XzfVP8cpNEy17hws",
+          },
+          {
+            url: "turns:turn1.turn.group.video:443",
+            username: "turnuser",
+            credential: "dJ4kP05PHcKN8Ubu",
+          },
+          {
+            url: "turns:turn2.turn.group.video:443",
+            username: "turnuser",
+            credential: "XzfVP8cpNEy17hws",
+          },
+        ],
+      };
 
-          url: 'stun:stun2.l.google.com:19302'
-        },
-        {
-
-          url: 'stun:stun3.l.google.com:19302'
-        },
-        {
-
-          url: 'stun:stun4.l.google.com:19302'
-        },
-        {
-          url: "turn:turn1.turn.group.video:3478",
-          username: "turnuser",
-          credential: "dJ4kP05PHcKN8Ubu",
-        },
-        {
-          url: "turn:turn2.turn.group.video:3478",
-          username: "turnuser",
-          credential: "XzfVP8cpNEy17hws",
-        },
-        {
-          url: "turns:turn1.turn.group.video:443",
-          username: "turnuser",
-          credential: "dJ4kP05PHcKN8Ubu",
-        },
-        {
-          url: "turns:turn2.turn.group.video:443",
-          username: "turnuser",
-          credential: "XzfVP8cpNEy17hws",
-        },
-      ],
-    };
-
-    function createPeerConnection(targetUsername, view = "audience") {
-      if (view === 'alt') {
-        const tmpPeerConnection = new RTCPeerConnection(myPeerConnectionConfig);
-        tmpPeerConnection.onicecandidate = function (event) {
+      function createPeerConnection(targetUsername, veiw = "audience") {
+        if (myPeerConnections[targetUsername]) {
+          return myPeerConnections[targetUsername];
+        }
+        myPeerConnection = new RTCPeerConnection(myPeerConnectionConfig);
+        myPeerConnection.onicecandidate = function (event) {
           if (event.candidate) {
             console.log('Sending Candidate');
             socket.send(
               JSON.stringify({
-                type: "alt-new-ice-candidate",
+                type: "new-ice-candidate",
                 target: targetUsername,
                 candidate: event.candidate,
               })
             );
           }
         };
-        tmpPeerConnection.ontrack = function (event) {
-          console.log('[onTrack]', event);
+        myPeerConnection.ontrack = function (event) {
+          if (myRole != "broadcast") {
+            console.log('Stream Count', event.streams);
+            if (localStream && !shareScreenStream && localStream.id !== event.streams[0].id) {
+              shareScreenStream = event.streams[0];
+              document.getElementById("share_screen").srcObject =
+                event.streams[0];
+            }
+            else if (!localStream) {
+              document.getElementById("local_video").srcObject =
+                event.streams[0];
+              localStream = event.streams[0];
+              $("#source-stream").text("Read " + targetName ); //+ "[" + targetUsername + "]");
+              socket.send(
+                JSON.stringify({
+                  type: "stream",
+                  data: "true",
+                })
+              );
+              socket.send(
+                JSON.stringify({
+                  type: "log",
+                  data: "ontrack from " + targetName,
+                })
+              );
+            }
+          }
         };
         tmpPeerConnection.onnegotiationneeded = function (event) {
           console.log('Creating Offer');
           tmpPeerConnection
             .createOffer()
             .then(function (offer) {
-              return tmpPeerConnection.setLocalDescription(offer);
+              return myPeerConnection.setLocalDescription(offer);
             })
             .then(function () {
               console.log('Sending Offer');
@@ -335,37 +380,76 @@
                   name: myUsername,
                   target: targetUsername,
                   type: "video-offer",
-                  sdp: tmpPeerConnection.localDescription,
+                  sdp: myPeerConnection.localDescription,
                 })
               );
             })
             .catch(function (e) {
-              console.log('[onnegotiationneeded]', e);
+              socket.send(
+                JSON.stringify({
+                  type: "log",
+                  data: "onnegotiationneeded audience error:" + JSON.stringify(e),
+                })
+              );
             });
         };
-        tmpPeerConnection.onremovetrack = function (event) { };
-        tmpPeerConnection.oniceconnectionstatechange = function (event) {
-          if (tmpPeerConnection.iceConnectionState == 'disconnected') {
-            console.log('Disconnected', tmpPeerConnection);
-          }
-        };
-        tmpPeerConnection.onicegatheringstatechange = function (event) { };
-        tmpPeerConnection.onsignalingstatechange = function (event) { };
-        tmpPeerConnection.onicecandidateerror = (event) => {
-        };
-        return tmpPeerConnection;
-      }
-      if (myPeerConnections[targetUsername]) {
-        return myPeerConnections[targetUsername];
-      }
-      myPeerConnection = new RTCPeerConnection(myPeerConnectionConfig);
-      myPeerConnection.onicecandidate = function (event) {
-        if (event.candidate) {
+        myPeerConnection.onremovetrack = function (event) {};
+        myPeerConnection.oniceconnectionstatechange = function (event) {
           socket.send(
             JSON.stringify({
-              type: "new-ice-candidate",
-              target: targetUsername,
-              candidate: event.candidate,
+              type: "log",
+              data: "oniceconnectionstatechange :" + myPeerConnection.iceConnectionState,
+            })
+          );
+          if(myPeerConnection.iceConnectionState == 'disconnected') {
+              console.log('Disconnected', myPeerConnections);
+              socket.close();
+          }
+        };
+        myPeerConnection.onicegatheringstatechange = function (event) {};
+        myPeerConnection.onsignalingstatechange = function (event) {};
+        myPeerConnection.onicecandidateerror = (event) => {
+          socket.send(
+            JSON.stringify({
+              type: "log",
+              data: "onicecandidateerror :" + JSON.stringify(event),
+            })
+          );
+        };
+        myPeerConnections[targetUsername] = myPeerConnection;
+        return myPeerConnection;
+      }
+      function connectUser(targetUsername) {
+        // console.log("Connect User", targetUsername);
+        if (myPeerConnections[targetUsername]) {
+          // console.log("Already Connected");
+          return true;
+        }
+        let myPeerConnection = createPeerConnection(targetUsername);
+
+        // console.log("localStream", localStream);
+        if (localStream) {
+          localStream.getTracks().forEach((track) => {
+            // track["mmcomp"] = "VIDEO";
+            myPeerConnection.addTrack(track, localStream);
+          });
+          // console.log("Added tracks to connection");
+        }
+      }
+      async function login() {
+        let baseUrl = window.location.href.split("//")[1].split("/")[0];
+        let protocol = "wss";
+        if (window.location.href.split("//")[0] == "http:") {
+          protocol = "ws";
+        }
+        socket = new WebSocket(`${protocol}://${baseUrl}/ws`);
+        socket.onopen = function (event) {
+          // console.log("[open] Connection established");
+          // console.log("Sending start to server");
+          socket.send(
+            JSON.stringify({
+              type: "start",
+              data: myName,
             })
           );
         }
@@ -401,22 +485,144 @@
                 data: "true",
               })
             );
-            socket.send(
-              JSON.stringify({
-                type: "log",
-                data: "ontrack from " + targetName,
-              })
+          } else {
+            console.log(
+              `[close] Connection died, , code=${event.code} reason=${event.reason}`
             );
           }
-        }
-      };
-      myPeerConnection.onnegotiationneeded = function (event) {
-        myPeerConnection
-          .createOffer()
-          .then(function (offer) {
-            return myPeerConnection.setLocalDescription(offer);
-          })
-          .then(function () {
+          // myUsername = "";
+          myPeerConnections = [];
+          login();
+        };
+
+        socket.onerror = function (error) {
+          // console.log(`[error] ${error.message}`);
+        };
+
+        socket.onmessage = async function (event) {
+          // console.log(`[message] Data received from server: ${event.data}`);
+          let msg;
+          try {
+            msg = JSON.parse(event.data);
+          } catch (e) {
+            return;
+          }
+          msg.data = (msg.Data && !msg.data) ? msg.Data : msg.data;
+          msg.type = (msg.Type && !msg.type) ? msg.Type : msg.type;
+          // console.log("Message", msg);
+          if (msg.type == "video-offer") {
+            // console.log("Video Offer Rec!");
+            let targetUsername = msg.name;
+            targetName = msg.username;
+            var desc = new RTCSessionDescription(msg.sdp);
+            let myPeerConnection = createPeerConnection(targetUsername, true);
+            try {
+              await myPeerConnection.setRemoteDescription(desc);
+            } catch (e) {
+              // console.log("Error setRemoteDescription", e);
+            }
+            try {
+              var answer = await myPeerConnection.createAnswer();
+            } catch (e) {
+              // console.log("Error createAnswer", e);
+            }
+            try {
+              await myPeerConnection.setLocalDescription(answer);
+
+              socket.send(
+                JSON.stringify({
+                  name: myUsername,
+                  target: targetUsername,
+                  type: "video-answer",
+                  sdp: myPeerConnection.localDescription,
+                })
+              );
+            } catch (e) {
+              console.log("Error setLocalDescription", e);
+            }
+          } else if (msg.type == "new-ice-candidate") {
+            // console.log("ICE Canadidate Recieved!");
+            iceCandidates.push(new RTCIceCandidate(msg.candidate));
+            // console.log(iceCandidates);
+            if (myPeerConnection && myPeerConnection.remoteDescription) {
+              // console.log("Adding canadidate");
+              var candidate = iceCandidates.pop();
+              myPeerConnection.addIceCandidate(candidate).catch(function (e) {
+                // console.log("new-ice-candidate error:", e, candidate);
+              });
+            }
+          } else if (msg.type == "video-answer") {
+            var desc = new RTCSessionDescription(msg.sdp);
+            myPeerConnection.setRemoteDescription(desc).catch((e) => {
+              console.log("Error", e);
+            });
+          } else if (msg.type == "start") {
+            // console.log("START!!");
+            if (!msg.error) {
+              loggedIn = true;
+              myUsername = msg.data
+              $("#user-name").text("You are " + myName);// + "[" + myUsername + "]");
+              if ($("#audience-btn").prop("disabled")) {
+                // console.log("reconnecting as audience");
+                audience();
+              } else if ($("#broadcast-btn").prop("disabled")) {
+                // console.log("reconnecting as broadcast");
+                broadcast();
+              }
+            } else {
+              alert(msg.error);
+            }
+            // console.log("Start", msg, loggedIn);
+          } else if (msg.type == "role") {
+            // console.log("Role Message");
+            if (msg.data === "no:broadcast") {
+              alert("You are not a broadcaster anymore!");
+              socket.close();
+            } else if (msg.data === "yes:broadcast") {
+              // console.log("Load Stream local", localStream);
+              document.getElementById("local_video").srcObject = localStream;
+              $("#source-stream").text("Broadcasting");
+            } else {
+              if (msg.data === "no:audience") {
+                // $("#audience-btn").prop("disabled", false);
+                // $("#broadcast-btn").prop("disabled", false);
+                // $("#source-stream").text("");
+                // alert("No broadcast to connect!");
+                setTimeout(() => {
+                  audience();
+                }, 200);
+              }
+              document.getElementById("local_video").srcObject = null;
+
+            }
+          } else if (msg.type == "add_audience") {
+            // console.log("add_audience", msg.data);
+            connectUser(msg.data);
+          } else if (msg.type == "add_broadcast_audience") {
+            // console.log("add_audience", msg.data);
+            connectUser(msg.data);
+          } else if (msg.type == "tree") {
+            const treeData = JSON.parse(msg.data);
+            // console.log({treeData});
+            if (lastTree && lastTree === msg.data) {
+              return;
+            }
+            lastTree = msg.data;
+            if (treeData && treeData.length > 0) {
+              drawGraph(treeData);
+            }
+          }
+        };
+      }
+
+      function broadcast() {
+        $("#audience-btn").prop("disabled", false);
+        $("#broadcast-btn").prop("disabled", true);
+        navigator.mediaDevices
+          .getUserMedia(mediaConstraints)
+          .then((ls) => {
+            localStream = ls;
+            // console.log("Local Stream", localStream);
             socket.send(
               JSON.stringify({
                 name: myUsername,
@@ -425,100 +631,92 @@
                 sdp: myPeerConnection.localDescription,
               })
             );
-          })
-          .catch(function (e) {
+            const turnStatus = myPeerConnectionConfig.iceServers.findIndex(s => s.url.indexOf('turn:') === 0) >= 0;
             socket.send(
               JSON.stringify({
-                type: "log",
-                data: "onnegotiationneeded audience error:" + JSON.stringify(e),
+                type: "turn_status",
+                data: turnStatus ? "on" : "off",
               })
             );
+          })
+          .catch((e) => {
+            console.log("Local St error", e);
           });
-      };
-      myPeerConnection.onremovetrack = function (event) { };
-      myPeerConnection.oniceconnectionstatechange = function (event) {
+      }
+      function audience() {
         socket.send(
           JSON.stringify({
-            type: "log",
-            data: "oniceconnectionstatechange :" + myPeerConnection.iceConnectionState,
+            type: "role",
+            data: "audience",
           })
         );
-        if (myPeerConnection.iceConnectionState == 'disconnected') {
-          console.log('Disconnected', myPeerConnections);
-          socket.close();
-        }
-      };
-      myPeerConnection.onicegatheringstatechange = function (event) { };
-      myPeerConnection.onsignalingstatechange = function (event) { };
-      myPeerConnection.onicecandidateerror = (event) => {
+        const turnStatus = myPeerConnectionConfig.iceServers.findIndex(s => s.url.indexOf('turn:') === 0) >= 0;
         socket.send(
           JSON.stringify({
-            type: "log",
-            data: "onicecandidateerror :" + JSON.stringify(event),
+            type: "turn_status",
+            data: turnStatus ? "on" : "off",
           })
         );
-      };
-      myPeerConnections[targetUsername] = myPeerConnection;
-      return myPeerConnection;
-    }
-    function connectUser(targetUsername, type = 'default') {
-      if (type === 'alt') {
-        broadcasterPeerConnection = createPeerConnection(targetUsername, type);
-
-        if (sendStream) {
-          sendStream.getTracks().forEach((track) => {
-            broadcasterPeerConnection.addTrack(track, sendStream);
-          });
-        }
-
-        return;
+        $("#audience-btn").prop("disabled", true);
+        $("#broadcast-btn").prop("disabled", false);
+        document.getElementById("local_video").srcObject = null;
       }
-      // console.log("Connect User", targetUsername);
-      if (myPeerConnections[targetUsername]) {
-        // console.log("Already Connected");
-        return true;
-      }
-      let myPeerConnection = createPeerConnection(targetUsername);
-
-      // console.log("localStream", localStream);
-      if (localStream) {
-        localStream.getTracks().forEach((track) => {
-          // track["mmcomp"] = "VIDEO";
-          myPeerConnection.addTrack(track, localStream);
-        });
-        // console.log("Added tracks to connection");
-      }
-    }
-    async function login() {
-      let baseUrl = window.location.href.split("//")[1].split("/")[0];
-      let protocol = "wss";
-      if (window.location.href.split("//")[0] == "http:") {
-        protocol = "ws";
-      }
-      socket = new WebSocket(`${protocol}://${baseUrl}/ws`);
-      socket.onopen = function (event) {
-        // console.log("[open] Connection established");
-        // console.log("Sending start to server");
-        socket.send(
-          JSON.stringify({
-            type: "start",
-            data: myName,
-          })
-        );
-      };
-
-      socket.onclose = function (event) {
-        if (event.wasClean) {
-          console.log(
-            `[close] Connection closed cleanly, code=${event.code} reason=${event.reason}`
-          );
+      function toggleTurnUsage() {
+        /*
+        const turnRecord = {
+          url: "turn:45.149.77.155:3478",
+          username: "admin",
+          credential: "mmcomp",
+        };
+        */
+        const turnRecord = [
+           {
+            url: "turn:turn1.turn.group.video:3478",
+            username: "turnuser",
+            credential: "dJ4kP05PHcKN8Ubu",
+          },
+          {
+            url: "turn:turn2.turn.group.video:3478",
+            username: "turnuser",
+            credential: "XzfVP8cpNEy17hws",
+          },
+          {
+            url: "turns:turn1.turn.group.video:443",
+            username: "turnuser",
+            credential: "dJ4kP05PHcKN8Ubu",
+          },
+          {
+            url: "turns:turn2.turn.group.video:443",
+            username: "turnuser",
+            credential: "XzfVP8cpNEy17hws",
+          },
+        ];
+        const turnStatus = myPeerConnectionConfig.iceServers.findIndex(s => s.url.indexOf('turn') === 0) >= 0;
+        if (turnStatus) {
+          myPeerConnectionConfig.iceServers = myPeerConnectionConfig.iceServers.filter(s => s.url.indexOf('turn') < 0);
         } else {
-          console.log(
-            `[close] Connection died, , code=${event.code} reason=${event.reason}`
-          );
+          myPeerConnectionConfig.iceServers.push(...turnRecord);
         }
-        // myUsername = "";
-        myPeerConnections = [];
+        console.log(myPeerConnectionConfig);
+      }
+      function sendLog(log) {
+        socket.send(
+          JSON.stringify({
+            type: "log",
+            data: log,
+          })
+        );
+      }
+      window.addEventListener("beforeunload", function () {
+        if (socket) socket.close();
+      });
+      var isWebRTCSupported = navigator.getUserMedia ||
+        navigator.webkitGetUserMedia ||
+        navigator.mozGetUserMedia ||
+        navigator.msGetUserMedia ||
+        window.RTCPeerConnection;
+
+      if (window.navigator.userAgent.indexOf("Edge") === -1 && isWebRTCSupported) {
         login();
       };
 
@@ -713,34 +911,6 @@
       } else {
         myPeerConnectionConfig.iceServers.push(...turnRecord);
       }
-      console.log(myPeerConnectionConfig);
-    }
-    function sendLog(log) {
-      socket.send(
-        JSON.stringify({
-          type: "log",
-          data: log,
-        })
-      );
-    }
-    window.addEventListener("beforeunload", function () {
-      if (socket) socket.close();
-    });
-    var isWebRTCSupported = navigator.getUserMedia ||
-      navigator.webkitGetUserMedia ||
-      navigator.mozGetUserMedia ||
-      navigator.msGetUserMedia ||
-      window.RTCPeerConnection;
-
-    if (window.navigator.userAgent.indexOf("Edge") === -1 && isWebRTCSupported) {
-      login();
-      setInterval(() => {
-        refreshGraph();
-      }, 2000);
-    } else {
-      alert('Unfortunetly your browser does not support this action!');
-    }
-  </script>
-</body>
-
+    </script>
+  </body>
 </html>
