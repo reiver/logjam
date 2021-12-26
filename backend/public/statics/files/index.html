@@ -55,7 +55,9 @@
   <h4 id="user-name"></h4>
   <div style="display: flex;justify-content: space-between;">
     <div class="some-class">
+      Broadcast: <br/>
       <video id="local_video" autoplay playsinline muted style="width: 100%"></video><br />
+      Local: <br/>
       <video id="send_video" autoplay playsinline muted style="width: 100%"></video><br />
     </div>
     <div id="graph-div" class="some-class"></div>
@@ -306,6 +308,7 @@
         const tmpPeerConnection = new RTCPeerConnection(myPeerConnectionConfig);
         tmpPeerConnection.onicecandidate = function (event) {
           if (event.candidate) {
+            console.log('Sending Candidate');
             socket.send(
               JSON.stringify({
                 type: "alt-new-ice-candidate",
@@ -319,12 +322,14 @@
           console.log('[onTrack]', event);
         };
         tmpPeerConnection.onnegotiationneeded = function (event) {
+          console.log('Creating Offer');
           tmpPeerConnection
             .createOffer()
             .then(function (offer) {
               return tmpPeerConnection.setLocalDescription(offer);
             })
             .then(function () {
+              console.log('Sending Offer');
               socket.send(
                 JSON.stringify({
                   name: myUsername,
@@ -366,10 +371,6 @@
         }
       };
       myPeerConnection.ontrack = function (event) {
-        if (view === 'alt') {
-          console.log('ALT TRACK', event);
-          return;
-        }
         if (myRole != "broadcast") {
           console.log('Stream Count', event.streams);
           if (localStream && !shareScreenStream && localStream.id !== event.streams[0].id) {
@@ -381,6 +382,18 @@
             document.getElementById("local_video").srcObject =
               event.streams[0];
             localStream = event.streams[0];
+            localStream.onactive = (inp) => {
+              console.log(`[localStream] onactive`, {inp});
+            };
+            localStream.oninactive = (inp) => {
+              console.log(`[localStream] oninactive`, {inp});
+            };
+            localStream.onaddtrack = (inp) => {
+              console.log(`[localStream] onaddtrack`, {inp});
+            };
+            localStream.onremovetrack = (inp) => {
+              console.log(`[localStream] onremovetrack`, {inp});
+            };
             $("#source-stream").text("Read " + targetName); //+ "[" + targetUsername + "]");
             socket.send(
               JSON.stringify({
@@ -557,7 +570,7 @@
           if (broadcasterPeerConnection && broadcasterPeerConnection.remoteDescription) {
             var candidate = altIceCandidates.pop();
             broadcasterPeerConnection.addIceCandidate(candidate).catch(function (e) {
-              // console.log("new-ice-candidate error:", e, candidate);
+              console.log("new-ice-candidate error:", e, candidate);
             });
           }
         } else if (msg.type == "video-answer") {
@@ -618,6 +631,10 @@
           }
         } else if (msg.type == "alt-broadcast") {
           console.log({ msg });
+          if (msg.data === 'no-broadcaster') {
+            alert('No Broadcaster is available!');
+            return;
+          }
           document.getElementById("send_video").srcObject = sendStream;
           console.log('Start connecting to broadcaster');
           connectUser(msg.data, 'alt');

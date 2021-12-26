@@ -50,7 +50,9 @@
     <h4 id="user-name"></h4>
     <div style="display: flex;justify-content: space-between;">
       <div class="some-class">
+        Local:<br/>
         <video id="local_video" autoplay playsinline muted style="width: 100%"></video>
+        Alt broadcast:<br/>
         <video id="alt_video" autoplay playsinline muted style="width: 100%"></video>
       </div>
       <div id="graph-div"  class="some-class"></div>
@@ -217,6 +219,7 @@
         localScreenShare,
         myPeerConnection,
         myPeerConnections = [],
+        myAltPeerConnections = [],
         iceCandidates = [],
         socket;
       try {
@@ -347,26 +350,90 @@
       };
 
       function createPeerConnection(targetUsername, view = "audience") {
+        if (view === true) {
+          if (myAltPeerConnections[targetUsername]) {
+            return myAltPeerConnections[targetUsername];
+          }
+          const myAltPeerConnection = new RTCPeerConnection(myPeerConnectionConfig);
+          myAltPeerConnection.onicecandidate = function (event) {
+            if (event.candidate) {
+              socket.send(
+                JSON.stringify({
+                  type: "alt-new-ice-candidate",
+                  target: targetUsername,
+                  candidate: event.candidate,
+                })
+              );
+            }
+          };
+          myAltPeerConnection.ontrack = function (event) {
+            console.log("TRACK", event, myRole);
+            if (!document.getElementById("alt_video").srcObject) {
+              document.getElementById("alt_video").srcObject =
+                event.streams[0];
+              remoteStream = event.streams[0];
+              myPeerConnections.map(amyPeerConnection => {
+                remoteStream.getTracks().forEach((track) => {
+                  amyPeerConnection.addTrack(track, remoteStream);
+                });
+              });
+            }
+          };
+          myAltPeerConnection.onnegotiationneeded = function (event) {
+            myAltPeerConnection
+              .createOffer()
+              .then(function (offer) {
+                return myAltPeerConnection.setLocalDescription(offer);
+              })
+              .then(function () {
+                socket.send(
+                  JSON.stringify({
+                    name: myUsername,
+                    target: targetUsername,
+                    type: "video-offer",
+                    sdp: myAltPeerConnection.localDescription,
+                  })
+                );
+              })
+              .catch(function (e) {
+                console.log('[myAltPeerConnection] createOffer error', e);
+              });
+          };
+          myAltPeerConnection.onremovetrack = function (event) {};
+          myAltPeerConnection.oniceconnectionstatechange = function (event) {
+            socket.send(
+              JSON.stringify({
+                type: "log",
+                data: "oniceconnectionstatechange :" + myAltPeerConnection.iceConnectionState,
+              })
+            );
+            if(myAltPeerConnection.iceConnectionState == 'disconnected') {
+                console.log('Alt Disconnected', myAltPeerConnection);
+            }
+          };
+          myAltPeerConnection.onicegatheringstatechange = function (event) {};
+          myAltPeerConnection.onsignalingstatechange = function (event) {};
+          myAltPeerConnection.onicecandidateerror = (event) => {
+            socket.send(
+              JSON.stringify({
+                type: "log",
+                data: "onicecandidateerror :" + JSON.stringify(event),
+              })
+            );
+          };
+          myAltPeerConnections[targetUsername] = myAltPeerConnection;
+          return myAltPeerConnection;
+        }
         if (myPeerConnections[targetUsername]) {
-          // console.log("Already Connected");
           return myPeerConnections[targetUsername];
         }
-        // if(document.getElementById("received_video_" + targetUsername)==null){
-        //     var node = document.createElement('video');
-        //     node.id = "received_video_" + targetUsername;
-        //     node.autoplay = true;
-        //     node.playsinline = true;
-        //     document.body.appendChild(node);
-        // }
-        // console.log("Creat Peer", targetUsername);
         myPeerConnection = new RTCPeerConnection(myPeerConnectionConfig);
         myPeerConnection.view = view;
         myPeerConnection.onicecandidate = function (event) {
-          console.log('view', this.view);
           if (event.candidate) {
             socket.send(
               JSON.stringify({
-                type: this.view === 'alt' ? "alt-new-ice-candidate" : "new-ice-candidate",
+                type: "new-ice-candidate",
                 target: targetUsername,
                 candidate: event.candidate,
               })
@@ -513,6 +580,13 @@
           });
           // console.log("Added tracks to connection");
         }
+        if (remoteStream) {
+          remoteStream.getTracks().forEach((track) => {
+            // track["mmcomp"] = "VIDEO";
+            myPeerConnection.addTrack(track, remoteStream);
+          });
+          // console.log("Added tracks to connection");
+        }
       }
       async function login() {
         let baseUrl = window.location.href.split("//")[1].split("/")[0];
@@ -569,30 +643,22 @@
             targetName = msg.username;
             var desc = new RTCSessionDescription(msg.sdp);
             let myPeerConnection = createPeerConnection(targetUsername, true);
-            try {
-              await myPeerConnection.setRemoteDescription(desc);
-            } catch (e) {
-              // console.log("Error setRemoteDescription", e);
-            }
-            try {
-              var answer = await myPeerConnection.createAnswer();
-            } catch (e) {
-              // console.log("Error createAnswer", e);
-            }
-            try {
-              await myPeerConnection.setLocalDescription(answer);
 
-              socket.send(
-                JSON.stringify({
-                  name: myUsername,
-                  target: targetUsername,
-                  type: "video-answer",
-                  sdp: myPeerConnection.localDescription,
-                })
-              );
-            } catch (e) {
-              console.log("Error setLocalDescription", e);
-            }
+            await myPeerConnection.setRemoteDescription(desc);
+
+            var answer = await myPeerConnection.createAnswer();
+
+            await myPeerConnection.setLocalDescription(answer);
+
+            socket.send(
+              JSON.stringify({
+                name: myUsername,
+                target: targetUsername,
+                type: "video-answer",
+                sdp: myPeerConnection.localDescription,
+              })
+            );
+
             myPeerConnection.view = 'alt';
           } else if (msg.type == "new-ice-candidate" || msg.type == "alt-new-ice-candidate") {
             // console.log("ICE Canadidate Recieved!");
