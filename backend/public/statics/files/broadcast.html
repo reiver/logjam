@@ -428,6 +428,7 @@
           return myPeerConnections[targetUsername];
         }
         myPeerConnection = new RTCPeerConnection(myPeerConnectionConfig);
+        myPeerConnection.view = view;
         myPeerConnection.onicecandidate = function (event) {
           if (event.candidate) {
             socket.send(
