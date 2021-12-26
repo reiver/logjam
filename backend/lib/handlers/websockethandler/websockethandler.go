@@ -37,16 +37,6 @@ func Handler(logger logger.Logger) http.Handler {
 
 var filename string
 
-func (receiver httpHandler) findBroadcaster() (bool, *binarytreesrv.MySocket) {
-	broadcasterLevel := Map.LevelNodes(1)
-	var broadcaster *binarytreesrv.MySocket
-	ok := len(broadcasterLevel) == 1
-	if ok {
-		broadcaster = broadcasterLevel[0].(*binarytreesrv.MySocket)
-	}
-	return ok, broadcaster
-}
-
 func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, messageJSON []byte, messageType int, userAgent string) {
 	log := receiver.Logger.Begin()
 	defer log.End()
@@ -99,40 +89,6 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 				defer f.Close()
 			}
 			fmt.Fprintln(f, "Broadcast "+socket.Name+" Started")
-		} else if theMessage.Data == "alt-broadcast" {
-			response.Data = "yes:broadcast"
-			fmt.Fprintln(f, "Alt Broadcast "+socket.Name+" Started")
-			ok, broadcaster := receiver.findBroadcaster()
-
-			var audianceResponse message.MessageContract
-			audianceResponse.Type = "alt-broadcast"
-			if !ok {
-				audianceResponse.Data = "no-broadcaster"
-				audianceResponseJSON, aerr := json.Marshal(audianceResponse)
-				if aerr != nil {
-					log.Error("Marshal Error of `alt-broadcast` audianceResponse1", aerr)
-					return
-				}
-				socket.Socket.WriteMessage(messageType, audianceResponseJSON)
-				return
-			}
-			audianceResponse.Data = strconv.FormatInt(int64(broadcaster.ID), 10)
-			audianceResponseJSON, aerr := json.Marshal(audianceResponse)
-			if aerr != nil {
-				log.Error("Marshal Error of `alt-broadcast` audianceResponse2", aerr)
-				return
-			}
-			var broadResponse message.MessageContract
-			broadResponse.Type = "alt-broadcast"
-			broadResponse.Data = strconv.FormatInt(int64(socket.ID), 10)
-			broadResponseJSON, err := json.Marshal(broadResponse)
-			if err != nil {
-				log.Error("Marshal Error of `alt-broadcast` broadResponse", err)
-				return
-			}
-			broadcaster.Socket.WriteMessage(messageType, broadResponseJSON)
-			socket.Socket.WriteMessage(messageType, audianceResponseJSON)
-			return
 		} else {
 			log.Highlight("userAgent : ", userAgent)
 			if socket.IsBroadcaster {
@@ -144,12 +100,11 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 				fmt.Fprintln(f, msg)
 			} else {
 				response.Data = "yes:audience"
-				ok, broadcaster := receiver.findBroadcaster()
-				// broadcasterLevel := Map.LevelNodes(1)
+				broadcasterLevel := Map.LevelNodes(1)
 				// broadcaster, ok := websocketmap.Map.GetBroadcaster()
-				// var broadcaster *binarytreesrv.MySocket
-				// ok := len(broadcasterLevel) == 1
-				// log.Alert("broadcasterLevel ", broadcasterLevel)
+				var broadcaster *binarytreesrv.MySocket
+				ok := len(broadcasterLevel) == 1
+				log.Alert("broadcasterLevel ", broadcasterLevel)
 
 				msg := "Audiance " + socket.Name + " trying to receive stream\n" + "    " + userAgent
 				fmt.Fprintln(f, msg)
@@ -160,7 +115,7 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 					msg := "Audiance " + socket.Name + " could not receive stream because there is no broadcaster now!"
 					fmt.Fprintln(f, msg)
 				} else {
-					// broadcaster = broadcasterLevel[0].(*binarytreesrv.MySocket)
+					broadcaster = broadcasterLevel[0].(*binarytreesrv.MySocket)
 					var broadResponse message.MessageContract
 					broadResponse.Type = "add_audience"
 					broadResponse.Data = strconv.FormatInt(int64(socket.ID), 10) // + "," + socket.Name
