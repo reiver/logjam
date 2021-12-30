@@ -334,7 +334,7 @@
                 JSON.stringify({
                   name: myUsername,
                   target: targetUsername,
-                  type: "video-offer",
+                  type: "alt-video-offer",
                   sdp: tmpPeerConnection.localDescription,
                 })
               );
@@ -573,7 +573,7 @@
               console.log("new-ice-candidate error:", e, candidate);
             });
           }
-        } else if (msg.type == "video-answer") {
+        } else if (msg.type == "alt-video-answer") {
           var desc = new RTCSessionDescription(msg.sdp);
           broadcasterPeerConnection.setRemoteDescription(desc).catch((e) => {
             console.log("Error", e);
