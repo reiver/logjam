@@ -637,7 +637,7 @@
           msg.type = (msg.Type && !msg.type) ? msg.Type : msg.type;
           if (msg.type !== 'tree') 
             console.log("Message", msg);
-          if (msg.type == "video-offer") {
+          if (msg.type == "alt-video-offer") {
             // console.log("Video Offer Rec!");
             let targetUsername = msg.name;
             targetName = msg.username;
@@ -654,7 +654,7 @@
               JSON.stringify({
                 name: myUsername,
                 target: targetUsername,
-                type: "video-answer",
+                type: "alt-video-answer",
                 sdp: myPeerConnection.localDescription,
               })
             );
