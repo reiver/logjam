@@ -351,6 +351,7 @@
 
       function createPeerConnection(targetUsername, view = "audience") {
         if (view === true) {
+          console.log('createPeerConnection[alt]');
           if (myAltPeerConnections[targetUsername]) {
             return myAltPeerConnections[targetUsername];
           }
@@ -660,7 +661,20 @@
             );
 
             myPeerConnection.view = 'alt';
-          } else if (msg.type == "new-ice-candidate" || msg.type == "alt-new-ice-candidate") {
+          } else if (msg.type == "new-ice-candidate") {
+            // console.log("ICE Canadidate Recieved!");
+            iceCandidates.push(new RTCIceCandidate(msg.candidate));
+            // console.log(iceCandidates);
+            if (myPeerConnection && myPeerConnection.remoteDescription) {
+              // console.log("Adding canadidate");
+              var candidate = iceCandidates.pop();
+              myPeerConnection.addIceCandidate(candidate).catch(function (e) {
+                // console.log("new-ice-candidate error:", e, candidate);
+              });
+            }
+          } else if (msg.type == "alt-new-ice-candidate") {
+            let targetUsername = msg.name;
+            let myPeerConnection = createPeerConnection(targetUsername, true);
             // console.log("ICE Canadidate Recieved!");
             iceCandidates.push(new RTCIceCandidate(msg.candidate));
             // console.log(iceCandidates);
