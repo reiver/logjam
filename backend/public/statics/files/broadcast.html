@@ -673,7 +673,7 @@
               });
             }
           } else if (msg.type == "alt-new-ice-candidate") {
-            let targetUsername = msg.name;
+            let targetUsername = msg.target;
             let myPeerConnection = createPeerConnection(targetUsername, true);
             // console.log("ICE Canadidate Recieved!");
             iceCandidates.push(new RTCIceCandidate(msg.candidate));
