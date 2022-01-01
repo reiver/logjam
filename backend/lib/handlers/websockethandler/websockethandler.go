@@ -284,6 +284,7 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 				return
 			}
 			fullMessage["username"] = socket.Name
+			fullMessage["data"] = strconv.FormatInt(int64(socket.ID), 10)
 			messageJSON, err = json.Marshal(fullMessage)
 			if err != nil {
 				log.Error("Error marshal message ", err)
