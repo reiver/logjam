@@ -221,6 +221,7 @@
         myPeerConnections = [],
         myAltPeerConnections = [],
         iceCandidates = [],
+        altIceCandidates = [],
         socket;
       try {
         myName = localStorage.getItem('logjam_myName');
@@ -676,11 +677,11 @@
             let targetUsername = msg.target;
             let myPeerConnection = createPeerConnection(targetUsername, true);
             // console.log("ICE Canadidate Recieved!");
-            iceCandidates.push(new RTCIceCandidate(msg.candidate));
+            altIceCandidates.push(new RTCIceCandidate(msg.candidate));
             // console.log(iceCandidates);
             if (myPeerConnection && myPeerConnection.remoteDescription) {
               // console.log("Adding canadidate");
-              var candidate = iceCandidates.pop();
+              var candidate = altIceCandidates.pop();
               myPeerConnection.addIceCandidate(candidate).catch(function (e) {
                 // console.log("new-ice-candidate error:", e, candidate);
               });
