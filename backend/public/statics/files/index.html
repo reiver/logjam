@@ -54,16 +54,11 @@
   <h3 id="source-stream"></h3>
   <h4 id="user-name"></h4>
   <div style="display: flex;justify-content: space-between;">
-    <div class="some-class">
-      Broadcast: <br/>
-      <video id="local_video" autoplay playsinline muted style="width: 100%"></video><br />
+    <div id="streams" class="some-class">
       Local: <br/>
       <video id="send_video" autoplay playsinline muted style="width: 100%"></video><br />
     </div>
     <div id="graph-div" class="some-class"></div>
-    <div class="some-class">
-      <video id="share_screen" autoplay playsinline style="width: 100%"></video><br />
-    </div>
   </div>
   <script src="https://code.jquery.com/jquery-2.2.4.min.js"
     integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script>
@@ -371,43 +366,48 @@
         }
       };
       myPeerConnection.ontrack = function (event) {
+        console.log('ontrack', event.streams[0]);
         if (myRole != "broadcast") {
           console.log('Stream Count', event.streams);
-          if (localStream && !shareScreenStream && localStream.id !== event.streams[0].id) {
-            shareScreenStream = event.streams[0];
-            document.getElementById("share_screen").srcObject =
-              event.streams[0];
+          if ($("#local_video_" + event.streams[0].id).length === 0) {
+            $("#streams").append(`<video id="local_video_${event.streams[0].id}" autoplay playsinline muted style="width: 100%"></video><br />`);
+            document.getElementById("local_video_" + event.streams[0].id).srcObject = event.streams[0];
           }
-          else if (!localStream) {
-            document.getElementById("local_video").srcObject =
-              event.streams[0];
-            localStream = event.streams[0];
-            localStream.onactive = (inp) => {
-              console.log(`[localStream] onactive`, {inp});
-            };
-            localStream.oninactive = (inp) => {
-              console.log(`[localStream] oninactive`, {inp});
-            };
-            localStream.onaddtrack = (inp) => {
-              console.log(`[localStream] onaddtrack`, {inp});
-            };
-            localStream.onremovetrack = (inp) => {
-              console.log(`[localStream] onremovetrack`, {inp});
-            };
-            $("#source-stream").text("Read " + targetName); //+ "[" + targetUsername + "]");
-            socket.send(
-              JSON.stringify({
-                type: "stream",
-                data: "true",
-              })
-            );
-            socket.send(
-              JSON.stringify({
-                type: "log",
-                data: "ontrack from " + targetName,
-              })
-            );
-          }
+          // if (localStream && !shareScreenStream && localStream.id !== event.streams[0].id) {
+          //   shareScreenStream = event.streams[0];
+          //   document.getElementById("share_screen").srcObject =
+          //     event.streams[0];
+          // }
+          // else if (!localStream) {
+          //   document.getElementById("local_video").srcObject =
+          //     event.streams[0];
+          //   localStream = event.streams[0];
+          //   localStream.onactive = (inp) => {
+          //     console.log(`[localStream] onactive`, {inp});
+          //   };
+          //   localStream.oninactive = (inp) => {
+          //     console.log(`[localStream] oninactive`, {inp});
+          //   };
+          //   localStream.onaddtrack = (inp) => {
+          //     console.log(`[localStream] onaddtrack`, {inp});
+          //   };
+          //   localStream.onremovetrack = (inp) => {
+          //     console.log(`[localStream] onremovetrack`, {inp});
+          //   };
+          //   $("#source-stream").text("Read " + targetName); //+ "[" + targetUsername + "]");
+          //   socket.send(
+          //     JSON.stringify({
+          //       type: "stream",
+          //       data: "true",
+          //     })
+          //   );
+          //   socket.send(
+          //     JSON.stringify({
+          //       type: "log",
+          //       data: "ontrack from " + targetName,
+          //     })
+          //   );
+          // }
         }
       };
       myPeerConnection.onnegotiationneeded = function (event) {
@@ -542,7 +542,7 @@
           let targetUsername = msg.name;
           targetName = msg.username;
           var desc = new RTCSessionDescription(msg.sdp);
-          let myPeerConnection = createPeerConnection(targetUsername, true);
+          let myPeerConnection = createPeerConnection(targetUsername);
           await myPeerConnection.setRemoteDescription(desc);
 
           var answer = await myPeerConnection.createAnswer();
@@ -554,6 +554,25 @@
               name: myUsername,
               target: targetUsername,
               type: "video-answer",
+              sdp: myPeerConnection.localDescription,
+            })
+          );
+        } else if (msg.type == "alt-video-offer") {
+          let targetUsername = msg.name;
+          targetName = msg.username;
+          var desc = new RTCSessionDescription(msg.sdp);
+          let myPeerConnection = createPeerConnection(targetUsername, true);
+          await myPeerConnection.setRemoteDescription(desc);
+
+          var answer = await myPeerConnection.createAnswer();
+
+          await myPeerConnection.setLocalDescription(answer);
+
+          socket.send(
+            JSON.stringify({
+              name: myUsername,
+              target: targetUsername,
+              type: "alt-video-answer",
               sdp: myPeerConnection.localDescription,
             })
           );
@@ -576,6 +595,11 @@
         } else if (msg.type == "alt-video-answer") {
           var desc = new RTCSessionDescription(msg.sdp);
           broadcasterPeerConnection.setRemoteDescription(desc).catch((e) => {
+            console.log("Error", e);
+          });
+        } else if (msg.type == "video-answer") {
+          var desc = new RTCSessionDescription(msg.sdp);
+          myPeerConnection.setRemoteDescription(desc).catch((e) => {
             console.log("Error", e);
           });
         } else if (msg.type == "start") {

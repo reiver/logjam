@@ -49,11 +49,10 @@
     <h3 id="source-stream"></h3>
     <h4 id="user-name"></h4>
     <div style="display: flex;justify-content: space-between;">
-      <div class="some-class">
+      <div id="streams" class="some-class">
         Local:<br/>
         <video id="local_video" autoplay playsinline muted style="width: 100%"></video>
-        Alt broadcast:<br/>
-        <video id="alt_video" autoplay playsinline muted style="width: 100%"></video>
+        Alt broadcasts:<br/>
       </div>
       <div id="graph-div"  class="some-class"></div>
       <div class="some-class">
@@ -222,7 +221,8 @@
         myAltPeerConnections = [],
         iceCandidates = [],
         altIceCandidates = [],
-        socket;
+        socket,
+        altStreams = {};
       try {
         myName = localStorage.getItem('logjam_myName');
       } catch (e) {
@@ -372,13 +372,25 @@
           };
           myAltPeerConnection.ontrack = function (event) {
             console.log("TRACK", event, myRole);
-            if (!document.getElementById("alt_video").srcObject) {
-              document.getElementById("alt_video").srcObject =
-                event.streams[0];
-              remoteStream = event.streams[0];
+            altStreams[targetUsername] = event.streams;
+            // if (!document.getElementById("alt_video").srcObject) {
+            //   document.getElementById("alt_video").srcObject =
+            //     event.streams[0];
+            //   remoteStream = event.streams[0];
+            //   myPeerConnections.map(amyPeerConnection => {
+            //     remoteStream.getTracks().forEach((track) => {
+            //       amyPeerConnection.addTrack(track, remoteStream);
+            //     });
+            //   });
+            // }
+            if ($("#alt_video_" + targetUsername).length === 0) {
+              $("#streams").append(`<video id="alt_video_${targetUsername}" autoplay playsinline muted style="width: 100%"></video><br/>`);
+              document.getElementById("alt_video_" + targetUsername).srcObject = event.streams[0];
               myPeerConnections.map(amyPeerConnection => {
-                remoteStream.getTracks().forEach((track) => {
-                  amyPeerConnection.addTrack(track, remoteStream);
+                event.streams[0].getTracks().forEach((track) => {
+                  track['mehrdad'] = 12;
+                  event.streams[0]['mehrdad'] = 12;
+                  amyPeerConnection.addTrack(track, event.streams[0]);
                 });
               });
             }
@@ -394,7 +406,7 @@
                   JSON.stringify({
                     name: myUsername,
                     target: targetUsername,
-                    type: "video-offer",
+                    type: "alt-video-offer",
                     sdp: myAltPeerConnection.localDescription,
                   })
                 );
@@ -577,20 +589,26 @@
           });
           // console.log("Added tracks to connection");
         }
-        if (shareScreenStream) {
-          shareScreenStream.getTracks().forEach((track) => {
-            // track["mmcomp"] = "VIDEO";
-            myPeerConnection.addTrack(track, shareScreenStream);
+        for(const tuser in altStreams) {
+          const tstreams = altStreams[tuser];
+          tstreams[0].getTracks().forEach((track) => {
+            myPeerConnection.addTrack(track, tstreams[0]);
           });
-          // console.log("Added tracks to connection");
         }
-        if (remoteStream) {
-          remoteStream.getTracks().forEach((track) => {
-            // track["mmcomp"] = "VIDEO";
-            myPeerConnection.addTrack(track, remoteStream);
-          });
-          // console.log("Added tracks to connection");
-        }
+        // if (shareScreenStream) {
+        //   shareScreenStream.getTracks().forEach((track) => {
+        //     // track["mmcomp"] = "VIDEO";
+        //     myPeerConnection.addTrack(track, shareScreenStream);
+        //   });
+        //   // console.log("Added tracks to connection");
+        // }
+        // if (remoteStream) {
+        //   remoteStream.getTracks().forEach((track) => {
+        //     // track["mmcomp"] = "VIDEO";
+        //     myPeerConnection.addTrack(track, remoteStream);
+        //   });
+        //   // console.log("Added tracks to connection");
+        // }
       }
       async function login() {
         let baseUrl = window.location.href.split("//")[1].split("/")[0];
