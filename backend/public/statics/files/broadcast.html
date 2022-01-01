@@ -690,7 +690,14 @@
             myPeerConnection.setRemoteDescription(desc).catch((e) => {
               console.log("Error", e);
             });
-          } else if (msg.type == "start") {
+          } else if (msg.type == "alt-video-answer") {
+            var desc = new RTCSessionDescription(msg.sdp);
+            let targetUsername = msg.target;
+            let myPeerConnection = createPeerConnection(targetUsername, true);
+            myPeerConnection.setRemoteDescription(desc).catch((e) => {
+              console.log("Error", e);
+            });
+          }  else if (msg.type == "start") {
             // console.log("START!!");
             if (!msg.error) {
               loggedIn = true;
