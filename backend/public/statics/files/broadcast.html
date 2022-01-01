@@ -352,10 +352,12 @@
 
       function createPeerConnection(targetUsername, view = "audience") {
         if (view === true) {
-          console.log('createPeerConnection[alt]');
+          console.log('createPeerConnection[alt]', targetUsername);
           if (myAltPeerConnections[targetUsername]) {
+            console.log('Exists', targetUsername)
             return myAltPeerConnections[targetUsername];
           }
+          console.log('Not Exists', targetUsername)
           const myAltPeerConnection = new RTCPeerConnection(myPeerConnectionConfig);
           myAltPeerConnection.onicecandidate = function (event) {
             if (event.candidate) {
