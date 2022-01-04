@@ -527,7 +527,7 @@
       };
 
       socket.onmessage = async function (event) {
-        // console.log(`[message] Data received from server: ${event.data}`);
+        console.log(`[message] Data received from server: ${event.data}`);
         let msg;
         try {
           msg = JSON.parse(event.data);
@@ -645,14 +645,16 @@
           connectUser(msg.data);
         } else if (msg.type == "tree") {
           const treeData = JSON.parse(msg.data);
-          // console.log({treeData});
+          console.log({treeData});
           if (lastTree && lastTree === msg.data) {
             return;
           }
+          console.log('a1');
           lastTree = msg.data;
           if (treeData && treeData.length > 0) {
             drawGraph(treeData);
           }
+          console.log('a2');
         } else if (msg.type == "alt-broadcast") {
           console.log({ msg });
           if (msg.data === 'no-broadcaster') {
