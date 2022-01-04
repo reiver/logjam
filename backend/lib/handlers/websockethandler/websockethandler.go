@@ -176,6 +176,7 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 							log.Error("Insert Child Error ", e)
 							return
 						}
+						log.Highlight("Deciding to connect end")
 						targetSocket := targetSocketNode.(*binarytreesrv.MySocket)
 						log.Highlight("target ", targetSocket.ID)
 
