@@ -122,9 +122,10 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 				log.Error("Marshal Error of `alt-broadcast` audianceResponse2", aerr)
 				return
 			}
-			var broadResponse message.MessageContract
-			broadResponse.Type = "alt-broadcast"
-			broadResponse.Data = strconv.FormatInt(int64(socket.ID), 10)
+			var broadResponse map[string]interface{} = make(map[string]interface{})
+			broadResponse["Type"] = "alt-broadcast"
+			broadResponse["Data"] = strconv.FormatInt(int64(socket.ID), 10)
+			broadResponse["name"] = socket.Name
 			broadResponseJSON, err := json.Marshal(broadResponse)
 			if err != nil {
 				log.Error("Marshal Error of `alt-broadcast` broadResponse", err)

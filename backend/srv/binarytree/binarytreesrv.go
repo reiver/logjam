@@ -1,7 +1,6 @@
 package binarytreesrv
 
 import (
-	"fmt"
 	"strconv"
 
 	"github.com/gorilla/websocket"
@@ -62,9 +61,7 @@ func (receiver *MySocket) ToggleHead() {
 }
 
 func (receiver *MySocket) ToggleCanConnect() {
-	fmt.Println("ToggleCanConnect ", receiver.ID)
 	receiver.HasStream = !receiver.HasStream
-	fmt.Println("HasStream ", receiver.HasStream)
 }
 
 func (receiver *MySocket) GetIndex() interface{} {
@@ -103,7 +100,6 @@ type TreeGraphElement struct {
 }
 
 func addSubSockets(socket MySocket, children *[]TreeGraphElement, aMap binarytree.Tree) {
-	fmt.Println("Adding CHilds of ", socket.ID, socket.Name)
 	for child := range socket.ConnectedSockets {
 		childSocket := aMap.Get(child).(*MySocket)
 		var turnState string = "no-TURN"
@@ -115,7 +111,6 @@ func addSubSockets(socket MySocket, children *[]TreeGraphElement, aMap binarytre
 			Parent:   "null",
 			Children: []TreeGraphElement{},
 		})
-		fmt.Println("Child ", childSocket.ID, childSocket.Name)
 		addSubSockets(*childSocket, &(*children)[len(*children)-1].Children, aMap)
 	}
 }
