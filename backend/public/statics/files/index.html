@@ -55,7 +55,7 @@
   <h4 id="user-name"></h4>
   <div style="display: flex;justify-content: space-between;">
     <div id="streams" class="some-class">
-      Local: <br/>
+      Local: <br />
       <video id="send_video" autoplay playsinline muted style="width: 100%"></video><br />
     </div>
     <div id="graph-div" class="some-class"></div>
@@ -198,6 +198,7 @@
   <script>
     let lastTree;
     let loggedIn = false;
+    let hasStream = false;
     let myUsername,
       myName,
       targetName,
@@ -210,7 +211,7 @@
     let localStream,
       shareScreenStream,
       sendStream,
-      remoteStream,
+      remoteStream = {},
       localScreenShare,
       myPeerConnection,
       broadcasterPeerConnection,
@@ -366,12 +367,23 @@
         }
       };
       myPeerConnection.ontrack = function (event) {
+        if (!hasStream) {
+          socket.send(
+            JSON.stringify({
+              type: "stream",
+              data: "true",
+            })
+          );
+          hasStream = true;
+        }
         console.log('ontrack', event.streams[0]);
         if (myRole != "broadcast") {
           console.log('Stream Count', event.streams);
           if ($("#local_video_" + event.streams[0].id).length === 0) {
             $("#streams").append(`<video id="local_video_${event.streams[0].id}" autoplay playsinline muted style="width: 100%"></video><br />`);
             document.getElementById("local_video_" + event.streams[0].id).srcObject = event.streams[0];
+            remoteStream[event.streams[0].id] = event.streams[0];
+            sendToAll(event.streams[0]);
           }
           // if (localStream && !shareScreenStream && localStream.id !== event.streams[0].id) {
           //   shareScreenStream = event.streams[0];
@@ -401,12 +413,12 @@
           //       data: "true",
           //     })
           //   );
-          //   socket.send(
-          //     JSON.stringify({
-          //       type: "log",
-          //       data: "ontrack from " + targetName,
-          //     })
-          //   );
+          socket.send(
+            JSON.stringify({
+              type: "log",
+              data: "ontrack from " + targetName,
+            })
+          );
           // }
         }
       };
@@ -461,6 +473,14 @@
       myPeerConnections[targetUsername] = myPeerConnection;
       return myPeerConnection;
     }
+    function sendToAll(aStream) {
+      for(const targetUsername in myPeerConnections) {
+        const myPeerConnection = myPeerConnections[targetUsername];
+        aStream.getTracks().forEach((track) => {
+          myPeerConnection.addTrack(track, aStream);
+        });
+      }
+    }
     function connectUser(targetUsername, type = 'default') {
       if (type === 'alt') {
         broadcasterPeerConnection = createPeerConnection(targetUsername, type);
@@ -480,6 +500,7 @@
       }
       let myPeerConnection = createPeerConnection(targetUsername);
 
+      /*
       // console.log("localStream", localStream);
       if (localStream) {
         localStream.getTracks().forEach((track) => {
@@ -487,6 +508,13 @@
           myPeerConnection.addTrack(track, localStream);
         });
         // console.log("Added tracks to connection");
+      }
+      */
+      for (streamId in remoteStream) {
+        remoteStream[streamId].getTracks().forEach((track) => {
+          // track["mmcomp"] = "VIDEO";
+          myPeerConnection.addTrack(track, remoteStream[streamId]);
+        });
       }
     }
     async function login() {
@@ -634,7 +662,7 @@
                 audience();
               }, 200);
             }
-            document.getElementById("local_video").srcObject = null;
+            // document.getElementById("local_video").srcObject = null;
 
           }
         } else if (msg.type == "add_audience") {
@@ -645,16 +673,13 @@
           connectUser(msg.data);
         } else if (msg.type == "tree") {
           const treeData = JSON.parse(msg.data);
-          console.log({treeData});
           if (lastTree && lastTree === msg.data) {
             return;
           }
-          console.log('a1');
           lastTree = msg.data;
           if (treeData && treeData.length > 0) {
             drawGraph(treeData);
           }
-          console.log('a2');
         } else if (msg.type == "alt-broadcast") {
           console.log({ msg });
           if (msg.data === 'no-broadcaster') {
@@ -662,6 +687,10 @@
             return;
           }
           document.getElementById("send_video").srcObject = sendStream;
+          alert('Waiting for Broadcaster Approve');
+          // console.log('Start connecting to broadcaster');
+          // connectUser(msg.data, 'alt');
+        } else if (msg.type == "alt-broadcast-approve") {
           console.log('Start connecting to broadcaster');
           connectUser(msg.data, 'alt');
         }
@@ -760,9 +789,9 @@
 
     if (window.navigator.userAgent.indexOf("Edge") === -1 && isWebRTCSupported) {
       login();
-      setInterval(() => {
-        refreshGraph();
-      }, 2000);
+      // setInterval(() => {
+      //   refreshGraph();
+      // }, 2000);
     } else {
       alert('Unfortunetly your browser does not support this action!');
     }
