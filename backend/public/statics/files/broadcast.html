@@ -383,7 +383,7 @@
           //   });
           // }
           if ($("#alt_video_" + targetUsername).length === 0) {
-            $("#streams").append(`<video id="alt_video_${targetUsername}" autoplay playsinline muted style="width: 100%"></video><br/>`);
+            $("#streams").append(`<video id="alt_video_${targetUsername}" autoplay playsinline style="width: 100%"></video><br/>`);
             document.getElementById("alt_video_" + targetUsername).srcObject = event.streams[0];
             myPeerConnections.map(amyPeerConnection => {
               event.streams[0].getTracks().forEach((track) => {
@@ -892,9 +892,9 @@
 
     if (window.navigator.userAgent.indexOf("Edge") === -1 && isWebRTCSupported) {
       login();
-      // setInterval(() => {
-      //   refreshGraph();
-      // }, 2000);
+      setInterval(() => {
+        refreshGraph();
+      }, 2000);
     } else {
       alert('Unfortunetly your browser does not support this action!');
     }
