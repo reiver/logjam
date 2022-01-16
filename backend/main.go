@@ -4,7 +4,6 @@ import (
 	"bytes"
 
 	"github.com/sparkscience/logjam/backend/arg"
-	command "github.com/sparkscience/logjam/backend/public/command"
 	"github.com/sparkscience/logjam/backend/public/graphapi"
 	"github.com/sparkscience/logjam/backend/public/logfiles"
 	roomwebsockets "github.com/sparkscience/logjam/backend/public/roomws"
@@ -56,7 +55,6 @@ func main() {
 	log.Log("Websocket listening on ", websockets.Path)
 	log.Log("Static listening on ", statics.Path)
 	log.Log("Log File listening on ", logfiles.Path)
-	log.Log("Command listening on ", command.Path)
 	log.Log("Graphapi listening on ", graphapi.Path)
 	log.Log("RoomWebsocket listening on ", roomwebsockets.Path)
 
