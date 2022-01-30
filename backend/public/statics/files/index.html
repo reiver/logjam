@@ -374,7 +374,7 @@
               data: "true",
             })
           );
-          hasStream = true;
+          hasStream = true;.0
         }
         console.log('ontrack', event.streams[0]);
         if (myRole != "broadcast") {
@@ -547,6 +547,8 @@
         }
         // myUsername = "";
         myPeerConnections = [];
+        broadcasterPeerConnection = null;
+        myPeerConnection = null;
         login();
       };
 
@@ -693,6 +695,11 @@
         } else if (msg.type == "alt-broadcast-approve") {
           console.log('Start connecting to broadcaster');
           connectUser(msg.data, 'alt');
+        }
+        else if (msg.type == "error") {
+          console.log('Error', msg);
+          $("#audience-btn").prop("disabled", false);
+          alert(msg.data);
         }
       };
     }

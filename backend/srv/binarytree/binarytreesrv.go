@@ -2,6 +2,7 @@ package binarytreesrv
 
 import (
 	"strconv"
+	"time"
 
 	"github.com/gorilla/websocket"
 	"github.com/mmcomp/go-binarytree"
@@ -91,6 +92,19 @@ func fillFunction(node interface{}, socketIndex uint64) binarytree.SingleNode {
 func GetMap() binarytree.Tree {
 	Map.SetFillNode(fillFunction)
 	return Map
+}
+
+func InsertChild(socket *websocket.Conn, aMap binarytree.Tree) (binarytree.SingleNode, error) {
+	tryCount := 0
+	var result binarytree.SingleNode
+	var err error
+	result, err = aMap.InsertChild(socket, false)
+	for err != nil && err.Error() == "no nodes to connect" && tryCount < 10 {
+		result, err = aMap.InsertChild(socket, false)
+		time.Sleep(1000 * time.Millisecond)
+		tryCount++
+	}
+	return result, err
 }
 
 type TreeGraphElement struct {
