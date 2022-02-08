@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/mmcomp/go-binarytree"
 	logger "github.com/mmcomp/go-log"
@@ -16,6 +17,7 @@ var (
 )
 
 type MyNode struct {
+	mutex          sync.Mutex
 	Name           string
 	ID             float64
 	ConnectedNodes map[float64]MyNode
@@ -24,32 +26,53 @@ type MyNode struct {
 }
 
 func (receiver *MyNode) Insert(node binarytree.SingleNode) {
+	receiver.mutex.Lock()
+	defer receiver.mutex.Unlock()
+
 	theNode := node.(*MyNode)
 	receiver.ConnectedNodes[theNode.ID] = *theNode
 }
 
 func (receiver *MyNode) Delete(nodeId interface{}) {
+	receiver.mutex.Lock()
+	defer receiver.mutex.Unlock()
+
 	delete(receiver.ConnectedNodes, nodeId.(float64))
 }
 
 func (receiver *MyNode) Get(nodeId interface{}) binarytree.SingleNode {
+	receiver.mutex.Lock()
+	defer receiver.mutex.Unlock()
+
 	result := receiver.ConnectedNodes[nodeId.(float64)]
 	return &result
 }
 
-func (receiver *MyNode) GetLength() int {
+func (receiver *MyNode) Length() int {
+	receiver.mutex.Lock()
+	defer receiver.mutex.Unlock()
+
 	return len(receiver.ConnectedNodes)
 }
 
 func (receiver *MyNode) IsHead() bool {
+	receiver.mutex.Lock()
+	defer receiver.mutex.Unlock()
+
 	return receiver.Head
 }
 
 func (receiver *MyNode) CanConnect() bool {
+	receiver.mutex.Lock()
+	defer receiver.mutex.Unlock()
+
 	return receiver.Connectable
 }
 
-func (receiver *MyNode) GetAll() map[interface{}]binarytree.SingleNode {
+func (receiver *MyNode) All() map[interface{}]binarytree.SingleNode {
+	receiver.mutex.Lock()
+	defer receiver.mutex.Unlock()
+
 	var output map[interface{}]binarytree.SingleNode = make(map[interface{}]binarytree.SingleNode)
 	for indx := range receiver.ConnectedNodes {
 		result := receiver.ConnectedNodes[indx]
@@ -59,14 +82,23 @@ func (receiver *MyNode) GetAll() map[interface{}]binarytree.SingleNode {
 }
 
 func (receiver *MyNode) ToggleHead() {
+	receiver.mutex.Lock()
+	defer receiver.mutex.Unlock()
+
 	receiver.Head = !receiver.Head
 }
 
 func (receiver *MyNode) ToggleCanConnect() {
+	receiver.mutex.Lock()
+	defer receiver.mutex.Unlock()
+
 	receiver.Connectable = !receiver.Connectable
 }
 
-func (receiver *MyNode) GetIndex() interface{} {
+func (receiver *MyNode) Index() interface{} {
+	receiver.mutex.Lock()
+	defer receiver.mutex.Unlock()
+
 	return receiver.ID
 }
 
@@ -142,7 +174,7 @@ func (receiver httpHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) 
 	w.Header().Set("Content-Type", "application/json")
 	switch req.Method {
 	case "GET":
-		nodes := Map.GetAll()
+		nodes := Map.All()
 		log.Inform("total ", len(nodes))
 		treeData := receiver.GetTree(Map)
 		log.Inform("treeData ", treeData)

@@ -219,7 +219,7 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 		fmt.Fprintln(f, msg)
 	case "tree":
 		log.Alert("Tree Received ", socket.Name)
-		treeData := binarytreesrv.GetTree(Map)
+		treeData := binarytreesrv.Tree(Map)
 		log.Inform("treeData ", treeData)
 		j, e := json.Marshal(treeData)
 		if e != nil {
@@ -245,7 +245,7 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 			return
 		}
 		log.Alert("Target ", ID)
-		allockets := Map.GetAll()
+		allockets := Map.All()
 		var ok = false
 		var target binarytreesrv.MySocket
 		// target, ok := Map. .GetSocketByID(ID)
@@ -256,7 +256,7 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 				target = *node.(*binarytreesrv.MySocket)
 				break
 			} else {
-				for _, child := range node.GetAll() {
+				for _, child := range node.All() {
 					log.Alert(child.(*binarytreesrv.MySocket).ID)
 					if child.(*binarytreesrv.MySocket).ID == ID {
 						ok = true
