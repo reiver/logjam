@@ -102,7 +102,7 @@ func (receiver *MyNode) Index() interface{} {
 	return receiver.ID
 }
 
-func fillFunction(node interface{}, socketIndex uint64) binarytree.SingleNode {
+func fillFunction(node interface{}, _ uint64) binarytree.SingleNode {
 	id := node.(float64)
 	result := MyNode{
 		ID:             id,
