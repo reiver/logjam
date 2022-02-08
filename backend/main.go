@@ -1,8 +1,6 @@
 package main
 
 import (
-	"bytes"
-
 	"github.com/sparkscience/logjam/backend/arg"
 	"github.com/sparkscience/logjam/backend/public/graphapi"
 	"github.com/sparkscience/logjam/backend/public/logfiles"
@@ -14,29 +12,11 @@ import (
 
 	"fmt"
 	"net/http"
-
-	"os/exec"
 )
 
 func main() {
 	log := logsrv.Begin()
 	defer log.End()
-
-	// test
-	cmd := exec.Command("whoami")
-
-	var out bytes.Buffer
-	cmd.Stdout = &out
-
-	err := cmd.Run()
-
-	if err != nil {
-		log.Error(err)
-	} else {
-		log.Alert(out.String())
-	}
-
-	//\test
 
 	// If --test-logs flag was used, then do a logs test and then exit.
 	if arg.TestLogs {
