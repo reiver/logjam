@@ -28,12 +28,12 @@ func (receiver *MyNode) Insert(node binarytree.SingleNode) {
 	receiver.ConnectedNodes[theNode.ID] = *theNode
 }
 
-func (receiver *MyNode) Delete(node interface{}) {
-	delete(receiver.ConnectedNodes, node.(float64))
+func (receiver *MyNode) Delete(nodeId interface{}) {
+	delete(receiver.ConnectedNodes, nodeId.(float64))
 }
 
-func (receiver *MyNode) Get(node interface{}) binarytree.SingleNode {
-	result := receiver.ConnectedNodes[node.(float64)]
+func (receiver *MyNode) Get(nodeId interface{}) binarytree.SingleNode {
+	result := receiver.ConnectedNodes[nodeId.(float64)]
 	return &result
 }
 
