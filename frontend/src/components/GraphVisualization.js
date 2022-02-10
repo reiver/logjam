@@ -13,11 +13,10 @@ export default function GraphVisualization({data}) {
         // Set the dimension of the diagram
         d3.select(ref.current)
             .attr("width", dimension.width + OFFSET)
-            .attr("height", dimension.height)
+            .attr("height", dimension.height - 20)
             .append("g")
-            // set padding
             .attr("transform", function (d) {
-                return "translate(20, 20)";
+                return "translate(30, 0)";
             })
     }, [dimension.height, dimension.width]);
 
@@ -78,6 +77,7 @@ export default function GraphVisualization({data}) {
                 // .attr("text-anchor", function (d) {
                 //     return d.children || d._children ? "end" : "start";
                 // })
+                .attr("stroke", "white")
                 .text(function (d) {
                     return d.data.name;
                 });

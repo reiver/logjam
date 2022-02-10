@@ -1,15 +1,16 @@
 .chart{
     overflow: auto;
+    /*border: 5px solid red;*/
 }
 
 .node circle {
-    /*fill: #fff;*/
     stroke: steelblue;
     stroke-width: 3px;
 }
 
 .node text {
     font: 12px sans-serif;
+    fill: white;
 }
 
 .link {

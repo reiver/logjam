@@ -7,7 +7,7 @@ export default function Screen(props: any) {
     const flexGap = 1;
     let flexRatio = 100 / Math.ceil(Math.sqrt(videoCount));
     let flex = "0 0 calc(" + flexRatio + "% - " + flexGap + "px)";
-    // let flex = "0 0 calc(" + flexRatio + "%)";
+
     for (let i = 0; i < videoCount; i++) {
         console.log(props.children[i]);
         containers.push(
