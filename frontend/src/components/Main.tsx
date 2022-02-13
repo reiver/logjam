@@ -5,7 +5,7 @@ import BottomSidebar from "./BottomSidebar";
 import LeftSidebar from "./LeftSidebar";
 import ControlButtons from "./ControlButtons";
 
-export default function Main() {
+export default function Main({myName}: any) {
     const [mic, setMic] = useState(true);
     const [camera, setCamera] = useState(true);
 
@@ -36,7 +36,7 @@ export default function Main() {
                 <video id="video 7" autoPlay playsInline muted/>
                 <video id="video 8" autoPlay playsInline muted/>
             </Screen>
-            <BottomSidebar controlButtons={controlButtons}/>
+            <BottomSidebar controlButtons={controlButtons} myName={myName}/>
             <LeftSidebar/>
         </Page>
     )
@@ -47,3 +47,4 @@ const Page = styled.div`
   height: 100vh;
   padding: 1em;
 `;
+

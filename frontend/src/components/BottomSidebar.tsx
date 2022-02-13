@@ -1,17 +1,27 @@
 import React from 'react';
 import styled from "styled-components";
 
-export default function BottomSidebar({controlButtons}: any){
+export default function BottomSidebar({controlButtons, myName}: any){
 
     return(
         <Wrapper>
             <Slider/>
             <Container >
+                <Welcome>{myName}</Welcome>
                 {controlButtons}
             </Container>
         </Wrapper>
     )
 }
+
+
+const Welcome = styled.p`
+  color: white;
+  margin-left: 20px;
+  position: relative;
+  top: -30px;
+`;
+
 
 const Wrapper = styled.div`
   bottom: 0;
@@ -25,6 +35,7 @@ const Wrapper = styled.div`
   -moz-transition: all 1s ease;
   -o-transition: all 1s ease;
   transition: all 1s ease;
+  color: white;
 
   &:hover {
     -webkit-transition: all 1s ease;

@@ -29,7 +29,7 @@ const VideoGroupContainer = styled.div`
   justify-content: center;
   background-color: black;
   gap: 1px;
-  height: 100%;
+  height: 95%;
 `;
 
 const VideoContainer = styled.div`

@@ -5,11 +5,12 @@ import GetName from "./components/GetName";
 
 function App() {
     const [myName, setMyName] = useState();
-    console.log(myName);
     return (
-        <div className="App">
+        <div>
             {
-                myName ? <Main/> : <GetName myName={myName} setMyName={setMyName}/>
+                myName ?
+                    <Main myName={myName}/> :
+                    <GetName myName={myName} setMyName={setMyName}/>
             }
         </div>
     );
