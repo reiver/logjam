@@ -4,10 +4,10 @@ import Screen from "./Screen";
 import BottomSidebar from "./BottomSidebar";
 import LeftSidebar from "./LeftSidebar";
 import ControlButtons from "./ControlButtons";
-import useSocket from "../hooks/useSocket";
+import Socket from "./Socket";
 
 export default function Main({myName}: any) {
-    let socket = useSocket(myName);
+    const [mySocket, setMySocket] = useState<WebSocket>();
 
     const [mic, setMic] = useState(true);
     const [camera, setCamera] = useState(true);
@@ -29,12 +29,17 @@ export default function Main({myName}: any) {
 
 
     useEffect(() => {
-        console.log('socket:', socket);
-    }, [socket]);
+        console.log('myName:', myName);
+    }, [myName]);
+
+    useEffect(() => {
+        console.log('mySocket:', mySocket);
+    }, [mySocket]);
 
 
     return (
         <Page>
+            <Socket myName={myName} mySocket={mySocket} setMySocket={setMySocket}/>
             <Screen>
                 <video id="video 1" autoPlay playsInline muted/>
                 <video id="video 2" autoPlay playsInline muted/>

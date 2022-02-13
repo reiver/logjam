@@ -1,9 +1,9 @@
 import {useEffect, useState} from "react";
 import {SocketMessage} from "../types/SocketMessage";
 
-export default function useSocket({myName}: any) {
-    const [mySocket, setMySocket] = useState<WebSocket>();
+export default function Socket({myName, mySocket, setMySocket}: any) {
     // let socket: (WebSocket | undefined) = undefined;
+    const [readyState, setReadyState] = useState(null);
 
     const [message, setMessage] = useState<SocketMessage>(
         {
@@ -19,11 +19,38 @@ export default function useSocket({myName}: any) {
     );
 
     useEffect(() => {
-        console.log("myName=", myName);
-        if (myName && !mySocket) {
-            createSocket();
+        if (mySocket) {
+            setReadyState(mySocket.readyState)
         }
+    }, [mySocket, mySocket?.readyState]);
+
+    useEffect(() => {
+        console.log("myName=", myName);
+        if (!myName) {
+            console.log('myName is not set yet');
+            return;
+        }
+        if (mySocket) {
+            console.log('socket already exists');
+            return;
+        }
+        createSocket();
     });
+
+    function getStateDescription(state: number) {
+        switch (state) {
+            case 0:
+                return "CONNECTING	Socket has been created. The connection is not yet open.";
+            case 1:
+                return "OPEN	The connection is open and ready to communicate."
+            case 2:
+                return "CLOSING	The connection is in the process of closing."
+            case 3:
+                return "CLOSED	The connection is closed or couldn't be opened."
+            default:
+                return ""
+        }
+    }
 
     function getSocketUrl() {
         const url = window.location.href.split("//");
@@ -52,12 +79,18 @@ export default function useSocket({myName}: any) {
 
     function createSocket() {
         console.log('createSocket()');
-        let socket = new WebSocket(getSocketUrl());
+        let socket: WebSocket;
+        try {
+            socket = new WebSocket(getSocketUrl());
+            console.log('socket created:', socket);
+        } catch (e) {
+            console.log('could not create socket:', e);
+            return;
+        }
 
         socket.onopen = function (event) {
-            // console.log("[open] Connection established");
-            // console.log("Sending start to server");
-            if (!socket) return;
+            console.log("[open] Connection established");
+            console.log("Sending start to server");
             socket.send(
                 JSON.stringify({
                     type: "start",
@@ -84,12 +117,16 @@ export default function useSocket({myName}: any) {
         };
 
         socket.onerror = function (error) {
-            // console.log(`[error] ${error.message}`);
+            console.dir('error:', error);
         };
 
         socket.onmessage = async function (event) {
             let msg: SocketMessage = parseSocketMessage(event.data);
-            if (!msg) return;
+            if (!msg) {
+                console.log('message is null');
+                return;
+            }
+
             setMessage(prevState => ({
                 ...prevState, msg
             }));
@@ -134,9 +171,13 @@ export default function useSocket({myName}: any) {
                     console.log(msg);
             }
         }
+        console.log('mySocket is set')
         setMySocket(socket);
     }
-    return mySocket;
+
+    return (
+        <p style={{color: "white"}}>Socket {readyState ? getStateDescription(readyState) : "-"}</p>
+    );
 }
 
 
