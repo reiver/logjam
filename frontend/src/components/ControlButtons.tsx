@@ -6,14 +6,15 @@ const CAMERA_OFF = "/cam-off.png";
 const MIC_ON = "/mic-on.png";
 const MIC_OFF = "/mic-off.png";
 
-export default function ControlButtons({camera, mic, onMicButtonClick}: {
+export default function ControlButtons({camera, mic, onMicButtonClick, onCameraClick}: {
     camera: boolean,
     mic: boolean,
-    onMicButtonClick: ()=>void
+    onMicButtonClick: ()=>void,
+    onCameraClick: ()=> void
 }) {
     return (
         <Container>
-            <Image src={camera ? CAMERA_ON : CAMERA_OFF} alt={"icon"}/>
+            <Image src={camera ? CAMERA_ON : CAMERA_OFF} alt={"icon"} onClick={onCameraClick}/>
             <Image src={"/spark-logo.png"} alt={"logo"}/>
             <Image src={mic ? MIC_ON : MIC_OFF} alt={"icon"} onClick={onMicButtonClick}/>
         </Container>

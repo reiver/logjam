@@ -7,12 +7,22 @@ import ControlButtons from "./ControlButtons";
 
 export default function Main() {
     const [mic, setMic] = useState(true);
+    const [camera, setCamera] = useState(true);
 
     function handleMicButtonClicked() {
         setMic(!mic);
     }
 
-    const controlButtons = <ControlButtons camera={true} mic={mic} onMicButtonClick={handleMicButtonClicked}/>
+    function handleCameraButtonClicked() {
+        setCamera(!camera);
+    }
+
+    const controlButtons = (
+        <ControlButtons camera={camera} mic={mic}
+                        onMicButtonClick={handleMicButtonClicked}
+                        onCameraClick={handleCameraButtonClicked}
+        />
+    );
 
     return (
         <Page>
