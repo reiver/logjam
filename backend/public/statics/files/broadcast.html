@@ -385,15 +385,15 @@
           if ($("#alt_video_" + targetUsername).length === 0) {
             $("#streams").append(`<video id="alt_video_${targetUsername}" autoplay playsinline style="width: 100%"></video><br/>`);
             document.getElementById("alt_video_" + targetUsername).srcObject = event.streams[0];
-            /*
-            myPeerConnections.map(amyPeerConnection => {
-              event.streams[0].getTracks().forEach((track) => {
-                track['mehrdad'] = 12;
-                event.streams[0]['mehrdad'] = 12;
-                amyPeerConnection.addTrack(track, event.streams[0]);
+            myPeerConnections.map(anyPeerConnection => {
+              event.streams.map((stream) => {
+                stream.getTracks().forEach((track) => {
+                  // track['mehrdad'] = 12;
+                  // stream['mehrdad'] = 12;
+                  anyPeerConnection.addTrack(track, stream);
+                });
               });
             });
-            */
           }
         };
         myAltPeerConnection.onnegotiationneeded = function (event) {
