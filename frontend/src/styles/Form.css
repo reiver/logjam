@@ -1,0 +1,46 @@
+.form {
+    position: relative;
+    padding: 1em;
+    display: flex;
+    flex-flow: row wrap;
+    align-items: center;
+    gap: 1em;
+    justify-content: center;
+}
+
+.form label {
+    padding: 10px;
+}
+
+.form input {
+    vertical-align: middle;
+    margin-right: .2em;
+    padding: 10px;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: .2em;
+}
+
+.form button {
+    padding: 0 50px;
+    background-color: dodgerblue;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    color: white;
+    cursor: pointer;
+}
+
+.form button:hover {
+    background-color: royalblue;
+}
+
+@media (max-width: 800px) {
+    .form input {
+        margin: 10px 0;
+    }
+
+    .form {
+        flex-direction: column;
+        align-items: stretch;
+    }
+}
