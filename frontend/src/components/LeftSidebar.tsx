@@ -46,13 +46,11 @@ const Container = styled.div`
 `;
 
 const Slider = styled.div`
-  width: 3px;
+  width: 4px;
   height: 40%;
-  border: 1px solid #5691f8;
   border-radius: 10px;
   position: absolute;
   left: 0;
   top: 30%;
-  background-color: #5691f8;
-  z-index: 1;
+  background-color: #26a5f6;
 `;

@@ -18,7 +18,7 @@ const Wrapper = styled.div`
   left: 0;
   position: fixed;
   width: 100%;
-  height: 3px;
+  height: 30px;
   //overflow: auto;
   margin: 0 auto;
   -webkit-transition: all 1s ease;
@@ -46,11 +46,11 @@ const Container = styled.div`
 
 const Slider = styled.div`
   width: 20%;
-  height: 3px;
-  border: 1px solid #5691f8;
+  height: 4px;
   border-radius: 10px;
   position: absolute;
   left: 40%;
   bottom: 0;
-  background-color: #5691f8;
+  background-color: #26a5f6;
+  z-index: 1;
 `;
