@@ -1,6 +1,7 @@
 import React from 'react';
 import styled from "styled-components";
 import ControlButtons from "./ControlButtons";
+import Logo from "./Logo";
 
 export default function BottomSidebar(){
     return(
@@ -20,20 +21,19 @@ const Wrapper = styled.div`
   position: fixed;
   width: 100%;
   height: 3px;
-  overflow: auto;
+  //overflow: auto;
   margin: 0 auto;
   -webkit-transition: all 1s ease;
   -moz-transition: all 1s ease;
   -o-transition: all 1s ease;
   transition: all 1s ease;
-  z-index: 999;
 
   &:hover {
     -webkit-transition: all 1s ease;
     -moz-transition: all 1s ease;
     -o-transition: all 1s ease;
     transition: all 1s ease;
-    height: 20%;
+    height: 50%;
   }
 `;
 
@@ -43,7 +43,7 @@ const Container = styled.div`
   position: relative;
   top: 0;
   left: 0;
-  background: rgba(36, 46, 66, .3);
+  background-color: rgba(36, 46, 66, .5);
 `;
 
 const Slider = styled.div`
@@ -55,5 +55,4 @@ const Slider = styled.div`
   left: 40%;
   bottom: 0;
   background-color: #5691f8;
-  z-index: 1;
 `;

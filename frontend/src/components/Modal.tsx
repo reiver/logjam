@@ -1,23 +1,24 @@
 import React from 'react';
 import styled from "styled-components";
+import Logo from "./Logo";
 
-export default function Modal({children, show}) {
+export default function Modal({children, show}: {children: any, show: boolean}) {
     if (!show) return (<div/>);
     return (
-        <Container>
-            <Logo/>
-            <Wrapper>
+        <Wrapper>
+            <Logo />
+            <Container>
                 <Content>
                     <br/>
                     {children}
                 </Content>
-            </Wrapper>
-        </Container>
+            </Container>
+        </Wrapper>
     );
 }
 
 
-const Container = styled.div`
+const Wrapper = styled.div`
   /* This way it could be display flex or grid or whatever also. */
   display: block;
 
@@ -51,19 +52,7 @@ const Container = styled.div`
   text-align: center;
 `;
 
-const Logo = styled.div`
-  width: 100%;
-  height: 130px;
-  position: absolute;
-  top: -80px;
-  left: 0;
-  background-image: url("/spark-logo.png");
-  background-repeat: no-repeat;
-  background-size: contain;
-  background-position: center;
-`;
-
-const Wrapper = styled.div`
+const Container = styled.div`
   display: flex;
   width: 100%;
   height: 100%;

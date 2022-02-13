@@ -3,6 +3,7 @@ import styled from "styled-components";
 import Screen from "./Screen";
 import BottomSidebar from "./BottomSidebar";
 import LeftSidebar from "./LeftSidebar";
+import Logo from "./Logo";
 
 export default function Main() {
     return (
@@ -25,7 +26,6 @@ export default function Main() {
 
 const Page = styled.div`
   background-color: black;
-  //border: 1px solid #16253f;
   height: 100vh;
   padding: 1em;
 `;
