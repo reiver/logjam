@@ -576,7 +576,7 @@
           targetName = msg.username;
           var desc = new RTCSessionDescription(msg.sdp);
           let myPeerConnection = createPeerConnection(targetUsername);
-          await myPeerConnection.setLocalDescription({type: "rollback"});
+          // await myPeerConnection.setLocalDescription({type: "rollback"});
           await myPeerConnection.setRemoteDescription(desc);
 
           var answer = await myPeerConnection.createAnswer();
@@ -596,7 +596,7 @@
           targetName = msg.username;
           var desc = new RTCSessionDescription(msg.sdp);
           let myPeerConnection = createPeerConnection(targetUsername, true);
-          await myPeerConnection.setLocalDescription({type: "rollback"});
+          // await myPeerConnection.setLocalDescription({type: "rollback"});
           await myPeerConnection.setRemoteDescription(desc);
 
           var answer = await myPeerConnection.createAnswer();
