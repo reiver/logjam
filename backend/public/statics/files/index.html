@@ -367,6 +367,11 @@
         }
       };
       myPeerConnection.ontrack = function (event) {
+        console.log('[onTrack stream length]', event.streams.length);
+        event.streams.map((stream) => {
+          console.log('stream id', stream.id);
+          console.log('stream track length', stream.getTracks().length);
+        });
         if (!hasStream) {
           socket.send(
             JSON.stringify({
@@ -374,10 +379,9 @@
               data: "true",
             })
           );
-          hasStream = true;.0
+          hasStream = true;
         }
         console.log('ontrack', event.streams[0]);
-        if (myRole != "broadcast") {
           console.log('Stream Count', event.streams);
           if ($("#local_video_" + event.streams[0].id).length === 0) {
             $("#streams").append(`<video id="local_video_${event.streams[0].id}" autoplay playsinline style="width: 100%"></video><br />`);
@@ -420,7 +424,6 @@
             })
           );
           // }
-        }
       };
       myPeerConnection.onnegotiationneeded = function (event) {
         myPeerConnection
@@ -557,7 +560,7 @@
       };
 
       socket.onmessage = async function (event) {
-        console.log(`[message] Data received from server: ${event.data}`);
+        // console.log(`[message] Data received from server: ${event.data}`);
         let msg;
         try {
           msg = JSON.parse(event.data);
