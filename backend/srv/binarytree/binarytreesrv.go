@@ -2,6 +2,7 @@ package binarytreesrv
 
 import (
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -13,6 +14,7 @@ var (
 )
 
 type MySocket struct {
+	mutex            sync.Mutex
 	Socket           *websocket.Conn
 	ID               uint64
 	IsBroadcaster    bool
@@ -23,32 +25,53 @@ type MySocket struct {
 }
 
 func (receiver *MySocket) Insert(node binarytree.SingleNode) {
+	receiver.mutex.Lock()
+	defer receiver.mutex.Unlock()
+
 	socket := node.(*MySocket)
 	receiver.ConnectedSockets[socket.Socket] = *socket
 }
 
 func (receiver *MySocket) Delete(node interface{}) {
+	receiver.mutex.Lock()
+	defer receiver.mutex.Unlock()
+
 	delete(receiver.ConnectedSockets, node.(*websocket.Conn))
 }
 
 func (receiver *MySocket) Get(node interface{}) binarytree.SingleNode {
+	receiver.mutex.Lock()
+	defer receiver.mutex.Unlock()
+
 	result := receiver.ConnectedSockets[node.(*websocket.Conn)]
 	return &result
 }
 
-func (receiver *MySocket) GetLength() int {
+func (receiver *MySocket) Length() int {
+	receiver.mutex.Lock()
+	defer receiver.mutex.Unlock()
+
 	return len(receiver.ConnectedSockets)
 }
 
 func (receiver *MySocket) IsHead() bool {
+	receiver.mutex.Lock()
+	defer receiver.mutex.Unlock()
+
 	return receiver.IsBroadcaster
 }
 
 func (receiver *MySocket) CanConnect() bool {
+	receiver.mutex.Lock()
+	defer receiver.mutex.Unlock()
+
 	return receiver.HasStream
 }
 
-func (receiver *MySocket) GetAll() map[interface{}]binarytree.SingleNode {
+func (receiver *MySocket) All() map[interface{}]binarytree.SingleNode {
+	receiver.mutex.Lock()
+	defer receiver.mutex.Unlock()
+
 	var output map[interface{}]binarytree.SingleNode = make(map[interface{}]binarytree.SingleNode)
 	for indx := range receiver.ConnectedSockets {
 		result := receiver.ConnectedSockets[indx]
@@ -58,22 +81,37 @@ func (receiver *MySocket) GetAll() map[interface{}]binarytree.SingleNode {
 }
 
 func (receiver *MySocket) ToggleHead() {
+	receiver.mutex.Lock()
+	defer receiver.mutex.Unlock()
+
 	receiver.IsBroadcaster = !receiver.IsBroadcaster
 }
 
 func (receiver *MySocket) ToggleCanConnect() {
+	receiver.mutex.Lock()
+	defer receiver.mutex.Unlock()
+
 	receiver.HasStream = !receiver.HasStream
 }
 
-func (receiver *MySocket) GetIndex() interface{} {
+func (receiver *MySocket) Index() interface{} {
+	receiver.mutex.Lock()
+	defer receiver.mutex.Unlock()
+
 	return receiver.Socket
 }
 
 func (receiver *MySocket) SetName(name string) {
+	receiver.mutex.Lock()
+	defer receiver.mutex.Unlock()
+
 	receiver.Name = name
 }
 
 func (receiver *MySocket) SetIsTurn(isTurn bool) {
+	receiver.mutex.Lock()
+	defer receiver.mutex.Unlock()
+
 	receiver.IsTURN = isTurn
 }
 
@@ -129,7 +167,7 @@ func addSubSockets(socket MySocket, children *[]TreeGraphElement, aMap binarytre
 	}
 }
 
-func GetTree(aMap binarytree.Tree) []TreeGraphElement {
+func Tree(aMap binarytree.Tree) []TreeGraphElement {
 	treeData := []TreeGraphElement{}
 	broadcasterLevel := aMap.LevelNodes(1)
 	if len(broadcasterLevel) == 0 {
