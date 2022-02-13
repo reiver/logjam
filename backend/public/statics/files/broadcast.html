@@ -385,6 +385,7 @@
           if ($("#alt_video_" + targetUsername).length === 0) {
             $("#streams").append(`<video id="alt_video_${targetUsername}" autoplay playsinline style="width: 100%"></video><br/>`);
             document.getElementById("alt_video_" + targetUsername).srcObject = event.streams[0];
+            /*
             myPeerConnections.map(amyPeerConnection => {
               event.streams[0].getTracks().forEach((track) => {
                 track['mehrdad'] = 12;
@@ -392,6 +393,7 @@
                 amyPeerConnection.addTrack(track, event.streams[0]);
               });
             });
+            */
           }
         };
         myAltPeerConnection.onnegotiationneeded = function (event) {
