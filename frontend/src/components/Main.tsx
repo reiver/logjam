@@ -1,11 +1,14 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import styled from "styled-components";
 import Screen from "./Screen";
 import BottomSidebar from "./BottomSidebar";
 import LeftSidebar from "./LeftSidebar";
 import ControlButtons from "./ControlButtons";
+import useSocket from "../hooks/useSocket";
 
 export default function Main({myName}: any) {
+    let socket = useSocket(myName);
+
     const [mic, setMic] = useState(true);
     const [camera, setCamera] = useState(true);
 
@@ -23,6 +26,12 @@ export default function Main({myName}: any) {
                         onCameraClick={handleCameraButtonClicked}
         />
     );
+
+
+    useEffect(() => {
+        console.log('socket:', socket);
+    }, [socket]);
+
 
     return (
         <Page>
