@@ -1,17 +1,15 @@
 import React from 'react';
 import styled from "styled-components";
-import ControlButtons from "./ControlButtons";
-import Logo from "./Logo";
 
-export default function BottomSidebar(){
+export default function BottomSidebar({controlButtons}: any){
+
     return(
         <Wrapper>
             <Slider/>
             <Container >
-                <ControlButtons camera={true} mic={false}/>
+                {controlButtons}
             </Container>
         </Wrapper>
-
     )
 }
 

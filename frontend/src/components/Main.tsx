@@ -1,11 +1,19 @@
-import React from 'react';
+import React, {useState} from 'react';
 import styled from "styled-components";
 import Screen from "./Screen";
 import BottomSidebar from "./BottomSidebar";
 import LeftSidebar from "./LeftSidebar";
-import Logo from "./Logo";
+import ControlButtons from "./ControlButtons";
 
 export default function Main() {
+    const [mic, setMic] = useState(true);
+
+    function handleMicButtonClicked() {
+        setMic(!mic);
+    }
+
+    const controlButtons = <ControlButtons camera={true} mic={mic} onMicButtonClick={handleMicButtonClicked}/>
+
     return (
         <Page>
             <Screen>
@@ -18,7 +26,7 @@ export default function Main() {
                 <video id="video 7" autoPlay playsInline muted/>
                 <video id="video 8" autoPlay playsInline muted/>
             </Screen>
-            <BottomSidebar/>
+            <BottomSidebar controlButtons={controlButtons}/>
             <LeftSidebar/>
         </Page>
     )

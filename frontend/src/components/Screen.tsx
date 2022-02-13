@@ -9,7 +9,6 @@ export default function Screen(props: any) {
     let flex = "0 0 calc(" + flexRatio + "% - " + flexGap + "px)";
 
     for (let i = 0; i < videoCount; i++) {
-        console.log(props.children[i]);
         containers.push(
             <VideoContainer key={"vc-" + i} className={"video-container"} style={{flex: flex}}>
                 {i}
