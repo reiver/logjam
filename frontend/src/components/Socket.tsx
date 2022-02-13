@@ -2,7 +2,6 @@ import {useEffect, useState} from "react";
 import {SocketMessage} from "../types/SocketMessage";
 
 export default function Socket({myName, mySocket, setMySocket}: any) {
-    // let socket: (WebSocket | undefined) = undefined;
     const [readyState, setReadyState] = useState(null);
 
     const [message, setMessage] = useState<SocketMessage>(
@@ -100,15 +99,9 @@ export default function Socket({myName, mySocket, setMySocket}: any) {
         };
 
         socket.onclose = function (event) {
-            if (event.wasClean) {
-                console.log(
-                    `[close] Connection closed cleanly, code=${event.code} reason=${event.reason}`
-                );
-            } else {
-                console.log(
-                    `[close] Connection died, , code=${event.code} reason=${event.reason}`
-                );
-            }
+            console.log(
+                `[close] Connection ${event.wasClean ? "closed": "died"}, code=${event.code} reason=${event.reason}`
+            );
             // myUsername = "";
             // myPeerConnections = [];
             // myAltPeerConnections = [];
@@ -117,7 +110,8 @@ export default function Socket({myName, mySocket, setMySocket}: any) {
         };
 
         socket.onerror = function (error) {
-            console.dir('error:', error);
+            console.log('error:');
+            console.dir(error);
         };
 
         socket.onmessage = async function (event) {
