@@ -216,7 +216,7 @@
       remoteStream,
       localScreenShare,
       myPeerConnection,
-      myPeerConnections = [],
+      myPeerConnections = {},
       myAltPeerConnections = [],
       iceCandidates = [],
       altIceCandidates = [],
@@ -385,6 +385,13 @@
           if ($("#alt_video_" + targetUsername).length === 0) {
             $("#streams").append(`<video id="alt_video_${targetUsername}" autoplay playsinline style="width: 100%"></video><br/>`);
             document.getElementById("alt_video_" + targetUsername).srcObject = event.streams[0];
+            for(const targetUsername in myPeerConnections) {
+              console.log('Sending new tracks to', targetUsername);
+              const anyPeerConnection = myPeerConnections[targetUsername];
+              event.streams[0].getTracks().forEach((track) => {
+                anyPeerConnection.addTrack(track, event.streams[0]);
+              });
+            }
             // myPeerConnections.map(anyPeerConnection => {
               // event.streams[0].getTracks().forEach((track) => {
               //   anyPeerConnection.addTrack(track, event.streams[0]);
@@ -396,9 +403,6 @@
               //   });
               // });
             // });
-            event.streams[0].getTracks().forEach((track) => {
-              localStream.addTrack(track, event.streams[0]);
-            });
           }
         };
         myAltPeerConnection.onnegotiationneeded = function (event) {
