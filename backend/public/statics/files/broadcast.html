@@ -386,13 +386,12 @@
             $("#streams").append(`<video id="alt_video_${targetUsername}" autoplay playsinline style="width: 100%"></video><br/>`);
             document.getElementById("alt_video_" + targetUsername).srcObject = event.streams[0];
             myPeerConnections.map(anyPeerConnection => {
-              event.streams.map((stream) => {
-                stream.getTracks().forEach((track) => {
-                  // track['mehrdad'] = 12;
-                  // stream['mehrdad'] = 12;
-                  anyPeerConnection.addTrack(track, stream);
-                });
-              });
+              anyPeerConnection.addStream(event.streams[0]);
+              // event.streams.map((stream) => {
+                // stream.getTracks().forEach((track) => {
+                //   anyPeerConnection.addTrack(track, stream);
+                // });
+              // });
             });
           }
         };
