@@ -388,7 +388,10 @@
             for(const tUsername in myPeerConnections) {
               console.log('Sending new tracks to', tUsername);
               const anyPeerConnection = myPeerConnections[tUsername];
-              anyPeerConnection.addStream(event.streams[0]);
+              if (targetUsername !== tUsername) {
+                anyPeerConnection.restartIce();
+              }
+              // anyPeerConnection.addStream(event.streams[0]);
               // event.streams[0].getTracks().forEach((track) => {
               //   try {
               //     anyPeerConnection.addTrack(track, event.streams[0]);
