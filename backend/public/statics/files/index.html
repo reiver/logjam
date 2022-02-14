@@ -460,6 +460,7 @@
         );
         if (myPeerConnection.iceConnectionState == 'disconnected') {
           console.log('Disconnected', myPeerConnections);
+          $("#streams").html("");
           socket.close();
         }
       };
