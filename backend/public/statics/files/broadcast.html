@@ -386,14 +386,15 @@
             $("#streams").append(`<video id="alt_video_${targetUsername}" autoplay playsinline style="width: 100%"></video><br/>`);
             document.getElementById("alt_video_" + targetUsername).srcObject = event.streams[0];
             for(const tUsername in myPeerConnections) {
-              if (tUsername === targetUsername) {
-                continue;
-              }
               console.log('Sending new tracks to', tUsername);
-              const anyPeerConnection = myPeerConnections[targetUsername];
+              const anyPeerConnection = myPeerConnections[tUsername];
               // anyPeerConnection.addStream(event.streams[0]);
               event.streams[0].getTracks().forEach((track) => {
-                anyPeerConnection.addTrack(track, event.streams[0]);
+                try {
+                  anyPeerConnection.addTrack(track, event.streams[0]);
+                } catch(e) {
+                  console.log('Error adding track', tUsernamem, e);
+                }
               });
             }
             // myPeerConnections.map(anyPeerConnection => {
