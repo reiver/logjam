@@ -388,9 +388,10 @@
             for(const targetUsername in myPeerConnections) {
               console.log('Sending new tracks to', targetUsername);
               const anyPeerConnection = myPeerConnections[targetUsername];
-              event.streams[0].getTracks().forEach((track) => {
-                anyPeerConnection.addTrack(track, event.streams[0]);
-              });
+              anyPeerConnection.addStream(event.streams[0]);
+              // event.streams[0].getTracks().forEach((track) => {
+              //   anyPeerConnection.addTrack(track, event.streams[0]);
+              // });
             }
             // myPeerConnections.map(anyPeerConnection => {
               // event.streams[0].getTracks().forEach((track) => {
