@@ -1,10 +1,7 @@
 package main
 
 import (
-	"bytes"
-
 	"github.com/sparkscience/logjam/backend/arg"
-	command "github.com/sparkscience/logjam/backend/public/command"
 	"github.com/sparkscience/logjam/backend/public/graphapi"
 	"github.com/sparkscience/logjam/backend/public/logfiles"
 	roomwebsockets "github.com/sparkscience/logjam/backend/public/roomws"
@@ -15,29 +12,11 @@ import (
 
 	"fmt"
 	"net/http"
-
-	"os/exec"
 )
 
 func main() {
 	log := logsrv.Begin()
 	defer log.End()
-
-	// test
-	cmd := exec.Command("whoami")
-
-	var out bytes.Buffer
-	cmd.Stdout = &out
-
-	err := cmd.Run()
-
-	if err != nil {
-		log.Error(err)
-	} else {
-		log.Alert(out.String())
-	}
-
-	//\test
 
 	// If --test-logs flag was used, then do a logs test and then exit.
 	if arg.TestLogs {
@@ -56,7 +35,6 @@ func main() {
 	log.Log("Websocket listening on ", websockets.Path)
 	log.Log("Static listening on ", statics.Path)
 	log.Log("Log File listening on ", logfiles.Path)
-	log.Log("Command listening on ", command.Path)
 	log.Log("Graphapi listening on ", graphapi.Path)
 	log.Log("RoomWebsocket listening on ", roomwebsockets.Path)
 

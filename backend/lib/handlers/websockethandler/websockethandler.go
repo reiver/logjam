@@ -122,9 +122,10 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 				log.Error("Marshal Error of `alt-broadcast` audianceResponse2", aerr)
 				return
 			}
-			var broadResponse message.MessageContract
-			broadResponse.Type = "alt-broadcast"
-			broadResponse.Data = strconv.FormatInt(int64(socket.ID), 10)
+			var broadResponse map[string]interface{} = make(map[string]interface{})
+			broadResponse["Type"] = "alt-broadcast"
+			broadResponse["Data"] = strconv.FormatInt(int64(socket.ID), 10)
+			broadResponse["name"] = socket.Name
 			broadResponseJSON, err := json.Marshal(broadResponse)
 			if err != nil {
 				log.Error("Marshal Error of `alt-broadcast` broadResponse", err)
@@ -160,10 +161,9 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 					msg := "Audiance " + socket.Name + " could not receive stream because there is no broadcaster now!"
 					fmt.Fprintln(f, msg)
 				} else {
-					// broadcaster = broadcasterLevel[0].(*binarytreesrv.MySocket)
 					var broadResponse message.MessageContract
 					broadResponse.Type = "add_audience"
-					broadResponse.Data = strconv.FormatInt(int64(socket.ID), 10) // + "," + socket.Name
+					broadResponse.Data = strconv.FormatInt(int64(socket.ID), 10)
 					broadResponseJSON, err := json.Marshal(broadResponse)
 
 					msg := "Audiance " + socket.Name + " is going to get connected"
@@ -171,9 +171,11 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 
 					if err == nil {
 						log.Highlight("Deciding to connect ...")
-						targetSocketNode, e := Map.InsertChild(socket.Socket, false) // receiver.decideWhomToConnect(broadcaster)
+						targetSocketNode, e := binarytreesrv.InsertChild(socket.Socket, Map)
+						// targetSocketNode, e := Map.InsertChild(socket.Socket, false)
 						if e != nil {
 							log.Error("Insert Child Error ", e)
+							socket.Socket.WriteMessage(messageType, []byte("{\"type\":\"error\",\"data\":\"Insert Child Error : "+e.Error()+" \"}"))
 							return
 						}
 						log.Highlight("Deciding to connect end")
@@ -186,17 +188,7 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 						if targetSocket.Socket != broadcaster.Socket {
 							broadResponse.Type = "add_broadcast_audience"
 						}
-						// websocketmap.Map.InsertConnected(targetSocket.Socket, socket.Socket)
-						// log.Informf("Target Socket has %d sockets connected!", len(websocketmap.Map.Get(targetSocket.Socket).ConnectedSockets))
 						targetSocket.Socket.WriteMessage(messageType, broadResponseJSON)
-						level := 1
-						for {
-							if len(Map.LevelNodes(uint(level))) == 0 {
-								break
-							}
-							// log.Highlightf("Level %d: %d", level, len(receiver.levelSockets(uint(level))))
-							level++
-						}
 					} else {
 						log.Error("Marshal Error of `add_audience` broadResponse", err)
 						return
@@ -213,7 +205,6 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 		}
 	case "stream":
 		log.Alert("Stream Received ", socket.Name)
-		// websocketmap.Map.SetStreamState(socket.Socket, true)
 		Map.ToggleCanConnect(socket.Socket)
 
 		msg := "Audiance " + socket.Name + " is receiving stream!"
@@ -228,7 +219,7 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 		fmt.Fprintln(f, msg)
 	case "tree":
 		log.Alert("Tree Received ", socket.Name)
-		treeData := binarytreesrv.GetTree(Map)
+		treeData := binarytreesrv.Tree(Map)
 		log.Inform("treeData ", treeData)
 		j, e := json.Marshal(treeData)
 		if e != nil {
@@ -254,7 +245,7 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 			return
 		}
 		log.Alert("Target ", ID)
-		allockets := Map.GetAll()
+		allockets := Map.All()
 		var ok = false
 		var target binarytreesrv.MySocket
 		// target, ok := Map. .GetSocketByID(ID)
@@ -265,7 +256,7 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 				target = *node.(*binarytreesrv.MySocket)
 				break
 			} else {
-				for _, child := range node.GetAll() {
+				for _, child := range node.All() {
 					log.Alert(child.(*binarytreesrv.MySocket).ID)
 					if child.(*binarytreesrv.MySocket).ID == ID {
 						ok = true

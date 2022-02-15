@@ -1,143 +1,142 @@
 <!DOCTYPE html>
-  <head>
-    <title>SparkScience Broadcast Demo</title>
-    <style>
-      .node {
-        cursor: pointer;
-      }
 
-      .node circle {
-        fill: #fff;
-        stroke: steelblue;
-        stroke-width: 3px;
-      }
+<head>
+  <title>SparkScience Broadcast Demo</title>
+  <style>
+    .node {
+      cursor: pointer;
+    }
 
-      .turn-node circle {
-        fill: #fff;
-        stroke: #ff0000;
-        stroke-width: 3px;
-      }
+    .node circle {
+      fill: #fff;
+      stroke: steelblue;
+      stroke-width: 3px;
+    }
 
-      .node text {
-        font: 12px sans-serif;
-      }
+    .turn-node circle {
+      fill: #fff;
+      stroke: #ff0000;
+      stroke-width: 3px;
+    }
 
-      .link {
-        fill: none;
-        stroke: #ccc;
-        stroke-width: 2px;
-      }
+    .node text {
+      font: 12px sans-serif;
+    }
 
-      .some-class {
-        border: solid 1px #999;
-        border-radius: 5px;
-        width: 49%;
-      }
+    .link {
+      fill: none;
+      stroke: #ccc;
+      stroke-width: 2px;
+    }
 
-      body {
-        padding: 30px;
-      }
-    </style>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.min.js"></script>
-  </head>
-  <body>
-    <input type="checkbox" onclick="toggleTurnUsage();" checked /> Use TURN <br/>
-    <button id="broadcast-btn" onclick="broadcast();">START</button><br />
-    <button id="sharescreen-btn" onclick="screenshare();" disabled>SHARE SCREEN</button><br />
-    <button id="audience-btn" onclick="audience();" style="display: none;" >Audience</button><br />
-    <button onclick="refreshGraph();">Refresh Graph</button>
-    <h3 id="source-stream"></h3>
-    <h4 id="user-name"></h4>
-    <div style="display: flex;justify-content: space-between;">
-      <div id="streams" class="some-class">
-        Local:<br/>
-        <video id="local_video" autoplay playsinline muted style="width: 100%"></video>
-        Alt broadcasts:<br/>
-      </div>
-      <div id="graph-div"  class="some-class"></div>
-      <div class="some-class">
-        <video id="share_screen" autoplay playsinline muted style="width: 100%"></video>
-      </div>
+    .some-class {
+      border: solid 1px #999;
+      border-radius: 5px;
+      width: 49%;
+    }
+
+    body {
+      padding: 30px;
+    }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.min.js"></script>
+</head>
+
+<body>
+  <input type="checkbox" onclick="toggleTurnUsage();" checked /> Use TURN <br />
+  <button id="broadcast-btn" onclick="broadcast();">START</button><br />
+  <button id="sharescreen-btn" onclick="screenshare();" disabled>SHARE SCREEN</button><br />
+  <button id="audience-btn" onclick="audience();" style="display: none;">Audience</button><br />
+  <button onclick="refreshGraph();">Refresh Graph</button>
+  <h3 id="source-stream"></h3>
+  <h4 id="user-name"></h4>
+  <div style="display: flex;justify-content: space-between;">
+    <div id="streams" class="some-class">
+      Local:<br />
+      <video id="local_video" autoplay playsinline muted style="width: 100%"></video>
+      Alt broadcasts:<br />
     </div>
-    <script
-      src="https://code.jquery.com/jquery-2.2.4.min.js"
-      integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44="
-      crossorigin="anonymous"
-    ></script>
-    <!--  GRAPH -->
-    <script>
+    <div id="graph-div" class="some-class"></div>
+    <div class="some-class">
+      <video id="share_screen" autoplay playsinline muted style="width: 100%"></video>
+    </div>
+  </div>
+  <script src="https://code.jquery.com/jquery-2.2.4.min.js"
+    integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script>
+  <!--  GRAPH -->
+  <script>
     var lastTreeData;
-    var margin = {top: 20, right: 120, bottom: 20, left: 120},
-        width = 960 - margin.right - margin.left,
-        height = 500 - margin.top - margin.bottom;
-        
+    var margin = { top: 20, right: 120, bottom: 20, left: 120 },
+      width = 960 - margin.right - margin.left,
+      height = 500 - margin.top - margin.bottom;
+
     var i = 0,
-        duration = 750,
-        root;
+      duration = 750,
+      root;
 
     var tree = d3.layout.tree()
-        .size([height, width]);
+      .size([height, width]);
 
     var diagonal = d3.svg.diagonal()
-        .projection(function(d) { return [d.y, d.x]; });
+      .projection(function (d) { return [d.y, d.x]; });
 
     var svg = d3.select("#graph-div").append("svg")
-        .attr("width", width + margin.right + margin.left)
-        .attr("height", height + margin.top + margin.bottom)
-        .append("g")
-        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+      .attr("width", width + margin.right + margin.left)
+      .attr("height", height + margin.top + margin.bottom)
+      .append("g")
+      .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
     function drawGraph(treeData) {
-//      if (lastTreeData && treeData.length === lastTreeData.length) {
-//        return;
-//      }
+      //      if (lastTreeData && treeData.length === lastTreeData.length) {
+      //        return;
+      //      }
       lastTreeData = treeData;
       root = treeData[0];
       root.x0 = height / 2;
       root.y0 = 0;
-        
+
       update(root);
 
       d3.select(self.frameElement).style("height", "500px");
     }
     function update(source) {
-      console.log( { source });
+      console.log({ source });
       const isTurn = source.name.indexOf('[TURN]') > 0;
       // Compute the new tree layout.
       var nodes = tree.nodes(root).reverse(),
         links = tree.links(nodes);
 
       // Normalize for fixed-depth.
-      nodes.forEach(function(d) { d.y = d.depth * 180; });
+      nodes.forEach(function (d) { d.y = d.depth * 180; });
 
       // Update the nodes…
       var node = svg.selectAll("g.node")
-        .data(nodes, function(d) { return d.id || (d.id = ++i); });
+        .data(nodes, function (d) { return d.id || (d.id = ++i); });
 
       // Enter any new nodes at the parent's previous position.
       var nodeEnter = node.enter().append("g")
         .attr("class", "node")
-        .attr("transform", function(d) { return "translate(" + source.y0 + "," + source.x0 + ")"; })
+        .attr("transform", function (d) { return "translate(" + source.y0 + "," + source.x0 + ")"; })
         .on("click", click);
 
       nodeEnter.append("circle")
         .attr("r", 1e-6)
-        .style("fill", function(d) { return d._children ? "lightsteelblue" : "#fff"; });
+        .style("fill", function (d) { return d._children ? "lightsteelblue" : "#fff"; });
 
       nodeEnter.append("text")
-        .attr("x", function(d) { return d.children || d._children ? -13 : 13; })
+        .attr("x", function (d) { return d.children || d._children ? -13 : 13; })
         .attr("dy", ".35em")
-        .attr("text-anchor", function(d) { return d.children || d._children ? "end" : "start"; })
-        .text(function(d) { return d.name; })
+        .attr("text-anchor", function (d) { return d.children || d._children ? "end" : "start"; })
+        .text(function (d) { return d.name; })
         .style("fill-opacity", 1e-6);
 
       // Transition nodes to their new position.
       var nodeUpdate = node.transition()
         .duration(duration)
-        .attr("transform", function(d) { return "translate(" + d.y + "," + d.x + ")"; });
+        .attr("transform", function (d) { return "translate(" + d.y + "," + d.x + ")"; });
 
       nodeUpdate.select("circle")
         .attr("r", 10)
-        .style("fill", function(d) { return d._children ? "lightsteelblue" : "#fff"; });
+        .style("fill", function (d) { return d._children ? "lightsteelblue" : "#fff"; });
 
       nodeUpdate.select("text")
         .style("fill-opacity", 1);
@@ -145,7 +144,7 @@
       // Transition exiting nodes to the parent's new position.
       var nodeExit = node.exit().transition()
         .duration(duration)
-        .attr("transform", function(d) { return "translate(" + source.y + "," + source.x + ")"; })
+        .attr("transform", function (d) { return "translate(" + source.y + "," + source.x + ")"; })
         .remove();
 
       nodeExit.select("circle")
@@ -156,14 +155,14 @@
 
       // Update the links…
       var link = svg.selectAll("path.link")
-        .data(links, function(d) { return d.target.id; });
+        .data(links, function (d) { return d.target.id; });
 
       // Enter any new links at the parent's previous position.
       link.enter().insert("path", "g")
         .attr("class", "link")
-        .attr("d", function(d) {
-        var o = {x: source.x0, y: source.y0};
-        return diagonal({source: o, target: o});
+        .attr("d", function (d) {
+          var o = { x: source.x0, y: source.y0 };
+          return diagonal({ source: o, target: o });
         });
 
       // Transition links to their new position.
@@ -174,346 +173,366 @@
       // Transition exiting nodes to the parent's new position.
       link.exit().transition()
         .duration(duration)
-        .attr("d", function(d) {
-        var o = {x: source.x, y: source.y};
-        return diagonal({source: o, target: o});
+        .attr("d", function (d) {
+          var o = { x: source.x, y: source.y };
+          return diagonal({ source: o, target: o });
         })
         .remove();
 
       // Stash the old positions for transition.
-      nodes.forEach(function(d) {
-      d.x0 = d.x;
-      d.y0 = d.y;
+      nodes.forEach(function (d) {
+        d.x0 = d.x;
+        d.y0 = d.y;
       });
     }
 
     // Toggle children on click.
     function click(d) {
       if (d.children) {
-      d._children = d.children;
-      d.children = null;
+        d._children = d.children;
+        d.children = null;
       } else {
-      d.children = d._children;
-      d._children = null;
+        d.children = d._children;
+        d._children = null;
       }
       update(d);
     }  
-    </script>
-    <!-- /GRAPH -->
-    <!-- <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script> -->
-    <script>
-      let lastTree;
-      let loggedIn = false;
-      let myUsername,
-        myName,
-        targetName,
-        myRole = "broadcast";
-      let mediaConstraints = (window.constraints = {
-        audio: true,
-        video: true,
-      });
-      let localStream,
-        shareScreenStream,
-        remoteStream,
-        localScreenShare,
-        myPeerConnection,
-        myPeerConnections = [],
-        myAltPeerConnections = [],
-        iceCandidates = [],
-        altIceCandidates = [],
-        socket,
-        altStreams = {};
+  </script>
+  <!-- /GRAPH -->
+  <!-- <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script> -->
+  <script>
+    let lastTree;
+    let loggedIn = false;
+    let myUsername,
+      myName,
+      targetName,
+      myRole = "broadcast";
+    let mediaConstraints = (window.constraints = {
+      audio: true,
+      video: true,
+    });
+    let localStream,
+      shareScreenStream,
+      remoteStream,
+      localScreenShare,
+      myPeerConnection,
+      myPeerConnections = {},
+      myAltPeerConnections = [],
+      iceCandidates = [],
+      altIceCandidates = [],
+      socket,
+      altStreams = {};
+    try {
+      myName = localStorage.getItem('logjam_myName');
+    } catch (e) {
+      console.log(e);
+    }
+    if (confirm(`Do you want to change ${myName} as your name?`)) {
+      const newName = prompt('What is you name?');
+      if (newName) {
+        myName = newName;
+        localStorage.setItem('logjam_myName', myName);
+      }
+    }
+    if (myName === '' || !myName) {
+      myName = makeid(20);
       try {
-        myName = localStorage.getItem('logjam_myName');
+        localStorage.setItem('logjam_myName', myName);
       } catch (e) {
         console.log(e);
       }
-      if (confirm(`Do you want to change ${myName} as your name?`)) {
-        const newName = prompt('What is you name?');
-        if (newName) {
-          myName = newName;
-          localStorage.setItem('logjam_myName', myName);
-        }
+    }
+    function refreshGraph() {
+      socket.send(JSON.stringify({
+        type: "tree",
+        data: "",
+        target: "1",
+        name: ""
+      }));
+    }
+    function makeid(length) {
+      var result = '';
+      var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+      var charactersLength = characters.length;
+      for (var i = 0; i < length; i++) {
+        result += characters.charAt(Math.floor(Math.random() * charactersLength));
       }
-      if (myName==='' || !myName) {
-        myName = makeid(20);
-        try {
-          localStorage.setItem('logjam_myName', myName);
-        } catch(e) {
-          console.log(e);
-        }
-      }
-      function refreshGraph() {
-        socket.send(JSON.stringify({
-          type: "tree",
-          data: "",
-          target: "1",
-          name: ""
-        }));
-      }
-      function makeid(length) {
-        var result           = '';
-        var characters       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-        var charactersLength = characters.length;
-        for ( var i = 0; i < length; i++ ) {
-          result += characters.charAt(Math.floor(Math.random() * charactersLength));
-        }
-        return result;
-      }
-      var myPeerConnectionConfig = {
-        iceServers: [
-          // {'urls': 'stun:stun.l.google.com:19302'},
-          // {"urls": "turn:numb.viagenie.ca", "username":"m.mirsamie@gmail.com", "credential":"159951"},
-          // {
-          //   url: 'stun:stun.1und1.de:3478'
-          // },
-          // {
-          //   url: 'stun:stun.gmx.net:3478'
-          // },
-          {
-            url: 'stun:stun.l.google.com:19302'
-          },
-          {
-            url: 'stun:stun1.l.google.com:19302'
-          },
-          {
-          
-            url: 'stun:stun2.l.google.com:19302'
-          },
-          {
-          
-            url: 'stun:stun3.l.google.com:19302'
-          },
-          {
-          
-            url: 'stun:stun4.l.google.com:19302'
-          },
-          /*
-          {
-            url: "turn:numb.viagenie.ca",
-            credential: "muazkh",
-            username: "webrtc@live.com",
-          },
-          {
-            url: "turn:192.158.29.39:3478?transport=udp",
-            credential: "JZEOEt2V3Qb0y27GRntt2u2PAYA=",
-            username: "28224511:1379330808",
-          },
-          {
-            url: "turn:192.158.29.39:3478?transport=tcp",
-            credential: "JZEOEt2V3Qb0y27GRntt2u2PAYA=",
-            username: "28224511:1379330808",
-          },
-          {
-            url: "turn:turn.bistri.com:80",
-            credential: "homeo",
-            username: "homeo",
-          },
-          {
-            url: "turn:turn.anyfirewall.com:443?transport=tcp",
-            credential: "webrtc",
-            username: "webrtc",
-          },
-          {
-            url:"turn:13.250.13.83:3478?transport=udp",
-            username: "YzYNCouZM1mhqhmseWk6",
-            credential: "YzYNCouZM1mhqhmseWk6"
-          }
-          */
-          /*
-          {
-            url: "turn:45.149.77.155:3478",
-            username: "admin",
-            credential: "mmcomp",
-          },
-          */
-          {
-            url: "turn:turn1.turn.group.video:3478",
-            username: "turnuser",
-            credential: "dJ4kP05PHcKN8Ubu",
-          },
-          {
-            url: "turn:turn2.turn.group.video:3478",
-            username: "turnuser",
-            credential: "XzfVP8cpNEy17hws",
-          },
-          {
-            url: "turns:turn1.turn.group.video:443",
-            username: "turnuser",
-            credential: "dJ4kP05PHcKN8Ubu",
-          },
-          {
-            url: "turns:turn2.turn.group.video:443",
-            username: "turnuser",
-            credential: "XzfVP8cpNEy17hws",
-          },
-        ],
-      };
+      return result;
+    }
+    var myPeerConnectionConfig = {
+      iceServers: [
+        // {'urls': 'stun:stun.l.google.com:19302'},
+        // {"urls": "turn:numb.viagenie.ca", "username":"m.mirsamie@gmail.com", "credential":"159951"},
+        // {
+        //   url: 'stun:stun.1und1.de:3478'
+        // },
+        // {
+        //   url: 'stun:stun.gmx.net:3478'
+        // },
+        {
+          urls: ['stun:stun.l.google.com:19302']
+        },
+        {
+          urls: ['stun:stun1.l.google.com:19302']
+        },
+        {
 
-      function createPeerConnection(targetUsername, view = "audience") {
-        if (view === true) {
-          console.log('createPeerConnection[alt]', targetUsername);
-          if (myAltPeerConnections[targetUsername]) {
-            console.log('Exists', targetUsername)
-            return myAltPeerConnections[targetUsername];
-          }
-          console.log('Not Exists', targetUsername)
-          const myAltPeerConnection = new RTCPeerConnection(myPeerConnectionConfig);
-          myAltPeerConnection.onicecandidate = function (event) {
-            if (event.candidate) {
-              socket.send(
-                JSON.stringify({
-                  type: "alt-new-ice-candidate",
-                  target: targetUsername,
-                  candidate: event.candidate,
-                })
-              );
-            }
-          };
-          myAltPeerConnection.ontrack = function (event) {
-            console.log("TRACK", event, myRole);
-            altStreams[targetUsername] = event.streams;
-            // if (!document.getElementById("alt_video").srcObject) {
-            //   document.getElementById("alt_video").srcObject =
-            //     event.streams[0];
-            //   remoteStream = event.streams[0];
-            //   myPeerConnections.map(amyPeerConnection => {
-            //     remoteStream.getTracks().forEach((track) => {
-            //       amyPeerConnection.addTrack(track, remoteStream);
-            //     });
-            //   });
-            // }
-            if ($("#alt_video_" + targetUsername).length === 0) {
-              $("#streams").append(`<video id="alt_video_${targetUsername}" autoplay playsinline muted style="width: 100%"></video><br/>`);
-              document.getElementById("alt_video_" + targetUsername).srcObject = event.streams[0];
-              myPeerConnections.map(amyPeerConnection => {
-                event.streams[0].getTracks().forEach((track) => {
-                  track['mehrdad'] = 12;
-                  event.streams[0]['mehrdad'] = 12;
-                  amyPeerConnection.addTrack(track, event.streams[0]);
-                });
-              });
-            }
-          };
-          myAltPeerConnection.onnegotiationneeded = function (event) {
-            myAltPeerConnection
-              .createOffer()
-              .then(function (offer) {
-                return myAltPeerConnection.setLocalDescription(offer);
-              })
-              .then(function () {
-                socket.send(
-                  JSON.stringify({
-                    name: myUsername,
-                    target: targetUsername,
-                    type: "alt-video-offer",
-                    sdp: myAltPeerConnection.localDescription,
-                  })
-                );
-              })
-              .catch(function (e) {
-                console.log('[myAltPeerConnection] createOffer error', e);
-              });
-          };
-          myAltPeerConnection.onremovetrack = function (event) {};
-          myAltPeerConnection.oniceconnectionstatechange = function (event) {
-            socket.send(
-              JSON.stringify({
-                type: "log",
-                data: "oniceconnectionstatechange :" + myAltPeerConnection.iceConnectionState,
-              })
-            );
-            if(myAltPeerConnection.iceConnectionState == 'disconnected') {
-                console.log('Alt Disconnected', myAltPeerConnection);
-            }
-          };
-          myAltPeerConnection.onicegatheringstatechange = function (event) {};
-          myAltPeerConnection.onsignalingstatechange = function (event) {};
-          myAltPeerConnection.onicecandidateerror = (event) => {
-            socket.send(
-              JSON.stringify({
-                type: "log",
-                data: "onicecandidateerror :" + JSON.stringify(event),
-              })
-            );
-          };
-          myAltPeerConnections[targetUsername] = myAltPeerConnection;
-          return myAltPeerConnection;
+          urls: ['stun:stun2.l.google.com:19302']
+        },
+        {
+
+          urls: ['stun:stun3.l.google.com:19302']
+        },
+        {
+
+          urls: ['stun:stun4.l.google.com:19302']
+        },
+        /*
+        {
+          url: "turn:numb.viagenie.ca",
+          credential: "muazkh",
+          username: "webrtc@live.com",
+        },
+        {
+          url: "turn:192.158.29.39:3478?transport=udp",
+          credential: "JZEOEt2V3Qb0y27GRntt2u2PAYA=",
+          username: "28224511:1379330808",
+        },
+        {
+          url: "turn:192.158.29.39:3478?transport=tcp",
+          credential: "JZEOEt2V3Qb0y27GRntt2u2PAYA=",
+          username: "28224511:1379330808",
+        },
+        {
+          url: "turn:turn.bistri.com:80",
+          credential: "homeo",
+          username: "homeo",
+        },
+        {
+          url: "turn:turn.anyfirewall.com:443?transport=tcp",
+          credential: "webrtc",
+          username: "webrtc",
+        },
+        {
+          url:"turn:13.250.13.83:3478?transport=udp",
+          username: "YzYNCouZM1mhqhmseWk6",
+          credential: "YzYNCouZM1mhqhmseWk6"
         }
-        if (myPeerConnections[targetUsername]) {
-          return myPeerConnections[targetUsername];
+        */
+        /*
+        {
+          url: "turn:45.149.77.155:3478",
+          username: "admin",
+          credential: "mmcomp",
+        },
+        */
+        {
+          urls: ["turn:turn1.turn.group.video:3478"],
+          username: "turnuser",
+          credential: "dJ4kP05PHcKN8Ubu",
+        },
+        {
+          urls: ["turn:turn2.turn.group.video:3478"],
+          username: "turnuser",
+          credential: "XzfVP8cpNEy17hws",
+        },
+        {
+          urls: ["turns:turn1.turn.group.video:443"],
+          username: "turnuser",
+          credential: "dJ4kP05PHcKN8Ubu",
+        },
+        {
+          urls: ["turns:turn2.turn.group.video:443"],
+          username: "turnuser",
+          credential: "XzfVP8cpNEy17hws",
+        },
+      ],
+    };
+
+    function createPeerConnection(targetUsername, view = "audience") {
+      if (view === true) {
+        console.log('createPeerConnection[alt]', targetUsername);
+        if (myAltPeerConnections[targetUsername]) {
+          console.log('Exists', targetUsername)
+          return myAltPeerConnections[targetUsername];
         }
-        myPeerConnection = new RTCPeerConnection(myPeerConnectionConfig);
-        myPeerConnection.view = view;
-        myPeerConnection.onicecandidate = function (event) {
+        console.log('Not Exists', targetUsername)
+        const myAltPeerConnection = new RTCPeerConnection(myPeerConnectionConfig);
+        myAltPeerConnection.onicecandidate = function (event) {
           if (event.candidate) {
             socket.send(
               JSON.stringify({
-                type: "new-ice-candidate",
+                type: "alt-new-ice-candidate",
                 target: targetUsername,
                 candidate: event.candidate,
               })
             );
           }
         };
-        myPeerConnection.ontrack = function (event) {
+        myAltPeerConnection.ontrack = function (event) {
           console.log("TRACK", event, myRole);
-          if (myRole != "broadcast") {
-            // if(event.transceiver.sender.track.mmcomp && event.transceiver.sender.track.mmcomp=="SHARE")
-            if (!document.getElementById("local_video").srcObject) {
-              document.getElementById("local_video").srcObject =
-                event.streams[0];
-              localStream = event.streams[0];
-              $("#source-stream").text("Read " + targetName ); //+ "[" + targetUsername + "]");
-              socket.send(
-                JSON.stringify({
-                  type: "stream",
-                  data: "true",
-                })
-              );
-              socket.send(
-                JSON.stringify({
-                  type: "log",
-                  data: "ontrack from " + targetName,
-                })
-              );
+          altStreams[targetUsername] = event.streams;
+          // if (!document.getElementById("alt_video").srcObject) {
+          //   document.getElementById("alt_video").srcObject =
+          //     event.streams[0];
+          //   remoteStream = event.streams[0];
+          //   myPeerConnections.map(amyPeerConnection => {
+          //     remoteStream.getTracks().forEach((track) => {
+          //       amyPeerConnection.addTrack(track, remoteStream);
+          //     });
+          //   });
+          // }
+          if ($("#alt_video_" + targetUsername).length === 0) {
+            $("#streams").append(`<video id="alt_video_${targetUsername}" autoplay playsinline style="width: 100%"></video><br/>`);
+            document.getElementById("alt_video_" + targetUsername).srcObject = event.streams[0];
+            for(const tUsername in myPeerConnections) {
+              console.log('Sending new tracks to', tUsername);
+              const anyPeerConnection = myPeerConnections[tUsername];
+              if (targetUsername !== tUsername) {
+                console.log('closing', tUsername);
+                anyPeerConnection.close();
+              }
+              // anyPeerConnection.addStream(event.streams[0]);
+              // event.streams[0].getTracks().forEach((track) => {
+              //   try {
+              //     anyPeerConnection.addTrack(track, event.streams[0]);
+              //   } catch(e) {
+              //     console.log('Error adding track', tUsernamem, e);
+              //   }
+              // });
             }
-          } else {
-            if (!document.getElementById("alt_video").srcObject) {
-              document.getElementById("alt_video").srcObject =
-                event.streams[0];
-              remoteStream = event.streams[0];
-            }
+            // myPeerConnections.map(anyPeerConnection => {
+              // event.streams[0].getTracks().forEach((track) => {
+              //   anyPeerConnection.addTrack(track, event.streams[0]);
+              // });
+              // anyPeerConnection.addStream(event.streams[0]);
+              // event.streams.map((stream) => {
+              //   stream.getTracks().forEach((track) => {
+              //     anyPeerConnection.addTrack(track, stream);
+              //   });
+              // });
+            // });
           }
-          // document.getElementById("received_video_" + targetUsername).srcObject = event.streams[0];
         };
-        myPeerConnection.onnegotiationneeded = function (event) {
-          // console.log("onnegotiationneeded", veiw, event);
+        myAltPeerConnection.onnegotiationneeded = function (event) {
+          myAltPeerConnection
+            .createOffer()
+            .then(function (offer) {
+              return myAltPeerConnection.setLocalDescription(offer);
+            })
+            .then(function () {
+              socket.send(
+                JSON.stringify({
+                  name: myUsername,
+                  target: targetUsername,
+                  type: "alt-video-offer",
+                  sdp: myAltPeerConnection.localDescription,
+                })
+              );
+            })
+            .catch(function (e) {
+              console.log('[myAltPeerConnection] createOffer error', e);
+            });
+        };
+        myAltPeerConnection.onremovetrack = function (event) { };
+        myAltPeerConnection.oniceconnectionstatechange = function (event) {
+          socket.send(
+            JSON.stringify({
+              type: "log",
+              data: "oniceconnectionstatechange :" + myAltPeerConnection.iceConnectionState,
+            })
+          );
+          if (myAltPeerConnection.iceConnectionState == 'disconnected') {
+            console.log('Alt Disconnected', myAltPeerConnection);
+          }
+        };
+        myAltPeerConnection.onicegatheringstatechange = function (event) { };
+        myAltPeerConnection.onsignalingstatechange = function (event) { };
+        myAltPeerConnection.onicecandidateerror = (event) => {
+          socket.send(
+            JSON.stringify({
+              type: "log",
+              data: "onicecandidateerror :" + JSON.stringify(event),
+            })
+          );
+        };
+        myAltPeerConnections[targetUsername] = myAltPeerConnection;
+        return myAltPeerConnection;
+      }
+      if (myPeerConnections[targetUsername]) {
+        return myPeerConnections[targetUsername];
+      }
+      myPeerConnection = new RTCPeerConnection(myPeerConnectionConfig);
+      myPeerConnection.view = view;
+      myPeerConnection.onicecandidate = function (event) {
+        if (event.candidate) {
+          socket.send(
+            JSON.stringify({
+              type: "new-ice-candidate",
+              target: targetUsername,
+              candidate: event.candidate,
+            })
+          );
+        }
+      };
+      myPeerConnection.ontrack = function (event) {
+        console.log("TRACK", event, myRole);
+        if (myRole != "broadcast") {
+          // if(event.transceiver.sender.track.mmcomp && event.transceiver.sender.track.mmcomp=="SHARE")
+          if (!document.getElementById("local_video").srcObject) {
+            document.getElementById("local_video").srcObject =
+              event.streams[0];
+            localStream = event.streams[0];
+            $("#source-stream").text("Read " + targetName); //+ "[" + targetUsername + "]");
+            socket.send(
+              JSON.stringify({
+                type: "stream",
+                data: "true",
+              })
+            );
+            socket.send(
+              JSON.stringify({
+                type: "log",
+                data: "ontrack from " + targetName,
+              })
+            );
+          }
+        } else {
+          // if (!document.getElementById("alt_video").srcObject) {
+          //   document.getElementById("alt_video").srcObject =
+          //     event.streams[0];
+          //   remoteStream = event.streams[0];
+          // }
+        }
+        // document.getElementById("received_video_" + targetUsername).srcObject = event.streams[0];
+      };
+      myPeerConnection.onnegotiationneeded = function (event) {
+        // console.log("onnegotiationneeded", veiw, event);
         //   if (veiw == "audience") {
-            myPeerConnection
-              .createOffer()
-              .then(function (offer) {
-                return myPeerConnection.setLocalDescription(offer);
+        myPeerConnection
+          .createOffer()
+          .then(function (offer) {
+            return myPeerConnection.setLocalDescription(offer);
+          })
+          .then(function () {
+            socket.send(
+              JSON.stringify({
+                name: myUsername,
+                target: targetUsername,
+                type: "video-offer",
+                sdp: myPeerConnection.localDescription,
               })
-              .then(function () {
-                socket.send(
-                  JSON.stringify({
-                    name: myUsername,
-                    target: targetUsername,
-                    type: "video-offer",
-                    sdp: myPeerConnection.localDescription,
-                  })
-                );
+            );
+          })
+          .catch(function (e) {
+            // console.log("onnegotiationneeded audience error:", e);
+            socket.send(
+              JSON.stringify({
+                type: "log",
+                data: "onnegotiationneeded audience error:" + JSON.stringify(e),
               })
-              .catch(function (e) {
-                // console.log("onnegotiationneeded audience error:", e);
-                socket.send(
-                  JSON.stringify({
-                    type: "log",
-                    data: "onnegotiationneeded audience error:" + JSON.stringify(e),
-                  })
-                );
-              });
+            );
+          });
         //   } else if (veiw == "replicate") {
         //     myPeerConnection
         //       .createOffer()
@@ -534,363 +553,374 @@
         //         console.log("onnegotiationneeded replicate error:", e);
         //       });
         //   }
-        };
-        myPeerConnection.onremovetrack = function (event) {};
-        myPeerConnection.oniceconnectionstatechange = function (event) {
+      };
+      myPeerConnection.onremovetrack = function (event) { };
+      myPeerConnection.oniceconnectionstatechange = function (event) {
+        socket.send(
+          JSON.stringify({
+            type: "log",
+            data: "oniceconnectionstatechange :" + myPeerConnection.iceConnectionState,
+          })
+        );
+        // console.log("ICE Change : ", event);
+        if (myPeerConnection.iceConnectionState == 'disconnected') {
+          console.log('Disconnected', myPeerConnections);
+          //              setTimeout(() => {
+          //                login();
+          //              }, 1000);
+          // $("#audience-btn").prop("disabled", false);
+          // $("#broadcast-btn").prop("disabled", false);
+          // if ($("#audience-btn").prop("disabled")) {
+          // setTimeout(() => {
+          //   audience();
+          // }, 1000);
+          // }
+        }
+      };
+      myPeerConnection.onicegatheringstatechange = function (event) { };
+      myPeerConnection.onsignalingstatechange = function (event) { };
+      myPeerConnection.onicecandidateerror = (event) => {
+        // console.log("Ice Error", event);
+        socket.send(
+          JSON.stringify({
+            type: "log",
+            data: "onicecandidateerror :" + JSON.stringify(event),
+          })
+        );
+        //socket.close();
+      };
+      myPeerConnections[targetUsername] = myPeerConnection;
+      return myPeerConnection;
+    }
+    function connectUser(targetUsername) {
+      // console.log("Connect User", targetUsername);
+      if (myPeerConnections[targetUsername]) {
+        // console.log("Already Connected");
+        return true;
+      }
+      let myPeerConnection = createPeerConnection(targetUsername);
+
+      // console.log("localStream", localStream);
+      if (localStream) {
+        localStream.getTracks().forEach((track) => {
+          // track["mmcomp"] = "VIDEO";
+          myPeerConnection.addTrack(track, localStream);
+        });
+        // console.log("Added tracks to connection");
+      }
+      for (const tuser in altStreams) {
+        const tstreams = altStreams[tuser];
+        tstreams[0].getTracks().forEach((track) => {
+          myPeerConnection.addTrack(track, tstreams[0]);
+        });
+      }
+      // if (shareScreenStream) {
+      //   shareScreenStream.getTracks().forEach((track) => {
+      //     // track["mmcomp"] = "VIDEO";
+      //     myPeerConnection.addTrack(track, shareScreenStream);
+      //   });
+      //   // console.log("Added tracks to connection");
+      // }
+      // if (remoteStream) {
+      //   remoteStream.getTracks().forEach((track) => {
+      //     // track["mmcomp"] = "VIDEO";
+      //     myPeerConnection.addTrack(track, remoteStream);
+      //   });
+      //   // console.log("Added tracks to connection");
+      // }
+    }
+    async function login() {
+      let baseUrl = window.location.href.split("//")[1].split("/")[0];
+      let protocol = "wss";
+      if (window.location.href.split("//")[0] == "http:") {
+        protocol = "ws";
+      }
+      socket = new WebSocket(`${protocol}://${baseUrl}/ws`);
+      socket.onopen = function (event) {
+        // console.log("[open] Connection established");
+        // console.log("Sending start to server");
+        socket.send(
+          JSON.stringify({
+            type: "start",
+            data: myName,
+          })
+        );
+      };
+
+      socket.onclose = function (event) {
+        if (event.wasClean) {
+          console.log(
+            `[close] Connection closed cleanly, code=${event.code} reason=${event.reason}`
+          );
+        } else {
+          console.log(
+            `[close] Connection died, , code=${event.code} reason=${event.reason}`
+          );
+        }
+        // myUsername = "";
+        myPeerConnections = [];
+        myAltPeerConnections = [];
+        myPeerConnection = null;
+        login();
+      };
+
+      socket.onerror = function (error) {
+        // console.log(`[error] ${error.message}`);
+      };
+
+      socket.onmessage = async function (event) {
+        // console.log(`[message] Data received from server: ${event.data}`);
+        let msg;
+        try {
+          msg = JSON.parse(event.data);
+        } catch (e) {
+          return;
+        }
+        msg.data = (msg.Data && !msg.data) ? msg.Data : msg.data;
+        msg.type = (msg.Type && !msg.type) ? msg.Type : msg.type;
+        if (msg.type !== 'tree')
+          console.log("Message", msg);
+        if (msg.type == "alt-video-offer") {
+          // console.log("Video Offer Rec!");
+          let targetUsername = msg.name;
+          targetName = msg.username;
+          var desc = new RTCSessionDescription(msg.sdp);
+          let myPeerConnection = createPeerConnection(targetUsername, true);
+
+          await myPeerConnection.setRemoteDescription(desc);
+
+          var answer = await myPeerConnection.createAnswer();
+
+          await myPeerConnection.setLocalDescription(answer);
+
           socket.send(
             JSON.stringify({
-              type: "log",
-              data: "oniceconnectionstatechange :" + myPeerConnection.iceConnectionState,
+              name: myUsername,
+              target: targetUsername,
+              type: "alt-video-answer",
+              sdp: myPeerConnection.localDescription,
             })
           );
-          // console.log("ICE Change : ", event);
-          if(myPeerConnection.iceConnectionState == 'disconnected') {
-              console.log('Disconnected', myPeerConnections);
-//              setTimeout(() => {
-//                login();
-//              }, 1000);
+
+          myPeerConnection.view = 'alt';
+        } else if (msg.type == "new-ice-candidate") {
+          // console.log("ICE Canadidate Recieved!");
+          iceCandidates.push(new RTCIceCandidate(msg.candidate));
+          // console.log(iceCandidates);
+          if (myPeerConnection && myPeerConnection.remoteDescription) {
+            // console.log("Adding canadidate");
+            var candidate = iceCandidates.pop();
+            myPeerConnection.addIceCandidate(candidate).catch(function (e) {
+              // console.log("new-ice-candidate error:", e, candidate);
+            });
+          }
+        } else if (msg.type == "alt-new-ice-candidate") {
+          let targetUsername = msg.data;
+          let myPeerConnection = createPeerConnection(targetUsername, true);
+          // console.log("ICE Canadidate Recieved!");
+          altIceCandidates.push(new RTCIceCandidate(msg.candidate));
+          // console.log(iceCandidates);
+          if (myPeerConnection && myPeerConnection.remoteDescription) {
+            // console.log("Adding canadidate");
+            var candidate = altIceCandidates.pop();
+            myPeerConnection.addIceCandidate(candidate).catch(function (e) {
+              // console.log("new-ice-candidate error:", e, candidate);
+            });
+          }
+        } else if (msg.type == "video-answer") {
+          var desc = new RTCSessionDescription(msg.sdp);
+          myPeerConnection.setRemoteDescription(desc).catch((e) => {
+            console.log("Error", e);
+          });
+        } else if (msg.type == "alt-video-answer") {
+          var desc = new RTCSessionDescription(msg.sdp);
+          let targetUsername = msg.target;
+          let myPeerConnection = createPeerConnection(targetUsername, true);
+          myPeerConnection.setRemoteDescription(desc).catch((e) => {
+            console.log("Error", e);
+          });
+        } else if (msg.type == "start") {
+          // console.log("START!!");
+          if (!msg.error) {
+            loggedIn = true;
+            myUsername = msg.data
+            $("#user-name").text("You are " + myName);// + "[" + myUsername + "]");
+            if ($("#audience-btn").prop("disabled")) {
+              // console.log("reconnecting as audience");
+              audience();
+            } else if ($("#broadcast-btn").prop("disabled")) {
+              // console.log("reconnecting as broadcast");
+              broadcast();
+            }
+          } else {
+            alert(msg.error);
+          }
+          // console.log("Start", msg, loggedIn);
+        } else if (msg.type == "role") {
+          // console.log("Role Message");
+          if (msg.data === "no:broadcast") {
+            alert("You are not a broadcaster anymore!");
+            socket.close();
+          } else if (msg.data === "yes:broadcast") {
+            // console.log("Load Stream local", localStream);
+            document.getElementById("local_video").srcObject = localStream;
+            $("#source-stream").text("Broadcasting");
+          } else {
+            if (msg.data === "no:audience") {
               // $("#audience-btn").prop("disabled", false);
               // $("#broadcast-btn").prop("disabled", false);
-              // if ($("#audience-btn").prop("disabled")) {
-                // setTimeout(() => {
-                //   audience();
-                // }, 1000);
-              // }
+              // $("#source-stream").text("");
+              // alert("No broadcast to connect!");
+              setTimeout(() => {
+                audience();
+              }, 200);
+            }
+            document.getElementById("local_video").srcObject = null;
+
           }
-        };
-        myPeerConnection.onicegatheringstatechange = function (event) {};
-        myPeerConnection.onsignalingstatechange = function (event) {};
-        myPeerConnection.onicecandidateerror = (event) => {
-          // console.log("Ice Error", event);
-          socket.send(
-            JSON.stringify({
-              type: "log",
-              data: "onicecandidateerror :" + JSON.stringify(event),
-            })
-          );
-          //socket.close();
-        };
-        myPeerConnections[targetUsername] = myPeerConnection;
-        return myPeerConnection;
-      }
-      function connectUser(targetUsername) {
-        // console.log("Connect User", targetUsername);
-        if (myPeerConnections[targetUsername]) {
-          // console.log("Already Connected");
-          return true;
-        }
-        let myPeerConnection = createPeerConnection(targetUsername);
-
-        // console.log("localStream", localStream);
-        if (localStream) {
-          localStream.getTracks().forEach((track) => {
-            // track["mmcomp"] = "VIDEO";
-            myPeerConnection.addTrack(track, localStream);
-          });
-          // console.log("Added tracks to connection");
-        }
-        for(const tuser in altStreams) {
-          const tstreams = altStreams[tuser];
-          tstreams[0].getTracks().forEach((track) => {
-            myPeerConnection.addTrack(track, tstreams[0]);
-          });
-        }
-        // if (shareScreenStream) {
-        //   shareScreenStream.getTracks().forEach((track) => {
-        //     // track["mmcomp"] = "VIDEO";
-        //     myPeerConnection.addTrack(track, shareScreenStream);
-        //   });
-        //   // console.log("Added tracks to connection");
-        // }
-        // if (remoteStream) {
-        //   remoteStream.getTracks().forEach((track) => {
-        //     // track["mmcomp"] = "VIDEO";
-        //     myPeerConnection.addTrack(track, remoteStream);
-        //   });
-        //   // console.log("Added tracks to connection");
-        // }
-      }
-      async function login() {
-        let baseUrl = window.location.href.split("//")[1].split("/")[0];
-        let protocol = "wss";
-        if (window.location.href.split("//")[0] == "http:") {
-          protocol = "ws";
-        }
-        socket = new WebSocket(`${protocol}://${baseUrl}/ws`);
-        socket.onopen = function (event) {
-          // console.log("[open] Connection established");
-          // console.log("Sending start to server");
-          socket.send(
-            JSON.stringify({
-              type: "start",
-              data: myName,
-            })
-          );
-        };
-
-        socket.onclose = function (event) {
-          if (event.wasClean) {
-            console.log(
-              `[close] Connection closed cleanly, code=${event.code} reason=${event.reason}`
-            );
-          } else {
-            console.log(
-              `[close] Connection died, , code=${event.code} reason=${event.reason}`
-            );
-          }
-          // myUsername = "";
-          myPeerConnections = [];
-          login();
-        };
-
-        socket.onerror = function (error) {
-          // console.log(`[error] ${error.message}`);
-        };
-
-        socket.onmessage = async function (event) {
-          // console.log(`[message] Data received from server: ${event.data}`);
-          let msg;
-          try {
-            msg = JSON.parse(event.data);
-          } catch (e) {
+        } else if (msg.type == "add_audience") {
+          // console.log("add_audience", msg.data);
+          connectUser(msg.data);
+        } else if (msg.type == "add_broadcast_audience") {
+          // console.log("add_audience", msg.data);
+          connectUser(msg.data);
+        } else if (msg.type == "tree") {
+          const treeData = JSON.parse(msg.data);
+          // console.log({treeData});
+          if (lastTree && lastTree === msg.data) {
             return;
           }
-          msg.data = (msg.Data && !msg.data) ? msg.Data : msg.data;
-          msg.type = (msg.Type && !msg.type) ? msg.Type : msg.type;
-          if (msg.type !== 'tree') 
-            console.log("Message", msg);
-          if (msg.type == "alt-video-offer") {
-            // console.log("Video Offer Rec!");
-            let targetUsername = msg.name;
-            targetName = msg.username;
-            var desc = new RTCSessionDescription(msg.sdp);
-            let myPeerConnection = createPeerConnection(targetUsername, true);
-
-            await myPeerConnection.setRemoteDescription(desc);
-
-            var answer = await myPeerConnection.createAnswer();
-
-            await myPeerConnection.setLocalDescription(answer);
-
-            socket.send(
-              JSON.stringify({
-                name: myUsername,
-                target: targetUsername,
-                type: "alt-video-answer",
-                sdp: myPeerConnection.localDescription,
-              })
-            );
-
-            myPeerConnection.view = 'alt';
-          } else if (msg.type == "new-ice-candidate") {
-            // console.log("ICE Canadidate Recieved!");
-            iceCandidates.push(new RTCIceCandidate(msg.candidate));
-            // console.log(iceCandidates);
-            if (myPeerConnection && myPeerConnection.remoteDescription) {
-              // console.log("Adding canadidate");
-              var candidate = iceCandidates.pop();
-              myPeerConnection.addIceCandidate(candidate).catch(function (e) {
-                // console.log("new-ice-candidate error:", e, candidate);
-              });
-            }
-          } else if (msg.type == "alt-new-ice-candidate") {
-            let targetUsername = msg.data;
-            let myPeerConnection = createPeerConnection(targetUsername, true);
-            // console.log("ICE Canadidate Recieved!");
-            altIceCandidates.push(new RTCIceCandidate(msg.candidate));
-            // console.log(iceCandidates);
-            if (myPeerConnection && myPeerConnection.remoteDescription) {
-              // console.log("Adding canadidate");
-              var candidate = altIceCandidates.pop();
-              myPeerConnection.addIceCandidate(candidate).catch(function (e) {
-                // console.log("new-ice-candidate error:", e, candidate);
-              });
-            }
-          } else if (msg.type == "video-answer") {
-            var desc = new RTCSessionDescription(msg.sdp);
-            myPeerConnection.setRemoteDescription(desc).catch((e) => {
-              console.log("Error", e);
-            });
-          } else if (msg.type == "alt-video-answer") {
-            var desc = new RTCSessionDescription(msg.sdp);
-            let targetUsername = msg.target;
-            let myPeerConnection = createPeerConnection(targetUsername, true);
-            myPeerConnection.setRemoteDescription(desc).catch((e) => {
-              console.log("Error", e);
-            });
-          }  else if (msg.type == "start") {
-            // console.log("START!!");
-            if (!msg.error) {
-              loggedIn = true;
-              myUsername = msg.data
-              $("#user-name").text("You are " + myName);// + "[" + myUsername + "]");
-              if ($("#audience-btn").prop("disabled")) {
-                // console.log("reconnecting as audience");
-                audience();
-              } else if ($("#broadcast-btn").prop("disabled")) {
-                // console.log("reconnecting as broadcast");
-                broadcast();
-              }
-            } else {
-              alert(msg.error);
-            }
-            // console.log("Start", msg, loggedIn);
-          } else if (msg.type == "role") {
-            // console.log("Role Message");
-            if (msg.data === "no:broadcast") {
-              alert("You are not a broadcaster anymore!");
-              socket.close();
-            } else if (msg.data === "yes:broadcast") {
-              // console.log("Load Stream local", localStream);
-              document.getElementById("local_video").srcObject = localStream;
-              $("#source-stream").text("Broadcasting");
-            } else {
-              if (msg.data === "no:audience") {
-                // $("#audience-btn").prop("disabled", false);
-                // $("#broadcast-btn").prop("disabled", false);
-                // $("#source-stream").text("");
-                // alert("No broadcast to connect!");
-                setTimeout(() => {
-                  audience();
-                }, 200);
-              }
-              document.getElementById("local_video").srcObject = null;
-
-            }
-          } else if (msg.type == "add_audience") {
-            // console.log("add_audience", msg.data);
-            connectUser(msg.data);
-          } else if (msg.type == "add_broadcast_audience") {
-            // console.log("add_audience", msg.data);
-            connectUser(msg.data);
-          } else if (msg.type == "tree") {
-            const treeData = JSON.parse(msg.data);
-            // console.log({treeData});
-            if (lastTree && lastTree === msg.data) {
-              return;
-            }
-            lastTree = msg.data;
-            if (treeData && treeData.length > 0) {
-              drawGraph(treeData);
-            }
-          } else if (msg.type == "alt-broadcast") {
-            console.log({msg});
+          lastTree = msg.data;
+          if (treeData && treeData.length > 0) {
+            drawGraph(treeData);
           }
-        };
-      }
-
-      function broadcast() {
-        $("#audience-btn").prop("disabled", false);
-        $("#broadcast-btn").prop("disabled", true);
-        $("#sharescreen-btn").prop("disabled", false);
-        
-        navigator.mediaDevices
-          .getUserMedia(mediaConstraints)
-          .then((ls) => {
-            localStream = ls;
-            // console.log("Local Stream", localStream);
+        } else if (msg.type == "alt-broadcast") {
+          console.log({ msg });
+          if(confirm(`${msg.name} wants to broadcast, do you approve?`)) {
             socket.send(
               JSON.stringify({
-                type: "role",
-                data: "broadcast",
+                type: "alt-broadcast-approve",
+                target: msg.data,
               })
             );
-            const turnStatus = myPeerConnectionConfig.iceServers.findIndex(s => s.url.indexOf('turn:') === 0) >= 0;
-            socket.send(
-              JSON.stringify({
-                type: "turn_status",
-                data: turnStatus ? "on" : "off",
-              })
-            );
-          })
-          .catch((e) => {
-            console.log("Local St error", e);
-          });
-      }
-      function screenshare() {
-        navigator.mediaDevices
-          .getDisplayMedia(mediaConstraints)
-          .then((ls) => {
-            shareScreenStream = ls;
-            document.getElementById("share_screen").srcObject = shareScreenStream;
-          })
-          .catch((e) => {
-            console.log("Share Screen St error", e);
-          });
-      }
-      function audience() {
-        socket.send(
-          JSON.stringify({
-            type: "role",
-            data: "audience",
-          })
-        );
-        const turnStatus = myPeerConnectionConfig.iceServers.findIndex(s => s.url.indexOf('turn:') === 0) >= 0;
-        socket.send(
-          JSON.stringify({
-            type: "turn_status",
-            data: turnStatus ? "on" : "off",
-          })
-        );
-        $("#audience-btn").prop("disabled", true);
-        $("#broadcast-btn").prop("disabled", false);
-        document.getElementById("local_video").srcObject = null;
-      }
-      function toggleTurnUsage() {
-        /*
-        const turnRecord = {
-          url: "turn:45.149.77.155:3478",
-          username: "admin",
-          credential: "mmcomp",
-        };
-        */
-        const turnRecord = [
-           {
-            url: "turn:turn1.turn.group.video:3478",
-            username: "turnuser",
-            credential: "dJ4kP05PHcKN8Ubu",
-          },
-          {
-            url: "turn:turn2.turn.group.video:3478",
-            username: "turnuser",
-            credential: "XzfVP8cpNEy17hws",
-          },
-          {
-            url: "turns:turn1.turn.group.video:443",
-            username: "turnuser",
-            credential: "dJ4kP05PHcKN8Ubu",
-          },
-          {
-            url: "turns:turn2.turn.group.video:443",
-            username: "turnuser",
-            credential: "XzfVP8cpNEy17hws",
-          },
-        ];
-        const turnStatus = myPeerConnectionConfig.iceServers.findIndex(s => s.url.indexOf('turn') === 0) >= 0;
-        if (turnStatus) {
-          myPeerConnectionConfig.iceServers = myPeerConnectionConfig.iceServers.filter(s => s.url.indexOf('turn') < 0);
-        } else {
-          myPeerConnectionConfig.iceServers.push(...turnRecord);
+          }
         }
-        console.log(myPeerConnectionConfig);
-      }
-      window.addEventListener("beforeunload", function () {
-        if (socket) socket.close();
-      });
-      var isWebRTCSupported = navigator.getUserMedia ||
-        navigator.webkitGetUserMedia ||
-        navigator.mozGetUserMedia ||
-        navigator.msGetUserMedia ||
-        window.RTCPeerConnection;
+      };
+    }
 
-      if (window.navigator.userAgent.indexOf("Edge") === -1 && isWebRTCSupported) {
-        login();
-        setInterval(() => {
-          refreshGraph();
-        }, 2000);
-      } else  {
-        alert('Unfortunetly your browser does not support this action!');
+    function broadcast() {
+      $("#audience-btn").prop("disabled", false);
+      $("#broadcast-btn").prop("disabled", true);
+      $("#sharescreen-btn").prop("disabled", false);
+
+      navigator.mediaDevices
+        .getUserMedia(mediaConstraints)
+        .then((ls) => {
+          localStream = ls;
+          // console.log("Local Stream", localStream);
+          socket.send(
+            JSON.stringify({
+              type: "role",
+              data: "broadcast",
+            })
+          );
+          const turnStatus = myPeerConnectionConfig.iceServers.findIndex(s => s.url.indexOf('turn:') === 0) >= 0;
+          socket.send(
+            JSON.stringify({
+              type: "turn_status",
+              data: turnStatus ? "on" : "off",
+            })
+          );
+        })
+        .catch((e) => {
+          console.log("Local St error", e);
+        });
+    }
+    function screenshare() {
+      navigator.mediaDevices
+        .getDisplayMedia(mediaConstraints)
+        .then((ls) => {
+          shareScreenStream = ls;
+          document.getElementById("share_screen").srcObject = shareScreenStream;
+        })
+        .catch((e) => {
+          console.log("Share Screen St error", e);
+        });
+    }
+    function audience() {
+      socket.send(
+        JSON.stringify({
+          type: "role",
+          data: "audience",
+        })
+      );
+      const turnStatus = myPeerConnectionConfig.iceServers.findIndex(s => s.url.indexOf('turn:') === 0) >= 0;
+      socket.send(
+        JSON.stringify({
+          type: "turn_status",
+          data: turnStatus ? "on" : "off",
+        })
+      );
+      $("#audience-btn").prop("disabled", true);
+      $("#broadcast-btn").prop("disabled", false);
+      document.getElementById("local_video").srcObject = null;
+    }
+    function toggleTurnUsage() {
+      /*
+      const turnRecord = {
+        url: "turn:45.149.77.155:3478",
+        username: "admin",
+        credential: "mmcomp",
+      };
+      */
+      const turnRecord = [
+        {
+          url: "turn:turn1.turn.group.video:3478",
+          username: "turnuser",
+          credential: "dJ4kP05PHcKN8Ubu",
+        },
+        {
+          url: "turn:turn2.turn.group.video:3478",
+          username: "turnuser",
+          credential: "XzfVP8cpNEy17hws",
+        },
+        {
+          url: "turns:turn1.turn.group.video:443",
+          username: "turnuser",
+          credential: "dJ4kP05PHcKN8Ubu",
+        },
+        {
+          url: "turns:turn2.turn.group.video:443",
+          username: "turnuser",
+          credential: "XzfVP8cpNEy17hws",
+        },
+      ];
+      const turnStatus = myPeerConnectionConfig.iceServers.findIndex(s => s.url.indexOf('turn') === 0) >= 0;
+      if (turnStatus) {
+        myPeerConnectionConfig.iceServers = myPeerConnectionConfig.iceServers.filter(s => s.url.indexOf('turn') < 0);
+      } else {
+        myPeerConnectionConfig.iceServers.push(...turnRecord);
       }
-    </script>
-  </body>
+      console.log(myPeerConnectionConfig);
+    }
+    window.addEventListener("beforeunload", function () {
+      if (socket) socket.close();
+    });
+    var isWebRTCSupported = navigator.getUserMedia ||
+      navigator.webkitGetUserMedia ||
+      navigator.mozGetUserMedia ||
+      navigator.msGetUserMedia ||
+      window.RTCPeerConnection;
+
+    if (window.navigator.userAgent.indexOf("Edge") === -1 && isWebRTCSupported) {
+      login();
+      setInterval(() => {
+        refreshGraph();
+      }, 2000);
+    } else {
+      alert('Unfortunetly your browser does not support this action!');
+    }
+  </script>
+</body>
+
 </html>

@@ -55,7 +55,7 @@
   <h4 id="user-name"></h4>
   <div style="display: flex;justify-content: space-between;">
     <div id="streams" class="some-class">
-      Local: <br/>
+      Local: <br />
       <video id="send_video" autoplay playsinline muted style="width: 100%"></video><br />
     </div>
     <div id="graph-div" class="some-class"></div>
@@ -198,6 +198,7 @@
   <script>
     let lastTree;
     let loggedIn = false;
+    let hasStream = false;
     let myUsername,
       myName,
       targetName,
@@ -210,7 +211,7 @@
     let localStream,
       shareScreenStream,
       sendStream,
-      remoteStream,
+      remoteStream = {},
       localScreenShare,
       myPeerConnection,
       broadcasterPeerConnection,
@@ -258,40 +259,40 @@
     var myPeerConnectionConfig = {
       iceServers: [
         {
-          url: 'stun:stun.l.google.com:19302'
+          urls: ['stun:stun.l.google.com:19302']
         },
         {
-          url: 'stun:stun1.l.google.com:19302'
-        },
-        {
-
-          url: 'stun:stun2.l.google.com:19302'
+          urls: ['stun:stun1.l.google.com:19302']
         },
         {
 
-          url: 'stun:stun3.l.google.com:19302'
+          urls: ['stun:stun2.l.google.com:19302']
         },
         {
 
-          url: 'stun:stun4.l.google.com:19302'
+          urls: ['stun:stun3.l.google.com:19302']
         },
         {
-          url: "turn:turn1.turn.group.video:3478",
+
+          urls: ['stun:stun4.l.google.com:19302']
+        },
+        {
+          urls: ["turn:turn1.turn.group.video:3478"],
           username: "turnuser",
           credential: "dJ4kP05PHcKN8Ubu",
         },
         {
-          url: "turn:turn2.turn.group.video:3478",
+          urls: ["turn:turn2.turn.group.video:3478"],
           username: "turnuser",
           credential: "XzfVP8cpNEy17hws",
         },
         {
-          url: "turns:turn1.turn.group.video:443",
+          urls: ["turns:turn1.turn.group.video:443"],
           username: "turnuser",
           credential: "dJ4kP05PHcKN8Ubu",
         },
         {
-          url: "turns:turn2.turn.group.video:443",
+          urls: ["turns:turn2.turn.group.video:443"],
           username: "turnuser",
           credential: "XzfVP8cpNEy17hws",
         },
@@ -366,12 +367,27 @@
         }
       };
       myPeerConnection.ontrack = function (event) {
+        console.log('[onTrack stream length]', event.streams.length);
+        event.streams.map((stream) => {
+          console.log('stream id', stream.id);
+          console.log('stream track length', stream.getTracks().length);
+        });
+        if (!hasStream) {
+          socket.send(
+            JSON.stringify({
+              type: "stream",
+              data: "true",
+            })
+          );
+          hasStream = true;
+        }
         console.log('ontrack', event.streams[0]);
-        if (myRole != "broadcast") {
           console.log('Stream Count', event.streams);
           if ($("#local_video_" + event.streams[0].id).length === 0) {
-            $("#streams").append(`<video id="local_video_${event.streams[0].id}" autoplay playsinline muted style="width: 100%"></video><br />`);
+            $("#streams").append(`<video id="local_video_${event.streams[0].id}" autoplay playsinline style="width: 100%"></video><br />`);
             document.getElementById("local_video_" + event.streams[0].id).srcObject = event.streams[0];
+            remoteStream[event.streams[0].id] = event.streams[0];
+            sendToAll(event.streams[0]);
           }
           // if (localStream && !shareScreenStream && localStream.id !== event.streams[0].id) {
           //   shareScreenStream = event.streams[0];
@@ -401,14 +417,13 @@
           //       data: "true",
           //     })
           //   );
-          //   socket.send(
-          //     JSON.stringify({
-          //       type: "log",
-          //       data: "ontrack from " + targetName,
-          //     })
-          //   );
+          socket.send(
+            JSON.stringify({
+              type: "log",
+              data: "ontrack from " + targetName,
+            })
+          );
           // }
-        }
       };
       myPeerConnection.onnegotiationneeded = function (event) {
         myPeerConnection
@@ -445,6 +460,7 @@
         );
         if (myPeerConnection.iceConnectionState == 'disconnected') {
           console.log('Disconnected', myPeerConnections);
+          $("#streams").html("");
           socket.close();
         }
       };
@@ -460,6 +476,14 @@
       };
       myPeerConnections[targetUsername] = myPeerConnection;
       return myPeerConnection;
+    }
+    function sendToAll(aStream) {
+      for(const targetUsername in myPeerConnections) {
+        const myPeerConnection = myPeerConnections[targetUsername];
+        aStream.getTracks().forEach((track) => {
+          myPeerConnection.addTrack(track, aStream);
+        });
+      }
     }
     function connectUser(targetUsername, type = 'default') {
       if (type === 'alt') {
@@ -480,6 +504,7 @@
       }
       let myPeerConnection = createPeerConnection(targetUsername);
 
+      /*
       // console.log("localStream", localStream);
       if (localStream) {
         localStream.getTracks().forEach((track) => {
@@ -487,6 +512,13 @@
           myPeerConnection.addTrack(track, localStream);
         });
         // console.log("Added tracks to connection");
+      }
+      */
+      for (streamId in remoteStream) {
+        remoteStream[streamId].getTracks().forEach((track) => {
+          // track["mmcomp"] = "VIDEO";
+          myPeerConnection.addTrack(track, remoteStream[streamId]);
+        });
       }
     }
     async function login() {
@@ -519,6 +551,8 @@
         }
         // myUsername = "";
         myPeerConnections = [];
+        broadcasterPeerConnection = null;
+        myPeerConnection = null;
         login();
       };
 
@@ -527,7 +561,7 @@
       };
 
       socket.onmessage = async function (event) {
-        console.log(`[message] Data received from server: ${event.data}`);
+        // console.log(`[message] Data received from server: ${event.data}`);
         let msg;
         try {
           msg = JSON.parse(event.data);
@@ -543,6 +577,7 @@
           targetName = msg.username;
           var desc = new RTCSessionDescription(msg.sdp);
           let myPeerConnection = createPeerConnection(targetUsername);
+          // await myPeerConnection.setLocalDescription({type: "rollback"});
           await myPeerConnection.setRemoteDescription(desc);
 
           var answer = await myPeerConnection.createAnswer();
@@ -562,6 +597,7 @@
           targetName = msg.username;
           var desc = new RTCSessionDescription(msg.sdp);
           let myPeerConnection = createPeerConnection(targetUsername, true);
+          // await myPeerConnection.setLocalDescription({type: "rollback"});
           await myPeerConnection.setRemoteDescription(desc);
 
           var answer = await myPeerConnection.createAnswer();
@@ -634,7 +670,7 @@
                 audience();
               }, 200);
             }
-            document.getElementById("local_video").srcObject = null;
+            // document.getElementById("local_video").srcObject = null;
 
           }
         } else if (msg.type == "add_audience") {
@@ -645,16 +681,13 @@
           connectUser(msg.data);
         } else if (msg.type == "tree") {
           const treeData = JSON.parse(msg.data);
-          console.log({treeData});
           if (lastTree && lastTree === msg.data) {
             return;
           }
-          console.log('a1');
           lastTree = msg.data;
           if (treeData && treeData.length > 0) {
             drawGraph(treeData);
           }
-          console.log('a2');
         } else if (msg.type == "alt-broadcast") {
           console.log({ msg });
           if (msg.data === 'no-broadcaster') {
@@ -662,8 +695,17 @@
             return;
           }
           document.getElementById("send_video").srcObject = sendStream;
+          alert('Waiting for Broadcaster Approve');
+          // console.log('Start connecting to broadcaster');
+          // connectUser(msg.data, 'alt');
+        } else if (msg.type == "alt-broadcast-approve") {
           console.log('Start connecting to broadcaster');
           connectUser(msg.data, 'alt');
+        }
+        else if (msg.type == "error") {
+          console.log('Error', msg);
+          $("#audience-btn").prop("disabled", false);
+          alert(msg.data);
         }
       };
     }
