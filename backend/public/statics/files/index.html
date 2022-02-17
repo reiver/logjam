@@ -375,13 +375,14 @@
         });
         hasStream = true;
         setTimeout(() => {
+          console.log('STRAEM TRUE');
           socket.send(
             JSON.stringify({
               type: "stream",
               data: "true",
             })
           );
-        }, 1000);
+        }, 5000);
         console.log('ontrack', event.streams[0]);
           console.log('Stream Count', event.streams);
           if ($("#local_video_" + event.streams[0].id).length === 0) {
