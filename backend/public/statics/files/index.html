@@ -571,8 +571,8 @@
         }
         msg.data = (msg.Data && !msg.data) ? msg.Data : msg.data;
         msg.type = (msg.Type && !msg.type) ? msg.Type : msg.type;
-        if (msg.type !== 'tree')
-          console.log("Message", msg);
+        // if (msg.type !== 'tree')
+        //   console.log("Message", msg);
         if (msg.type == "video-offer") {
           let targetUsername = msg.name;
           targetName = msg.username;
