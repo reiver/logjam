@@ -376,17 +376,21 @@
         hasStream = true;
         // setTimeout(() => {
         //   console.log('STRAEM TRUE');
-        try {
           socket.send(
             JSON.stringify({
               type: "stream",
               data: "true",
             })
           );
-          console.log('sent has stream');
-        } catch (e) {
-          console.log('stream true error', e);
-        }
+        setTimeout(() => {
+          socket.send(
+            JSON.stringify({
+              type: "stream",
+              data: "true",
+            })
+          );
+          console.log('after 10secs');
+        }, 10000);
         // }, 5000);
         console.log('ontrack', event.streams[0]);
           console.log('Stream Count', event.streams);
