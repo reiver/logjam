@@ -374,15 +374,19 @@
           console.log('stream track length', stream.getTracks().length);
         });
         hasStream = true;
-        setTimeout(() => {
-          console.log('STRAEM TRUE');
+        // setTimeout(() => {
+        //   console.log('STRAEM TRUE');
+        try {
           socket.send(
             JSON.stringify({
               type: "stream",
               data: "true",
             })
           );
-        }, 5000);
+        } catch (e) {
+          console.log('stream true error', e);
+        }
+        // }, 5000);
         console.log('ontrack', event.streams[0]);
           console.log('Stream Count', event.streams);
           if ($("#local_video_" + event.streams[0].id).length === 0) {
@@ -463,7 +467,7 @@
         if (myPeerConnection.iceConnectionState == 'disconnected') {
           console.log('Disconnected', myPeerConnections);
           $("#streams").html("");
-          socket.close();
+          // socket.close();
         }
       };
       myPeerConnection.onicegatheringstatechange = function (event) { };
