@@ -383,6 +383,7 @@
               data: "true",
             })
           );
+          console.log('sent has stream');
         } catch (e) {
           console.log('stream true error', e);
         }
@@ -467,7 +468,8 @@
         if (myPeerConnection.iceConnectionState == 'disconnected') {
           console.log('Disconnected', myPeerConnections);
           $("#streams").html("");
-          // socket.close();
+          hasStream = false;
+          socket.close();
         }
       };
       myPeerConnection.onicegatheringstatechange = function (event) { };
@@ -559,6 +561,7 @@
         myPeerConnections = [];
         broadcasterPeerConnection = null;
         myPeerConnection = null;
+        hasStream = false;
         login();
       };
 
