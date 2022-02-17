@@ -824,7 +824,7 @@
               data: "broadcast",
             })
           );
-          const turnStatus = myPeerConnectionConfig.iceServers.findIndex(s => s.urls.indexOf('turn:') === 0) >= 0;
+          const turnStatus = myPeerConnectionConfig.iceServers.findIndex(s => s.urls[0].indexOf('turn:') === 0) >= 0;
           socket.send(
             JSON.stringify({
               type: "turn_status",
