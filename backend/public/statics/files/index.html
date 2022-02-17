@@ -374,6 +374,7 @@
           console.log('stream track length', stream.getTracks().length);
         });
         // if (!hasStream) {
+        setTimeout(() => {
           socket.send(
             JSON.stringify({
               type: "stream",
@@ -382,6 +383,7 @@
           );
           hasStream = true;
         // }
+        }, 300);
         console.log('ontrack', event.streams[0]);
           console.log('Stream Count', event.streams);
           if ($("#local_video_" + event.streams[0].id).length === 0) {
