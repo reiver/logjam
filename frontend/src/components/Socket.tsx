@@ -2,7 +2,6 @@ import {useEffect, useState} from "react";
 import {SocketMessage} from "../types/SocketMessage";
 
 export default function Socket({myName, mySocket, setMySocket}: any) {
-    const [readyState, setReadyState] = useState(null);
 
     const [message, setMessage] = useState<SocketMessage>(
         {
@@ -16,12 +15,6 @@ export default function Socket({myName, mySocket, setMySocket}: any) {
             target: null
         }
     );
-
-    useEffect(() => {
-        if (mySocket) {
-            setReadyState(mySocket.readyState)
-        }
-    }, [mySocket, mySocket?.readyState]);
 
     useEffect(() => {
         console.log("myName=", myName);
@@ -52,10 +45,11 @@ export default function Socket({myName, mySocket, setMySocket}: any) {
     }
 
     function getSocketUrl() {
-        const url = window.location.href.split("//");
-        const protocol = url[0] === "http:" ? "wss" : "ws";
-        const baseUrl = url[1].split("/")[0];
-        return `${protocol}://${baseUrl}/ws`;
+        return 'ws://localhost:8080/ws'
+        // const url = window.location.href.split("//");
+        // const protocol = url[0] === "http:" ? "wss" : "ws";
+        // const baseUrl = url[1].split("/")[0];
+        // return `${protocol}://${baseUrl}/ws`;
     }
 
     function parseSocketMessage(data: string) {
@@ -170,7 +164,7 @@ export default function Socket({myName, mySocket, setMySocket}: any) {
     }
 
     return (
-        <p style={{color: "white"}}>Socket {readyState ? getStateDescription(readyState) : "-"}</p>
+        <p style={{color: "white"}}>Socket {mySocket ? getStateDescription(mySocket.readyState) : "-"}</p>
     );
 }
 
