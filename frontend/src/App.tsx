@@ -1,29 +1,22 @@
 import React, {createContext, ReactChild, useEffect, useState} from 'react';
 import './styles/App.css';
-import Main from "./components/Main";
+// import Main from "./components/Main";
 import GetName from "./components/GetName";
 import {SocketProvider} from "./SocketProvider";
 import {Socket} from "./components/Socket";
 
 function App() {
-    // const [myName, setMyName] = useState();
+    const [myName, setMyName] = useState();
 
+    if (!myName) return (
+        <GetName myName={myName} setMyName={setMyName}/>
+    );
 
-    // useEffect(()=>{
-    //     console.log('myName is set to:', myName);
-    // }, myName);
-    return <SocketProvider>{
-        <div>
-            <Socket/>
-
-            {/*{*/}
-            {/*    myName ?*/}
-            {/*        <Main myName={myName}/> :*/}
-            {/*        <GetName myName={myName} setMyName={setMyName}/>*/}
-            {/*}*/}
-        </div>
-
-    }</SocketProvider>
+    return (
+        <SocketProvider>
+            <Socket myName={myName}/>
+        </SocketProvider>
+    );
 }
 
 export default App;

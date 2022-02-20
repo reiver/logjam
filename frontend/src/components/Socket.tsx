@@ -1,7 +1,7 @@
 import {useCallback, useEffect} from "react";
 import {useSocket} from "../hooks/useSocket";
 
-export const Socket = () => {
+export const Socket = ({myName}: { myName: string }) => {
     console.log('Socket component');
 
     const socket = useSocket();
@@ -25,9 +25,9 @@ export const Socket = () => {
     const onOpen = useCallback((event) => {
         let data = {
             type: "start",
-            data: 'myName'
+            data: myName
         };
-        console.log('[onOpen] sent: ');
+        console.log('[onOpen] sent: ', data);
         socket.send(JSON.stringify(data));
 
     }, []);
