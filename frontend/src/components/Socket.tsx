@@ -22,6 +22,16 @@ export const Socket = () => {
         }
     }
 
+    const onOpen = useCallback((event) => {
+        let data = {
+            type: "start",
+            data: 'myName'
+        };
+        console.log('[onOpen] sent: ');
+        socket.send(JSON.stringify(data));
+
+    }, []);
+
     const onMessage = useCallback((message) => {
         if (!message) {
             console.error('[onMessage] Socket message is null');
@@ -72,23 +82,28 @@ export const Socket = () => {
     }, []);
 
     useEffect(() => {
+        socket.addEventListener("open", onOpen);
+        console.log('added socket onOpen listener');
+
+        return () => {
+            socket.removeEventListener("open", onOpen);
+            console.log('socket onOpen listener removed');
+        };
+    }, [socket, onMessage]);
+
+    useEffect(() => {
         socket.addEventListener("message", onMessage);
+        console.log('added socket onMessage listener');
 
         return () => {
             socket.removeEventListener("message", onMessage);
+            console.log('socket onMessage listener removed');
         };
     }, [socket, onMessage]);
 
     return (
         <button
             onClick={() => {
-                console.log('message sent')
-                socket.send(
-                    JSON.stringify({
-                        type: "start",
-                        data: 'myName'
-                    })
-                );
             }}
         >Start</button>
     )

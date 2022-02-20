@@ -1,4 +1,4 @@
-import React, {useEffect, useState, createContext, ReactChild} from "react";
+import React, {useEffect, useState, createContext, ReactChild, useCallback} from "react";
 
 const SOCKET_RECONNECTION_TIMEOUT = 30;
 
@@ -21,28 +21,39 @@ export const SocketProvider = (props: ISocketProvider) => {
     console.log('SocketProvider');
     const [ws, setWs] = useState<WebSocket>(webSocket);
 
+    // onClose Handler
+    const onClose = useCallback((event) => {
+        console.log(
+            `[socket closed] Connection ${event.wasClean ?
+                "closed cleanly" : "died"}, code=${event.code} reason=${event.reason}`
+        );
+        setTimeout(() => {
+            setWs(new WebSocket(getSocketUrl()));
+        }, SOCKET_RECONNECTION_TIMEOUT);
+    }, []);
+
+    // onError Handler
+    const onError = useCallback((error) => {
+        console.log('[socket error] ', error);
+    }, []);
+
     useEffect(() => {
-        const onClose = (event: { wasClean: boolean; code: number; reason: string; }) => {
-            console.log(
-                `[socket closed] Connection ${event.wasClean ?
-                    "closed cleanly" : "died"}, code=${event.code} reason=${event.reason}`
-            );
-            setTimeout(() => {
-                setWs(new WebSocket(getSocketUrl()));
-            }, SOCKET_RECONNECTION_TIMEOUT);
-        };
-
-        const onError = (error: any) =>{
-            console.log('[socket error] ', error);
-        }
-
         ws.addEventListener("close", onClose);
-        ws.addEventListener("error", onError);
+        console.log('added socket onClose listener');
 
         return () => {
-            console.log('socket listeners removed')
             ws.removeEventListener("close", onClose);
+            console.log('socket onClose listener removed');
+        };
+    }, [ws, setWs]);
+
+    useEffect(() => {
+        ws.addEventListener("error", onError);
+        console.log('added socket onError listener');
+
+        return () => {
             ws.removeEventListener("error", onError);
+            console.log('socket onError listener removed');
         };
     }, [ws, setWs]);
 
