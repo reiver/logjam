@@ -1,7 +1,7 @@
 import {useEffect, useState} from "react";
 import {SocketMessage} from "../types/SocketMessage";
 
-export default function Socket({myName, mySocket, setMySocket}: any) {
+export default function Socket({myName}: any) {
 
     const [message, setMessage] = useState<SocketMessage>(
         {
@@ -15,19 +15,6 @@ export default function Socket({myName, mySocket, setMySocket}: any) {
             target: null
         }
     );
-
-    useEffect(() => {
-        console.log("myName=", myName);
-        if (!myName) {
-            console.log('myName is not set yet');
-            return;
-        }
-        if (mySocket) {
-            console.log('socket already exists');
-            return;
-        }
-        createSocket();
-    });
 
     function getStateDescription(state: number) {
         switch (state) {
@@ -160,11 +147,12 @@ export default function Socket({myName, mySocket, setMySocket}: any) {
             }
         }
         console.log('mySocket is set')
-        setMySocket(socket);
+        // setMySocket(socket);
     }
 
     return (
-        <p style={{color: "white"}}>Socket {mySocket ? getStateDescription(mySocket.readyState) : "-"}</p>
+        <div/>
+        // <p style={{color: "white"}}>Socket {mySocket ? getStateDescription(mySocket.readyState) : "-"}</p>
     );
 }
 
