@@ -3,7 +3,7 @@ import './styles/App.css';
 import Main from "./components/Main";
 import GetName from "./components/GetName";
 import {SocketProvider} from "./SocketProvider";
-import {MyComponent} from "./components/MyComponent";
+import {Socket} from "./components/Socket";
 
 function App() {
     // const [myName, setMyName] = useState();
@@ -14,7 +14,7 @@ function App() {
     // }, myName);
     return <SocketProvider>{
         <div>
-            <MyComponent/>
+            <Socket/>
 
             {/*{*/}
             {/*    myName ?*/}

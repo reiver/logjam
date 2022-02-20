@@ -1,23 +1,14 @@
-import {useEffect, useState} from "react";
-import {SocketMessage} from "../types/SocketMessage";
+import {useCallback, useEffect} from "react";
+import {useSocket} from "../hooks/useSocket";
 
-export default function Socket({myName}: any) {
+export const Socket = () => {
+    console.log('Socket component');
 
-    const [message, setMessage] = useState<SocketMessage>(
-        {
-            type: '',
-            data: null,
-            error: null,
-            candidate: null,
-            name: '',
-            username: '',
-            sdp: null,
-            target: null
-        }
-    );
+    const socket = useSocket();
+    console.log(socket);
 
-    function getStateDescription(state: number) {
-        switch (state) {
+    function getStateDescription(readyState: number) {
+        switch (readyState) {
             case 0:
                 return "CONNECTING	Socket has been created. The connection is not yet open.";
             case 1:
@@ -27,133 +18,78 @@ export default function Socket({myName}: any) {
             case 3:
                 return "CLOSED	The connection is closed or couldn't be opened."
             default:
-                return ""
+                return "Unknown readyState"
         }
     }
 
-    function getSocketUrl() {
-        return 'ws://localhost:8080/ws'
-        // const url = window.location.href.split("//");
-        // const protocol = url[0] === "http:" ? "wss" : "ws";
-        // const baseUrl = url[1].split("/")[0];
-        // return `${protocol}://${baseUrl}/ws`;
-    }
-
-    function parseSocketMessage(data: string) {
-        let msg;
-        try {
-            msg = JSON.parse(data);
-            if (msg.type !== 'tree') {
-                console.log("Message", msg);
-            }
-        } catch (e) {
-            console.error('Unable to parse socket message: ', e);
-            return;
-        }
-        if (!msg) {
-            console.error('Socket message is null');
-            return;
-        }
-        return msg;
-    }
-
-    function createSocket() {
-        console.log('createSocket()');
-        let socket: WebSocket;
-        try {
-            socket = new WebSocket(getSocketUrl());
-            console.log('socket created:', socket);
-        } catch (e) {
-            console.log('could not create socket:', e);
+    const onMessage = useCallback((message) => {
+        if (!message) {
+            console.error('[onMessage] Socket message is null');
             return;
         }
 
-        socket.onopen = function (event) {
-            console.log("[open] Connection established");
-            console.log("Sending start to server");
-            socket.send(
-                JSON.stringify({
-                    type: "start",
-                    data: myName,
-                })
-            );
-        };
-
-        socket.onclose = function (event) {
-            console.log(
-                `[close] Connection ${event.wasClean ? "closed": "died"}, code=${event.code} reason=${event.reason}`
-            );
-            // myUsername = "";
-            // myPeerConnections = [];
-            // myAltPeerConnections = [];
-            // myPeerConnection = null;
-            // login();
-        };
-
-        socket.onerror = function (error) {
-            console.log('error:');
-            console.dir(error);
-        };
-
-        socket.onmessage = async function (event) {
-            let msg: SocketMessage = parseSocketMessage(event.data);
-            if (!msg) {
-                console.log('message is null');
-                return;
-            }
-
-            setMessage(prevState => ({
-                ...prevState, msg
-            }));
-
-            switch (msg.type) {
-                case "alt-video-offer":
-                    // await altVideoOffer();
-                    break;
-                case "new-ice-candidate":
-                    // newIceCandidate();
-                    break;
-                case "alt-new-ice-candidate":
-                    // newAltIceCandidate();
-                    break;
-                case "video-answer":
-                    // videoAnswer();
-                    break;
-                case "alt-video-answer":
-                    // newAltVideoAnswer();
-                    break;
-                case "start":
-                    // start();
-                    break;
-                case "role":
-                    // role();
-                    break;
-                case "add_audience":
-                    // console.log("add_audience", msg.data);
-                    // connectUser();
-                    break;
-                case "add_broadcast_audience":
-                    // console.log("add_audience", msg.data);
-                    // connectUser();
-                    break;
-                case "tree":
-                    // tree();
-                    break;
-                case "alt-broadcast":
-                    // altBroadcast();
-                    break;
-                default:
-                    console.log(msg);
-            }
+        const msg = JSON.parse(message?.data);
+        console.log('[message received]', msg);
+        switch (msg.Type) {
+            case "alt-video-offer":
+                // await altVideoOffer();
+                break;
+            case "new-ice-candidate":
+                // newIceCandidate();
+                break;
+            case "alt-new-ice-candidate":
+                // newAltIceCandidate();
+                break;
+            case "video-answer":
+                // videoAnswer();
+                break;
+            case "alt-video-answer":
+                // newAltVideoAnswer();
+                break;
+            case "start":
+                // start();
+                break;
+            case "role":
+                // role();
+                break;
+            case "add_audience":
+                // console.log("add_audience", msg.data);
+                // connectUser();
+                break;
+            case "add_broadcast_audience":
+                // console.log("add_audience", msg.data);
+                // connectUser();
+                break;
+            case "tree":
+                // tree();
+                break;
+            case "alt-broadcast":
+                // altBroadcast();
+                break;
+            default:
+                console.log(msg);
         }
-        console.log('mySocket is set')
-        // setMySocket(socket);
-    }
+    }, []);
+
+    useEffect(() => {
+        socket.addEventListener("message", onMessage);
+
+        return () => {
+            socket.removeEventListener("message", onMessage);
+        };
+    }, [socket, onMessage]);
 
     return (
-        <div/>
-        // <p style={{color: "white"}}>Socket {mySocket ? getStateDescription(mySocket.readyState) : "-"}</p>
-    );
+        <button
+            onClick={() => {
+                console.log('message sent')
+                socket.send(
+                    JSON.stringify({
+                        type: "start",
+                        data: 'myName'
+                    })
+                );
+            }}
+        >Start</button>
+    )
 }
-
-
