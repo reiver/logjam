@@ -1,4 +1,4 @@
-import React, {createContext, ReactChild, useEffect, useState} from 'react';
+import React, {useState} from 'react';
 import styled from "styled-components";
 import Screen from "./Screen";
 import BottomSidebar from "./BottomSidebar";
@@ -25,21 +25,8 @@ export default function Main({myName}: any) {
     );
 
 
-    // useEffect(() => {
-    //     console.log('myName:', myName);
-    //     if (myName){
-    //         socket =
-    //     }
-    // }, [myName]);
-    //
-    // useEffect(() => {
-    //     console.log('mySocket:', mySocket);
-    // }, [mySocket]);
-
-
     return (
         <Page>
-            {/*<Socket myName={myName} mySocket={mySocket} setMySocket={setMySocket}/>*/}
             <Screen>
                 <video id="video 1" autoPlay playsInline muted/>
                 <video id="video 2" autoPlay playsInline muted/>
@@ -61,4 +48,3 @@ const Page = styled.div`
   height: 100vh;
   padding: 1em;
 `;
-

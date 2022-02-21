@@ -2,12 +2,21 @@ import {useCallback, useEffect} from "react";
 import {useSocket} from "../hooks/useSocket";
 import Main from "./Main";
 
-export const Socket = () => {
+export const Socket = ({myName}: any) => {
     console.log('Socket component');
 
     const socket = useSocket();
     console.log(socket);
 
+    useEffect(()=>{
+        console.log('sent start')
+        socket.send(JSON.stringify({
+                type: "start",
+                data: myName
+            }
+        ));
+
+    }, []);
 
     function getStateDescription(readyState: number) {
         switch (readyState) {

@@ -1,11 +1,6 @@
 import React, {useEffect, useState, createContext, ReactChild, useCallback} from "react";
 
-const SOCKET_RECONNECTION_TIMEOUT = 30;
-
-interface ISocketProvider {
-    myName: string,
-    children: ReactChild;
-}
+const SOCKET_RECONNECTION_TIMEOUT = 5000;
 
 function getSocketUrl() {
     return 'ws://localhost:8080/ws'
@@ -18,19 +13,16 @@ function getSocketUrl() {
 const webSocket = new WebSocket(getSocketUrl());
 export const SocketContext = createContext(webSocket);
 
-export const SocketProvider = (props: ISocketProvider) => {
+export const SocketProvider = (props: {
+    children: ReactChild;
+}) => {
     console.log('SocketProvider');
-    console.log('myName: ', props.myName);
+    // console.log('myName: ', props.myName);
     const [ws, setWs] = useState<WebSocket>(webSocket);
 
     // onOpen Handler
     const onOpen = useCallback((event) => {
-        let data = {
-            type: "start",
-            data: props.myName
-        };
-        console.log('[onOpen] sent: ', data);
-        ws.send(JSON.stringify(data));
+        console.log('[socket opened]');
     }, []);
 
     // onClose Handler
@@ -49,6 +41,16 @@ export const SocketProvider = (props: ISocketProvider) => {
         console.log('[socket error] ', error);
     }, []);
 
+    useEffect(() => {
+        ws.addEventListener("close", onClose);
+        console.log('added socket onClose listener');
+
+        return () => {
+            ws.removeEventListener("close", onClose);
+            console.log('socket onClose listener removed');
+        };
+    }, [ws]);
+
 
     useEffect(() => {
         ws.addEventListener("open", onOpen);
@@ -60,15 +62,6 @@ export const SocketProvider = (props: ISocketProvider) => {
         };
     }, [ws]);
 
-    useEffect(() => {
-        ws.addEventListener("close", onClose);
-        console.log('added socket onClose listener');
-
-        return () => {
-            ws.removeEventListener("close", onClose);
-            console.log('socket onClose listener removed');
-        };
-    }, [ws]);
 
     useEffect(() => {
         ws.addEventListener("error", onError);
