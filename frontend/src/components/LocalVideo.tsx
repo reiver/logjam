@@ -12,24 +12,22 @@ export default function LocalVideo() {
     }
 
     useEffect(() => {
-        console.log('here***')
         navigator.mediaDevices.getUserMedia(MEDIA_CONSTRAINTS)
             .then((mediaStream) => {
-                    console.log('mediaStream')
                     if (videoRef && videoRef.current) {
                         const video = videoRef.current as HTMLVideoElement;
                         video.srcObject = mediaStream;
-                        video.onloadedmetadata = function (e) {
-                            console.log('video loaded')
-                            videoRef?.current?.play().then(r => console.log(r));
-                        };
+                        // video.onloadedmetadata = function (e) {
+                        //     console.log('video loaded')
+                        //     videoRef?.current?.play().then();
+                        // };
                     }
                 }
             )
     }, [videoRef]);
 
     return (
-        <video id={"video 1"} ref={videoRef}/>
+        <video id={"video 1"} ref={videoRef} autoPlay playsInline muted/>
     )
 
 }

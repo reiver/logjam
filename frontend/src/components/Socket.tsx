@@ -3,19 +3,27 @@ import {useSocket} from "../hooks/useSocket";
 import Main from "./Main";
 import LocalVideo from "./LocalVideo";
 
-export const Socket = ({myName}: any) => {
+export const Socket = ({myName, myRole}: any) => {
     console.log('Socket component');
 
     const socket = useSocket();
     console.log(socket);
 
-    useEffect(()=>{
-        console.log('sent start')
+    useEffect(() => {
         socket.send(JSON.stringify({
                 type: "start",
                 data: myName
             }
         ));
+        console.log('start sent')
+
+        socket.send(JSON.stringify({
+                type: "role",
+                data: myRole
+            }
+        ));
+        console.log('role sent')
+
 
     }, []);
 

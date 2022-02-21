@@ -38,8 +38,8 @@ export default function Main({myName}: any) {
             {/*    /!*<video id="video 7" autoPlay playsInline muted/>*!/*/}
             {/*    /!*<video id="video 8" autoPlay playsInline muted/>*!/*/}
             </Screen>
-            {/*<BottomSidebar controlButtons={controlButtons} myName={myName}/>*/}
-            {/*<LeftSidebar/>*/}
+            <BottomSidebar controlButtons={controlButtons} myName={myName}/>
+            <LeftSidebar/>
         </Page>
     )
 }
