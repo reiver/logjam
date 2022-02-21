@@ -3,6 +3,7 @@ import React, {useEffect, useState, createContext, ReactChild, useCallback} from
 const SOCKET_RECONNECTION_TIMEOUT = 30;
 
 interface ISocketProvider {
+    myName: string,
     children: ReactChild;
 }
 
@@ -19,7 +20,18 @@ export const SocketContext = createContext(webSocket);
 
 export const SocketProvider = (props: ISocketProvider) => {
     console.log('SocketProvider');
+    console.log('myName: ', props.myName);
     const [ws, setWs] = useState<WebSocket>(webSocket);
+
+    // onOpen Handler
+    const onOpen = useCallback((event) => {
+        let data = {
+            type: "start",
+            data: props.myName
+        };
+        console.log('[onOpen] sent: ', data);
+        ws.send(JSON.stringify(data));
+    }, []);
 
     // onClose Handler
     const onClose = useCallback((event) => {
@@ -37,6 +49,17 @@ export const SocketProvider = (props: ISocketProvider) => {
         console.log('[socket error] ', error);
     }, []);
 
+
+    useEffect(() => {
+        ws.addEventListener("open", onOpen);
+        console.log('added socket onOpen listener');
+
+        return () => {
+            ws.removeEventListener("open", onOpen);
+            console.log('socket onOpen listener removed');
+        };
+    }, [ws]);
+
     useEffect(() => {
         ws.addEventListener("close", onClose);
         console.log('added socket onClose listener');
@@ -45,7 +68,7 @@ export const SocketProvider = (props: ISocketProvider) => {
             ws.removeEventListener("close", onClose);
             console.log('socket onClose listener removed');
         };
-    }, [ws, setWs]);
+    }, [ws]);
 
     useEffect(() => {
         ws.addEventListener("error", onError);
@@ -55,7 +78,7 @@ export const SocketProvider = (props: ISocketProvider) => {
             ws.removeEventListener("error", onError);
             console.log('socket onError listener removed');
         };
-    }, [ws, setWs]);
+    }, [ws]);
 
     return (
         <SocketContext.Provider value={ws}>

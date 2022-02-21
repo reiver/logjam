@@ -1,11 +1,13 @@
 import {useCallback, useEffect} from "react";
 import {useSocket} from "../hooks/useSocket";
+import Main from "./Main";
 
-export const Socket = ({myName}: { myName: string }) => {
+export const Socket = () => {
     console.log('Socket component');
 
     const socket = useSocket();
     console.log(socket);
+
 
     function getStateDescription(readyState: number) {
         switch (readyState) {
@@ -22,15 +24,6 @@ export const Socket = ({myName}: { myName: string }) => {
         }
     }
 
-    const onOpen = useCallback((event) => {
-        let data = {
-            type: "start",
-            data: myName
-        };
-        console.log('[onOpen] sent: ', data);
-        socket.send(JSON.stringify(data));
-
-    }, []);
 
     const onMessage = useCallback((message) => {
         if (!message) {
@@ -82,16 +75,6 @@ export const Socket = ({myName}: { myName: string }) => {
     }, []);
 
     useEffect(() => {
-        socket.addEventListener("open", onOpen);
-        console.log('added socket onOpen listener');
-
-        return () => {
-            socket.removeEventListener("open", onOpen);
-            console.log('socket onOpen listener removed');
-        };
-    }, [socket, onMessage]);
-
-    useEffect(() => {
         socket.addEventListener("message", onMessage);
         console.log('added socket onMessage listener');
 
@@ -102,9 +85,6 @@ export const Socket = ({myName}: { myName: string }) => {
     }, [socket, onMessage]);
 
     return (
-        <button
-            onClick={() => {
-            }}
-        >Start</button>
+        <Main/>
     )
 }
