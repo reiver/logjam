@@ -1,6 +1,7 @@
 import {useCallback, useEffect} from "react";
 import {useSocket} from "../hooks/useSocket";
 import Main from "./Main";
+import LocalVideo from "./LocalVideo";
 
 export const Socket = ({myName}: any) => {
     console.log('Socket component');
@@ -94,6 +95,6 @@ export const Socket = ({myName}: any) => {
     }, [socket, onMessage]);
 
     return (
-        <Main/>
+        <LocalVideo/>
     )
 }
