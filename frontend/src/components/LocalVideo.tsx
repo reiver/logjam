@@ -1,24 +1,35 @@
 import React, {useEffect, useRef} from 'react';
-import {MEDIA_CONSTRAINTS} from "../config/mediaConstraints";
 
 export default function LocalVideo() {
     const videoRef = useRef<HTMLVideoElement>(null);
 
+    const MEDIA_CONSTRAINTS =  {
+        audio: false,
+        video: {
+            width: 300,
+            height: 200
+        },
+    }
+
     useEffect(() => {
+        console.log('here***')
         navigator.mediaDevices.getUserMedia(MEDIA_CONSTRAINTS)
             .then((mediaStream) => {
+                    console.log('mediaStream')
                     if (videoRef && videoRef.current) {
-                        videoRef.current.srcObject = mediaStream;
-                        videoRef.current.onloadedmetadata = function (e) {
+                        const video = videoRef.current as HTMLVideoElement;
+                        video.srcObject = mediaStream;
+                        video.onloadedmetadata = function (e) {
+                            console.log('video loaded')
                             videoRef?.current?.play().then(r => console.log(r));
                         };
                     }
                 }
             )
-    }, []);
+    }, [videoRef]);
 
     return (
-        <video ref={videoRef} autoPlay/>
+        <video id={"video 1"} ref={videoRef}/>
     )
 
 }

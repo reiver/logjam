@@ -4,6 +4,7 @@ import Screen from "./Screen";
 import BottomSidebar from "./BottomSidebar";
 import LeftSidebar from "./LeftSidebar";
 import ControlButtons from "./ControlButtons";
+import LocalVideo from "./LocalVideo";
 
 export default function Main({myName}: any) {
     const [mic, setMic] = useState(true);
@@ -28,17 +29,17 @@ export default function Main({myName}: any) {
     return (
         <Page>
             <Screen>
-                <video id="video 1" autoPlay playsInline muted/>
+                <LocalVideo/>
                 <video id="video 2" autoPlay playsInline muted/>
                 <video id="video 3" autoPlay playsInline muted/>
                 <video id="video 4" autoPlay playsInline muted/>
                 <video id="video 5" autoPlay playsInline muted/>
-                <video id="video 6" autoPlay playsInline muted/>
-                <video id="video 7" autoPlay playsInline muted/>
-                <video id="video 8" autoPlay playsInline muted/>
+            {/*    /!*<video id="video 6" autoPlay playsInline muted/>*!/*/}
+            {/*    /!*<video id="video 7" autoPlay playsInline muted/>*!/*/}
+            {/*    /!*<video id="video 8" autoPlay playsInline muted/>*!/*/}
             </Screen>
-            <BottomSidebar controlButtons={controlButtons} myName={myName}/>
-            <LeftSidebar/>
+            {/*<BottomSidebar controlButtons={controlButtons} myName={myName}/>*/}
+            {/*<LeftSidebar/>*/}
         </Page>
     )
 }

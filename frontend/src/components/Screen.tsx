@@ -11,7 +11,7 @@ export default function Screen(props: any) {
     for (let i = 0; i < videoCount; i++) {
         containers.push(
             <VideoContainer key={"vc-" + i} className={"video-container"} style={{flex: flex}}>
-                {i}
+                {props.children[i]}
             </VideoContainer>
         )
     }

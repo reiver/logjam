@@ -95,6 +95,7 @@ export const Socket = ({myName}: any) => {
     }, [socket, onMessage]);
 
     return (
-        <LocalVideo/>
+        <Main/>
+        // <LocalVideo/>
     )
 }
