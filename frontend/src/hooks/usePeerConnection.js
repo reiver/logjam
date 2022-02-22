@@ -127,7 +127,7 @@ export default function usePeerConnection() {
                 if (!document.getElementById("local_video").srcObject) {
                     document.getElementById("local_video").srcObject =
                         event.streams[0];
-                    localStream = event.streams[0];
+                    let localStream = event.streams[0];
                     document.getElementById("#source-stream").text("Read " + targetName); //+ "[" + targetUsername + "]");
                     socket.send(
                         JSON.stringify({

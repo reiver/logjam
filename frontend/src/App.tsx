@@ -1,6 +1,6 @@
 import React from 'react';
 import './styles/App.css';
-import {SocketProvider} from "./SocketProvider";
+import {SocketProvider} from "./providers/SocketProvider";
 import {Router} from "./components/Router";
 
 

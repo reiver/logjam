@@ -4,9 +4,12 @@ import Main from "./Main";
 import LocalVideo from "./LocalVideo";
 import {useParams} from "react-router-dom";
 import {receiveMessage, sendMessage} from "../helpers/message";
+import myPeerConnectionConfig from "../config/myPeerConnectionConfig";
 
-export const Socket = ({myName}: {myName: string}) => {
-    let { myRole } = useParams() || "audience";
+export const Socket = ({myName}: { myName: string }) => {
+    let {myRole} = useParams() || "audience";
+    let myPeerConnection: any;
+    let myPeerConnections: any = {};
 
     console.log('Socket component');
 
@@ -14,7 +17,7 @@ export const Socket = ({myName}: {myName: string}) => {
     console.log(socket);
 
     useEffect(() => {
-        sendMessage(socket,{
+        sendMessage(socket, {
                 type: "start",
                 data: myName
             }
@@ -46,10 +49,89 @@ export const Socket = ({myName}: {myName: string}) => {
         }
     }
 
+    // function createPeerConnection(targetUsername: string) {
+    //     myPeerConnection = new RTCPeerConnection(myPeerConnectionConfig);
+    //     myPeerConnection.onicecandidate = function (event: RTCPeerConnectionIceEvent) {
+    //         if (event.candidate) {
+    //             sendMessage(socket, {
+    //                 type: "new-ice-candidate",
+    //                 target: targetUsername,
+    //                 candidate: event.candidate,
+    //             });
+    //         }
+    //     };
+    //
+    //     myPeerConnection.ontrack = function (event: RTCTrackEvent) {
+    //         console.log("TRACK", event, myRole);
+    //     };
+    //
+    //     myPeerConnection.onnegotiationneeded = function (event: Event) {
+    //         console.log("onnegotiationneeded", event);
+    //     };
+    //
+    //     myPeerConnection.onremovetrack = function (event: any) {
+    //         console.log('onremovetrack', event)
+    //     };
+    //
+    //     myPeerConnection.oniceconnectionstatechange = function (event: Event) {
+    //         console.log("oniceconnectionstatechange", event);
+    //     };
+    //
+    //     myPeerConnection.onicegatheringstatechange = function (event: Event) {
+    //         console.log("onicegatheringstatechange", event);
+    //     };
+    //
+    //     myPeerConnection.onsignalingstatechange = function (event: Event) {
+    //         console.log("onsignalingstatechange", event);
+    //     };
+    //
+    //     myPeerConnection.onicecandidateerror = (event: Event) => {
+    //         console.log("onicecandidateerror", event);
+    //     };
+    //     return myPeerConnection;
+    // }
+    //
+    // function connectUser(targetUsername: string) {
+    //     // console.log("Connect User", targetUsername);
+    //     if (myPeerConnections[targetUsername]) {
+    //         // console.log("Already Connected");
+    //         return true;
+    //     }
+    //     let myPeerConnection = createPeerConnection(targetUsername);
+    //
+    //     // console.log("localStream", localStream);
+    //     if (localStream) {
+    //         localStream.getTracks().forEach((track) => {
+    //             // track["mmcomp"] = "VIDEO";
+    //             myPeerConnection.addTrack(track, localStream);
+    //         });
+    //         // console.log("Added tracks to connection");
+    //     }
+    //     for (const tuser in altStreams) {
+    //         const tstreams = altStreams[tuser];
+    //         tstreams[0].getTracks().forEach((track) => {
+    //             myPeerConnection.addTrack(track, tstreams[0]);
+    //         });
+    //     }
+    //     // if (shareScreenStream) {
+    //     //   shareScreenStream.getTracks().forEach((track) => {
+    //     //     // track["mmcomp"] = "VIDEO";
+    //     //     myPeerConnection.addTrack(track, shareScreenStream);
+    //     //   });
+    //     //   // console.log("Added tracks to connection");
+    //     // }
+    //     // if (remoteStream) {
+    //     //   remoteStream.getTracks().forEach((track) => {
+    //     //     // track["mmcomp"] = "VIDEO";
+    //     //     myPeerConnection.addTrack(track, remoteStream);
+    //     //   });
+    //     //   // console.log("Added tracks to connection");
+    //     // }
+    // }
 
     const onMessage = useCallback((message) => {
         let msg = receiveMessage(message);
-        switch (msg.Type) {
+        switch (msg.Type as string) {
             case "alt-video-offer":
                 // await altVideoOffer();
                 break;

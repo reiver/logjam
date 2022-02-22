@@ -1,4 +1,4 @@
-const myPeerConnectionConfig = {
+const myPeerConnectionConfig: RTCConfiguration = {
     iceServers: [
         // {'urls': 'stun:stun.l.google.com:19302'},
         // {"urls": "turn:numb.viagenie.ca", "username":"m.mirsamie@gmail.com", "credential":"159951"},
@@ -9,22 +9,22 @@ const myPeerConnectionConfig = {
         //   url: 'stun:stun.gmx.net:3478'
         // },
         {
-            url: 'stun:stun.l.google.com:19302'
+            urls: ['stun:stun.l.google.com:19302']
         },
         {
-            url: 'stun:stun1.l.google.com:19302'
-        },
-        {
-
-            url: 'stun:stun2.l.google.com:19302'
+            urls: ['stun:stun1.l.google.com:19302']
         },
         {
 
-            url: 'stun:stun3.l.google.com:19302'
+            urls: ['stun:stun2.l.google.com:19302']
         },
         {
 
-            url: 'stun:stun4.l.google.com:19302'
+            urls: ['stun:stun3.l.google.com:19302']
+        },
+        {
+
+            urls: ['stun:stun4.l.google.com:19302']
         },
         /*
         {
@@ -66,22 +66,22 @@ const myPeerConnectionConfig = {
         },
         */
         {
-            url: "turn:turn1.turn.group.video:3478",
+            urls: ["turn:turn1.turn.group.video:3478"],
             username: "turnuser",
             credential: "dJ4kP05PHcKN8Ubu",
         },
         {
-            url: "turn:turn2.turn.group.video:3478",
+            urls: ["turn:turn2.turn.group.video:3478"],
             username: "turnuser",
             credential: "XzfVP8cpNEy17hws",
         },
         {
-            url: "turns:turn1.turn.group.video:443",
+            urls: ["turns:turn1.turn.group.video:443"],
             username: "turnuser",
             credential: "dJ4kP05PHcKN8Ubu",
         },
         {
-            url: "turns:turn2.turn.group.video:443",
+            urls: ["turns:turn2.turn.group.video:443"],
             username: "turnuser",
             credential: "XzfVP8cpNEy17hws",
         },
