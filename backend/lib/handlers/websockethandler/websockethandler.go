@@ -14,6 +14,7 @@ import (
 	// "github.com/sparkscience/logjam/backend/lib/websocketmap"
 	binarytreesrv "github.com/sparkscience/logjam/backend/srv/binarytree"
 
+	"github.com/mmcomp/go-log"
 	logger "github.com/mmcomp/go-log"
 )
 
@@ -48,8 +49,8 @@ func (receiver httpHandler) findBroadcaster() (bool, *binarytreesrv.MySocket) {
 }
 
 func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, messageJSON []byte, messageType int, userAgent string) {
-	log := receiver.Logger.Begin()
-	defer log.End()
+	// log := receiver.Logger.Begin()
+	// defer log.End()
 	f, err := os.OpenFile(filename, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
 	if err == nil {
 		defer f.Close()
@@ -59,7 +60,7 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 	{
 		err := json.Unmarshal(messageJSON, &theMessage)
 		if err != nil {
-			log.Error("Error unmarshal message ", err)
+			// log.Error("Error unmarshal message ", err)
 			return
 		}
 		// log.Highlight("TheMessage  Type : ", theMessage.Type, " Data : ", theMessage.Data, " Target : ", theMessage.Target)
@@ -76,7 +77,7 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 		if err == nil {
 			socket.Socket.WriteMessage(messageType, responseJSON)
 		} else {
-			log.Error("Marshal Error of `start` response", err)
+			// log.Error("Marshal Error of `start` response", err)
 			return
 		}
 	case "role":
@@ -95,7 +96,7 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 			filename = "./logs/" + socket.Name + "/" + logName + ".log"
 			f, err := os.OpenFile(filename, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
 			if err == nil {
-				log.Alert("Set output to file")
+				// log.Alert("Set output to file")
 				defer f.Close()
 			}
 			fmt.Fprintln(f, "Broadcast "+socket.Name+" Started")
@@ -110,7 +111,7 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 				audianceResponse.Data = "no-broadcaster"
 				audianceResponseJSON, aerr := json.Marshal(audianceResponse)
 				if aerr != nil {
-					log.Error("Marshal Error of `alt-broadcast` audianceResponse1", aerr)
+					// log.Error("Marshal Error of `alt-broadcast` audianceResponse1", aerr)
 					return
 				}
 				socket.Socket.WriteMessage(messageType, audianceResponseJSON)
@@ -119,7 +120,7 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 			audianceResponse.Data = strconv.FormatInt(int64(broadcaster.ID), 10)
 			audianceResponseJSON, aerr := json.Marshal(audianceResponse)
 			if aerr != nil {
-				log.Error("Marshal Error of `alt-broadcast` audianceResponse2", aerr)
+				// log.Error("Marshal Error of `alt-broadcast` audianceResponse2", aerr)
 				return
 			}
 			var broadResponse map[string]interface{} = make(map[string]interface{})
@@ -128,14 +129,14 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 			broadResponse["name"] = socket.Name
 			broadResponseJSON, err := json.Marshal(broadResponse)
 			if err != nil {
-				log.Error("Marshal Error of `alt-broadcast` broadResponse", err)
+				// log.Error("Marshal Error of `alt-broadcast` broadResponse", err)
 				return
 			}
 			broadcaster.Socket.WriteMessage(messageType, broadResponseJSON)
 			socket.Socket.WriteMessage(messageType, audianceResponseJSON)
 			return
 		} else {
-			log.Highlight("userAgent : ", userAgent)
+			// log.Highlight("userAgent : ", userAgent)
 			if socket.IsBroadcaster {
 				response.Data = "no:broadcast"
 				// websocketmap.Map.RemoveBroadcaster(socket.Socket)
@@ -170,17 +171,17 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 					fmt.Fprintln(f, msg)
 
 					if err == nil {
-						log.Highlight("Deciding to connect ...")
+						// log.Highlight("Deciding to connect ...")
 						targetSocketNode, e := binarytreesrv.InsertChild(socket.Socket, Map)
 						// targetSocketNode, e := Map.InsertChild(socket.Socket, false)
 						if e != nil {
-							log.Error("Insert Child Error ", e)
+							// log.Error("Insert Child Error ", e)
 							socket.Socket.WriteMessage(messageType, []byte("{\"type\":\"error\",\"data\":\"Insert Child Error : "+e.Error()+" \"}"))
 							return
 						}
-						log.Highlight("Deciding to connect end")
+						// log.Highlight("Deciding to connect end")
 						targetSocket := targetSocketNode.(*binarytreesrv.MySocket)
-						log.Highlight("target ", targetSocket.ID)
+						// log.Highlight("target ", targetSocket.ID)
 
 						msg := "Audiance " + socket.Name + " is starting to connect to " + targetSocket.Name
 						fmt.Fprintln(f, msg)
@@ -190,7 +191,7 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 						}
 						targetSocket.Socket.WriteMessage(messageType, broadResponseJSON)
 					} else {
-						log.Error("Marshal Error of `add_audience` broadResponse", err)
+						// log.Error("Marshal Error of `add_audience` broadResponse", err)
 						return
 					}
 				}
@@ -200,11 +201,11 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 		if err == nil {
 			socket.Socket.WriteMessage(messageType, responseJSON)
 		} else {
-			log.Error("Marshal Error of `role` response", err)
+			// log.Error("Marshal Error of `role` response", err)
 			return
 		}
 	case "stream":
-		log.Alert("Stream Received ", socket.Name)
+		// log.Alert("Stream Received ", socket.Name)
 		Map.ToggleCanConnect(socket.Socket)
 
 		msg := "Audiance " + socket.Name + " is receiving stream!"
@@ -214,50 +215,50 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 		socket.SetIsTurn(theMessage.Data == "on")
 		fmt.Fprintln(f, msg)
 	case "log":
-		log.Alert("Log Received ", socket.Name)
+		// log.Alert("Log Received ", socket.Name)
 		msg := "Audiance " + socket.Name + " client log :\n    " + theMessage.Data
 		fmt.Fprintln(f, msg)
 	case "tree":
-		log.Alert("Tree Received ", socket.Name)
+		// log.Alert("Tree Received ", socket.Name)
 		treeData := binarytreesrv.Tree(Map)
-		log.Inform("treeData ", treeData)
+		// log.Inform("treeData ", treeData)
 		j, e := json.Marshal(treeData)
 		if e != nil {
 			log.Error(e)
 			return
 		}
 		output := string(j)
-		log.Inform("treeData ", output)
+		// log.Inform("treeData ", output)
 		response.Type = "tree"
 		response.Data = output
 		responseJSON, err := json.Marshal(response)
 		if err == nil {
 			socket.Socket.WriteMessage(messageType, responseJSON)
 		} else {
-			log.Error("Marshal Error of `tree` response", err)
+			// log.Error("Marshal Error of `tree` response", err)
 			return
 		}
 	default:
-		log.Alert("Default Message")
+		// log.Alert("Default Message")
 		ID, err := strconv.ParseUint(theMessage.Target, 10, 64)
 		if err != nil {
-			log.Error("Inavlid Target : ", theMessage.Target)
+			// log.Error("Inavlid Target : ", theMessage.Target)
 			return
 		}
-		log.Alert("Target ", ID)
+		// log.Alert("Target ", ID)
 		allockets := Map.All()
 		var ok = false
 		var target binarytreesrv.MySocket
 		// target, ok := Map. .GetSocketByID(ID)
 		for _, node := range allockets {
-			log.Alert(node.(*binarytreesrv.MySocket).ID)
+			// log.Alert(node.(*binarytreesrv.MySocket).ID)
 			if node.(*binarytreesrv.MySocket).ID == ID {
 				ok = true
 				target = *node.(*binarytreesrv.MySocket)
 				break
 			} else {
 				for _, child := range node.All() {
-					log.Alert(child.(*binarytreesrv.MySocket).ID)
+					// log.Alert(child.(*binarytreesrv.MySocket).ID)
 					if child.(*binarytreesrv.MySocket).ID == ID {
 						ok = true
 						target = *child.(*binarytreesrv.MySocket)
@@ -266,20 +267,20 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 				}
 			}
 		}
-		log.Alert("Find target ? ", ok)
+		// log.Alert("Find target ? ", ok)
 		if ok {
 			// log.Inform("Default sending to ", ID, " ", string(messageJSON))
 			var fullMessage map[string]interface{}
 			err := json.Unmarshal(messageJSON, &fullMessage)
 			if err != nil {
-				log.Error("Error unmarshal message ", err)
+				// log.Error("Error unmarshal message ", err)
 				return
 			}
 			fullMessage["username"] = socket.Name
 			fullMessage["data"] = strconv.FormatInt(int64(socket.ID), 10)
 			messageJSON, err = json.Marshal(fullMessage)
 			if err != nil {
-				log.Error("Error marshal message ", err)
+				// log.Error("Error marshal message ", err)
 				return
 			}
 			target.Socket.WriteMessage(messageType, messageJSON)
@@ -288,8 +289,8 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 }
 
 func (receiver httpHandler) reader(conn *websocket.Conn, userAgent string) {
-	log := receiver.Logger.Begin()
-	defer log.End()
+	// log := receiver.Logger.Begin()
+	// defer log.End()
 	for {
 		messageType, p, err := conn.ReadMessage()
 		if err != nil {
@@ -298,14 +299,14 @@ func (receiver httpHandler) reader(conn *websocket.Conn, userAgent string) {
 			if closedError || handshakeError {
 				// log.Warn("Socket ", Map.Get(conn).(*binarytreesrv.MySocket).ID, " Closed!")
 				Map.Delete(conn)
-				log.Inform("Socket closed!")
+				// log.Inform("Socket closed!")
 				return
 			}
-			log.Error("Read from socket error : ", err)
+			// log.Error("Read from socket error : ", err)
 			return
 		}
-		log.Informf("Message from socket ID %d name %s ", Map.Get(conn).(*binarytreesrv.MySocket).ID, Map.Get(conn).(*binarytreesrv.MySocket).Name)
-		log.Inform("Message", string(p))
+		// log.Informf("Message from socket ID %d name %s ", Map.Get(conn).(*binarytreesrv.MySocket).ID, Map.Get(conn).(*binarytreesrv.MySocket).Name)
+		// log.Inform("Message", string(p))
 		receiver.parseMessage(Map.Get(conn).(*binarytreesrv.MySocket), p, messageType, userAgent)
 		// log.Alert(messageType, p, Map.Get(conn))
 	}
@@ -315,14 +316,14 @@ func (receiver httpHandler) reader(conn *websocket.Conn, userAgent string) {
 func (receiver httpHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	log := receiver.Logger.Begin()
 	defer log.End()
-	log.Highlight("Method", req.Method)
-	log.Highlight("Path", req.URL.Path)
+	// log.Highlight("Method", req.Method)
+	// log.Highlight("Path", req.URL.Path)
 	ws, err := upgrader.Upgrade(w, req, nil)
 	if err != nil {
 		log.Error("Upgrade Error : ", err)
 		return
 	}
-	log.Log("Client Connected")
+	// log.Log("Client Connected")
 	Map.Insert(ws)
 	userAgent := req.Header.Get("User-Agent")
 	receiver.reader(ws, userAgent)
