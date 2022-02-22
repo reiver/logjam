@@ -41,7 +41,7 @@
   <input type="checkbox" onclick="toggleTurnUsage();" checked /> Use TURN <br />
   <button id="broadcast-btn" onclick="broadcast();">Broadcast</button><br />
   <button id="audience-btn" onclick="audience();">START</button><br />
-  <button id="t" onclick="test();">TEST</button><br />
+  <!-- <button id="t" onclick="test();">TEST</button><br /> -->
   <div>
     <h3 style="text-align: center;">
       Status Report
@@ -382,24 +382,26 @@
           console.log('stream id', stream.id);
           console.log('stream track length', stream.getTracks().length);
         });
-        hasStream = true;
         // setTimeout(() => {
         //   console.log('STRAEM TRUE');
+        if (!hasStream) {
+          hasStream = true;
           socket.send(
             JSON.stringify({
               type: "stream",
               data: "true",
             })
           );
-        setTimeout(() => {
-          socket.send(
-            JSON.stringify({
-              type: "stream",
-              data: "true",
-            })
-          );
-          console.log('after 10secs', socket);
-        }, 10000);
+        }
+        // setTimeout(() => {
+        //   socket.send(
+        //     JSON.stringify({
+        //       type: "stream",
+        //       data: "true",
+        //     })
+        //   );
+        //   console.log('after 10secs', socket);
+        // }, 10000);
         // }, 5000);
         console.log('ontrack', event.streams[0]);
           console.log('Stream Count', event.streams);
