@@ -1,4 +1,4 @@
-import myPeerConnectionConfig from "../config/myPeerConnectionConfig";
+import PEER_CONNECTION_CONFIG from "../config/myPeerConnectionConfig";
 
 export default function _usePeerConnection() {
 
@@ -19,7 +19,7 @@ export default function _usePeerConnection() {
                 return myAltPeerConnections[targetUsername];
             }
             console.log('Not Exists', targetUsername)
-            const myAltPeerConnection = new RTCPeerConnection(myPeerConnectionConfig);
+            const myAltPeerConnection = new RTCPeerConnection(PEER_CONNECTION_CONFIG);
             myAltPeerConnection.onicecandidate = function (event) {
                 if (event.candidate) {
                     socket.send(
@@ -107,7 +107,7 @@ export default function _usePeerConnection() {
         if (myPeerConnections[targetUsername]) {
             return myPeerConnections[targetUsername];
         }
-        myPeerConnection = new RTCPeerConnection(myPeerConnectionConfig);
+        myPeerConnection = new RTCPeerConnection(PEER_CONNECTION_CONFIG);
         myPeerConnection.view = view;
         myPeerConnection.onicecandidate = function (event) {
             if (event.candidate) {

@@ -1,4 +1,4 @@
-import myPeerConnectionConfig from "../config/myPeerConnectionConfig";
+import PEER_CONNECTION_CONFIG from "../config/myPeerConnectionConfig";
 
 const MEDIA_CONSTRAINTS = (
     window.constraints = {
@@ -20,7 +20,7 @@ export function _broadcast() {
     //                 data: "_broadcast",
     //             })
     //         );
-    //         const turnStatus = myPeerConnectionConfig.iceServers.findIndex(s => s.urls[0].indexOf('turn:') === 0) >= 0;
+    //         const turnStatus = m
     //         socket.send(
     //             JSON.stringify({
     //                 type: "turn_status",

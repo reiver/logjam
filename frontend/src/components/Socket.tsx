@@ -4,14 +4,14 @@ import Main from "./Main";
 import LocalStream from "./LocalStream";
 import {useParams} from "react-router-dom";
 import {receiveMessage, sendMessage} from "../helpers/message";
-import myPeerConnectionConfig from "../config/myPeerConnectionConfig";
+import {PEER_CONNECTION_CONFIG, turnStatus} from "../config/myPeerConnectionConfig";
 
 export const Socket = ({myName}: { myName: string }) => {
     let {myRole} = useParams() || "audience";
     let myPeerConnection: any;
     let myPeerConnections: any = {};
 
-    console.log('Socket component');
+    console.log('Socket component rendered');
 
     const socket = useSocket();
     console.log(socket);
@@ -31,8 +31,56 @@ export const Socket = ({myName}: { myName: string }) => {
         );
         console.log('role sent');
 
+        sendMessage(socket, {
+                type: "turn_status",
+                data: turnStatus()
+            }
+        );
+        console.log('role sent');
 
     }, []);
+
+    useEffect(() => {
+        if (myRole === 'audience') {
+            let myPeerConnection = new RTCPeerConnection(PEER_CONNECTION_CONFIG);
+            console.log(myPeerConnection);
+
+            myPeerConnection.onicecandidate = function (event) {
+                if (event.candidate) {
+                    sendMessage(socket, {
+                        type: "new-ice-candidate",
+                        target: 'targetUsername',
+                        candidate: event.candidate,
+                    });
+                }
+            };
+
+            myPeerConnection.onnegotiationneeded = function (event) {
+                console.log("onnegotiationneeded", event);
+                myPeerConnection
+                    .createOffer()
+                    .then(function (offer) {
+                        return myPeerConnection.setLocalDescription(offer);
+                    })
+                    .then(function () {
+                        sendMessage(socket, {
+                            name: 'myUsername',
+                            target: 'targetUsername',
+                            type: "video-offer",
+                            sdp: myPeerConnection.localDescription,
+                        });
+
+                    })
+                    .catch(function (e) {
+                        // console.log("onnegotiationneeded audience error:", e);
+                        sendMessage(socket, {
+                            type: "log",
+                            data: "onnegotiationneeded audience error:" + JSON.stringify(e),
+                        });
+                    });
+            };
+        }
+    }, [myRole])
 
     function getStateDescription(readyState: number) {
         switch (readyState) {

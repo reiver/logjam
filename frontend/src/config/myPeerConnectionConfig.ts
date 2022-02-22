@@ -1,4 +1,4 @@
-const myPeerConnectionConfig: RTCConfiguration = {
+export const PEER_CONNECTION_CONFIG: RTCConfiguration = {
     iceServers: [
         // {'urls': 'stun:stun.l.google.com:19302'},
         // {"urls": "turn:numb.viagenie.ca", "username":"m.mirsamie@gmail.com", "credential":"159951"},
@@ -88,4 +88,14 @@ const myPeerConnectionConfig: RTCConfiguration = {
     ],
 }
 
-export default myPeerConnectionConfig;
+export function turnStatus() {
+    let status = false;
+    try {
+        if (PEER_CONNECTION_CONFIG && PEER_CONNECTION_CONFIG.iceServers) {
+            status = PEER_CONNECTION_CONFIG.iceServers.findIndex(s => s.urls[0].indexOf('turn:') === 0) >= 0;
+        }
+    } catch (err) {
+        console.error('[Error] Invalid PEER_CONNECTION_CONFIG ', err);
+    }
+    return status ? "on" : "off";
+}

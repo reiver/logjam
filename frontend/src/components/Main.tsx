@@ -7,6 +7,7 @@ import ControlButtons from "./ControlButtons";
 import LocalStream from "./LocalStream";
 
 export default function Main({myName, myRole}: any) {
+
     const [mic, setMic] = useState(true);
     const [camera, setCamera] = useState(true);
 
