@@ -1,4 +1,4 @@
-import {useCallback, useEffect} from "react";
+import {useCallback, useEffect, useState} from "react";
 import {useSocket} from "../hooks/useSocket";
 import Main from "./Main";
 import LocalStream from "./LocalStream";
@@ -9,77 +9,78 @@ import {useMessenger} from "../hooks/useMessenger";
 export const Socket = ({myName}: { myName: string }) => {
     console.log('Socket component rendered');
 
+    const [myUsername, setMyUsername] = useState('');
+
     let {myRole} = useParams() || "audience";
-    let myPeerConnection: any;
-    let myPeerConnections: any = {};
 
     const messenger = useMessenger();
     const socket = useSocket();
     console.log(socket);
 
     useEffect(() => {
+        // start
         messenger.send({
                 type: "start",
                 data: myName
             }
         );
-        console.log('start sent');
 
         messenger.send({
                 type: "role",
                 data: myRole
             }
         );
-        console.log('role sent');
 
         messenger.send({
                 type: "turn_status",
                 data: turnStatus()
             }
         );
-        console.log('role sent');
-
     }, []);
+
+    function createPeerConnection(targetUsername: string) {
+        let peerConnection = new RTCPeerConnection(PEER_CONNECTION_CONFIG);
+        console.log(peerConnection);
+
+        peerConnection.onicecandidate = function (event) {
+            if (event.candidate) {
+                messenger.send({
+                    type: "new-ice-candidate",
+                    target: 'targetUsername',
+                    candidate: event.candidate,
+                });
+            }
+        };
+
+        peerConnection.onnegotiationneeded = function (event) {
+            console.log("onnegotiationneeded", event);
+            peerConnection
+                .createOffer()
+                .then(function (offer) {
+                    return peerConnection.setLocalDescription(offer);
+                })
+                .then(function () {
+                    messenger.send({
+                        name: myUsername,
+                        target: targetUsername,
+                        type: "video-offer",
+                        sdp: peerConnection.localDescription,
+                    });
+
+                })
+                .catch((err) => {
+                    messenger.send({
+                        type: "log",
+                        data: "onnegotiationneeded audience error:" + JSON.stringify(err),
+                    });
+                });
+        };
+        return peerConnection;
+    }
 
     useEffect(() => {
         if (myRole === 'audience') {
-            let myPeerConnection = new RTCPeerConnection(PEER_CONNECTION_CONFIG);
-            console.log(myPeerConnection);
 
-            myPeerConnection.onicecandidate = function (event) {
-                if (event.candidate) {
-                    messenger.send({
-                        type: "new-ice-candidate",
-                        target: 'targetUsername',
-                        candidate: event.candidate,
-                    });
-                }
-            };
-
-            myPeerConnection.onnegotiationneeded = function (event) {
-                console.log("onnegotiationneeded", event);
-                myPeerConnection
-                    .createOffer()
-                    .then(function (offer) {
-                        return myPeerConnection.setLocalDescription(offer);
-                    })
-                    .then(function () {
-                        messenger.send({
-                            name: 'myUsername',
-                            target: 'targetUsername',
-                            type: "video-offer",
-                            sdp: myPeerConnection.localDescription,
-                        });
-
-                    })
-                    .catch(function (e) {
-                        // console.log("onnegotiationneeded audience error:", e);
-                        messenger.send({
-                            type: "log",
-                            data: "onnegotiationneeded audience error:" + JSON.stringify(e),
-                        });
-                    });
-            };
         }
     }, [myRole])
 
@@ -197,6 +198,7 @@ export const Socket = ({myName}: { myName: string }) => {
                 // newAltVideoAnswer();
                 break;
             case "start":
+                setMyUsername(msg.Data);
                 // start();
                 break;
             case "role":

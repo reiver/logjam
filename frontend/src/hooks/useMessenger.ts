@@ -1,7 +1,6 @@
 import {useSocket} from "./useSocket";
 
 export const useMessenger = () => {
-    console.log('useMessage rendered');
 
     let socket = useSocket();
 
@@ -22,9 +21,9 @@ export const useMessenger = () => {
             return;
         }
         try {
-            const msg = JSON.parse(message?.data);
+            let msg = message?.data;
             console.log('[Info] message received: ', msg);
-            return msg;
+            return JSON.parse(message?.data);
         } catch (e) {
             console.error('[Error] unable to parse received message.', e);
             return;
