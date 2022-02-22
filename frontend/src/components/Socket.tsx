@@ -3,35 +3,36 @@ import {useSocket} from "../hooks/useSocket";
 import Main from "./Main";
 import LocalStream from "./LocalStream";
 import {useParams} from "react-router-dom";
-import {receiveMessage, sendMessage} from "../helpers/message";
 import {PEER_CONNECTION_CONFIG, turnStatus} from "../config/myPeerConnectionConfig";
+import {useMessenger} from "../hooks/useMessenger";
 
 export const Socket = ({myName}: { myName: string }) => {
+    console.log('Socket component rendered');
+
     let {myRole} = useParams() || "audience";
     let myPeerConnection: any;
     let myPeerConnections: any = {};
 
-    console.log('Socket component rendered');
-
+    const messenger = useMessenger();
     const socket = useSocket();
     console.log(socket);
 
     useEffect(() => {
-        sendMessage(socket, {
+        messenger.send({
                 type: "start",
                 data: myName
             }
         );
         console.log('start sent');
 
-        sendMessage(socket, {
+        messenger.send({
                 type: "role",
                 data: myRole
             }
         );
         console.log('role sent');
 
-        sendMessage(socket, {
+        messenger.send({
                 type: "turn_status",
                 data: turnStatus()
             }
@@ -47,7 +48,7 @@ export const Socket = ({myName}: { myName: string }) => {
 
             myPeerConnection.onicecandidate = function (event) {
                 if (event.candidate) {
-                    sendMessage(socket, {
+                    messenger.send({
                         type: "new-ice-candidate",
                         target: 'targetUsername',
                         candidate: event.candidate,
@@ -63,7 +64,7 @@ export const Socket = ({myName}: { myName: string }) => {
                         return myPeerConnection.setLocalDescription(offer);
                     })
                     .then(function () {
-                        sendMessage(socket, {
+                        messenger.send({
                             name: 'myUsername',
                             target: 'targetUsername',
                             type: "video-offer",
@@ -73,7 +74,7 @@ export const Socket = ({myName}: { myName: string }) => {
                     })
                     .catch(function (e) {
                         // console.log("onnegotiationneeded audience error:", e);
-                        sendMessage(socket, {
+                        messenger.send({
                             type: "log",
                             data: "onnegotiationneeded audience error:" + JSON.stringify(e),
                         });
@@ -101,7 +102,7 @@ export const Socket = ({myName}: { myName: string }) => {
     //     myPeerConnection = new RTCPeerConnection(myPeerConnectionConfig);
     //     myPeerConnection.onicecandidate = function (event: RTCPeerConnectionIceEvent) {
     //         if (event.candidate) {
-    //             sendMessage(socket, {
+    //             message.send(socket, {
     //                 type: "new-ice-candidate",
     //                 target: targetUsername,
     //                 candidate: event.candidate,
@@ -178,7 +179,7 @@ export const Socket = ({myName}: { myName: string }) => {
     // }
 
     const onMessage = useCallback((message) => {
-        let msg = receiveMessage(message);
+        let msg = messenger.receive(message);
         switch (msg.Type as string) {
             case "alt-video-offer":
                 // await altVideoOffer();
