@@ -1,19 +1,20 @@
-import React, {useState} from 'react';
+import React from 'react';
 import './styles/App.css';
-import {SocketProvider} from "./providers/SocketProvider";
 import {Router} from "./components/Router";
+import {SocketProvider} from "./providers/SocketProvider";
 import {LocalStreamProvider} from "./providers/LocalStreamProvider";
+import {PeerConnectionArrayProvider} from "./providers/PeerConnectionArrayProvider";
 
 
-function App() {
+export default function App() {
 
     return (
         <SocketProvider>
             <LocalStreamProvider>
-                <Router/>
+                <PeerConnectionArrayProvider>
+                    <Router/>
+                </PeerConnectionArrayProvider>
             </LocalStreamProvider>
         </SocketProvider>
     );
 }
-
-export default App;

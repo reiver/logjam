@@ -164,7 +164,7 @@ export const Socket = ({myName}: { myName: string }) => {
             case "tree":
                 // tree();
                 break;
-            case "alt-broadcast":
+            case "alt-_broadcast":
                 // altBroadcast();
                 break;
             default:

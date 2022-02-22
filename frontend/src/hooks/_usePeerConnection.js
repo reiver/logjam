@@ -1,6 +1,6 @@
 import myPeerConnectionConfig from "../config/myPeerConnectionConfig";
 
-export default function usePeerConnection() {
+export default function _usePeerConnection() {
 
     let socket,
         altStreams,
@@ -215,7 +215,7 @@ export default function usePeerConnection() {
                 //                login();
                 //              }, 1000);
                 // $("#audience-btn").prop("disabled", false);
-                // $("#broadcast-btn").prop("disabled", false);
+                // $("#_broadcast-btn").prop("disabled", false);
                 // if ($("#audience-btn").prop("disabled")) {
                 // setTimeout(() => {
                 //   audience();

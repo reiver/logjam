@@ -7,7 +7,7 @@ const MEDIA_CONSTRAINTS = (
     }
 );
 
-export function broadcast() {
+export function _broadcast() {
     // let localStream;
     // navigator.mediaDevices
     //     .getUserMedia(MEDIA_CONSTRAINTS)
@@ -17,7 +17,7 @@ export function broadcast() {
     //         socket.send(
     //             JSON.stringify({
     //                 type: "role",
-    //                 data: "broadcast",
+    //                 data: "_broadcast",
     //             })
     //         );
     //         const turnStatus = myPeerConnectionConfig.iceServers.findIndex(s => s.urls[0].indexOf('turn:') === 0) >= 0;

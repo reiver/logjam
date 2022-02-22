@@ -1,4 +1,4 @@
-import React, {useEffect, useState, createContext, ReactChild, useCallback} from "react";
+import React, {useEffect, useState, createContext, ReactChild} from "react";
 
 export const LocalStreamContext = createContext({
     localStream: new MediaStream(),
