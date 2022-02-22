@@ -1,7 +1,7 @@
 import {useCallback, useEffect} from "react";
 import {useSocket} from "../hooks/useSocket";
 import Main from "./Main";
-import LocalVideo from "./LocalVideo";
+import LocalStream from "./LocalStream";
 import {useParams} from "react-router-dom";
 import {receiveMessage, sendMessage} from "../helpers/message";
 import myPeerConnectionConfig from "../config/myPeerConnectionConfig";
@@ -184,6 +184,6 @@ export const Socket = ({myName}: { myName: string }) => {
 
     return (
         <Main myName={myName} myRole={myRole}/>
-        // <LocalVideo/>
+        // <LocalStream/>
     )
 }

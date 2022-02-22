@@ -17,7 +17,7 @@ export const SocketProvider = (props: {
     children: ReactChild;
 }) => {
     console.log('SocketProvider');
-    // console.log('myName: ', props.myName);
+
     const [ws, setWs] = useState<WebSocket>(webSocket);
 
     // onOpen Handler

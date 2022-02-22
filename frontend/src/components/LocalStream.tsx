@@ -1,6 +1,8 @@
 import React, {useEffect, useRef} from 'react';
+import {useLocalStream} from "../hooks/useLocalStream";
 
-export default function LocalVideo() {
+export default function LocalStream() {
+    let {localStream, setLocalStream} = useLocalStream();
     const videoRef = useRef<HTMLVideoElement>(null);
 
     const MEDIA_CONSTRAINTS =  {
@@ -17,6 +19,7 @@ export default function LocalVideo() {
                     if (videoRef && videoRef.current) {
                         const video = videoRef.current as HTMLVideoElement;
                         video.srcObject = mediaStream;
+                        setLocalStream(mediaStream);
                         // video.onloadedmetadata = function (e) {
                         //     console.log('video loaded')
                         //     videoRef?.current?.play().then();

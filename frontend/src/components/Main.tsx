@@ -4,7 +4,7 @@ import Screen from "./Screen";
 import BottomSidebar from "./BottomSidebar";
 import LeftSidebar from "./LeftSidebar";
 import ControlButtons from "./ControlButtons";
-import LocalVideo from "./LocalVideo";
+import LocalStream from "./LocalStream";
 
 export default function Main({myName, myRole}: any) {
     const [mic, setMic] = useState(true);
@@ -29,7 +29,7 @@ export default function Main({myName, myRole}: any) {
     return (
         <Page>
             <Screen>
-                <LocalVideo/>
+                <LocalStream/>
                 <video id="video 2" autoPlay playsInline muted/>
                 <video id="video 3" autoPlay playsInline muted/>
                 <video id="video 4" autoPlay playsInline muted/>
