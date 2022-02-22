@@ -2,27 +2,31 @@ import {useCallback, useEffect} from "react";
 import {useSocket} from "../hooks/useSocket";
 import Main from "./Main";
 import LocalVideo from "./LocalVideo";
+import {useParams} from "react-router-dom";
+import {receiveMessage, sendMessage} from "../helpers/message";
 
-export const Socket = ({myName, myRole}: any) => {
+export const Socket = ({myName}: {myName: string}) => {
+    let { myRole } = useParams() || "audience";
+
     console.log('Socket component');
 
     const socket = useSocket();
     console.log(socket);
 
     useEffect(() => {
-        socket.send(JSON.stringify({
+        sendMessage(socket,{
                 type: "start",
                 data: myName
             }
-        ));
-        console.log('start sent')
+        );
+        console.log('start sent');
 
-        socket.send(JSON.stringify({
+        sendMessage(socket, {
                 type: "role",
                 data: myRole
             }
-        ));
-        console.log('role sent')
+        );
+        console.log('role sent');
 
 
     }, []);
@@ -44,13 +48,7 @@ export const Socket = ({myName, myRole}: any) => {
 
 
     const onMessage = useCallback((message) => {
-        if (!message) {
-            console.error('[onMessage] Socket message is null');
-            return;
-        }
-
-        const msg = JSON.parse(message?.data);
-        console.log('[message received]', msg);
+        let msg = receiveMessage(message);
         switch (msg.Type) {
             case "alt-video-offer":
                 // await altVideoOffer();
@@ -103,7 +101,7 @@ export const Socket = ({myName, myRole}: any) => {
     }, [socket, onMessage]);
 
     return (
-        <Main/>
+        <Main myName={myName} myRole={myRole}/>
         // <LocalVideo/>
     )
 }

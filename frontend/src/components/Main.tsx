@@ -6,7 +6,7 @@ import LeftSidebar from "./LeftSidebar";
 import ControlButtons from "./ControlButtons";
 import LocalVideo from "./LocalVideo";
 
-export default function Main({myName}: any) {
+export default function Main({myName, myRole}: any) {
     const [mic, setMic] = useState(true);
     const [camera, setCamera] = useState(true);
 

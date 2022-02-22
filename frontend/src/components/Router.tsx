@@ -10,7 +10,7 @@ export function Router() {
     return (
         <BrowserRouter>
             <Routes>
-                <Route path="/:myRole" children={<Home/>}/>
+                <Route path="/:myRole" element={<Home/>}/>
             </Routes>
         </BrowserRouter>
     )

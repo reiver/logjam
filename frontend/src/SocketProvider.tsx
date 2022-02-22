@@ -41,16 +41,6 @@ export const SocketProvider = (props: {
         console.log('[socket error] ', error);
     }, []);
 
-    useEffect(() => {
-        ws.addEventListener("close", onClose);
-        console.log('added socket onClose listener');
-
-        return () => {
-            ws.removeEventListener("close", onClose);
-            console.log('socket onClose listener removed');
-        };
-    }, [ws]);
-
 
     useEffect(() => {
         ws.addEventListener("open", onOpen);
@@ -60,8 +50,17 @@ export const SocketProvider = (props: {
             ws.removeEventListener("open", onOpen);
             console.log('socket onOpen listener removed');
         };
-    }, [ws]);
+    }, [ws, onOpen]);
 
+    useEffect(() => {
+        ws.addEventListener("close", onClose);
+        console.log('added socket onClose listener');
+
+        return () => {
+            ws.removeEventListener("close", onClose);
+            console.log('socket onClose listener removed');
+        };
+    }, [ws, onClose]);
 
     useEffect(() => {
         ws.addEventListener("error", onError);
@@ -71,7 +70,7 @@ export const SocketProvider = (props: {
             ws.removeEventListener("error", onError);
             console.log('socket onError listener removed');
         };
-    }, [ws]);
+    }, [ws, onError]);
 
     return (
         <SocketContext.Provider value={ws}>

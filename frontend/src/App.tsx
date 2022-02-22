@@ -1,13 +1,13 @@
 import React from 'react';
 import './styles/App.css';
 import {SocketProvider} from "./SocketProvider";
-import {Home} from "./components/Home";
+import {Router} from "./components/Router";
 
 
 function App() {
     return (
         <SocketProvider>
-            <Home/>
+            <Router/>
         </SocketProvider>
     );
 }
