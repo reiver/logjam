@@ -3,6 +3,8 @@ import {useState} from "react";
 import {Socket} from "./Socket";
 
 export const Home = () => {
+    console.log('[Render] Home');
+
     const [myName, setMyName] = useState();
 
     return (

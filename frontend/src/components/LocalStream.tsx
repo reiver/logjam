@@ -20,6 +20,7 @@ export default function LocalStream() {
                         const video = videoRef.current as HTMLVideoElement;
                         video.srcObject = mediaStream;
                         setLocalStream(mediaStream);
+                        console.log('setLocalStream:', mediaStream);
                         // video.onloadedmetadata = function (e) {
                         //     console.log('video loaded')
                         //     videoRef?.current?.play().then();

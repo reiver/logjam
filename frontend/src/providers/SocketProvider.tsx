@@ -16,7 +16,7 @@ export const SocketContext = createContext(defaultWebSocket);
 export const SocketProvider = (props: {
     children: ReactChild;
 }) => {
-    console.log('SocketProvider');
+    // console.log('SocketProvider');
 
     const [webSocket, setWebSocket] = useState<WebSocket>(defaultWebSocket);
 
@@ -44,31 +44,31 @@ export const SocketProvider = (props: {
 
     useEffect(() => {
         webSocket.addEventListener("open", onOpen);
-        console.log('added socket onOpen listener');
+        // console.log('added socket onOpen listener');
 
         return () => {
             webSocket.removeEventListener("open", onOpen);
-            console.log('socket onOpen listener removed');
+            // console.log('socket onOpen listener removed');
         };
     }, [webSocket, onOpen]);
 
     useEffect(() => {
         webSocket.addEventListener("close", onClose);
-        console.log('added socket onClose listener');
+        // console.log('added socket onClose listener');
 
         return () => {
             webSocket.removeEventListener("close", onClose);
-            console.log('socket onClose listener removed');
+            // console.log('socket onClose listener removed');
         };
     }, [webSocket, onClose]);
 
     useEffect(() => {
         webSocket.addEventListener("error", onError);
-        console.log('added socket onError listener');
+        // console.log('added socket onError listener');
 
         return () => {
             webSocket.removeEventListener("error", onError);
-            console.log('socket onError listener removed');
+            // console.log('socket onError listener removed');
         };
     }, [webSocket, onError]);
 

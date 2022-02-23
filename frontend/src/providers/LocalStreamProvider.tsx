@@ -15,7 +15,7 @@ export const LocalStreamProvider = (props: {
 
 
     useEffect(() => {
-        console.log('localStream:', localStream);
+        console.log('*** localStream (provider)', localStream);
     }, [localStream]);
 
     return (

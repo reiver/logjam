@@ -1,24 +1,29 @@
 import {useCallback, useEffect, useState} from "react";
 import {useSocket} from "../hooks/useSocket";
 import Main from "./Main";
-import LocalStream from "./LocalStream";
 import {useParams} from "react-router-dom";
 import {PEER_CONNECTION_CONFIG, turnStatus} from "../config/myPeerConnectionConfig";
 import {useMessenger} from "../hooks/useMessenger";
 import {usePeerConnectionMap} from "../hooks/usePeerConnectionMap";
+import {useLocalStream} from "../hooks/useLocalStream";
 
 export const Socket = ({myName}: { myName: string }) => {
-    console.log('Socket component rendered');
+    console.log('[RENDER] Socket');
 
-    const [myUsername, setMyUsername] = useState('');
-
+    // const [myUsername, setMyUsername] = useState('');
+    let myUsername: string;
     let {myRole} = useParams() || "audience";
 
     let {peerConnectionMap, setPeerConnectionMap} = usePeerConnectionMap();
+    let {localStream, setLocalStream} = useLocalStream();
 
     const messenger = useMessenger();
     const socket = useSocket();
     console.log(socket);
+
+    // useEffect(()=>{
+    //     console.log('Socket--->', localStream);
+    // }, [localStream])
 
     useEffect(() => {
         // start
@@ -42,7 +47,8 @@ export const Socket = ({myName}: { myName: string }) => {
     }, []);
 
     function connectUser(targetUsername: string){
-        addPeerConnection(targetUsername);
+        let peerConnection = addPeerConnection(targetUsername);
+        console.log('====>', socket);
     }
 
     function addPeerConnection(targetUsername: string){
@@ -53,6 +59,7 @@ export const Socket = ({myName}: { myName: string }) => {
         let newPeerConnection = createPeerConnection(targetUsername);
         setPeerConnectionMap((
             prev: Map<string, RTCPeerConnection>) => new Map(prev).set(targetUsername, newPeerConnection));
+        return newPeerConnection;
     }
 
     function createPeerConnection(targetUsername: string) {
@@ -216,7 +223,8 @@ export const Socket = ({myName}: { myName: string }) => {
                 // newAltVideoAnswer();
                 break;
             case "start":
-                setMyUsername(msg.Data);
+                // setMyUsername(msg.Data);
+                myUsername = msg.Data;
                 // start();
                 break;
             case "role":
@@ -252,7 +260,11 @@ export const Socket = ({myName}: { myName: string }) => {
     }, [socket, onMessage]);
 
     return (
-        <Main myName={myName} myRole={myRole}/>
+        <div>
+            <button onClick={(e)=>console.log(localStream)}>Local</button>
+            <Main myName={myName} myRole={myRole}/>
+
+        </div>
         // <LocalStream/>
     )
 }
