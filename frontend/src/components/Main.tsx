@@ -30,7 +30,7 @@ export default function Main({myName, myRole}: any) {
     return (
         <Page>
             <Screen>
-                <LocalStream/>
+                {myRole === 'broadcast' ? <LocalStream/> : null}
                 <video id="video 2" autoPlay playsInline muted/>
                 <video id="video 3" autoPlay playsInline muted/>
                 <video id="video 4" autoPlay playsInline muted/>

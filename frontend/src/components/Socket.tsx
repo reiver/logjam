@@ -41,6 +41,10 @@ export const Socket = ({myName}: { myName: string }) => {
         );
     }, []);
 
+    function connectUser(targetUsername: string){
+        addPeerConnection(targetUsername);
+    }
+
     function addPeerConnection(targetUsername: string){
         if (peerConnectionMap.get(targetUsername)) {
             console.log('peerConnection already exists.');
@@ -53,7 +57,6 @@ export const Socket = ({myName}: { myName: string }) => {
 
     function createPeerConnection(targetUsername: string) {
         let peerConnection = new RTCPeerConnection(PEER_CONNECTION_CONFIG);
-        console.log(peerConnection);
 
         peerConnection.onicecandidate = function (event) {
             if (event.candidate) {
@@ -88,6 +91,8 @@ export const Socket = ({myName}: { myName: string }) => {
                     });
                 });
         };
+        console.log('peerConnection created: ', peerConnection);
+
         return peerConnection;
     }
 
@@ -219,7 +224,7 @@ export const Socket = ({myName}: { myName: string }) => {
                 break;
             case "add_audience":
                 // console.log("add_audience", msg.data);
-                // connectUser();
+                connectUser(msg.Data);
                 break;
             case "add_broadcast_audience":
                 // console.log("add_audience", msg.data);
