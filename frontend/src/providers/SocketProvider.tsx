@@ -1,6 +1,7 @@
 import React, {useEffect, useState, createContext, ReactChild, useCallback} from "react";
 
 const SOCKET_RECONNECTION_TIMEOUT = 5000;
+const defaultWebSocket = new WebSocket(getSocketUrl());
 
 function getSocketUrl() {
     return 'ws://localhost:8080/ws'
@@ -10,15 +11,14 @@ function getSocketUrl() {
     // return `${protocol}://${baseUrl}/ws`;
 }
 
-const webSocket = new WebSocket(getSocketUrl());
-export const SocketContext = createContext(webSocket);
+export const SocketContext = createContext(defaultWebSocket);
 
 export const SocketProvider = (props: {
     children: ReactChild;
 }) => {
     console.log('SocketProvider');
 
-    const [ws, setWs] = useState<WebSocket>(webSocket);
+    const [webSocket, setWebSocket] = useState<WebSocket>(defaultWebSocket);
 
     // onOpen Handler
     const onOpen = useCallback((event) => {
@@ -32,7 +32,7 @@ export const SocketProvider = (props: {
                 "closed cleanly" : "died"}, code=${event.code} reason=${event.reason}`
         );
         setTimeout(() => {
-            setWs(new WebSocket(getSocketUrl()));
+            setWebSocket(new WebSocket(getSocketUrl()));
         }, SOCKET_RECONNECTION_TIMEOUT);
     }, []);
 
@@ -43,37 +43,37 @@ export const SocketProvider = (props: {
 
 
     useEffect(() => {
-        ws.addEventListener("open", onOpen);
+        webSocket.addEventListener("open", onOpen);
         console.log('added socket onOpen listener');
 
         return () => {
-            ws.removeEventListener("open", onOpen);
+            webSocket.removeEventListener("open", onOpen);
             console.log('socket onOpen listener removed');
         };
-    }, [ws, onOpen]);
+    }, [webSocket, onOpen]);
 
     useEffect(() => {
-        ws.addEventListener("close", onClose);
+        webSocket.addEventListener("close", onClose);
         console.log('added socket onClose listener');
 
         return () => {
-            ws.removeEventListener("close", onClose);
+            webSocket.removeEventListener("close", onClose);
             console.log('socket onClose listener removed');
         };
-    }, [ws, onClose]);
+    }, [webSocket, onClose]);
 
     useEffect(() => {
-        ws.addEventListener("error", onError);
+        webSocket.addEventListener("error", onError);
         console.log('added socket onError listener');
 
         return () => {
-            ws.removeEventListener("error", onError);
+            webSocket.removeEventListener("error", onError);
             console.log('socket onError listener removed');
         };
-    }, [ws, onError]);
+    }, [webSocket, onError]);
 
     return (
-        <SocketContext.Provider value={ws}>
+        <SocketContext.Provider value={webSocket}>
             {props.children}
         </SocketContext.Provider>
     )

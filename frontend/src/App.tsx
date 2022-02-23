@@ -3,7 +3,7 @@ import './styles/App.css';
 import {Router} from "./components/Router";
 import {SocketProvider} from "./providers/SocketProvider";
 import {LocalStreamProvider} from "./providers/LocalStreamProvider";
-import {PeerConnectionArrayProvider} from "./providers/PeerConnectionArrayProvider";
+import {PeerConnectionMapProvider} from "./providers/PeerConnectionMapProvider";
 
 
 export default function App() {
@@ -11,9 +11,9 @@ export default function App() {
     return (
         <SocketProvider>
             <LocalStreamProvider>
-                <PeerConnectionArrayProvider>
+                <PeerConnectionMapProvider>
                     <Router/>
-                </PeerConnectionArrayProvider>
+                </PeerConnectionMapProvider>
             </LocalStreamProvider>
         </SocketProvider>
     );

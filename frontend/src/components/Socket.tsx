@@ -5,6 +5,7 @@ import LocalStream from "./LocalStream";
 import {useParams} from "react-router-dom";
 import {PEER_CONNECTION_CONFIG, turnStatus} from "../config/myPeerConnectionConfig";
 import {useMessenger} from "../hooks/useMessenger";
+import {usePeerConnectionMap} from "../hooks/usePeerConnectionMap";
 
 export const Socket = ({myName}: { myName: string }) => {
     console.log('Socket component rendered');
@@ -12,6 +13,8 @@ export const Socket = ({myName}: { myName: string }) => {
     const [myUsername, setMyUsername] = useState('');
 
     let {myRole} = useParams() || "audience";
+
+    let {peerConnectionMap, setPeerConnectionMap} = usePeerConnectionMap();
 
     const messenger = useMessenger();
     const socket = useSocket();
@@ -37,6 +40,16 @@ export const Socket = ({myName}: { myName: string }) => {
             }
         );
     }, []);
+
+    function addPeerConnection(targetUsername: string){
+        if (peerConnectionMap.get(targetUsername)) {
+            console.log('peerConnection already exists.');
+            return peerConnectionMap.get(targetUsername);
+        }
+        let newPeerConnection = createPeerConnection(targetUsername);
+        setPeerConnectionMap((
+            prev: Map<string, RTCPeerConnection>) => new Map(prev).set(targetUsername, newPeerConnection));
+    }
 
     function createPeerConnection(targetUsername: string) {
         let peerConnection = new RTCPeerConnection(PEER_CONNECTION_CONFIG);
