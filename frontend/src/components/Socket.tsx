@@ -60,7 +60,7 @@ export const Socket = ({myName}: { myName: string }) => {
         const desc = new RTCSessionDescription(msg.sdp);
         let myPeerConnection = addPeerConnection(targetUsername);
         console.log(myPeerConnection);
-        if (myPeerConnection){
+        if (myPeerConnection) {
             await myPeerConnection.setRemoteDescription(desc);
 
             let answer = await myPeerConnection.createAnswer();
@@ -291,11 +291,6 @@ export const Socket = ({myName}: { myName: string }) => {
     }, [socket, onMessage]);
 
     return (
-        <div>
-            <button onClick={(e) => console.log(localStream)}>Local</button>
-            <Main myName={myName} myRole={myRole}/>
-
-        </div>
-        // <LocalStream/>
+        <Main myName={myName} myRole={myRole}/>
     )
 }
