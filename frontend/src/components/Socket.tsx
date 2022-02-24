@@ -1,4 +1,4 @@
-import {useCallback, useEffect, useState} from "react";
+import React, {useCallback, useEffect, useRef, useState} from "react";
 import {useSocket} from "../hooks/useSocket";
 import Main from "./Main";
 import {useParams} from "react-router-dom";
@@ -9,6 +9,7 @@ import {useLocalStream} from "../hooks/useLocalStream";
 
 export const Socket = ({myName}: { myName: string }) => {
     console.log('[Render] Socket');
+    const videoRef = useRef<HTMLVideoElement>(null);
 
     const [myUsername, setMyUsername] = useState('');
     // let myUsername: string;
@@ -41,6 +42,13 @@ export const Socket = ({myName}: { myName: string }) => {
             }
         );
     }, []);
+
+    useEffect(()=>{
+        console.log('videoRef updated')
+        if (videoRef && videoRef.current){
+
+        }
+    },[videoRef.current]);
 
     function connectUser(targetUsername: string) {
         let myPeerConnection = addPeerConnection(targetUsername);
@@ -76,7 +84,7 @@ export const Socket = ({myName}: { myName: string }) => {
         }
     }
 
-    function videoAnswerReceived(msg: any){
+    function videoAnswerReceived(msg: any) {
         console.log('[Socket] videoAnswerReceived')
         const desc = new RTCSessionDescription(msg.sdp);
         let myPeerConnection = peerConnectionMap.get(myUsername);
@@ -105,7 +113,7 @@ export const Socket = ({myName}: { myName: string }) => {
             if (event.candidate) {
                 messenger.send({
                     type: "new-ice-candidate",
-                    target: 'targetUsername',
+                    target: targetUsername,
                     candidate: event.candidate,
                 });
             }
@@ -135,6 +143,45 @@ export const Socket = ({myName}: { myName: string }) => {
                     });
                 });
         };
+
+        peerConnection.ontrack = function (event: RTCTrackEvent) {
+            console.log('[PeerConnection] onTrack stream length:', event.streams.length);
+            event.streams.map((stream) => {
+                console.log('stream id', stream.id);
+                console.log('stream track length', stream.getTracks().length);
+            });
+
+            // if (!hasStream) {
+            //     hasStream = true;
+            //     socket.send(
+            //         JSON.stringify({
+            //             type: "stream",
+            //             data: "true",
+            //         })
+            //     );
+            // }
+            console.log('Stream Count', event.streams);
+            console.log('ontrack', event.streams[0]);
+
+            if (videoRef && videoRef.current){
+                const video = videoRef.current as HTMLVideoElement;
+                video.srcObject = event.streams[0];
+                video.play().then();
+                console.log('#################')
+            }
+            // if ($("#local_video_" + event.streams[0].id).length === 0) {
+            //     $("#streams").append(`<video id="local_video_${event.streams[0].id}" autoplay playsinline style="width: 100%"></video><br />`);
+            //     document.getElementById("local_video_" + event.streams[0].id).srcObject = event.streams[0];
+            //     remoteStream[event.streams[0].id] = event.streams[0];
+            //     sendToAll(event.streams[0]);
+            // }
+
+            messenger.send({
+                type: "log",
+                data: "ontrack from " + 'targetName',
+            });
+        };
+
         console.log('[PeerConnection] new peerConnection created:', peerConnection);
 
         return peerConnection;
@@ -302,6 +349,10 @@ export const Socket = ({myName}: { myName: string }) => {
     }, [socket, onMessage]);
 
     return (
-        <Main myName={myName} myRole={myRole}/>
+        <div>
+            <video id="remote" style={{border: "5px solid yellow"}} ref={videoRef} autoPlay playsInline muted/>
+            <Main myName={myName} myRole={myRole}/>
+
+        </div>
     )
 }
