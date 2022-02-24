@@ -1,13 +1,15 @@
 import React, {useEffect, useRef} from 'react';
 import {useLocalStream} from "../hooks/useLocalStream";
+import {useLogger} from "../hooks/useLogger";
 
 export default function RemoteStream({mediaStream}: { mediaStream: MediaStream }) {
-    console.log('[Render] RemoteStream');
+    const logger = useLogger();
+    logger.log('Render', 'RemoteStream');
 
     const videoRef = useRef<HTMLVideoElement>(null);
 
     useEffect(() => {
-        console.log('>>>>>', mediaStream);
+        logger.log('Inside RemoteStream', mediaStream);
         if (videoRef && videoRef.current && mediaStream) {
             const video = videoRef.current as HTMLVideoElement;
             video.srcObject = mediaStream;
