@@ -76,9 +76,18 @@ export const Socket = ({myName}: { myName: string }) => {
         }
     }
 
+    function videoAnswerReceived(msg: any){
+        console.log('[Socket] videoAnswerReceived')
+        const desc = new RTCSessionDescription(msg.sdp);
+        let myPeerConnection = peerConnectionMap.get(myUsername);
+        myPeerConnection?.setRemoteDescription(desc).catch((e) => {
+            console.log("Error", e);
+        });
+    }
+
     function addPeerConnection(targetUsername: string) {
         if (peerConnectionMap.get(targetUsername)) {
-            console.log('peerConnection already exists.');
+            console.log('[PeerConnection] peerConnection already exists.');
             return peerConnectionMap.get(targetUsername);
         }
         let newPeerConnection = createPeerConnection(targetUsername);
@@ -126,7 +135,7 @@ export const Socket = ({myName}: { myName: string }) => {
                     });
                 });
         };
-        console.log('peerConnection created: ', peerConnection);
+        console.log('[PeerConnection] new peerConnection created:', peerConnection);
 
         return peerConnection;
     }
@@ -250,7 +259,7 @@ export const Socket = ({myName}: { myName: string }) => {
                 sendVideoAnswer(msg).then();
                 break;
             case "video-answer":
-                // videoAnswer();
+                videoAnswerReceived(msg);
                 break;
             case "alt-video-answer":
                 // newAltVideoAnswer();
