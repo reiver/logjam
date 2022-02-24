@@ -43,12 +43,12 @@ export const Socket = ({myName}: { myName: string }) => {
         );
     }, []);
 
-    useEffect(()=>{
+    useEffect(() => {
         console.log('videoRef updated')
-        if (videoRef && videoRef.current){
+        if (videoRef && videoRef.current) {
 
         }
-    },[videoRef.current]);
+    }, [videoRef.current]);
 
     function connectUser(targetUsername: string) {
         let myPeerConnection = addPeerConnection(targetUsername);
@@ -119,6 +119,15 @@ export const Socket = ({myName}: { myName: string }) => {
             }
         };
 
+        // onIceCandidateError
+        peerConnection.onicecandidateerror = (event: Event) => {
+            console.log('[PeerConnection] onIceCandidateError')
+            messenger.send({
+                type: "log",
+                data: "onicecandidateerror :" + JSON.stringify(event),
+            });
+        };
+
         // onNegotiationNeeded
         peerConnection.onnegotiationneeded = function (event) {
             console.log("[PeerConnection] onNegotiationNeeded", event);
@@ -163,7 +172,7 @@ export const Socket = ({myName}: { myName: string }) => {
             console.log('Stream Count', event.streams);
             console.log('ontrack', event.streams[0]);
 
-            if (videoRef && videoRef.current){
+            if (videoRef && videoRef.current) {
                 const video = videoRef.current as HTMLVideoElement;
                 video.srcObject = event.streams[0];
                 video.play().then();
@@ -350,7 +359,14 @@ export const Socket = ({myName}: { myName: string }) => {
 
     return (
         <div>
-            <video id="remote" style={{border: "5px solid yellow"}} ref={videoRef} autoPlay playsInline muted/>
+            {myRole === 'audience' ?
+                <div>
+                    <h3 style={{color: "white"}}>Remote Video:</h3>
+                    <video id="remote" style={{border: "5px solid yellow", backgroundColor: "white"}} ref={videoRef}
+                           autoPlay playsInline muted/>
+                </div>
+                : null
+            }
             <Main myName={myName} myRole={myRole}/>
 
         </div>
