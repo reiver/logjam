@@ -5,9 +5,11 @@ import BottomSidebar from "./BottomSidebar";
 import LeftSidebar from "./LeftSidebar";
 import ControlButtons from "./ControlButtons";
 import LocalStream from "./LocalStream";
+import {useLogger} from "../hooks/useLogger";
 
 export default function Main({myName, myRole}: any) {
-    console.log('[Render] Main');
+    const logger = useLogger();
+    logger.log('Render', 'Main');
 
     const [mic, setMic] = useState(true);
     const [camera, setCamera] = useState(true);

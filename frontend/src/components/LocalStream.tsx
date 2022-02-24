@@ -1,8 +1,10 @@
 import React, {useEffect, useRef} from 'react';
 import {useLocalStream} from "../hooks/useLocalStream";
+import {useLogger} from "../hooks/useLogger";
 
 export default function LocalStream() {
-    console.log('[Render] LocalStream');
+    const logger = useLogger();
+    logger.log('Render', 'LocalStream');
 
     let {localStream, setLocalStream} = useLocalStream();
     const videoRef = useRef<HTMLVideoElement>(null);
@@ -22,7 +24,6 @@ export default function LocalStream() {
                         const video = videoRef.current as HTMLVideoElement;
                         video.srcObject = mediaStream;
                         setLocalStream(mediaStream);
-                        console.log('setLocalStream:', mediaStream);
                         // video.onloadedmetadata = function (e) {
                         //     console.log('video loaded')
                         //     videoRef?.current?.play().then();

@@ -6,10 +6,13 @@ import {PEER_CONNECTION_CONFIG, turnStatus} from "../config/myPeerConnectionConf
 import {useMessenger} from "../hooks/useMessenger";
 import {usePeerConnectionMap} from "../hooks/usePeerConnectionMap";
 import {useLocalStream} from "../hooks/useLocalStream";
+import Data from "../data";
+import RemoteStream from "./RemoteStream";
+import {useLogger} from "../hooks/useLogger";
 
 export const Socket = ({myName}: { myName: string }) => {
-    console.log('[Render] Socket');
-    const videoRef = useRef<HTMLVideoElement>(null);
+    const logger = useLogger();
+    logger.log('Render', 'Socket');
 
     const [myUsername, setMyUsername] = useState('');
     // let myUsername: string;
@@ -18,9 +21,11 @@ export const Socket = ({myName}: { myName: string }) => {
     let {peerConnectionMap, setPeerConnectionMap} = usePeerConnectionMap();
     let {localStream, setLocalStream} = useLocalStream();
 
+    const [remoteStream, setRemoteStream] = useState<MediaStream>(new MediaStream());
+
     const messenger = useMessenger();
     const socket = useSocket();
-    // console.log(socket);
+    // console.log(socket);s
 
     useEffect(() => {
         // start
@@ -44,11 +49,8 @@ export const Socket = ({myName}: { myName: string }) => {
     }, []);
 
     useEffect(() => {
-        console.log('videoRef updated')
-        if (videoRef && videoRef.current) {
-
-        }
-    }, [videoRef.current]);
+        logger.log('DEBUG', remoteStream);
+    }, [remoteStream]);
 
     function connectUser(targetUsername: string) {
         let myPeerConnection = addPeerConnection(targetUsername);
@@ -171,19 +173,7 @@ export const Socket = ({myName}: { myName: string }) => {
             // }
             console.log('Stream Count', event.streams);
             console.log('ontrack', event.streams[0]);
-
-            if (videoRef && videoRef.current) {
-                const video = videoRef.current as HTMLVideoElement;
-                video.srcObject = event.streams[0];
-                video.play().then();
-                console.log('#################')
-            }
-            // if ($("#local_video_" + event.streams[0].id).length === 0) {
-            //     $("#streams").append(`<video id="local_video_${event.streams[0].id}" autoplay playsinline style="width: 100%"></video><br />`);
-            //     document.getElementById("local_video_" + event.streams[0].id).srcObject = event.streams[0];
-            //     remoteStream[event.streams[0].id] = event.streams[0];
-            //     sendToAll(event.streams[0]);
-            // }
+            setRemoteStream(event.streams[0]);
 
             messenger.send({
                 type: "log",
@@ -362,8 +352,7 @@ export const Socket = ({myName}: { myName: string }) => {
             {myRole === 'audience' ?
                 <div>
                     <h3 style={{color: "white"}}>Remote Video:</h3>
-                    <video id="remote" style={{border: "5px solid yellow", backgroundColor: "white"}} ref={videoRef}
-                           autoPlay playsInline muted/>
+                    <RemoteStream mediaStream={remoteStream}/>
                 </div>
                 : null
             }
