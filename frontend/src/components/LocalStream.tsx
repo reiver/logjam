@@ -2,6 +2,8 @@ import React, {useEffect, useRef} from 'react';
 import {useLocalStream} from "../hooks/useLocalStream";
 
 export default function LocalStream() {
+    console.log('[Render] LocalStream');
+
     let {localStream, setLocalStream} = useLocalStream();
     const videoRef = useRef<HTMLVideoElement>(null);
 

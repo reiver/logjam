@@ -10,13 +10,12 @@ export const LocalStreamContext = createContext({
 export const LocalStreamProvider = (props: {
     children: ReactChild;
 }) => {
-    console.log('LocalStreamProvider');
     const [localStream, setLocalStream] = useState<MediaStream>(defaultLocalStream);
 
 
-    useEffect(() => {
-        console.log('*** localStream (provider)', localStream);
-    }, [localStream]);
+    // useEffect(() => {
+    //     console.log('*** localStream (provider)', localStream);
+    // }, [localStream]);
 
     return (
         <LocalStreamContext.Provider value={{localStream, setLocalStream}}>

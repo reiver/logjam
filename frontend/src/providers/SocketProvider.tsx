@@ -22,13 +22,13 @@ export const SocketProvider = (props: {
 
     // onOpen Handler
     const onOpen = useCallback((event) => {
-        console.log('[socket opened]');
+        console.log('[Socket] opened');
     }, []);
 
     // onClose Handler
     const onClose = useCallback((event) => {
         console.log(
-            `[socket closed] Connection ${event.wasClean ?
+            `[Socket] closed. Connection ${event.wasClean ?
                 "closed cleanly" : "died"}, code=${event.code} reason=${event.reason}`
         );
         setTimeout(() => {
@@ -38,7 +38,7 @@ export const SocketProvider = (props: {
 
     // onError Handler
     const onError = useCallback((error) => {
-        console.log('[socket error] ', error);
+        console.error('[socket] error', error);
     }, []);
 
 

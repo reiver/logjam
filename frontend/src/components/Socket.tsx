@@ -8,7 +8,7 @@ import {usePeerConnectionMap} from "../hooks/usePeerConnectionMap";
 import {useLocalStream} from "../hooks/useLocalStream";
 
 export const Socket = ({myName}: { myName: string }) => {
-    console.log('[RENDER] Socket');
+    console.log('[Render] Socket');
 
     // const [myUsername, setMyUsername] = useState('');
     let myUsername: string;
@@ -20,10 +20,6 @@ export const Socket = ({myName}: { myName: string }) => {
     const messenger = useMessenger();
     const socket = useSocket();
     console.log(socket);
-
-    // useEffect(()=>{
-    //     console.log('Socket--->', localStream);
-    // }, [localStream])
 
     useEffect(() => {
         // start
@@ -48,7 +44,7 @@ export const Socket = ({myName}: { myName: string }) => {
 
     function connectUser(targetUsername: string){
         let peerConnection = addPeerConnection(targetUsername);
-        console.log('====>', socket);
+        console.log('====>', localStream);
     }
 
     function addPeerConnection(targetUsername: string){
@@ -247,15 +243,15 @@ export const Socket = ({myName}: { myName: string }) => {
             default:
                 console.log(msg);
         }
-    }, []);
+    }, [localStream]);
 
     useEffect(() => {
         socket.addEventListener("message", onMessage);
-        console.log('added socket onMessage listener');
+        // console.log('added socket onMessage listener');
 
         return () => {
             socket.removeEventListener("message", onMessage);
-            console.log('socket onMessage listener removed');
+            // console.log('socket onMessage listener removed');
         };
     }, [socket, onMessage]);
 

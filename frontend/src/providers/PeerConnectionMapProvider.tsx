@@ -11,7 +11,7 @@ export const PeerConnectionMapContext = createContext({
 export const PeerConnectionMapProvider = (props: {
     children: ReactChild;
 }) => {
-    console.log('PeerConnectionMapProvider');
+    // console.log('PeerConnectionMapProvider');
     const [peerConnectionMap, setPeerConnectionMap] = useState(defaultPeerConnectionMap);
 
 
