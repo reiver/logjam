@@ -10,8 +10,8 @@ import {useLocalStream} from "../hooks/useLocalStream";
 export const Socket = ({myName}: { myName: string }) => {
     console.log('[Render] Socket');
 
-    // const [myUsername, setMyUsername] = useState('');
-    let myUsername: string;
+    const [myUsername, setMyUsername] = useState('');
+    // let myUsername: string;
     let {myRole} = useParams() || "audience";
 
     let {peerConnectionMap, setPeerConnectionMap} = usePeerConnectionMap();
@@ -53,7 +53,7 @@ export const Socket = ({myName}: { myName: string }) => {
     }
 
     async function sendVideoAnswer(msg: any) {
-        console.log('[Socket] sending video answer');
+        console.log('[Socket] sendVideoAnswer');
         console.log(msg);
         let targetUsername = msg.name ? msg.name : '';
         let targetName = msg.username;
@@ -90,7 +90,9 @@ export const Socket = ({myName}: { myName: string }) => {
     function createPeerConnection(targetUsername: string) {
         let peerConnection = new RTCPeerConnection(PEER_CONNECTION_CONFIG);
 
+        // onIceCandidate
         peerConnection.onicecandidate = function (event) {
+            console.log('[PeerConnection] onIceCandidate')
             if (event.candidate) {
                 messenger.send({
                     type: "new-ice-candidate",
@@ -100,8 +102,9 @@ export const Socket = ({myName}: { myName: string }) => {
             }
         };
 
+        // onNegotiationNeeded
         peerConnection.onnegotiationneeded = function (event) {
-            console.log("onnegotiationneeded", event);
+            console.log("[PeerConnection] onNegotiationNeeded", event);
             peerConnection
                 .createOffer()
                 .then(function (offer) {
@@ -244,8 +247,7 @@ export const Socket = ({myName}: { myName: string }) => {
                 // newAltIceCandidate();
                 break;
             case "video-offer":
-                console.log('###########');
-                sendVideoAnswer(msg.data).then();
+                sendVideoAnswer(msg).then();
                 break;
             case "video-answer":
                 // videoAnswer();
@@ -254,8 +256,8 @@ export const Socket = ({myName}: { myName: string }) => {
                 // newAltVideoAnswer();
                 break;
             case "start":
-                // setMyUsername(msg.Data);
-                myUsername = msg.data;
+                setMyUsername(msg.data);
+                // myUsername = msg.data;
                 // start();
                 break;
             case "role":
