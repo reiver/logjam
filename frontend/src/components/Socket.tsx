@@ -19,7 +19,7 @@ export const Socket = ({myName}: { myName: string }) => {
 
     const messenger = useMessenger();
     const socket = useSocket();
-    console.log(socket);
+    // console.log(socket);
 
     useEffect(() => {
         // start
@@ -42,12 +42,41 @@ export const Socket = ({myName}: { myName: string }) => {
         );
     }, []);
 
-    function connectUser(targetUsername: string){
-        let peerConnection = addPeerConnection(targetUsername);
-        console.log('====>', localStream);
+    function connectUser(targetUsername: string) {
+        let myPeerConnection = addPeerConnection(targetUsername);
+        if (myPeerConnection && localStream) {
+            console.log('Adding tracks... len=', localStream.getTracks().length);
+            localStream.getTracks().forEach((track) => {
+                myPeerConnection?.addTrack(track, localStream);
+            });
+        }
     }
 
-    function addPeerConnection(targetUsername: string){
+    async function sendVideoAnswer(msg: any) {
+        console.log('[Socket] sending video answer');
+        console.log(msg);
+        let targetUsername = msg.name ? msg.name : '';
+        let targetName = msg.username;
+        const desc = new RTCSessionDescription(msg.sdp);
+        let myPeerConnection = addPeerConnection(targetUsername);
+        console.log(myPeerConnection);
+        if (myPeerConnection){
+            await myPeerConnection.setRemoteDescription(desc);
+
+            let answer = await myPeerConnection.createAnswer();
+
+            await myPeerConnection.setLocalDescription(answer);
+
+            messenger.send({
+                name: myUsername,
+                target: targetUsername,
+                type: "video-answer",
+                sdp: myPeerConnection.localDescription,
+            });
+        }
+    }
+
+    function addPeerConnection(targetUsername: string) {
         if (peerConnectionMap.get(targetUsername)) {
             console.log('peerConnection already exists.');
             return peerConnectionMap.get(targetUsername);
@@ -202,7 +231,9 @@ export const Socket = ({myName}: { myName: string }) => {
 
     const onMessage = useCallback((message) => {
         let msg = messenger.receive(message);
-        switch (msg.Type as string) {
+        msg.data = (msg.Data && !msg.data) ? msg.Data : msg.data;
+        msg.type = (msg.Type && !msg.type) ? msg.Type : msg.type;
+        switch (msg.type as string) {
             case "alt-video-offer":
                 // await altVideoOffer();
                 break;
@@ -212,6 +243,10 @@ export const Socket = ({myName}: { myName: string }) => {
             case "alt-new-ice-candidate":
                 // newAltIceCandidate();
                 break;
+            case "video-offer":
+                console.log('###########');
+                sendVideoAnswer(msg.data).then();
+                break;
             case "video-answer":
                 // videoAnswer();
                 break;
@@ -220,7 +255,7 @@ export const Socket = ({myName}: { myName: string }) => {
                 break;
             case "start":
                 // setMyUsername(msg.Data);
-                myUsername = msg.Data;
+                myUsername = msg.data;
                 // start();
                 break;
             case "role":
@@ -228,7 +263,7 @@ export const Socket = ({myName}: { myName: string }) => {
                 break;
             case "add_audience":
                 // console.log("add_audience", msg.data);
-                connectUser(msg.Data);
+                connectUser(msg.data);
                 break;
             case "add_broadcast_audience":
                 // console.log("add_audience", msg.data);
@@ -257,7 +292,7 @@ export const Socket = ({myName}: { myName: string }) => {
 
     return (
         <div>
-            <button onClick={(e)=>console.log(localStream)}>Local</button>
+            <button onClick={(e) => console.log(localStream)}>Local</button>
             <Main myName={myName} myRole={myRole}/>
 
         </div>

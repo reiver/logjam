@@ -21,9 +21,9 @@ export const useMessenger = () => {
             return;
         }
         try {
-            let msg = message?.data;
+            let msg = JSON.parse(message?.data);
             console.log('[Info] message received: ', msg);
-            return JSON.parse(message?.data);
+            return msg;
         } catch (e) {
             console.error('[Error] unable to parse received message.', e);
             return;
