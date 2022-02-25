@@ -25,7 +25,6 @@ export const Socket = ({myName}: { myName: string }) => {
 
     const messenger = useMessenger();
     const socket = useSocket();
-    // console.log(socket);s
 
     useEffect(() => {
         // start

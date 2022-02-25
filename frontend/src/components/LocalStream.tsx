@@ -21,7 +21,7 @@ export default function LocalStream() {
         navigator.mediaDevices.getUserMedia(MEDIA_CONSTRAINTS)
             .then((mediaStream) => {
                     if (videoRef && videoRef.current) {
-                        const video = videoRef.current as HTMLVideoElement;
+                        let video = videoRef.current as HTMLVideoElement;
                         video.srcObject = mediaStream;
                         setLocalStream(mediaStream);
                         // video.onloadedmetadata = function (e) {
