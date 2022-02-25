@@ -12,6 +12,15 @@ export default function Stream({streamId, mediaStream}: { streamId: string, medi
         if (videoRef && videoRef.current && mediaStream) {
             let video = videoRef.current as HTMLVideoElement;
             video.srcObject = mediaStream;
+            console.log('---------------srcObject:', streamId, video.srcObject)
+        }
+        return () => {
+            if (mediaStream) {
+                console.log('---------- CLEAN')
+                mediaStream.getTracks().forEach(track => {
+                    track.stop()
+                })
+            }
         }
     }, [mediaStream]);
 
@@ -21,7 +30,7 @@ export default function Stream({streamId, mediaStream}: { streamId: string, medi
 
     return (
         <div>
-            <video id={streamId} style={{border: "5px solid blue", backgroundColor: "white"}}
+            <video id={streamId} style={{width: 400, height: 400, border: "5px solid blue", backgroundColor: "white"}}
                    ref={videoRef} autoPlay playsInline muted/>
 
         </div>

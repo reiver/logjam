@@ -135,6 +135,11 @@ export const Socket = ({myName}: { myName: string }) => {
             });
         };
 
+        // onIceCandidateError
+        peerConnection.oniceconnectionstatechange = (event: Event) => {
+            logger.error('PeerConnection', '################oniceconnectionstatechange')
+        };
+
         // onNegotiationNeeded
         peerConnection.onnegotiationneeded = function (event) {
             console.log("[PeerConnection] onNegotiationNeeded", event);
@@ -176,7 +181,6 @@ export const Socket = ({myName}: { myName: string }) => {
             //         })
             //     );
             // }
-            console.log('Stream Count', event.streams);
             console.log('ontrack', event.streams[0]);
             setRemoteStream(event.streams[0]);
             // setRemoteStream(localStream);
