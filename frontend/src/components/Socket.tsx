@@ -173,6 +173,7 @@ export const Socket = ({myName}: { myName: string }) => {
             console.log('Stream Count', event.streams);
             console.log('ontrack', event.streams[0]);
             setRemoteStream(event.streams[0]);
+            // setRemoteStream(localStream);
 
             messenger.send({
                 type: "log",
@@ -190,6 +191,7 @@ export const Socket = ({myName}: { myName: string }) => {
 
         }
     }, [myRole])
+
 
     function getStateDescription(readyState: number) {
         switch (readyState) {
@@ -346,15 +348,21 @@ export const Socket = ({myName}: { myName: string }) => {
         };
     }, [socket, onMessage]);
 
+    // {myRole === 'audience' ?
+    //     <div>
+    //         <h3 style={{color: "white"}}>Remote Video:</h3>
+    //         <RemoteStream mediaStream={remoteStream}/>
+    //     </div>
+    //     : null
+    // }
+
     return (
         <div>
-            {myRole === 'audience' ?
-                <div>
-                    <h3 style={{color: "white"}}>Remote Video:</h3>
-                    <RemoteStream mediaStream={remoteStream}/>
-                </div>
-                : null
-            }
+            {/*<button onClick={e => setRemoteStream(remoteStream)}>Set Remote</button>*/}
+            <div>
+                <h3 style={{color: "white"}}>Remote Video:</h3>
+                <RemoteStream mediaStream={remoteStream}/>
+            </div>
             <Main myName={myName} myRole={myRole}/>
 
         </div>

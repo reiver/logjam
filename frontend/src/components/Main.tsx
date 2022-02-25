@@ -29,11 +29,12 @@ export default function Main({myName, myRole}: any) {
         />
     );
 
+    // {myRole === 'broadcast' ? <LocalStream/> : null}
 
     return (
         <Page>
             <Screen>
-                {myRole === 'broadcast' ? <LocalStream/> : null}
+                <LocalStream/>
                 <video id="video 2" autoPlay playsInline muted/>
                 <video id="video 3" autoPlay playsInline muted/>
                 <video id="video 4" autoPlay playsInline muted/>
