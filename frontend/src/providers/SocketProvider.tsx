@@ -1,4 +1,5 @@
 import React, {useEffect, useState, createContext, ReactChild, useCallback} from "react";
+import {useLogger} from "../hooks/useLogger";
 
 const SOCKET_RECONNECTION_TIMEOUT = 5000;
 const defaultWebSocket = new WebSocket(getSocketUrl());
@@ -16,6 +17,7 @@ export const SocketContext = createContext(defaultWebSocket);
 export const SocketProvider = (props: {
     children: ReactChild;
 }) => {
+    const logger = useLogger();
     // console.log('SocketProvider');
 
     const [isReady, setIsReady] = useState(false);
@@ -23,14 +25,14 @@ export const SocketProvider = (props: {
 
     // onOpen Handler
     const onOpen = useCallback((event) => {
-        console.log('[Socket] opened');
+        logger.log('Socket', 'socket opened');
         setIsReady(true);
     }, []);
 
     // onClose Handler
     const onClose = useCallback((event) => {
-        console.log(
-            `[Socket] closed. Connection ${event.wasClean ?
+        logger.log('Socket',
+            `Connection ${event.wasClean ?
                 "closed cleanly" : "died"}, code=${event.code} reason=${event.reason}`
         );
         setIsReady(false);

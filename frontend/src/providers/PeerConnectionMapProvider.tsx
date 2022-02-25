@@ -1,4 +1,5 @@
 import React, {useEffect, useState, createContext, ReactChild} from "react";
+import {useLogger} from "../hooks/useLogger";
 
 const defaultPeerConnectionMap =  new Map<string, RTCPeerConnection>();
 
@@ -11,12 +12,12 @@ export const PeerConnectionMapContext = createContext({
 export const PeerConnectionMapProvider = (props: {
     children: ReactChild;
 }) => {
-    // console.log('PeerConnectionMapProvider');
+    const logger = useLogger();
+
     const [peerConnectionMap, setPeerConnectionMap] = useState(defaultPeerConnectionMap);
 
-
     useEffect(() => {
-        console.log('peerConnections:', peerConnectionMap);
+        logger.log('PeerConnectionMap', peerConnectionMap);
     }, [peerConnectionMap]);
 
     return (

@@ -1,14 +1,17 @@
-import React, {useCallback, useEffect, useRef, useState} from "react";
+import React, {useCallback, useEffect, useState} from "react";
 import {useSocket} from "../hooks/useSocket";
 import Main from "./Main";
 import {useParams} from "react-router-dom";
 import {PEER_CONNECTION_CONFIG, turnStatus} from "../config/myPeerConnectionConfig";
 import {useMessenger} from "../hooks/useMessenger";
 import {usePeerConnectionMap} from "../hooks/usePeerConnectionMap";
-import {useLocalStream} from "../hooks/useLocalStream";
-import Data from "../data";
-import RemoteStream from "./RemoteStream";
+// import {useLocalStream} from "../hooks/useLocalStream";
+// import Data from "../data";
+// import RemoteStream from "./RemoteStream";
 import {useLogger} from "../hooks/useLogger";
+import {useStreamMap} from "../hooks/useStreamMap";
+import {useUserMedia} from "../hooks/useUserMedia";
+import Stream from "./Stream";
 
 export const Socket = ({myName}: { myName: string }) => {
     const logger = useLogger();
@@ -19,9 +22,10 @@ export const Socket = ({myName}: { myName: string }) => {
     let {myRole} = useParams() || "audience";
 
     let {peerConnectionMap, setPeerConnectionMap} = usePeerConnectionMap();
-    let {localStream, setLocalStream} = useLocalStream();
+    let {streamMap, setStreamMap} = useStreamMap();
+    let localStream = useUserMedia();
 
-    const [remoteStream, setRemoteStream] = useState<MediaStream>(new MediaStream());
+    const [remoteStream, setRemoteStream] = useState<MediaStream>();
 
     const messenger = useMessenger();
     const socket = useSocket();
@@ -52,11 +56,14 @@ export const Socket = ({myName}: { myName: string }) => {
     }, [remoteStream]);
 
     function connectUser(targetUsername: string) {
+        console.log('##### connectUser');
         let myPeerConnection = addPeerConnection(targetUsername);
         if (myPeerConnection && localStream) {
             console.log('Adding tracks... len=', localStream.getTracks().length);
             localStream.getTracks().forEach((track) => {
-                myPeerConnection?.addTrack(track, localStream);
+                if (localStream){
+                    myPeerConnection?.addTrack(track, localStream);
+                }
             });
         }
     }
@@ -71,9 +78,7 @@ export const Socket = ({myName}: { myName: string }) => {
         console.log(myPeerConnection);
         if (myPeerConnection) {
             await myPeerConnection.setRemoteDescription(desc);
-
             let answer = await myPeerConnection.createAnswer();
-
             await myPeerConnection.setLocalDescription(answer);
 
             messenger.send({
@@ -96,12 +101,13 @@ export const Socket = ({myName}: { myName: string }) => {
 
     function addPeerConnection(targetUsername: string) {
         if (peerConnectionMap.get(targetUsername)) {
-            console.log('[PeerConnection] peerConnection already exists.');
+            logger.log('PeerConnection', 'peerConnection already exists.');
             return peerConnectionMap.get(targetUsername);
         }
         let newPeerConnection = createPeerConnection(targetUsername);
         setPeerConnectionMap((
             prev: Map<string, RTCPeerConnection>) => new Map(prev).set(targetUsername, newPeerConnection));
+        logger.log('PeerConnection', 'peerConnection added to peerConnectionMap');
         return newPeerConnection;
     }
 
@@ -110,7 +116,7 @@ export const Socket = ({myName}: { myName: string }) => {
 
         // onIceCandidate
         peerConnection.onicecandidate = function (event) {
-            console.log('[PeerConnection] onIceCandidate')
+            logger.log('PeerConnection', 'onIceCandidate')
             if (event.candidate) {
                 messenger.send({
                     type: "new-ice-candidate",
@@ -122,7 +128,7 @@ export const Socket = ({myName}: { myName: string }) => {
 
         // onIceCandidateError
         peerConnection.onicecandidateerror = (event: Event) => {
-            console.log('[PeerConnection] onIceCandidateError')
+            // logger.error('PeerConnection', 'onIceCandidateError')
             messenger.send({
                 type: "log",
                 data: "onicecandidateerror :" + JSON.stringify(event),
@@ -181,7 +187,7 @@ export const Socket = ({myName}: { myName: string }) => {
             });
         };
 
-        console.log('[PeerConnection] new peerConnection created:', peerConnection);
+        logger.log('PeerConnection', 'new peerConnection created:', peerConnection);
 
         return peerConnection;
     }
@@ -193,20 +199,20 @@ export const Socket = ({myName}: { myName: string }) => {
     }, [myRole])
 
 
-    function getStateDescription(readyState: number) {
-        switch (readyState) {
-            case 0:
-                return "CONNECTING	Socket has been created. The connection is not yet open.";
-            case 1:
-                return "OPEN	The connection is open and ready to communicate."
-            case 2:
-                return "CLOSING	The connection is in the process of closing."
-            case 3:
-                return "CLOSED	The connection is closed or couldn't be opened."
-            default:
-                return "Unknown readyState"
-        }
-    }
+    // function getStateDescription(readyState: number) {
+    //     switch (readyState) {
+    //         case 0:
+    //             return "CONNECTING	Socket has been created. The connection is not yet open.";
+    //         case 1:
+    //             return "OPEN	The connection is open and ready to communicate."
+    //         case 2:
+    //             return "CLOSING	The connection is in the process of closing."
+    //         case 3:
+    //             return "CLOSED	The connection is closed or couldn't be opened."
+    //         default:
+    //             return "Unknown readyState"
+    //     }
+    // }
 
     // function createPeerConnection(targetUsername: string) {
     //     myPeerConnection = new RTCPeerConnection(myPeerConnectionConfig);
@@ -336,7 +342,7 @@ export const Socket = ({myName}: { myName: string }) => {
             default:
                 console.log(msg);
         }
-    }, [localStream]);
+    }, [localStream, remoteStream]);
 
     useEffect(() => {
         socket.addEventListener("message", onMessage);
@@ -359,11 +365,15 @@ export const Socket = ({myName}: { myName: string }) => {
     return (
         <div>
             {/*<button onClick={e => setRemoteStream(remoteStream)}>Set Remote</button>*/}
-            <div>
-                <h3 style={{color: "white"}}>Remote Video:</h3>
-                <RemoteStream mediaStream={remoteStream}/>
-            </div>
-            <Main myName={myName} myRole={myRole}/>
+            {/*<div>*/}
+            {/*    <h3 style={{color: "white"}}>Remote Video:</h3>*/}
+            {/*    <RemoteStream mediaStream={remoteStream}/>*/}
+            {/*</div>*/}
+            <h1 style={{color: "white"}}>Local</h1>
+            <Stream streamId={"localStream"} mediaStream={localStream} />
+            <h1 style={{color: "white"}}>Remote</h1>
+            <Stream streamId={"remoteStream"}mediaStream={remoteStream}/>
+            {/*<Main myName={myName} myRole={myRole}/>*/}
 
         </div>
     )

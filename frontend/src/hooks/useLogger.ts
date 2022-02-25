@@ -2,7 +2,6 @@
 const DEBUG = true;
 
 export const useLogger = () => {
-
     function getTime(){
         const d = new Date();
         return d.getMinutes().toLocaleString(undefined, {minimumIntegerDigits: 2}) + ':' +

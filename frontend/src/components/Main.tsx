@@ -4,7 +4,7 @@ import Screen from "./Screen";
 import BottomSidebar from "./BottomSidebar";
 import LeftSidebar from "./LeftSidebar";
 import ControlButtons from "./ControlButtons";
-import LocalStream from "./LocalStream";
+// import LocalStream from "./LocalStream";
 import {useLogger} from "../hooks/useLogger";
 
 export default function Main({myName, myRole}: any) {
@@ -34,7 +34,6 @@ export default function Main({myName, myRole}: any) {
     return (
         <Page>
             <Screen>
-                <LocalStream/>
                 <video id="video 2" autoPlay playsInline muted/>
                 <video id="video 3" autoPlay playsInline muted/>
                 <video id="video 4" autoPlay playsInline muted/>
