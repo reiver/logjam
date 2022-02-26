@@ -58,11 +58,11 @@ export const Socket = ({myName}: { myName: string }) => {
     function connectUser(targetUsername: string) {
         console.log('##### connectUser');
         let myPeerConnection = addPeerConnection(targetUsername);
-        if (myPeerConnection && localStream) {
+        if (localStream) {
             console.log('Adding tracks... len=', localStream.getTracks().length);
             localStream.getTracks().forEach((track) => {
-                if (localStream){
-                    myPeerConnection?.addTrack(track, localStream);
+                if (myPeerConnection && localStream) {
+                    myPeerConnection.addTrack(track, localStream);
                 }
             });
         }
@@ -170,6 +170,10 @@ export const Socket = ({myName}: { myName: string }) => {
             event.streams.map((stream) => {
                 console.log('stream id', stream.id);
                 console.log('stream track length', stream.getTracks().length);
+                messenger.send({
+                    type: "stream",
+                    data: "true",
+                });
             });
 
             // if (!hasStream) {
@@ -181,8 +185,11 @@ export const Socket = ({myName}: { myName: string }) => {
             //         })
             //     );
             // }
-            console.log('ontrack', event.streams[0]);
-            setRemoteStream(event.streams[0]);
+            let stream = event.streams[0];
+            console.log('ontrack', stream);
+            console.dir('------------tracks', stream.getTracks());
+
+            setRemoteStream(stream);
             // setRemoteStream(localStream);
 
             messenger.send({
@@ -201,102 +208,6 @@ export const Socket = ({myName}: { myName: string }) => {
 
         }
     }, [myRole])
-
-
-    // function getStateDescription(readyState: number) {
-    //     switch (readyState) {
-    //         case 0:
-    //             return "CONNECTING	Socket has been created. The connection is not yet open.";
-    //         case 1:
-    //             return "OPEN	The connection is open and ready to communicate."
-    //         case 2:
-    //             return "CLOSING	The connection is in the process of closing."
-    //         case 3:
-    //             return "CLOSED	The connection is closed or couldn't be opened."
-    //         default:
-    //             return "Unknown readyState"
-    //     }
-    // }
-
-    // function createPeerConnection(targetUsername: string) {
-    //     myPeerConnection = new RTCPeerConnection(myPeerConnectionConfig);
-    //     myPeerConnection.onicecandidate = function (event: RTCPeerConnectionIceEvent) {
-    //         if (event.candidate) {
-    //             message.send(socket, {
-    //                 type: "new-ice-candidate",
-    //                 target: targetUsername,
-    //                 candidate: event.candidate,
-    //             });
-    //         }
-    //     };
-    //
-    //     myPeerConnection.ontrack = function (event: RTCTrackEvent) {
-    //         console.log("TRACK", event, myRole);
-    //     };
-    //
-    //     myPeerConnection.onnegotiationneeded = function (event: Event) {
-    //         console.log("onnegotiationneeded", event);
-    //     };
-    //
-    //     myPeerConnection.onremovetrack = function (event: any) {
-    //         console.log('onremovetrack', event)
-    //     };
-    //
-    //     myPeerConnection.oniceconnectionstatechange = function (event: Event) {
-    //         console.log("oniceconnectionstatechange", event);
-    //     };
-    //
-    //     myPeerConnection.onicegatheringstatechange = function (event: Event) {
-    //         console.log("onicegatheringstatechange", event);
-    //     };
-    //
-    //     myPeerConnection.onsignalingstatechange = function (event: Event) {
-    //         console.log("onsignalingstatechange", event);
-    //     };
-    //
-    //     myPeerConnection.onicecandidateerror = (event: Event) => {
-    //         console.log("onicecandidateerror", event);
-    //     };
-    //     return myPeerConnection;
-    // }
-    //
-    // function connectUser(targetUsername: string) {
-    //     // console.log("Connect User", targetUsername);
-    //     if (myPeerConnections[targetUsername]) {
-    //         // console.log("Already Connected");
-    //         return true;
-    //     }
-    //     let myPeerConnection = createPeerConnection(targetUsername);
-    //
-    //     // console.log("localStream", localStream);
-    //     if (localStream) {
-    //         localStream.getTracks().forEach((track) => {
-    //             // track["mmcomp"] = "VIDEO";
-    //             myPeerConnection.addTrack(track, localStream);
-    //         });
-    //         // console.log("Added tracks to connection");
-    //     }
-    //     for (const tuser in altStreams) {
-    //         const tstreams = altStreams[tuser];
-    //         tstreams[0].getTracks().forEach((track) => {
-    //             myPeerConnection.addTrack(track, tstreams[0]);
-    //         });
-    //     }
-    //     // if (shareScreenStream) {
-    //     //   shareScreenStream.getTracks().forEach((track) => {
-    //     //     // track["mmcomp"] = "VIDEO";
-    //     //     myPeerConnection.addTrack(track, shareScreenStream);
-    //     //   });
-    //     //   // console.log("Added tracks to connection");
-    //     // }
-    //     // if (remoteStream) {
-    //     //   remoteStream.getTracks().forEach((track) => {
-    //     //     // track["mmcomp"] = "VIDEO";
-    //     //     myPeerConnection.addTrack(track, remoteStream);
-    //     //   });
-    //     //   // console.log("Added tracks to connection");
-    //     // }
-    // }
 
     const onMessage = useCallback((message) => {
         let msg = messenger.receive(message);
@@ -374,9 +285,9 @@ export const Socket = ({myName}: { myName: string }) => {
             {/*    <RemoteStream mediaStream={remoteStream}/>*/}
             {/*</div>*/}
             <h1 style={{color: "white"}}>Local</h1>
-            <Stream streamId={"localStream"} mediaStream={localStream} />
+            <Stream streamId={"localStream"} mediaStream={localStream}/>
             <h1 style={{color: "white"}}>Remote</h1>
-            <Stream streamId={"remoteStream"}mediaStream={remoteStream}/>
+            <Stream streamId={"remoteStream"} mediaStream={remoteStream}/>
             {/*<Main myName={myName} myRole={myRole}/>*/}
 
         </div>
