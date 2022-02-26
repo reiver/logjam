@@ -1,5 +1,4 @@
 import React, {useEffect, useState, createContext, ReactChild} from "react";
-import {useLogger} from "../hooks/useLogger";
 
 const defaultStreamMap =  new Map<string, MediaStream>();
 
@@ -10,13 +9,11 @@ export const StreamMapContext = createContext({
 export const StreamMapProvider = (props: {
     children: ReactChild;
 }) => {
-    const logger = useLogger();
 
     const [streamMap, setStreamMap] = useState(defaultStreamMap);
 
-
     useEffect(() => {
-        logger.log('StreamsMap', streamMap);
+        console.log('[StreamsMap]', streamMap);
     }, [streamMap]);
 
     return (

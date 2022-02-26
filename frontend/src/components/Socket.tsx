@@ -8,14 +8,14 @@ import {usePeerConnectionMap} from "../hooks/usePeerConnectionMap";
 // import {useLocalStream} from "../hooks/useLocalStream";
 // import Data from "../data";
 // import RemoteStream from "./RemoteStream";
-import {useLogger} from "../hooks/useLogger";
+// import {useLogger} from "../hooks/useLogger";
 import {useStreamMap} from "../hooks/useStreamMap";
 import {useUserMedia} from "../hooks/useUserMedia";
 import Stream from "./Stream";
 
 export const Socket = ({myName}: { myName: string }) => {
-    const logger = useLogger();
-    logger.log('Render', 'Socket');
+    // const logger = useLogger();
+    console.log('[Render] Socket');
 
     const [myUsername, setMyUsername] = useState('');
     // let myUsername: string;
@@ -49,10 +49,10 @@ export const Socket = ({myName}: { myName: string }) => {
                 data: turnStatus()
             }
         );
-    }, []);
+    });
 
     useEffect(() => {
-        logger.log('DEBUG', remoteStream);
+        console.log('[Stream]', remoteStream);
     }, [remoteStream]);
 
     function connectUser(targetUsername: string) {
@@ -101,13 +101,13 @@ export const Socket = ({myName}: { myName: string }) => {
 
     function addPeerConnection(targetUsername: string) {
         if (peerConnectionMap.get(targetUsername)) {
-            logger.log('PeerConnection', 'peerConnection already exists.');
+            console.log('[PeerConnection] connection already exists.');
             return peerConnectionMap.get(targetUsername);
         }
         let newPeerConnection = createPeerConnection(targetUsername);
         setPeerConnectionMap((
             prev: Map<string, RTCPeerConnection>) => new Map(prev).set(targetUsername, newPeerConnection));
-        logger.log('PeerConnection', 'peerConnection added to peerConnectionMap');
+        console.log('[PeerConnection] new peerConnection added to peerConnectionMap');
         return newPeerConnection;
     }
 
@@ -116,7 +116,7 @@ export const Socket = ({myName}: { myName: string }) => {
 
         // onIceCandidate
         peerConnection.onicecandidate = function (event) {
-            logger.log('PeerConnection', 'onIceCandidate')
+            console.log('[PeerConnection] onIceCandidate')
             if (event.candidate) {
                 messenger.send({
                     type: "new-ice-candidate",
@@ -128,7 +128,7 @@ export const Socket = ({myName}: { myName: string }) => {
 
         // onIceCandidateError
         peerConnection.onicecandidateerror = (event: Event) => {
-            // logger.error('PeerConnection', 'onIceCandidateError')
+            // console.error('[PeerConnection] onIceCandidateError')
             messenger.send({
                 type: "log",
                 data: "onicecandidateerror :" + JSON.stringify(event),
@@ -137,7 +137,7 @@ export const Socket = ({myName}: { myName: string }) => {
 
         // onIceCandidateError
         peerConnection.oniceconnectionstatechange = (event: Event) => {
-            logger.error('PeerConnection', '################oniceconnectionstatechange')
+            console.error('[PeerConnection] ################oniceconnectionstatechange')
         };
 
         // onNegotiationNeeded
@@ -198,7 +198,7 @@ export const Socket = ({myName}: { myName: string }) => {
             });
         };
 
-        logger.log('PeerConnection', 'new peerConnection created:', peerConnection);
+        console.log('PeerConnection', 'new peerConnection created:', peerConnection);
 
         return peerConnection;
     }
