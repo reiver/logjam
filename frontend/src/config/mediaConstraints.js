@@ -5,8 +5,9 @@ export const MEDIA_CONSTRAINTS = (window.constraints = {
     //     'height': {'min': 200}
     // }
     audio: false,
-    video: {
-        width: 300,
-        height: 200
-    },
+    video: true
+    // video: {
+    //     width: 300,
+    //     height: 200
+    // },
 });

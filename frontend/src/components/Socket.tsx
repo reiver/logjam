@@ -38,24 +38,13 @@ export const Socket = ({myName}: { myName: string }) => {
             }
         );
 
-        messenger.send({
-                type: "role",
-                data: myRole
-            }
-        );
-
-        messenger.send({
-                type: "turn_status",
-                data: turnStatus()
-            }
-        );
     });
 
-    useEffect(() => {
-        console.log('[Stream]', remoteStream);
-    }, [remoteStream]);
+    // useEffect(() => {
+    //     console.log('[Stream]', remoteStream);
+    // }, [remoteStream]);
 
-    function connectUser(targetUsername: string) {
+    const connectUser = useCallback((targetUsername: string) => {
         console.log('##### connectUser');
         let myPeerConnection = addPeerConnection(targetUsername);
         if (localStream) {
@@ -66,9 +55,9 @@ export const Socket = ({myName}: { myName: string }) => {
                 }
             });
         }
-    }
+    }, []);
 
-    async function sendVideoAnswer(msg: any) {
+    const sendVideoAnswer = useCallback(async (msg: any) => {
         console.log('[Socket] sendVideoAnswer');
         console.log(msg);
         let targetUsername = msg.name ? msg.name : '';
@@ -88,16 +77,16 @@ export const Socket = ({myName}: { myName: string }) => {
                 sdp: myPeerConnection.localDescription,
             });
         }
-    }
+    }, []);
 
-    function videoAnswerReceived(msg: any) {
+    const videoAnswerReceived = useCallback((msg: any) => {
         console.log('[Socket] videoAnswerReceived')
         const desc = new RTCSessionDescription(msg.sdp);
         let myPeerConnection = peerConnectionMap.get(myUsername);
         myPeerConnection?.setRemoteDescription(desc).catch((e) => {
             console.log("Error", e);
         });
-    }
+    }, []);
 
     function addPeerConnection(targetUsername: string) {
         if (peerConnectionMap.get(targetUsername)) {
@@ -188,8 +177,8 @@ export const Socket = ({myName}: { myName: string }) => {
             let stream = event.streams[0];
             console.log('ontrack', stream);
             console.dir('------------tracks', stream.getTracks());
-
-            setRemoteStream(stream);
+            event.track.onended = e => setRemoteStream(event.streams[0]);
+            setRemoteStream(event.streams[0]);
             // setRemoteStream(localStream);
 
             messenger.send({
@@ -234,6 +223,19 @@ export const Socket = ({myName}: { myName: string }) => {
                 break;
             case "start":
                 setMyUsername(msg.data);
+
+                messenger.send({
+                        type: "role",
+                        data: myRole
+                        // data: myRole==='broadcast' ? 'alt-broadcast' : myRole
+                    }
+                );
+
+                messenger.send({
+                        type: "turn_status",
+                        data: turnStatus()
+                    }
+                );
                 // myUsername = msg.data;
                 // start();
                 break;
@@ -257,7 +259,7 @@ export const Socket = ({myName}: { myName: string }) => {
             default:
                 console.log(msg);
         }
-    }, [localStream, remoteStream]);
+    }, [connectUser, messenger, sendVideoAnswer, videoAnswerReceived]);
 
     useEffect(() => {
         socket.addEventListener("message", onMessage);
