@@ -19,4 +19,5 @@ export const Home = () => {
 
     // Choose a name for now
     return <Socket myName={myRole + '-user'}/>
+    // return <Socket myName={myName}/>
 }
