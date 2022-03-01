@@ -4,9 +4,12 @@ import Screen from "./Screen";
 import BottomSidebar from "./BottomSidebar";
 import LeftSidebar from "./LeftSidebar";
 import ControlButtons from "./ControlButtons";
+import Stream from "./Stream";
+import {useStreamMap} from "../hooks/useStreamMap";
 
-export default function Main({myName, myRole}: any) {
+export default function Main({myName}: any) {
     console.log('[Render] Main');
+    let {streamMap, setStreamMap, enableLocalStream} = useStreamMap();
 
     const [mic, setMic] = useState(true);
     const [camera, setCamera] = useState(true);
@@ -31,13 +34,11 @@ export default function Main({myName, myRole}: any) {
     return (
         <Page>
             <Screen>
+                <Stream streamId={'localStream'} mediaStream={streamMap.get('localStream')}/>
+                <Stream streamId={'remoteStream'} mediaStream={streamMap.get('remoteStream')}/>
                 <video id="video 2" autoPlay playsInline muted/>
                 <video id="video 3" autoPlay playsInline muted/>
                 <video id="video 4" autoPlay playsInline muted/>
-                <video id="video 5" autoPlay playsInline muted/>
-            {/*    /!*<video id="video 6" autoPlay playsInline muted/>*!/*/}
-            {/*    /!*<video id="video 7" autoPlay playsInline muted/>*!/*/}
-            {/*    /!*<video id="video 8" autoPlay playsInline muted/>*!/*/}
             </Screen>
             <BottomSidebar controlButtons={controlButtons} myName={myName}/>
             <LeftSidebar/>

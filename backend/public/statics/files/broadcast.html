@@ -610,12 +610,13 @@
       // }
     }
     async function login() {
-      let baseUrl = window.location.href.split("//")[1].split("/")[0];
-      let protocol = "wss";
-      if (window.location.href.split("//")[0] == "http:") {
-        protocol = "ws";
-      }
-      socket = new WebSocket(`${protocol}://${baseUrl}/ws`);
+      // let baseUrl = window.location.href.split("//")[1].split("/")[0];
+      // let protocol = "wss";
+      // if (window.location.href.split("//")[0] == "http:") {
+      //   protocol = "ws";
+      // }
+      // socket = new WebSocket(`${protocol}://${baseUrl}/ws`);
+      socket = new WebSocket(`ws://localhost:8080/ws`);
       socket.onopen = function (event) {
         // console.log("[open] Connection established");
         // console.log("Sending start to server");

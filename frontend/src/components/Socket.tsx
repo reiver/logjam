@@ -10,22 +10,20 @@ import {usePeerConnectionMap} from "../hooks/usePeerConnectionMap";
 // import RemoteStream from "./RemoteStream";
 // import {useLogger} from "../hooks/useLogger";
 import {useStreamMap} from "../hooks/useStreamMap";
-import {useUserMedia} from "../hooks/useUserMedia";
-import Stream from "./Stream";
+// import Stream from "./Stream";
 
 export const Socket = ({myName}: { myName: string }) => {
     // const logger = useLogger();
-    console.log('[Render] Socket');
+    console.log('[Render] Socket. myName=', myName);
 
     const [myUsername, setMyUsername] = useState('');
     // let myUsername: string;
     let {myRole} = useParams() || "audience";
 
     let {peerConnectionMap, setPeerConnectionMap} = usePeerConnectionMap();
-    let {streamMap, setStreamMap} = useStreamMap();
-    let localStream = useUserMedia();
+    let {streamMap, setStreamMap, enableLocalStream} = useStreamMap();
 
-    const [remoteStream, setRemoteStream] = useState<MediaStream>();
+    // const [remoteStream, setRemoteStream] = useState<MediaStream>();
 
     const messenger = useMessenger();
     const socket = useSocket();
@@ -38,80 +36,16 @@ export const Socket = ({myName}: { myName: string }) => {
             }
         );
 
-        messenger.send({
-                type: "role",
-                data: myRole
-            }
-        );
-
-        messenger.send({
-                type: "turn_status",
-                data: turnStatus()
-            }
-        );
     });
 
     useEffect(() => {
-        console.log('[Stream]', remoteStream);
-    }, [remoteStream]);
-
-    function connectUser(targetUsername: string) {
-        console.log('##### connectUser');
-        let myPeerConnection = addPeerConnection(targetUsername);
-        if (localStream) {
-            console.log('Adding tracks... len=', localStream.getTracks().length);
-            localStream.getTracks().forEach((track) => {
-                if (myPeerConnection && localStream) {
-                    myPeerConnection.addTrack(track, localStream);
-                }
-            });
+        if (myRole === 'broadcast' && !streamMap.get('localStream')){
+            enableLocalStream();
         }
-    }
+    },[enableLocalStream, myRole, streamMap]);
 
-    async function sendVideoAnswer(msg: any) {
-        console.log('[Socket] sendVideoAnswer');
-        console.log(msg);
-        let targetUsername = msg.name ? msg.name : '';
-        let targetName = msg.username;
-        const desc = new RTCSessionDescription(msg.sdp);
-        let myPeerConnection = addPeerConnection(targetUsername);
-        console.log(myPeerConnection);
-        if (myPeerConnection) {
-            await myPeerConnection.setRemoteDescription(desc);
-            let answer = await myPeerConnection.createAnswer();
-            await myPeerConnection.setLocalDescription(answer);
-
-            messenger.send({
-                name: myUsername,
-                target: targetUsername,
-                type: "video-answer",
-                sdp: myPeerConnection.localDescription,
-            });
-        }
-    }
-
-    function videoAnswerReceived(msg: any) {
-        console.log('[Socket] videoAnswerReceived')
-        const desc = new RTCSessionDescription(msg.sdp);
-        let myPeerConnection = peerConnectionMap.get(myUsername);
-        myPeerConnection?.setRemoteDescription(desc).catch((e) => {
-            console.log("Error", e);
-        });
-    }
-
-    function addPeerConnection(targetUsername: string) {
-        if (peerConnectionMap.get(targetUsername)) {
-            console.log('[PeerConnection] connection already exists.');
-            return peerConnectionMap.get(targetUsername);
-        }
-        let newPeerConnection = createPeerConnection(targetUsername);
-        setPeerConnectionMap((
-            prev: Map<string, RTCPeerConnection>) => new Map(prev).set(targetUsername, newPeerConnection));
-        console.log('[PeerConnection] new peerConnection added to peerConnectionMap');
-        return newPeerConnection;
-    }
-
-    function createPeerConnection(targetUsername: string) {
+    const createPeerConnection = useCallback((targetUsername: string) => {
+        console.log('>>>>>> createPeerConnection: targetUsername=', targetUsername);
         let peerConnection = new RTCPeerConnection(PEER_CONNECTION_CONFIG);
 
         // onIceCandidate
@@ -136,7 +70,7 @@ export const Socket = ({myName}: { myName: string }) => {
         };
 
         // onIceCandidateError
-        peerConnection.oniceconnectionstatechange = (event: Event) => {
+        peerConnection.oniceconnectionstatechange = (_: Event) => {
             console.error('[PeerConnection] ################oniceconnectionstatechange')
         };
 
@@ -167,7 +101,7 @@ export const Socket = ({myName}: { myName: string }) => {
 
         peerConnection.ontrack = function (event: RTCTrackEvent) {
             console.log('[PeerConnection] onTrack stream length:', event.streams.length);
-            event.streams.map((stream) => {
+            event.streams.forEach((stream) => {
                 console.log('stream id', stream.id);
                 console.log('stream track length', stream.getTracks().length);
                 messenger.send({
@@ -188,26 +122,96 @@ export const Socket = ({myName}: { myName: string }) => {
             let stream = event.streams[0];
             console.log('ontrack', stream);
             console.dir('------------tracks', stream.getTracks());
-
-            setRemoteStream(stream);
+            // event.track.onended = e => setRemoteStream(event.streams[0]);
+            // setRemoteStream(event.streams[0]);
             // setRemoteStream(localStream);
+            try {
+                setStreamMap((
+                    prev: Map<string, MediaStream>) => new Map(prev).set('remoteStream', stream));
+            } catch (err) {
+                console.error(err)
+            }
 
-            messenger.send({
-                type: "log",
-                data: "ontrack from " + 'targetName',
-            });
+
+            // messenger.send({
+            //     type: "log",
+            //     data: "ontrack from " + targetName,
+            // });
         };
 
         console.log('PeerConnection', 'new peerConnection created:', peerConnection);
 
         return peerConnection;
-    }
+    }, [messenger, myUsername, setStreamMap]);
 
-    useEffect(() => {
-        if (myRole === 'audience') {
+    // const addPeerConnection = useCallback((targetUsername: string) => {
+    //     let newPeerConnection = createPeerConnection(targetUsername);
+    //     setPeerConnectionMap((
+    //         prev: Map<string, RTCPeerConnection>) => new Map(prev).set(targetUsername, newPeerConnection));
+    //     console.log('[PeerConnection] new peerConnection added to peerConnectionMap');
+    //     return newPeerConnection;
+    // }, [createPeerConnection, peerConnectionMap, setPeerConnectionMap]);
 
+    const connectUser = useCallback((targetUsername: string) => {
+        console.log('##### connectUser');
+        if (peerConnectionMap.get(targetUsername)) {
+            console.log('[PeerConnection] connection already exists.');
+            return true;
         }
-    }, [myRole])
+
+        let myPeerConnection = createPeerConnection(targetUsername);
+        setPeerConnectionMap((
+            prev: Map<string, RTCPeerConnection>) => new Map(prev).set(targetUsername, myPeerConnection));
+        console.log('[PeerConnection] new peerConnection added to peerConnectionMap');
+
+        let localStream = streamMap.get('localStream');
+        if (localStream) {
+            console.log('Adding tracks... len=', localStream.getTracks().length);
+            localStream.getTracks().forEach((track) => {
+                if (myPeerConnection && localStream) {
+                    myPeerConnection.addTrack(track, localStream);
+                }
+            });
+        }
+    }, [createPeerConnection, peerConnectionMap, setPeerConnectionMap, streamMap]);
+
+    const sendVideoAnswer = useCallback(async (msg: any) => {
+        console.log('[Socket] sendVideoAnswer');
+        console.log(msg);
+        let targetUsername = msg.name ? msg.name : '';
+        // let targetName = msg.username;
+        const desc = new RTCSessionDescription(msg.sdp);
+        let myPeerConnection = createPeerConnection(targetUsername);
+        console.log(myPeerConnection);
+        if (myPeerConnection) {
+            await myPeerConnection.setRemoteDescription(desc);
+            let answer = await myPeerConnection.createAnswer();
+            await myPeerConnection.setLocalDescription(answer);
+
+            messenger.send({
+                name: myUsername,
+                target: targetUsername,
+                type: "video-answer",
+                sdp: myPeerConnection.localDescription,
+            });
+        }
+    }, [createPeerConnection, messenger, myUsername]);
+
+    const videoAnswerReceived = useCallback((msg: any) => {
+        console.log('[Socket] videoAnswerReceived')
+        const desc = new RTCSessionDescription(msg.sdp);
+        let myPeerConnection = peerConnectionMap.get(myUsername);
+        myPeerConnection?.setRemoteDescription(desc).catch((e) => {
+            console.log("Error", e);
+        });
+    }, [myUsername, peerConnectionMap]);
+
+
+    // useEffect(() => {
+    //     if (myRole === 'audience') {
+    //
+    //     }
+    // }, [myRole])
 
     const onMessage = useCallback((message) => {
         let msg = messenger.receive(message);
@@ -233,7 +237,22 @@ export const Socket = ({myName}: { myName: string }) => {
                 // newAltVideoAnswer();
                 break;
             case "start":
+                console.log('[SocketOnMessage] start');
                 setMyUsername(msg.data);
+                console.log('[SetState] myUsername');
+                // myUsername = msg.Data;
+                messenger.send({
+                        type: "role",
+                        data: myRole
+                        // data: myRole==='broadcast' ? 'alt-broadcast' : myRole
+                    }
+                );
+
+                messenger.send({
+                        type: "turn_status",
+                        data: turnStatus()
+                    }
+                );
                 // myUsername = msg.data;
                 // start();
                 break;
@@ -257,7 +276,7 @@ export const Socket = ({myName}: { myName: string }) => {
             default:
                 console.log(msg);
         }
-    }, [localStream, remoteStream]);
+    }, [connectUser, messenger, myRole, sendVideoAnswer, videoAnswerReceived]);
 
     useEffect(() => {
         socket.addEventListener("message", onMessage);
@@ -284,11 +303,11 @@ export const Socket = ({myName}: { myName: string }) => {
             {/*    <h3 style={{color: "white"}}>Remote Video:</h3>*/}
             {/*    <RemoteStream mediaStream={remoteStream}/>*/}
             {/*</div>*/}
-            <h1 style={{color: "white"}}>Local</h1>
-            <Stream streamId={"localStream"} mediaStream={localStream}/>
-            <h1 style={{color: "white"}}>Remote</h1>
-            <Stream streamId={"remoteStream"} mediaStream={remoteStream}/>
-            {/*<Main myName={myName} myRole={myRole}/>*/}
+            {/*<h1 style={{color: "white"}}>Local</h1>*/}
+            {/*<Stream streamId={"localStream"} mediaStream={localStream}/>*/}
+            {/*<h1 style={{color: "white"}}>Remote</h1>*/}
+            {/*<Stream streamId={"remoteStream"} mediaStream={remoteStream}/>*/}
+            <Main myName={myName} myRole={myRole}/>
 
         </div>
     )
