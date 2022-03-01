@@ -248,20 +248,20 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 		// log.Alert("Target ", ID)
 		allockets := Map.All()
 		var ok = false
-		var target binarytreesrv.MySocket
+		var target *binarytreesrv.MySocket
 		// target, ok := Map. .GetSocketByID(ID)
 		for _, node := range allockets {
 			// log.Alert(node.(*binarytreesrv.MySocket).ID)
 			if node.(*binarytreesrv.MySocket).ID == ID {
 				ok = true
-				target = *node.(*binarytreesrv.MySocket)
+				target = node.(*binarytreesrv.MySocket)
 				break
 			} else {
 				for _, child := range node.All() {
 					// log.Alert(child.(*binarytreesrv.MySocket).ID)
 					if child.(*binarytreesrv.MySocket).ID == ID {
 						ok = true
-						target = *child.(*binarytreesrv.MySocket)
+						target = child.(*binarytreesrv.MySocket)
 						break
 					}
 				}
