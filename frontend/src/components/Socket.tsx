@@ -16,8 +16,8 @@ export const Socket = ({myName}: { myName: string }) => {
     // const logger = useLogger();
     console.log('[Render] Socket. myName=', myName);
 
-    const [myUsername, setMyUsername] = useState('');
-    // let myUsername: string;
+    // const [myUsername, setMyUsername] = useState('');
+    let myUsername: string = '';
     let {myRole} = useParams() || "audience";
 
     let {peerConnectionMap, setPeerConnectionMap} = usePeerConnectionMap();
@@ -30,6 +30,7 @@ export const Socket = ({myName}: { myName: string }) => {
 
     useEffect(() => {
         // start
+        console.log('# 1 #');
         messenger.send({
                 type: "start",
                 data: myName
@@ -38,11 +39,31 @@ export const Socket = ({myName}: { myName: string }) => {
 
     });
 
-    useEffect(() => {
+    function broadcast(){
+        console.log('# 3 #');
+        console.log('broadcast()')
         if (myRole === 'broadcast' && !streamMap.get('localStream')){
+            console.log('getUserMedia')
             enableLocalStream();
         }
-    },[enableLocalStream, myRole, streamMap]);
+        messenger.send({
+                type: "role",
+                data: myRole
+                // data: myRole==='broadcast' ? 'alt-broadcast' : myRole
+            }
+        );
+
+        messenger.send({
+                type: "turn_status",
+                data: turnStatus()
+            }
+        );
+
+
+    }
+
+    // useEffect(() => {
+    // },[enableLocalStream, myRole, streamMap]);
 
     const createPeerConnection = useCallback((targetUsername: string) => {
         console.log('>>>>>> createPeerConnection: targetUsername=', targetUsername);
@@ -237,22 +258,17 @@ export const Socket = ({myName}: { myName: string }) => {
                 // newAltVideoAnswer();
                 break;
             case "start":
-                console.log('[SocketOnMessage] start');
-                setMyUsername(msg.data);
-                console.log('[SetState] myUsername');
-                // myUsername = msg.Data;
-                messenger.send({
-                        type: "role",
-                        data: myRole
-                        // data: myRole==='broadcast' ? 'alt-broadcast' : myRole
-                    }
-                );
+                console.log('# 2 #');
 
-                messenger.send({
-                        type: "turn_status",
-                        data: turnStatus()
-                    }
-                );
+                console.log('[SocketOnMessage] start');
+                // setMyUsername(msg.data);
+                myUsername = msg.data;
+                console.log(' myUsername:', msg.data);
+                // console.log('[SetState] myUsername:', msg.data);
+
+
+                broadcast();
+                // myUsername = msg.Data;
                 // myUsername = msg.data;
                 // start();
                 break;

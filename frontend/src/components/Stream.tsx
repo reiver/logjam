@@ -2,7 +2,7 @@ import React, {useEffect, useRef} from 'react';
 
 export default function Stream({streamId, mediaStream}: { streamId: string, mediaStream: MediaStream | undefined }) {
     console.log('[Render] Stream');
-    console.log('[Stream]', streamId, mediaStream);
+    // console.log('[Stream]', streamId, mediaStream);
 
     const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -10,18 +10,17 @@ export default function Stream({streamId, mediaStream}: { streamId: string, medi
         if (videoRef && videoRef.current && mediaStream) {
             let video = videoRef.current as HTMLVideoElement;
             video.srcObject = mediaStream;
-            console.log('---------------srcObject:', streamId, video.srcObject)
-            console.dir(video);
+            console.log('[html]', streamId + 'added as srcObject')
         }
         return () => {
             if (mediaStream) {
-                console.log('---------- CLEANUP')
-                mediaStream.getTracks().forEach(track => {
-                    track.stop()
-                })
+                console.log('[CLEANUP]')
+                // mediaStream.getTracks().forEach(track => {
+                //     track.stop()
+                // })
             }
         }
-    }, [mediaStream]);
+    }, [mediaStream, streamId]);
 
     if (!mediaStream) {
         return null;
