@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+
+<head>
+    <title>SparkScience Broadcast Sample</title>
+    <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
+</head>
+
+<body>
+    <input id="myName" type="text" placeholder="Enter your name" />
+    <button id="signalConnectBtn" onclick="setupSignalingSocket()">Connect to Signaling Server</button>
+    <button onclick="startBroadcasting()">Start Broadcasting</button>
+    <h1>Local Stream</h1>
+    <p>
+        <video id="localVideo" playsinline muted style="width: 100%" autoplay></video>
+    </p>
+
+    <script>
+        var myPeerConnectionConfig = {
+            iceServers: [
+                // {'urls': 'stun:stun.l.google.com:19302'},
+                // {"urls": "turn:numb.viagenie.ca", "username":"m.mirsamie@gmail.com", "credential":"159951"},
+                // {
+                //   url: 'stun:stun.1und1.de:3478'
+                // },
+                // {
+                //   url: 'stun:stun.gmx.net:3478'
+                // },
+                {
+                    url: 'stun:stun.l.google.com:19302'
+                },
+                {
+                    url: 'stun:stun1.l.google.com:19302'
+                },
+                {
+
+                    url: 'stun:stun2.l.google.com:19302'
+                },
+                {
+
+                    url: 'stun:stun3.l.google.com:19302'
+                },
+                {
+
+                    url: 'stun:stun4.l.google.com:19302'
+                },
+                /*
+                {
+                  url: "turn:numb.viagenie.ca",
+                  credential: "muazkh",
+                  username: "webrtc@live.com",
+                },
+                {
+                  url: "turn:192.158.29.39:3478?transport=udp",
+                  credential: "JZEOEt2V3Qb0y27GRntt2u2PAYA=",
+                  username: "28224511:1379330808",
+                },
+                {
+                  url: "turn:192.158.29.39:3478?transport=tcp",
+                  credential: "JZEOEt2V3Qb0y27GRntt2u2PAYA=",
+                  username: "28224511:1379330808",
+                },
+                {
+                  url: "turn:turn.bistri.com:80",
+                  credential: "homeo",
+                  username: "homeo",
+                },
+                {
+                  url: "turn:turn.anyfirewall.com:443?transport=tcp",
+                  credential: "webrtc",
+                  username: "webrtc",
+                },
+                {
+                  url:"turn:13.250.13.83:3478?transport=udp",
+                  username: "YzYNCouZM1mhqhmseWk6",
+                  credential: "YzYNCouZM1mhqhmseWk6"
+                }
+                */
+                /*
+                {
+                  url: "turn:45.149.77.155:3478",
+                  username: "admin",
+                  credential: "mmcomp",
+                },
+                */
+                {
+                    url: "turn:turn1.turn.group.video:3478",
+                    username: "turnuser",
+                    credential: "dJ4kP05PHcKN8Ubu",
+                },
+                {
+                    url: "turn:turn2.turn.group.video:3478",
+                    username: "turnuser",
+                    credential: "XzfVP8cpNEy17hws",
+                },
+                {
+                    url: "turns:turn1.turn.group.video:443",
+                    username: "turnuser",
+                    credential: "dJ4kP05PHcKN8Ubu",
+                },
+                {
+                    url: "turns:turn2.turn.group.video:443",
+                    username: "turnuser",
+                    credential: "XzfVP8cpNEy17hws",
+                },
+            ],
+        };
+
+        let localStream;
+        let socket;
+        let localVideoTag = document.getElementById('localVideo');
+        let myPeerConnection;
+        let myName = 'NoName';
+        let myUsername = 'NoUsername';
+        const myPeerConnectionArray = {};
+        const iceCandidates = [];
+        const handleMessage = (event) => {
+            let msg;
+            try {
+                msg = JSON.parse(event.data);
+            } catch (e) {
+                return;
+            }
+            msg.data = (msg.Data && !msg.data) ? msg.Data : msg.data;
+            msg.type = (msg.Type && !msg.type) ? msg.Type : msg.type;
+
+            console.log(msg);
+            switch (msg.type) {
+                case 'answer':
+                    console.log('Got answer.');
+                    myPeerConnection.setRemoteDescription(new RTCSessionDescription(msg.sdp));
+                    break;
+                case 'new-ice-candidate':
+                    console.log('Got ICE candidate.');
+                    iceCandidates.push(new RTCIceCandidate(msg.candidate));
+                    if (myPeerConnection && myPeerConnection.remoteDescription) {
+                        myPeerConnection.addIceCandidate(iceCandidates.pop());
+                    }
+                    break;
+                case 'role':
+                    if (msg.data === "no:broadcast") {
+                        alert("You are not a broadcaster anymore!");
+                        socket.close();
+                    } else if (msg.data === "yes:broadcast") {
+                        localVideoTag.srcObject = localStream;
+                        document.getElementById('signalConnectBtn').disabled = true;
+                        document.getElementById('myName').disabled = true;
+                        document.getElementById('myName').value = myName;
+                    } else {
+                        localVideoTag.srcObject = null;
+                    }
+                    break;
+                case 'start':
+                    if (msg.error) {
+                        alert(msg.error);
+                        return;
+                    }
+
+                    myUsername = msg.data;
+                    break;
+                case 'add_audience':
+                case 'add_broadcast_audience':
+                    connectToAudience(msg.data);
+                    break;
+                default:
+                    break;
+            }
+        };
+        const setupSignalingSocket = () => {
+            if (document.getElementById("myName").value) {
+                myName = document.getElementById("myName").value;
+            }
+
+            const baseUrl = window.location.href.split("//")[1].split("/")[0];
+            let protocol = "wss";
+            if (window.location.href.split("//")[0] == "http:") {
+                protocol = "ws";
+            }
+            socket = new WebSocket(`${protocol}://${baseUrl}/ws`);
+            socket.onmessage = handleMessage;
+            socket.onopen = () => {
+                console.log("WebSocket connection opened");
+                socket.send(
+                    JSON.stringify({
+                        type: "start",
+                        data: myName,
+                    })
+                );
+            };
+            socket.onclose = () => {
+                console.log("WebSocket connection closed");
+                myPeerConnection = undefined;
+                myPeerConnectionArray = [];
+                setupSignalingSocket();
+            };
+        }
+        const startBroadcasting = async () => {
+            try {
+                localStream = await navigator.mediaDevices.getUserMedia({
+                    audio: true,
+                    video: true,
+                });
+                socket.send(
+                    JSON.stringify({
+                        type: "role",
+                        data: "broadcast",
+                    })
+                );
+            } catch (e) {
+                console.log(e);
+                alert('Unable to get access to your webcam and microphone.');
+            }
+        }
+        const newPeerConnectionInstance = (target) => {
+            const peerConnection = new RTCPeerConnection(myPeerConnectionConfig);
+
+            peerConnection.onicecandidate = (event) => {
+                if (event.candidate) {
+                    socket.send(
+                        JSON.stringify({
+                            type: "new-ice-candidate",
+                            candidate: event.candidate,
+                            target,
+                        })
+                    );
+                }
+            };
+
+            peerConnection.onnegotiationneeded = async () => {
+                try {
+                    await peerConnection.setLocalDescription(
+                        await peerConnection.createOffer()
+                    );
+                    socket.send(
+                        JSON.stringify({
+                            type: "video-offer",
+                            sdp: peerConnection.localDescription,
+                            target,
+                            name: myUsername,
+                        })
+                    );
+                } catch (e) {
+                    console.log(e);
+                    alert('onnegotiationneeded failed:', e);
+                }
+            };
+
+            localStream.getTracks().forEach((track) => {
+                peerConnection.addTrack(track, localStream);
+            });
+
+            return peerConnection;
+        };
+        const connectToAudience = (audienceName) => {
+            console.log('connecting to', audienceName);
+            if (!localStream) return;
+            if (myPeerConnectionArray[audienceName]) return;
+
+            myPeerConnectionArray[audienceName] = newPeerConnectionInstance(audienceName);
+        };
+    </script>
+</body>
+
+</html>
