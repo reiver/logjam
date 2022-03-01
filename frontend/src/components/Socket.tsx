@@ -10,8 +10,7 @@ import {usePeerConnectionMap} from "../hooks/usePeerConnectionMap";
 // import RemoteStream from "./RemoteStream";
 // import {useLogger} from "../hooks/useLogger";
 import {useStreamMap} from "../hooks/useStreamMap";
-import {useUserMedia} from "../hooks/useUserMedia";
-import Stream from "./Stream";
+// import Stream from "./Stream";
 
 export const Socket = ({myName}: { myName: string }) => {
     // const logger = useLogger();
@@ -22,10 +21,9 @@ export const Socket = ({myName}: { myName: string }) => {
     let {myRole} = useParams() || "audience";
 
     let {peerConnectionMap, setPeerConnectionMap} = usePeerConnectionMap();
-    let {streamMap, setStreamMap} = useStreamMap();
-    let localStream = useUserMedia();
+    let {streamMap, setStreamMap, enableLocalStream} = useStreamMap();
 
-    const [remoteStream, setRemoteStream] = useState<MediaStream>();
+    // const [remoteStream, setRemoteStream] = useState<MediaStream>();
 
     const messenger = useMessenger();
     const socket = useSocket();
@@ -40,8 +38,13 @@ export const Socket = ({myName}: { myName: string }) => {
 
     });
 
+    useEffect(() => {
+        if (myRole === 'broadcast' && !streamMap.get('localStream')){
+            enableLocalStream();
+        }
+    },[enableLocalStream, myRole, streamMap]);
 
-    const createPeerConnection = useCallback((targetUsername: string) =>{
+    const createPeerConnection = useCallback((targetUsername: string) => {
         console.log('>>>>>> createPeerConnection: targetUsername=', targetUsername);
         let peerConnection = new RTCPeerConnection(PEER_CONNECTION_CONFIG);
 
@@ -67,7 +70,7 @@ export const Socket = ({myName}: { myName: string }) => {
         };
 
         // onIceCandidateError
-        peerConnection.oniceconnectionstatechange = (event: Event) => {
+        peerConnection.oniceconnectionstatechange = (_: Event) => {
             console.error('[PeerConnection] ################oniceconnectionstatechange')
         };
 
@@ -98,7 +101,7 @@ export const Socket = ({myName}: { myName: string }) => {
 
         peerConnection.ontrack = function (event: RTCTrackEvent) {
             console.log('[PeerConnection] onTrack stream length:', event.streams.length);
-            event.streams.map((stream) => {
+            event.streams.forEach((stream) => {
                 console.log('stream id', stream.id);
                 console.log('stream track length', stream.getTracks().length);
                 messenger.send({
@@ -120,35 +123,48 @@ export const Socket = ({myName}: { myName: string }) => {
             console.log('ontrack', stream);
             console.dir('------------tracks', stream.getTracks());
             // event.track.onended = e => setRemoteStream(event.streams[0]);
-            setRemoteStream(event.streams[0]);
+            // setRemoteStream(event.streams[0]);
             // setRemoteStream(localStream);
+            try {
+                setStreamMap((
+                    prev: Map<string, MediaStream>) => new Map(prev).set('remoteStream', stream));
+            } catch (err) {
+                console.error(err)
+            }
 
-            messenger.send({
-                type: "log",
-                data: "ontrack from " + 'targetName',
-            });
+
+            // messenger.send({
+            //     type: "log",
+            //     data: "ontrack from " + targetName,
+            // });
         };
 
         console.log('PeerConnection', 'new peerConnection created:', peerConnection);
 
         return peerConnection;
-    },[messenger, myUsername]);
+    }, [messenger, myUsername, setStreamMap]);
 
-    const addPeerConnection = useCallback((targetUsername: string) => {
-        if (peerConnectionMap.get(targetUsername)) {
-            console.log('[PeerConnection] connection already exists.');
-            return peerConnectionMap.get(targetUsername);
-        }
-        let newPeerConnection = createPeerConnection(targetUsername);
-        setPeerConnectionMap((
-            prev: Map<string, RTCPeerConnection>) => new Map(prev).set(targetUsername, newPeerConnection));
-        console.log('[PeerConnection] new peerConnection added to peerConnectionMap');
-        return newPeerConnection;
-    }, [createPeerConnection, peerConnectionMap, setPeerConnectionMap]);
+    // const addPeerConnection = useCallback((targetUsername: string) => {
+    //     let newPeerConnection = createPeerConnection(targetUsername);
+    //     setPeerConnectionMap((
+    //         prev: Map<string, RTCPeerConnection>) => new Map(prev).set(targetUsername, newPeerConnection));
+    //     console.log('[PeerConnection] new peerConnection added to peerConnectionMap');
+    //     return newPeerConnection;
+    // }, [createPeerConnection, peerConnectionMap, setPeerConnectionMap]);
 
     const connectUser = useCallback((targetUsername: string) => {
         console.log('##### connectUser');
-        let myPeerConnection = addPeerConnection(targetUsername);
+        if (peerConnectionMap.get(targetUsername)) {
+            console.log('[PeerConnection] connection already exists.');
+            return true;
+        }
+
+        let myPeerConnection = createPeerConnection(targetUsername);
+        setPeerConnectionMap((
+            prev: Map<string, RTCPeerConnection>) => new Map(prev).set(targetUsername, myPeerConnection));
+        console.log('[PeerConnection] new peerConnection added to peerConnectionMap');
+
+        let localStream = streamMap.get('localStream');
         if (localStream) {
             console.log('Adding tracks... len=', localStream.getTracks().length);
             localStream.getTracks().forEach((track) => {
@@ -157,15 +173,15 @@ export const Socket = ({myName}: { myName: string }) => {
                 }
             });
         }
-    }, [addPeerConnection, localStream]);
+    }, [createPeerConnection, peerConnectionMap, setPeerConnectionMap, streamMap]);
 
     const sendVideoAnswer = useCallback(async (msg: any) => {
         console.log('[Socket] sendVideoAnswer');
         console.log(msg);
         let targetUsername = msg.name ? msg.name : '';
-        let targetName = msg.username;
+        // let targetName = msg.username;
         const desc = new RTCSessionDescription(msg.sdp);
-        let myPeerConnection = addPeerConnection(targetUsername);
+        let myPeerConnection = createPeerConnection(targetUsername);
         console.log(myPeerConnection);
         if (myPeerConnection) {
             await myPeerConnection.setRemoteDescription(desc);
@@ -179,7 +195,7 @@ export const Socket = ({myName}: { myName: string }) => {
                 sdp: myPeerConnection.localDescription,
             });
         }
-    }, [addPeerConnection, messenger, myUsername]);
+    }, [createPeerConnection, messenger, myUsername]);
 
     const videoAnswerReceived = useCallback((msg: any) => {
         console.log('[Socket] videoAnswerReceived')
@@ -287,11 +303,11 @@ export const Socket = ({myName}: { myName: string }) => {
             {/*    <h3 style={{color: "white"}}>Remote Video:</h3>*/}
             {/*    <RemoteStream mediaStream={remoteStream}/>*/}
             {/*</div>*/}
-            <h1 style={{color: "white"}}>Local</h1>
-            <Stream streamId={"localStream"} mediaStream={localStream}/>
-            <h1 style={{color: "white"}}>Remote</h1>
-            <Stream streamId={"remoteStream"} mediaStream={remoteStream}/>
-            {/*<Main myName={myName} myRole={myRole}/>*/}
+            {/*<h1 style={{color: "white"}}>Local</h1>*/}
+            {/*<Stream streamId={"localStream"} mediaStream={localStream}/>*/}
+            {/*<h1 style={{color: "white"}}>Remote</h1>*/}
+            {/*<Stream streamId={"remoteStream"} mediaStream={remoteStream}/>*/}
+            <Main myName={myName} myRole={myRole}/>
 
         </div>
     )
