@@ -10,7 +10,7 @@ export default function Stream({streamId, mediaStream}: { streamId: string, medi
         if (videoRef && videoRef.current && mediaStream) {
             let video = videoRef.current as HTMLVideoElement;
             video.srcObject = mediaStream;
-            console.log('[html]', streamId + 'added as srcObject')
+            console.log('[html]', streamId + ' added as srcObject')
         }
         return () => {
             if (mediaStream) {
