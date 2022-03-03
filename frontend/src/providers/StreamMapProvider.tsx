@@ -20,13 +20,14 @@ export const StreamMapProvider = (props: {
             const stream = await navigator.mediaDevices.getUserMedia(MEDIA_CONSTRAINTS)
             setStreamMap((
                 prev: Map<string, MediaStream>) => new Map(prev).set('localStream', stream));
+            console.log('>>>>> UPDATE <<<<<< added localStream to streamMap')
         } catch (err) {
             console.error(err)
         }
     }
 
     useEffect(() => {
-        console.log('[StreamsMap]', streamMap);
+        console.log('[StreamsMap] size=', streamMap.size);
     }, [streamMap]);
 
     return (
