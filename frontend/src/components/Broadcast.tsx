@@ -2,9 +2,10 @@ import React, {useEffect} from 'react';
 import {PEER_CONNECTION_CONFIG} from "../config/myPeerConnectionConfig";
 import Main from "./Main";
 import {useStreamMap} from "../hooks/useStreamMap";
+import {useSocket} from "../hooks/useSocket";
 
 export default function Broadcast({myName}: { myName: string }) {
-    let socket: WebSocket;
+    let socket: WebSocket = useSocket();
     let myPeerConnection: RTCPeerConnection | undefined;
     let myUsername = 'NoUsername';
     let myPeerConnectionArray: any = {};
@@ -188,6 +189,10 @@ export default function Broadcast({myName}: { myName: string }) {
         myPeerConnectionArray[audienceName] = newPeerConnectionInstance(audienceName);
     };
     return (
-        <Main myName={myName} myRole={"broadcast"}/>
+        <div>
+            <h1>Broadcast</h1>
+            <Main myName={myName} myRole={"broadcast"}/>
+
+        </div>
     )
 }

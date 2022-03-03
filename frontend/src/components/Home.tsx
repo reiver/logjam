@@ -3,13 +3,13 @@ import React, {useEffect, useState} from "react";
 import {Socket} from "./Socket";
 import {useParams} from "react-router-dom";
 import Broadcast from "./Broadcast";
-import {_Audience} from "./_Audience";
+import Audience from "./Audience";
 // import {useParams} from "react-router-dom";
 
 export const Home = () => {
     // const [myName, setMyName] = useState('');
     let {myRole} = useParams()
-
+    console.log('myROLE=', myRole);
     // return (
     //     <>
     //         {
@@ -21,6 +21,6 @@ export const Home = () => {
     // )
 
     // Choose a name for now
-    return myRole ==='broadcast' ? <Broadcast myName={'brd'}/> : <_Audience myName={'aud'}/>
+    return myRole ==='broadcast' ? <Broadcast myName={'brd'}/> : <Audience myName={'aud'}/>
     // return <Socket myName={myName}/>
 }

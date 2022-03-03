@@ -17,13 +17,11 @@ export const SocketProvider = (props: {
     children: ReactChild;
 }) => {
 
-    const [isReady, setIsReady] = useState(false);
     const [webSocket, setWebSocket] = useState<WebSocket>(defaultWebSocket);
 
     // onOpen Handler
     const onOpen = useCallback((event) => {
         console.log('[Socket] socket opened');
-        setIsReady(true);
     }, []);
 
     // onClose Handler
@@ -31,7 +29,6 @@ export const SocketProvider = (props: {
         console.log(`[Socket] Connection ${event.wasClean ?
                 "closed cleanly" : "died"}, code=${event.code} reason=${event.reason}`
         );
-        setIsReady(false);
         setTimeout(() => {
             setWebSocket(new WebSocket(getSocketUrl()));
         }, SOCKET_RECONNECTION_TIMEOUT);
@@ -75,7 +72,7 @@ export const SocketProvider = (props: {
 
     return (
         <SocketContext.Provider value={webSocket}>
-            {isReady ? props.children : null}
+            {props.children}
         </SocketContext.Provider>
     )
 }

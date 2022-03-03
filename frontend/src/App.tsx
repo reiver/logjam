@@ -7,7 +7,7 @@ import {StreamMapProvider} from "./providers/StreamMapProvider";
 
 
 export default function App() {
-
+    console.log('APP started')
     return (
         <SocketProvider>
             <StreamMapProvider>
