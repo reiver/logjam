@@ -113,7 +113,7 @@
         let myUsername = 'NoUsername';
         const myPeerConnectionArray = {};
         const iceCandidates = [];
-        const handleMessage = (event) => {
+        const handleMessage = async (event) => {
             let msg;
             try {
                 msg = JSON.parse(event.data);
@@ -123,17 +123,26 @@
             msg.data = (msg.Data && !msg.data) ? msg.Data : msg.data;
             msg.type = (msg.Type && !msg.type) ? msg.Type : msg.type;
 
-            console.log(msg);
+            if (msg.type!=='new-ice-candidate') console.log(msg);
+            let audiencePeerConnection;
             switch (msg.type) {
-                case 'answer':
-                    console.log('Got answer.');
-                    myPeerConnection.setRemoteDescription(new RTCSessionDescription(msg.sdp));
+                case 'video-answer':
+                    console.log('Got answer.', msg);
+                    audiencePeerConnection = createOrGetPeerconnection(msg.data);
+                    try {
+                        await audiencePeerConnection.setRemoteDescription(new RTCSessionDescription(msg.sdp));
+                    } catch (e) {
+                        console.log('setRemoteDescription failed with exception: ' + e.message);
+                        console.log(audiencePeerConnection);
+                        console.log(msg.sdp);
+                    }
                     break;
                 case 'new-ice-candidate':
-                    console.log('Got ICE candidate.');
+                    console.log('Got ICE candidate.', msg);
+                    audiencePeerConnection = createOrGetPeerconnection(msg.data);
                     iceCandidates.push(new RTCIceCandidate(msg.candidate));
-                    if (myPeerConnection && myPeerConnection.remoteDescription) {
-                        myPeerConnection.addIceCandidate(iceCandidates.pop());
+                    if (audiencePeerConnection && audiencePeerConnection.remoteDescription) {
+                        audiencePeerConnection.addIceCandidate(iceCandidates.pop());
                     }
                     break;
                 case 'role':
@@ -210,7 +219,7 @@
                 alert('Unable to get access to your webcam and microphone.');
             }
         }
-        const newPeerConnectionInstance = (target) => {
+        const newPeerConnectionInstance = (target, addLocalStream = true) => {
             const peerConnection = new RTCPeerConnection(myPeerConnectionConfig);
 
             peerConnection.onicecandidate = (event) => {
@@ -238,18 +247,27 @@
                             name: myUsername,
                         })
                     );
+                    console.log('onnegotiationneeded done');
                 } catch (e) {
                     console.log(e);
                     alert('onnegotiationneeded failed:', e);
                 }
             };
 
-            localStream.getTracks().forEach((track) => {
-                peerConnection.addTrack(track, localStream);
-            });
+            if (addLocalStream) peerConnection.addStream(localStream);
+                // localStream.getTracks().forEach((track) => {
+                //     peerConnection.addTrack(track, localStream);
+                // });
 
             return peerConnection;
         };
+        const createOrGetPeerconnection = (audienceName) => {
+            if (myPeerConnectionArray[audienceName]) return myPeerConnectionArray[audienceName];
+
+            myPeerConnectionArray[audienceName] = newPeerConnectionInstance(audienceName, false);
+
+            return myPeerConnectionArray[audienceName];
+        }
         const connectToAudience = (audienceName) => {
             console.log('connecting to', audienceName);
             if (!localStream) return;
