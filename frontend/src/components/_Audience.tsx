@@ -12,9 +12,9 @@ import {usePeerConnectionMap} from "../hooks/usePeerConnectionMap";
 import {useStreamMap} from "../hooks/useStreamMap";
 // import Stream from "./Stream";
 
-export const Audience = ({myName}: { myName: string }) => {
+export const _Audience = ({myName}: { myName: string }) => {
     // const logger = useLogger();
-    console.log('[Render] Audience. myName=', myName);
+    console.log('[Render] _Audience. myName=', myName);
 
     const [myUsername, setMyUsername] = useState('');
     // let myUsername: string = '';
@@ -48,7 +48,7 @@ export const Audience = ({myName}: { myName: string }) => {
     // },[enableLocalStream, myRole, streamMap]);
 
     const createPeerConnection = useCallback(async (targetUsername: string) => {
-        console.log('>>>>>> Audience createPeerConnection: targetUsername=', targetUsername);
+        console.log('>>>>>> _Audience createPeerConnection: targetUsername=', targetUsername);
         let peerConnection = new RTCPeerConnection(PEER_CONNECTION_CONFIG);
 
         // onIceCandidate
@@ -158,7 +158,7 @@ export const Audience = ({myName}: { myName: string }) => {
                     type: "video-offer",
                     sdp: myPeerConnection.localDescription,
                 });
-                console.log("[PeerConnection] Audience sent video request (offer)");
+                console.log("[PeerConnection] _Audience sent video request (offer)");
             })
             .catch((err) => {
                 messenger.send({
