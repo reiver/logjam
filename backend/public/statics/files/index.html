@@ -386,6 +386,7 @@
           if ($("#local_video_" + event.streams[0].id).length === 0) {
             $("#streams").append(`<video id="local_video_${event.streams[0].id}" autoplay playsinline style="width: 100%"></video><br />`);
             document.getElementById("local_video_" + event.streams[0].id).srcObject = event.streams[0];
+            document.getElementById("local_video_" + event.streams[0].id).play();
             remoteStream[event.streams[0].id] = event.streams[0];
             sendToAll(event.streams[0]);
           }
@@ -734,7 +735,7 @@
           data: "audience",
         })
       );
-      const turnStatus = myPeerConnectionConfig.iceServers.findIndex(s => s.url.indexOf('turn:') === 0) >= 0;
+      const turnStatus = myPeerConnectionConfig.iceServers.findIndex(s => s.urls[0].indexOf('turn:') === 0) >= 0;
       socket.send(
         JSON.stringify({
           type: "turn_status",
