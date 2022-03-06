@@ -1,6 +1,6 @@
 import React, {useEffect, useState, createContext, ReactChild, useCallback} from "react";
 
-const SOCKET_RECONNECTION_TIMEOUT = 5000;
+const SOCKET_RECONNECTION_TIMEOUT = 500;
 const defaultWebSocket = new WebSocket(getSocketUrl());
 
 function getSocketUrl() {
@@ -17,7 +17,8 @@ export const SocketProvider = (props: {
     children: ReactChild;
 }) => {
 
-    const [webSocket, setWebSocket] = useState<WebSocket>(defaultWebSocket);
+    const [webSocket, setWebSocket] = useState<WebSocket>();
+
 
     // onOpen Handler
     const onOpen = useCallback((event) => {
@@ -72,7 +73,7 @@ export const SocketProvider = (props: {
 
     return (
         <SocketContext.Provider value={webSocket}>
-            {props.children}
+            {webSocket.readyState === webSocket.OPEN ? props.children : <h1>Wait...</h1>}
         </SocketContext.Provider>
     )
 }

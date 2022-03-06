@@ -13,15 +13,15 @@ export default function Audience({myName}: { myName: string }) {
 
     let {streamMap, setStreamMap} = useStreamMap();
 
-    useEffect(() => {
-        console.log('setupSignalingSocket');
-        setupSignalingSocket().then(e =>
-            startReadingBroadcast().then()
-        )
-    })
+    // useEffect(() => {
+    //     console.log('setupSignalingSocket');
+    //     setupSignalingSocket();
+    //     startReadingBroadcast();
+    // })
 
     const handleVideoOfferMsg = async (msg: any) => {
         const broadcasterPeerConnection = myPeerConnectionArray[msg.name] || newPeerConnectionInstance(msg.name);
+        console.log('broadcasterPeerConnection:', broadcasterPeerConnection)
         await broadcasterPeerConnection.setRemoteDescription(new RTCSessionDescription(msg.sdp));
         await broadcasterPeerConnection.setLocalDescription(await broadcasterPeerConnection.createAnswer());
 
@@ -47,7 +47,7 @@ export default function Audience({myName}: { myName: string }) {
         if (msg.type !== 'new-ice-candidate') console.log(msg);
         switch (msg.type) {
             case 'video-offer':
-                handleVideoOfferMsg(msg);
+                handleVideoOfferMsg(msg).then( );
                 break;
             case 'new-ice-candidate':
                 iceCandidates.push(new RTCIceCandidate(msg.candidate));
@@ -69,35 +69,48 @@ export default function Audience({myName}: { myName: string }) {
                 myUsername = msg.data;
                 break;
             default:
+                console.log(msg);
                 break;
         }
     };
 
-    const setupSignalingSocket = async () => {
-        const baseUrl = window.location.href.split("//")[1].split("/")[0];
-        let protocol = "wss";
-        if (window.location.href.split("//")[0] === "http:") {
-            protocol = "ws";
-        }
-        socket = new WebSocket(`${protocol}://${baseUrl}/ws`);
+    // const setupSignalingSocket = () => {
+    //     // const baseUrl = window.location.href.split("//")[1].split("/")[0];
+    //     // let protocol = "wss";
+    //     // if (window.location.href.split("//")[0] === "http:") {
+    //     //     protocol = "ws";
+    //     // }
+    //     // socket = new WebSocket(`${protocol}://${baseUrl}/ws`);
+    //     socket = new WebSocket('ws://localhost:8080/ws');
+    //     socket.onmessage = handleMessage;
+    //     socket.onopen = () => {
+    //         console.log("WebSocket connection opened");
+    //         socket.send(
+    //             JSON.stringify({
+    //                 type: "start",
+    //                 data: myName,
+    //             })
+    //         );
+    //     };
+    //     socket.onclose = () => {
+    //         console.log("WebSocket connection closed");
+    //         myPeerConnection = undefined;
+    //         myPeerConnectionArray = [];
+    //         setupSignalingSocket();
+    //     };
+    // }
+
+    const startReadingBroadcast = () => {
         socket.onmessage = handleMessage;
-        socket.onopen = () => {
-            console.log("WebSocket connection opened");
-            socket.send(
-                JSON.stringify({
-                    type: "start",
-                    data: myName,
-                })
-            );
-        };
-        socket.onclose = () => {
-            console.log("WebSocket connection closed");
-            myPeerConnection = undefined;
-            myPeerConnectionArray = [];
-            setupSignalingSocket();
-        };
-    }
-    const startReadingBroadcast = async () => {
+        socket.send(
+            JSON.stringify({
+                type: "start",
+                data: myName,
+            })
+        );
+
+        console.log('startReadingBroadcast');
+        // console.log(myPeerConnection)
         socket.send(
             JSON.stringify({
                 type: "role",
@@ -127,7 +140,7 @@ export default function Audience({myName}: { myName: string }) {
             if (streamMap.get('remoteStream')) return;
             setStreamMap((
                 prev: Map<string, MediaStream>) => new Map(prev).set('remoteStream', event.streams[0]));
-
+            console.log(event.streams[0])
             socket.send(
                 JSON.stringify({
                     type: "stream",
@@ -152,9 +165,13 @@ export default function Audience({myName}: { myName: string }) {
 
         myPeerConnectionArray[audienceName] = newPeerConnectionInstance(audienceName);
     };
+    // if (!socket){
+    //     return null
+    // }
     return (
         <div>
             <h1>Audience</h1>
+            <button onClick={startReadingBroadcast}>Start</button>
             <Main myName={myName} myRole={"audience"}/>
 
         </div>

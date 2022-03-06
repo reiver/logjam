@@ -27,7 +27,7 @@ export const StreamMapProvider = (props: {
     }
 
     useEffect(() => {
-        console.log('[StreamsMap] size=', streamMap.size);
+        console.log('[StreamsMap] ', streamMap);
     }, [streamMap]);
 
     return (

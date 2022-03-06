@@ -1,11 +1,12 @@
 <!DOCTYPE html>
-
+<html lang="en">
 <head>
     <title>SparkScience Broadcast Sample</title>
     <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
 </head>
 
 <body>
+    <label for="myName">Name:</label>
     <input id="myName" type="text" placeholder="Enter your name" />
     <button id="signalConnectBtn" onclick="setupSignalingSocket()">Connect to Signaling Server</button>
     <button onclick="startBroadcasting()">Start Broadcasting</button>
@@ -61,11 +62,11 @@
         let localStream;
         let socket;
         let localVideoTag = document.getElementById('localVideo');
-        let myPeerConnection;
+        // let myPeerConnection;
         let myName = 'NoName';
         let myUsername = 'NoUsername';
-        const myPeerConnectionArray = {};
-        const iceCandidates = [];
+        let myPeerConnectionArray = {};
+        let iceCandidates = [];
         const handleMessage = async (event) => {
             let msg;
             try {
@@ -81,7 +82,7 @@
             switch (msg.type) {
                 case 'video-answer':
                     console.log('Got answer.', msg);
-                    audiencePeerConnection = createOrGetPeerconnection(msg.data);
+                    audiencePeerConnection = createOrGetPeerConnection(msg.data);
                     try {
                         await audiencePeerConnection.setRemoteDescription(new RTCSessionDescription(msg.sdp));
                     } catch (e) {
@@ -92,7 +93,7 @@
                     break;
                 case 'new-ice-candidate':
                     console.log('Got ICE candidate.', msg);
-                    audiencePeerConnection = createOrGetPeerconnection(msg.data);
+                    audiencePeerConnection = createOrGetPeerConnection(msg.data);
                     iceCandidates.push(new RTCIceCandidate(msg.candidate));
                     if (audiencePeerConnection && audiencePeerConnection.remoteDescription) {
                         audiencePeerConnection.addIceCandidate(iceCandidates.pop());
@@ -132,12 +133,13 @@
                 myName = document.getElementById("myName").value;
             }
 
-            const baseUrl = window.location.href.split("//")[1].split("/")[0];
-            let protocol = "wss";
-            if (window.location.href.split("//")[0] == "http:") {
-                protocol = "ws";
-            }
-            socket = new WebSocket(`${protocol}://${baseUrl}/ws`);
+            // const baseUrl = window.location.href.split("//")[1].split("/")[0];
+            // let protocol = "wss";
+            // if (window.location.href.split("//")[0] == "http:") {
+            //     protocol = "ws";
+            // }
+            // socket = new WebSocket(`${protocol}://${baseUrl}/ws`);
+            socket = new WebSocket(`ws://localhost:8080/ws`);
             socket.onmessage = handleMessage;
             socket.onopen = () => {
                 console.log("WebSocket connection opened");
@@ -214,7 +216,7 @@
 
             return peerConnection;
         };
-        const createOrGetPeerconnection = (audienceName) => {
+        const createOrGetPeerConnection = (audienceName) => {
             if (myPeerConnectionArray[audienceName]) return myPeerConnectionArray[audienceName];
 
             myPeerConnectionArray[audienceName] = newPeerConnectionInstance(audienceName, false);

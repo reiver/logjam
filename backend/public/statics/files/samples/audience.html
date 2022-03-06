@@ -6,6 +6,7 @@
 </head>
 
 <body>
+    <label for="myName">Name:</label>
     <input id="myName" type="text" placeholder="Enter your name" />
     <button id="signalConnectBtn" onclick="setupSignalingSocket()">Connect to Signaling Server</button>
     <button onclick="startReadingBroadcast()">Start Receiving Broadcast</button>
@@ -62,8 +63,8 @@
         let myPeerConnection;
         let myName = 'NoName';
         let myUsername = 'NoUsername';
-        const myPeerConnectionArray = {};
-        const iceCandidates = [];
+        let myPeerConnectionArray = {};
+        let iceCandidates = [];
         const handleVideoOfferMsg = async (msg) => {
             const broadcasterPeerConnection = myPeerConnectionArray[msg.name] || newPeerConnectionInstance(msg.name);
             await broadcasterPeerConnection.setRemoteDescription(new RTCSessionDescription(msg.sdp));
@@ -121,12 +122,13 @@
                 myName = document.getElementById("myName").value;
             }
 
-            const baseUrl = window.location.href.split("//")[1].split("/")[0];
-            let protocol = "wss";
-            if (window.location.href.split("//")[0] == "http:") {
-                protocol = "ws";
-            }
-            socket = new WebSocket(`${protocol}://${baseUrl}/ws`);
+            // const baseUrl = window.location.href.split("//")[1].split("/")[0];
+            // let protocol = "wss";
+            // if (window.location.href.split("//")[0] == "http:") {
+            //     protocol = "ws";
+            // }
+            // socket = new WebSocket(`${protocol}://${baseUrl}/ws`);
+            socket = new WebSocket(`ws://localhost:8080/ws`);
             socket.onmessage = handleMessage;
             socket.onopen = () => {
                 console.log("WebSocket connection opened");
@@ -179,21 +181,14 @@
                 );
             };
 
-            peerConnection.oniceconnectionstatechange = function (event) {
-                if (peerConnection.iceConnectionState == 'disconnected') {
+            peerConnection.oniceconnectionstatechange = function () {
+                if (peerConnection.iceConnectionState === 'disconnected') {
                     console.log('Disconnected', peerConnection);
                     socket.close();
                 }
             };
 
             return peerConnection;
-        };
-        const connectToAudience = (audienceName) => {
-            console.log('connecting to', audienceName);
-            if (!localStream) return;
-            if (myPeerConnectionArray[audienceName]) return;
-
-            myPeerConnectionArray[audienceName] = newPeerConnectionInstance(audienceName);
         };
     </script>
 </body>

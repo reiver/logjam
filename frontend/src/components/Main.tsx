@@ -8,7 +8,6 @@ import Stream from "./Stream";
 import {useStreamMap} from "../hooks/useStreamMap";
 
 export default function Main({myName}: any) {
-    console.log('[Render] Main');
     let {streamMap, setStreamMap, enableLocalStream} = useStreamMap();
 
     const [mic, setMic] = useState(true);
@@ -30,6 +29,11 @@ export default function Main({myName}: any) {
     );
 
     // {myRole === 'broadcast' ? <LocalStream/> : null}
+    if (streamMap.size === 0){
+        return null;
+    }
+
+    console.log('[Render] Main');
 
     return (
         <Page>

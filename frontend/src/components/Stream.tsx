@@ -1,7 +1,6 @@
 import React, {useEffect, useRef} from 'react';
 
 export default function Stream({streamId, mediaStream}: { streamId: string, mediaStream: MediaStream | undefined }) {
-    console.log('[Render] Stream');
     // console.log('[Stream]', streamId, mediaStream);
 
     const videoRef = useRef<HTMLVideoElement>(null);
@@ -25,6 +24,7 @@ export default function Stream({streamId, mediaStream}: { streamId: string, medi
     if (!mediaStream) {
         return null;
     }
+    console.log('[Render] Stream');
 
     return (
         <div>
