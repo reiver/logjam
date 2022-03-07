@@ -176,8 +176,6 @@ class Graph {
         }
     }
 
-
-
     draw(data) {
         this.setup()
 

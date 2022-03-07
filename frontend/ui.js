@@ -6,25 +6,6 @@ const MIC_OFF = "images/mic-off.png";
 
 let graph;
 
-const TREE_SAMPLE_DATA = {
-    name: 'Colour',
-    pathProps: {},
-    textProps: {x: -25, y: 25},
-    children: [{
-        name: 'Black',
-        pathProps: {className: 'black'},
-        textProps: {x: -25, y: 25},
-        children: []
-    },
-        {
-            name: 'Blue',
-            pathProps: {className: 'blue'},
-            textProps: {x: -25, y: 25},
-            children: []
-        }
-    ]
-}
-
 function arrangeVideoContainers() {
     const videoContainers = document.getElementById('screen')
         .getElementsByClassName('video-container');
@@ -38,6 +19,7 @@ function arrangeVideoContainers() {
         }
     )
 }
+
 
 function onCameraButtonClick() {
     const img = document.getElementById("camera");
@@ -60,8 +42,8 @@ function onMicButtonClick() {
         img.dataset.status = 'on';
         img.src = MIC_ON;
     }
-    graph.draw(TREE_SAMPLE_DATA);
 }
+
 
 function handleResize(){
     clearTimeout(window.resizedFinished);
@@ -70,6 +52,7 @@ function handleResize(){
     }, 250);
 
 }
+
 
 function onLoad() {
     arrangeVideoContainers();
