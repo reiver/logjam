@@ -1,4 +1,4 @@
-class setup {
+class Graph {
     width;
     height;
     root;
@@ -23,6 +23,7 @@ class setup {
     }
 
     update(source) {
+        let self = this;
         let i = 0;
         let svg = d3.select(this.svgElement).select('g');
         // Assigns the x and y position for the nodes
@@ -163,7 +164,7 @@ class setup {
         }
 
         // Toggle children on click.
-        function click(event, d) {
+        function click(d) {
             if (d.children) {
                 d._children = d.children;
                 d.children = null;
@@ -171,9 +172,10 @@ class setup {
                 d.children = d._children;
                 d._children = null;
             }
-            // this.update(d);
+            self.update(d);
         }
     }
+
 
 
     draw(data) {

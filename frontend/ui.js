@@ -73,7 +73,7 @@ function handleResize(){
 
 function onLoad() {
     arrangeVideoContainers();
-    graph = new setup();
+    graph = new Graph();
     window.onresize = handleResize;
     graph.draw(DATA);
 }
