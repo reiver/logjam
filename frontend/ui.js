@@ -30,6 +30,17 @@ function onCameraButtonClick() {
 }
 
 
+function onMicButtonClick() {
+    const img = document.getElementById("mic");
+    if (img.dataset.status === 'on') {
+        img.dataset.status = 'off';
+        img.src = MIC_OFF;
+    }else{
+        img.dataset.status = 'on';
+        img.src = MIC_ON;
+    }
+}
+
 function onLoad() {
     arrangeVideoContainers();
 }
