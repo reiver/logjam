@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>SparkScience Broadcast Sample</title>
+    <title>SparkScience Demo</title>
     <link rel="stylesheet" href="css/main.css">
     <link rel="stylesheet" href="css/graph.css">
     <script src="https://d3js.org/d3.v4.min.js"></script>
@@ -14,7 +14,30 @@
 </head>
 
 <body onload="onLoad()">
+
+<!--getName-->
+<div id="getName" class="Modal-Wrapper">
+    <div id="logo"></div>
+    <div class="Modal-Container">
+        <div class="Modal-Content">
+            <br/>
+            <h2>Welcome to Group Video!</h2>
+            <form class="form">
+                <label for="inputName">Name: </label>
+                <input id="inputName"
+                       type="text"
+                       value=""
+                       placeholder="enter a nickname"
+                />
+                <button type="button" onclick="handleClick()">Enter</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!--main page-->
 <div id="page">
+
     <!--video containers-->
     <div id="screen">
         <video id="video 1" class="video-container" autoPlay playsInline muted></video>
@@ -28,7 +51,7 @@
     <div id="bottom-bar-wrapper">
         <div id="bottom-bar-slider"></div>
         <div id="bottom-bar-container">
-            <div id="name">massoud</div>
+            <p id="myName"></p>
             <div id="control-buttons-container">
                 <img id="camera" data-status="on" class="control-button-image" src="images/cam-on.png" alt="icon"
                      onclick="onCameraButtonClick()"/>
@@ -49,6 +72,7 @@
         </div>
     </div>
 </div>
+
 </body>
 
 </html>

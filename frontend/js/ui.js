@@ -3,8 +3,20 @@ const CAMERA_OFF = "images/cam-off.png";
 const MIC_ON = "images/mic-on.png";
 const MIC_OFF = "images/mic-off.png";
 // const SPARK_LOGO = "images/spark-logo.png";
+const CHARACTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
 
+let myName;
 let graph;
+
+
+function makeId(length) {
+    let result = '';
+    for (let i = 0; i < length; i++) {
+        result += CHARACTERS.charAt(Math.floor(Math.random() * CHARACTERS.length));
+    }
+    return result;
+}
+
 
 function arrangeVideoContainers() {
     const videoContainers = document.getElementById('screen')
@@ -44,6 +56,35 @@ function onMicButtonClick() {
     }
 }
 
+function setMyName(){
+    try {
+        myName = localStorage.getItem('logjam_myName');
+        document.getElementById('inputName').value = myName;
+    } catch (e) {
+        console.log(e);
+    }
+    if (myName === '' || !myName) {
+        myName = makeId(20);
+        try {
+            localStorage.setItem('logjam_myName', myName);
+        } catch (e) {
+            console.log(e);
+        }
+    }
+}
+
+function handleClick() {
+    let newName = document.getElementById("inputName").value;
+    if (newName) {
+        myName = newName;
+        localStorage.setItem('logjam_myName', myName);
+        console.log('myName=', myName);
+    }
+    document.getElementById("page").style.visibility = "visible";
+    document.getElementById("getName").style.display = "none";
+    document.getElementById("myName").innerText = newName;
+    return false;
+}
 
 function handleResize(){
     clearTimeout(window.resizedFinished);
@@ -53,8 +94,8 @@ function handleResize(){
 
 }
 
-
 function onLoad() {
+    setMyName();
     arrangeVideoContainers();
     graph = new Graph();
     window.onresize = handleResize;
