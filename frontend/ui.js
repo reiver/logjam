@@ -2,7 +2,28 @@ const CAMERA_ON = "images/cam-on.png";
 const CAMERA_OFF = "images/cam-off.png";
 const MIC_ON = "images/mic-on.png";
 const MIC_OFF = "images/mic-off.png";
-const SPARK_LOGO = "images/spark-logo.png";
+// const SPARK_LOGO = "images/spark-logo.png";
+
+let graph;
+
+const TREE_SAMPLE_DATA = {
+    name: 'Colour',
+    pathProps: {},
+    textProps: {x: -25, y: 25},
+    children: [{
+        name: 'Black',
+        pathProps: {className: 'black'},
+        textProps: {x: -25, y: 25},
+        children: []
+    },
+        {
+            name: 'Blue',
+            pathProps: {className: 'blue'},
+            textProps: {x: -25, y: 25},
+            children: []
+        }
+    ]
+}
 
 function arrangeVideoContainers() {
     const videoContainers = document.getElementById('screen')
@@ -39,10 +60,20 @@ function onMicButtonClick() {
         img.dataset.status = 'on';
         img.src = MIC_ON;
     }
+    graph.draw(TREE_SAMPLE_DATA);
+}
+
+function handleResize(){
+    clearTimeout(window.resizedFinished);
+    window.resizedFinished = setTimeout(function(){
+        graph.draw(graph.treeData);
+    }, 250);
+
 }
 
 function onLoad() {
     arrangeVideoContainers();
-    let graph = new GraphVisualization();
+    graph = new setup();
+    window.onresize = handleResize;
     graph.draw(DATA);
 }

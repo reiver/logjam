@@ -114,7 +114,7 @@ body {
     top: 0;
     left: 0;
     position: fixed;
-    width: 20px;
+    width: 10px;
     height: 100%;
     overflow: auto;
     -webkit-transition: all 1s ease;

@@ -1,15 +1,18 @@
-class GraphVisualization {
-    OFFSET = 1000;
-    svgElement = document.getElementById('svg')
-    width = window.innerWidth;
-    height = window.innerHeight;
-    duration = 750;
-    root = null;
-    treemap = null;
+class setup {
+    width;
+    height;
+    root;
+    treemap;
+    treeData;
+    duration = 700;
 
-    constructor() {
+    svgElement= document.getElementById('svg');
+
+    setup() {
+        this.width = window.innerWidth;
+        this.height = window.innerHeight;
         d3.select(this.svgElement)
-            .attr("width", this.width + this.OFFSET)
+            .attr("width", this.width + 1000)
             .attr("height", this.height - 20)
             .append("g")
             .attr("transform", function (_) {
@@ -17,9 +20,8 @@ class GraphVisualization {
             })
         // declares a tree layout and assigns the size
         this.treemap = d3.tree().size([this.height, this.width]);
-
     }
-    
+
     update(source) {
         let i = 0;
         let svg = d3.select(this.svgElement).select('g');
@@ -175,6 +177,7 @@ class GraphVisualization {
 
 
     draw(data) {
+        this.setup()
 
         // Assigns parent, children, height, depth
         this.root = d3.hierarchy(data, function (d) {
