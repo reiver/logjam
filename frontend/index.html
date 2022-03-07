@@ -8,6 +8,7 @@
 </head>
 <body onload="onLoad()">
 <div id="page">
+    <!--video containers-->
     <div id="screen">
         <video id="video 1" class="video-container" autoPlay playsInline muted></video>
         <video id="video 2" class="video-container" autoPlay playsInline muted></video>
@@ -15,6 +16,8 @@
         <video id="video 4" class="video-container" autoPlay playsInline muted></video>
         <video id="video 5" class="video-container" autoPlay playsInline muted></video>
     </div>
+
+    <!--bottom bar-->
     <div id="bottom-bar-wrapper">
         <div id="bottom-bar-slider"></div>
         <div id="bottom-bar-container">
@@ -25,10 +28,17 @@
                 <img id="spark" class="control-button-image" src="images/spark-logo.png" alt="logo"/>
                 <img id="mic" data-status="on" class="control-button-image" src="images/mic-on.png" alt="icon"
                      onclick="onMicButtonClick()"/>
-
             </div>
         </div>
     </div>
+
+    <!--sidebar-->
+    <div id="sidebar-wrapper" >
+        <div id="sidebar-slider"></div>
+        <div id="sidebar-container">
+        </div>
+    </div>
+
 
 </div>
 </body>

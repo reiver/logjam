@@ -109,3 +109,44 @@ body {
 .control-button-image:hover {
     filter: brightness(0) invert(1);
 }
+
+#sidebar-wrapper{
+    top: 0;
+    left: 0;
+    position: fixed;
+    width: 20px;
+    height: 100%;
+    overflow: auto;
+    -webkit-transition: all 1s ease;
+    -moz-transition: all 1s ease;
+    -o-transition: all 1s ease;
+    transition: all 1s ease;
+    z-index: 999;
+}
+
+#sidebar-wrapper:hover{
+    -webkit-transition: all 1s ease;
+    -moz-transition: all 1s ease;
+    -o-transition: all 1s ease;
+    transition: all 1s ease;
+    width: 50%;
+}
+
+#sidebar-slider{
+    width: 4px;
+    height: 40%;
+    border-radius: 10px;
+    position: absolute;
+    left: 0;
+    top: 30%;
+    background-color: #26a5f6;
+}
+
+#sidebar-container{
+    width: 100%;
+    height: 100%;
+    position: relative;
+    top: 0;
+    left: 0;
+    background: rgba(36, 46, 66, .3);
+}
