@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>SparkScience Broadcast Sample</title>
+    <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
+    <script src="./js/spark-rtc.js"></script>
+</head>
+
+<body>
+    <label for="myName">Name:</label>
+    <input id="myName" type="text" placeholder="Enter your name" />
+    <button id="signalConnectBtn" onclick="setupSignalingSocket()">Connect to Signaling Server</button>
+    <button onclick="startBroadcasting()">Start Broadcasting</button>
+    <h1>Local Stream</h1>
+    <p>
+        <video id="localVideo" playsinline muted style="width: 100%" autoplay></video>
+    </p>
+
+    <script>
+        const sparkRTC = new SparkRTC('broadcast', (stream) => {
+            console.log('got stream', stream);
+            document.getElementById('localVideo').srcObject = stream;
+        });
+        const setupSignalingSocket = () => {
+            const baseUrl = window.location.href.split("//")[1].split("/")[0];
+            let protocol = "wss";
+            if (window.location.href.split("//")[0] == "http:") {
+                protocol = "ws";
+            }
+            return sparkRTC.setupSignalingSocket(`${protocol}://${baseUrl}/ws`, document.getElementById("myName").value);
+        };
+        const startBroadcasting = () => {
+            return sparkRTC.start();
+        };
+    </script>
+</body>
+
+</html>
