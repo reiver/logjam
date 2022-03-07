@@ -16,11 +16,11 @@ export const StreamMapProvider = (props: {
     const [streamMap, setStreamMap] = useState(defaultStreamMap);
 
     const enableLocalStream = async () => {
+        console.log('enableLocalStream');
         try {
             const stream = await navigator.mediaDevices.getUserMedia(MEDIA_CONSTRAINTS)
             setStreamMap((
                 prev: Map<string, MediaStream>) => new Map(prev).set('localStream', stream));
-            console.log('>>>>> STATE UPDATED <<<<<< added localStream to streamMap');
         } catch (err) {
             console.error(err)
         }

@@ -18,18 +18,29 @@ export default function Broadcast({myName}: { myName: string }) {
     let {streamMap, setStreamMap, enableLocalStream} = useStreamMap();
 
     useEffect(() => {
-        console.log('-------', socket.readyState, socket.OPEN, myUsername)
-        if (socket.readyState === socket.OPEN && !myUsername){
-            console.log('[SendMessage] start')
+        if (socket.readyState != socket.OPEN) return;
+        if (!myUsername) {
             socket.send(
                 JSON.stringify({
                     type: "start",
                     data: myName,
                 })
             );
-
+            console.log('[Sent] start : myName = ', myName);
+        } else {
+            if (streamMap.get('localStream')) return;
+            enableLocalStream().then(_ =>
+                socket.send(
+                    JSON.stringify({
+                            type: "role",
+                            data: "broadcast"
+                            // data: myRole==='broadcast' ? 'alt-broadcast' : myRole
+                        }
+                    )
+                )
+            )
         }
-    },[myName, myUsername, socket]);
+    }, [myName, myUsername, socket]);
 
     useEffect(() => {
         const newPeerConnectionInstance = (target: any, addLocalStream = true) => {
@@ -149,7 +160,7 @@ export default function Broadcast({myName}: { myName: string }) {
                             console.log(audiencePeerConnection);
                             console.log(msg.sdp);
                         }
-                    }else{
+                    } else {
                         console.error('audiencePeerConnection is null')
                     }
                     break;
@@ -219,35 +230,14 @@ export default function Broadcast({myName}: { myName: string }) {
     // };
     // }
 
-    const startBroadcasting = () => {
-        if (!streamMap.get('localStream')) {
-
-            console.log('# 3 #');
-            console.log('==(1)==> The caller captures local Media via MediaDevices.getUserMedia')
-            enableLocalStream().then(_ => {
-
-                    socket.send(
-                        JSON.stringify({
-                                type: "role",
-                                data: "broadcast"
-                                // data: myRole==='broadcast' ? 'alt-broadcast' : myRole
-                            }
-                        )
-                    );
-                }
-            );
-        }
+    if (!myUsername) {
+        return null;
     }
-
-    // setupSignalingSocket();
-    // startBroadcasting();
 
     console.log('[Render] Broadcast')
     return (
         <div>
             <h1>Broadcast</h1>
-            {/*<button onClick={setupSignalingSocket}>Setup</button>*/}
-            <button onClick={startBroadcasting}>Start</button>
             <Main myName={myName} myRole={"broadcast"}/>
 
         </div>
