@@ -4,7 +4,12 @@
     <meta charset="UTF-8">
     <title>Spark</title>
     <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/graph.css">
     <script src="ui.js"></script>
+    <script src="data.js"></script>
+    <script src="graph.js"></script>
+    <script src="https://d3js.org/d3.v4.min.js"></script>
+
 </head>
 <body onload="onLoad()">
 <div id="page">
@@ -36,6 +41,9 @@
     <div id="sidebar-wrapper" >
         <div id="sidebar-slider"></div>
         <div id="sidebar-container">
+            <div class="chart">
+                <svg id="svg"/>
+            </div>
         </div>
     </div>
 

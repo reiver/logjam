@@ -43,4 +43,6 @@ function onMicButtonClick() {
 
 function onLoad() {
     arrangeVideoContainers();
+    let graph = new GraphVisualization();
+    graph.draw(DATA);
 }
