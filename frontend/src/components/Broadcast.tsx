@@ -5,6 +5,7 @@ import {useStreamMap} from "../hooks/useStreamMap";
 import {useSocket} from "../hooks/useSocket";
 import {usePeerConnectionMap} from "../hooks/usePeerConnectionMap";
 
+
 export default function Broadcast({myName}: { myName: string }) {
     let socket: WebSocket = useSocket();
     let myPeerConnection: RTCPeerConnection | undefined;
