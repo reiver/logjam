@@ -19,8 +19,7 @@ class GraphVisualization {
         this.treemap = d3.tree().size([this.height, this.width]);
 
     }
-
-
+    
     update(source) {
         let i = 0;
         let svg = d3.select(this.svgElement).select('g');
