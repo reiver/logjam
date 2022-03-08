@@ -2,40 +2,40 @@ class SparkRTC {
     myPeerConnectionConfig = {
         iceServers: [
             {
-                url: 'stun:stun.l.google.com:19302'
+                urls: 'stun:stun.l.google.com:19302'
             },
             {
-                url: 'stun:stun1.l.google.com:19302'
-            },
-            {
-
-                url: 'stun:stun2.l.google.com:19302'
+                urls: 'stun:stun1.l.google.com:19302'
             },
             {
 
-                url: 'stun:stun3.l.google.com:19302'
+                urls: 'stun:stun2.l.google.com:19302'
             },
             {
 
-                url: 'stun:stun4.l.google.com:19302'
+                urls: 'stun:stun3.l.google.com:19302'
             },
             {
-                url: "turn:turn1.turn.group.video:3478",
+
+                urls: 'stun:stun4.l.google.com:19302'
+            },
+            {
+                urls: "turn:turn1.turn.group.video:3478",
                 username: "turnuser",
                 credential: "dJ4kP05PHcKN8Ubu",
             },
             {
-                url: "turn:turn2.turn.group.video:3478",
+                urls: "turn:turn2.turn.group.video:3478",
                 username: "turnuser",
                 credential: "XzfVP8cpNEy17hws",
             },
             {
-                url: "turns:turn1.turn.group.video:443",
+                urls: "turns:turn1.turn.group.video:443",
                 username: "turnuser",
                 credential: "dJ4kP05PHcKN8Ubu",
             },
             {
-                url: "turns:turn2.turn.group.video:443",
+                urls: "turns:turn2.turn.group.video:443",
                 username: "turnuser",
                 credential: "XzfVP8cpNEy17hws",
             },
@@ -126,10 +126,10 @@ class SparkRTC {
                 break;
         }
     };
-    setupSignalingSocket = (url, myName) => {
+    setupSignalingSocket = async (url, myName) => {
         if (myName)
             this.myName = myName;
-        const socket = new WebSocket(url);
+        let socket = await new WebSocket(url);
         socket.onmessage = this.handleMessage;
         socket.onopen = () => {
             console.log("WebSocket connection opened");
@@ -166,12 +166,16 @@ class SparkRTC {
         }
     }
     startReadingBroadcast = async () => {
-        this.socket.send(
-            JSON.stringify({
-                type: "role",
-                data: "audience",
-            })
-        );
+        try {
+            this.socket.send(
+                JSON.stringify({
+                    type: "role",
+                    data: "audience",
+                })
+            );
+        } catch (e) {
+            console.log(e);
+        }
     }
     newPeerConnectionInstance = (target, addLocalStream = true) => {
         const peerConnection = new RTCPeerConnection(this.myPeerConnectionConfig);

@@ -5,9 +5,10 @@ const MIC_OFF = "images/mic-off.png";
 // const SPARK_LOGO = "images/spark-logo.png";
 const CHARACTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
 
-let myName;
 let graph;
-
+let sparkRTC;
+let myName;
+let myRole;
 
 function makeId(length) {
     let result = '';
@@ -38,7 +39,7 @@ function onCameraButtonClick() {
     if (img.dataset.status === 'on') {
         img.dataset.status = 'off';
         img.src = CAMERA_OFF;
-    }else{
+    } else {
         img.dataset.status = 'on';
         img.src = CAMERA_ON;
     }
@@ -50,13 +51,13 @@ function onMicButtonClick() {
     if (img.dataset.status === 'on') {
         img.dataset.status = 'off';
         img.src = MIC_OFF;
-    }else{
+    } else {
         img.dataset.status = 'on';
         img.src = MIC_ON;
     }
 }
 
-function setMyName(){
+function setMyName() {
     try {
         myName = localStorage.getItem('logjam_myName');
         document.getElementById('inputName').value = myName;
@@ -83,21 +84,41 @@ function handleClick() {
     document.getElementById("page").style.visibility = "visible";
     document.getElementById("getName").style.display = "none";
     document.getElementById("myName").innerText = newName;
+
     return false;
 }
 
-function handleResize(){
+function handleResize() {
     clearTimeout(window.resizedFinished);
-    window.resizedFinished = setTimeout(function(){
+    window.resizedFinished = setTimeout(function () {
         graph.draw(graph.treeData);
     }, 250);
 
 }
 
+function getMyRole() {
+    const queryString = window.location.search;
+    const urlParams = new URLSearchParams(queryString);
+    return urlParams.get('role') === 'broadcast' ? "broadcast" : "audience";
+}
+
+function setupSignalingSocket() {
+    return sparkRTC.setupSignalingSocket(getWsUrl(), myName);
+}
+
+function start(){
+    return sparkRTC.start();
+}
+
 function onLoad() {
+    myRole = getMyRole();
+    console.log('myRole=', myRole);
+    sparkRTC = createSparkRTC();
+
     setMyName();
-    arrangeVideoContainers();
     graph = new Graph();
     window.onresize = handleResize;
     graph.draw(DATA);
+
+    arrangeVideoContainers();
 }

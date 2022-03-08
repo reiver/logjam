@@ -278,3 +278,17 @@ body {
         align-items: stretch;
     }
 }
+
+.button {
+    padding: 0 50px;
+    background-color: dodgerblue;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    color: white;
+    cursor: pointer;
+    height: 2.5em;
+}
+
+.button:hover {
+    background-color: royalblue;
+}
