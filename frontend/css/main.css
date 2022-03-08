@@ -25,7 +25,7 @@ body {
 
 #page {
     visibility: hidden;
-    border: 5px solid red;
+    /*border: 5px solid red;*/
     background-color: black;
     height: 100vh;
     padding: 1em;
