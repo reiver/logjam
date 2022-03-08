@@ -152,7 +152,10 @@ class SparkRTC {
         try {
             this.localStream = await navigator.mediaDevices.getUserMedia({
                 audio: true,
-                video: true,
+                video: {
+                    width: 320,
+                    height: 240
+                },
             });
             this.socket.send(
                 JSON.stringify({
