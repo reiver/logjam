@@ -3,7 +3,7 @@
 <head>
     <title>SparkScience Broadcast Sample</title>
     <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
-    <script src="./js/spark-rtc.js"></script>
+    <script src="./js/spark-rtc.js?v=7"></script>
 </head>
 
 <body>
@@ -11,16 +11,29 @@
     <input id="myName" type="text" placeholder="Enter your name" />
     <button id="signalConnectBtn" onclick="setupSignalingSocket()">Connect to Signaling Server</button>
     <button onclick="startReadingBroadcast()">Start Receiving Broadcast</button>
+    <button onclick="raisHand()">Raise Hand</button>
     <h1>Remote Stream</h1>
+    <p id="remoteVideos"></p>
+    <h1>Local Stream</h1>
     <p>
-        <video id="remoteVideo" playsinline muted style="width: 100%" autoplay></video>
+        <video id="localVideo" playsinline muted style="width: 100%" autoplay></video>
     </p>
-
     <script>
-        const sparkRTC = new SparkRTC('audience', null, (stream) => {
-            if (document.getElementById('remoteVideo').srcObject !== stream)
-                document.getElementById('remoteVideo').srcObject = stream;
+        const sparkRTC = new SparkRTC('audience', {
+            remoteStreamCallback: (stream) => {
+                const tagId = 'remoteVideo-' + stream.id;
+                if (document.getElementById(tagId)) return;
+
+                document.getElementById('remoteVideos').innerHTML += `
+                    <video id="${tagId}" playsinline style="width: 100%" autoplay></video>
+                `;
+                document.getElementById(tagId).srcObject = stream;
+            },
+            signalingDisconnectedCallback: () => {
+                document.getElementById('remoteVideos').innerHTML = '';
+            },
         });
+
         const setupSignalingSocket = () => {
             const baseUrl = window.location.href.split("//")[1].split("/")[0];
             let protocol = "wss";
@@ -31,6 +44,11 @@
         };
         const startReadingBroadcast = () => {
             return sparkRTC.start();
+        };
+        const raisHand = async () => {
+            const localStream = await sparkRTC.raiseHand();
+            console.log('raised hand', localStream);
+            document.getElementById('localVideo').srcObject = localStream;
         };
     </script>
 </body>
