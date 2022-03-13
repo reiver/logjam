@@ -3,7 +3,7 @@
 <head>
     <title>SparkScience Broadcast Sample</title>
     <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
-    <script src="./js/spark-rtc.js?v=7"></script>
+    <script src="./js/spark-rtc.js?v=17"></script>
 </head>
 
 <body>
@@ -16,7 +16,7 @@
     <p id="remoteVideos"></p>
     <h1>Local Stream</h1>
     <p>
-        <video id="localVideo" playsinline muted style="width: 100%" autoplay></video>
+        <video id="localVideo" playsinline muted style="width: 100px" autoplay></video>
     </p>
     <script>
         const sparkRTC = new SparkRTC('audience', {
@@ -24,13 +24,11 @@
                 const tagId = 'remoteVideo-' + stream.id;
                 if (document.getElementById(tagId)) return;
 
-                document.getElementById('remoteVideos').innerHTML += `
-                    <video id="${tagId}" playsinline style="width: 100%" autoplay></video>
-                `;
-                document.getElementById(tagId).srcObject = stream;
+                addRemoteVideoTag(stream);
             },
             signalingDisconnectedCallback: () => {
                 document.getElementById('remoteVideos').innerHTML = '';
+                startReadingBroadcast();
             },
         });
 
@@ -49,6 +47,20 @@
             const localStream = await sparkRTC.raiseHand();
             console.log('raised hand', localStream);
             document.getElementById('localVideo').srcObject = localStream;
+        };
+
+        const addRemoteVideoTag = (stream) => {
+            const tagId = 'remoteVideo-' + stream.id;
+            if (document.getElementById(tagId)) return;
+
+            const videoTag = document.createElement('video');
+            videoTag.playsInline = true;
+            videoTag.muted = true;
+            videoTag.autoplay = true;
+            videoTag.id = tagId;
+            videoTag.style.width = '100px';
+            videoTag.srcObject = stream;
+            document.getElementById('remoteVideos').appendChild(videoTag);
         };
     </script>
 </body>

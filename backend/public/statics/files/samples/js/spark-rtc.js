@@ -171,12 +171,36 @@ class SparkRTC {
         };
         this.socket = socket;
     };
+    startShareScreen = async () => {
+        try {
+            const shareStream = await navigator.mediaDevices
+                .getDisplayMedia({
+                    audio: true,
+                    video: true,
+                });
+            this.remoteStreams.push(shareStream);
+            console.log('Sending to all peers');
+            for (const userId in this.myPeerConnectionArray) {
+                const apeerConnection = this.myPeerConnectionArray[userId];
+                if (!apeerConnection.isAdience) return;
+
+                shareStream.getTracks().forEach((track) => {
+                    apeerConnection.addTrack(track, shareStream);
+                });
+            }
+            return shareStream;
+        } catch (e) {
+            console.log(e);
+            alert('Unable to get access to screenshare.');
+        }
+    };
     startBroadcasting = async (data = 'broadcast') => {
         try {
             this.localStream = await navigator.mediaDevices.getUserMedia({
                 audio: true,
                 video: true,
             });
+            this.remoteStreams.push(this.localStream);
             this.socket.send(
                 JSON.stringify({
                     type: "role",
@@ -237,12 +261,14 @@ class SparkRTC {
         };
 
         peerConnection.ontrack = (event) => {
-            if (this.remoteStreams.indexOf(event.streams[0]) !== -1) return;
             const stream = event.streams[0];
-            this.remoteStreams.push(stream);
-            console.log("onTrack");
+            console.log({stream});
+            if (this.remoteStreams.indexOf(event.streams[0]) !== -1) return;
             if (this.remoteStreamCallback)
                 this.remoteStreamCallback(stream);
+            if (this.remoteStreams.indexOf(stream) === -1)
+                this.remoteStreams.push(stream);
+            console.log("onTrack");
             if (!this.remoteStreamNotified) {
                 this.remoteStreamNotified = true;
                 this.socket.send(
@@ -259,7 +285,9 @@ class SparkRTC {
                 const apeerConnection = this.myPeerConnectionArray[userId];
                 if (!apeerConnection.isAdience) return;
 
-                apeerConnection.close();
+                stream.getTracks().forEach((track) => {
+                    apeerConnection.addTrack(track, stream);
+                });
             }
         };
 
@@ -270,33 +298,31 @@ class SparkRTC {
             }
         };
 
-        if (theStream) {
-            if(this.remoteStreams.length > 0)
-                this.remoteStreams.forEach((stream) => {
-                    stream.getTracks().forEach((track) => {
-                        peerConnection.addTrack(track, stream);
-                    });
-                });
-            if (this.localStream)
-                this.localStream.getTracks().forEach((track) => {
-                    peerConnection.addTrack(track, theStream);
-                });
-        }
         return peerConnection;
     };
     createOrGetPeerConnection = (audienceName, isAdience = false) => {
         if (this.myPeerConnectionArray[audienceName]) return this.myPeerConnectionArray[audienceName];
 
-        this.myPeerConnectionArray[audienceName] = this.newPeerConnectionInstance(audienceName, isAdience);
+        this.myPeerConnectionArray[audienceName] = this.newPeerConnectionInstance(audienceName, true, isAdience);
 
         return this.myPeerConnectionArray[audienceName];
     };
     connectToAudience = (audienceName) => {
         console.log('connecting to', audienceName, !!this.localStream, this.remoteStreams.length);
         if (!this.localStream && this.remoteStreams.length === 0) return;
-        if (this.myPeerConnectionArray[audienceName]) return;
+        if (!this.myPeerConnectionArray[audienceName]) {
+            this.myPeerConnectionArray[audienceName] = this.newPeerConnectionInstance(audienceName, this.localStream || this.remoteStreams, true);
+        }
 
-        this.myPeerConnectionArray[audienceName] = this.newPeerConnectionInstance(audienceName, this.localStream || this.remoteStreams, true);
+        if (this.remoteStreams.length > 0) {
+            this.remoteStreams.forEach((astream) => {
+                console.log('Adding remote stream to peer connection', astream.id);
+                astream.getTracks().forEach((track) => {
+                    this.myPeerConnectionArray[audienceName].addTrack(track, astream);
+                });
+            });
+            console.log('remoteStreams', this.remoteStreams);
+        }
     };
     sendStreamTo = (target, stream) => {
         const peerConnection = this.createOrGetPeerConnection(target, false);
