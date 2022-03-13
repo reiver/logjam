@@ -48,10 +48,12 @@
             }
             return sparkRTC.setupSignalingSocket(`${protocol}://${baseUrl}/ws`, document.getElementById("myName").value);
         };
+        
         const startBroadcasting = async () => {
             await setupSignalingSocket();
             return sparkRTC.start();
         };
+
         const requestShareScreen = async () => {
             const stream = await sparkRTC.startShareScreen();
             document.getElementById('localScreen').srcObject = stream;

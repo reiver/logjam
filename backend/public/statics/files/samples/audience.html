@@ -43,10 +43,12 @@
             }
             return sparkRTC.setupSignalingSocket(`${protocol}://${baseUrl}/ws`, document.getElementById("myName").value);
         };
+
         const startReadingBroadcast = async () => {
             await setupSignalingSocket();
             return sparkRTC.start();
         };
+
         const raisHand = async () => {
             const localStream = await sparkRTC.raiseHand();
             console.log('raised hand', localStream);
