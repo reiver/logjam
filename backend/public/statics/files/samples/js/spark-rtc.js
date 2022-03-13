@@ -149,27 +149,34 @@ class SparkRTC {
         }
     };
     setupSignalingSocket = (url, myName) => {
-        if (myName)
-            this.myName = myName;
-        const socket = new WebSocket(url);
-        socket.onmessage = this.handleMessage;
-        socket.onopen = () => {
-            console.log("WebSocket connection opened");
-            socket.send(
-                JSON.stringify({
-                    type: "start",
-                    data: myName,
-                })
-            );
-        };
-        socket.onclose = () => {
-            console.log("WebSocket connection closed");
-            this.remoteStreamNotified = false;
-            this.myPeerConnectionArray = {};
-            if (this.signalingDisconnectedCallback) this.signalingDisconnectedCallback;
-            this.setupSignalingSocket(url, myName);
-        };
-        this.socket = socket;
+        return new Promise((resolve, reject) => {
+            if (myName)
+                this.myName = myName;
+            const socket = new WebSocket(url);
+            socket.onmessage = this.handleMessage;
+            socket.onopen = () => {
+                console.log("WebSocket connection opened");
+                socket.send(
+                    JSON.stringify({
+                        type: "start",
+                        data: myName,
+                    })
+                );
+                resolve(socket);
+            };
+            socket.onclose = () => {
+                console.log("WebSocket connection closed");
+                this.remoteStreamNotified = false;
+                this.myPeerConnectionArray = {};
+                if (this.signalingDisconnectedCallback) this.signalingDisconnectedCallback;
+                this.setupSignalingSocket(url, myName);
+            };
+            socket.onerror = (error) => {
+                console.log("WebSocket error: " + error);
+                reject(error);
+            };
+            this.socket = socket;
+        })
     };
     startShareScreen = async () => {
         try {
@@ -262,7 +269,7 @@ class SparkRTC {
 
         peerConnection.ontrack = (event) => {
             const stream = event.streams[0];
-            console.log({stream});
+            console.log({ stream });
             if (this.remoteStreams.indexOf(event.streams[0]) !== -1) return;
             if (this.remoteStreamCallback)
                 this.remoteStreamCallback(stream);
@@ -336,6 +343,20 @@ class SparkRTC {
         }
 
         return this.startReadingBroadcast();
+    };
+
+    disableVideo = (enabled = false) => {
+        this.localStream.getTracks().forEach((track) => {
+            if (track.kind === 'video')
+                track.enabled = enabled;
+        });
+    };
+
+    disableAudio = (enabled = false) => {
+        this.localStream.getTracks().forEach((track) => {
+            if (track.kind === 'audio')
+                track.enabled = enabled;
+        });
     };
 
     constructor(role, options = {}) {

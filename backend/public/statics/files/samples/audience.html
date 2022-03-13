@@ -9,9 +9,12 @@
 <body>
     <label for="myName">Name:</label>
     <input id="myName" type="text" placeholder="Enter your name" />
-    <button id="signalConnectBtn" onclick="setupSignalingSocket()">Connect to Signaling Server</button>
     <button onclick="startReadingBroadcast()">Start Receiving Broadcast</button>
     <button onclick="raisHand()">Raise Hand</button>
+    <button onclick="stopVideo()">Stop video</button>
+    <button onclick="restartVideo()">Restart video</button>
+    <button onclick="stopAudio()">Stop Audio</button>
+    <button onclick="restartAudio()">Restart audio</button>
     <h1>Remote Stream</h1>
     <p id="remoteVideos"></p>
     <h1>Local Stream</h1>
@@ -40,9 +43,12 @@
             }
             return sparkRTC.setupSignalingSocket(`${protocol}://${baseUrl}/ws`, document.getElementById("myName").value);
         };
-        const startReadingBroadcast = () => {
+
+        const startReadingBroadcast = async () => {
+            await setupSignalingSocket();
             return sparkRTC.start();
         };
+
         const raisHand = async () => {
             const localStream = await sparkRTC.raiseHand();
             console.log('raised hand', localStream);
@@ -55,12 +61,28 @@
 
             const videoTag = document.createElement('video');
             videoTag.playsInline = true;
-            videoTag.muted = true;
+            // videoTag.muted = true;
             videoTag.autoplay = true;
             videoTag.id = tagId;
             videoTag.style.width = '100px';
             videoTag.srcObject = stream;
             document.getElementById('remoteVideos').appendChild(videoTag);
+        };
+
+        const stopVideo = () => {
+            sparkRTC.disableVideo();
+        };
+
+        const restartVideo = () => {
+            sparkRTC.disableVideo(true);
+        };
+
+        const stopAudio = () => {
+            sparkRTC.disableAudio();
+        };
+
+        const restartAudio = () => {
+            sparkRTC.disableAudio(true);
         };
     </script>
 </body>
