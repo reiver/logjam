@@ -4,17 +4,19 @@
 <head>
     <title>SparkScience Broadcast Sample</title>
     <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
-    <script src="./js/spark-rtc.js?v=7"></script>
+    <script src="./js/spark-rtc.js?v=17"></script>
 </head>
 
 <body>
     <label for="myName">Name:</label>
     <input id="myName" type="text" placeholder="Enter your name" />
     <button id="signalConnectBtn" onclick="setupSignalingSocket()">Connect to Signaling Server</button>
+    <button onclick="requestShareScreen()">Start Schare Screen</button>
     <button onclick="startBroadcasting()">Start Broadcasting</button>
     <h1>Local Stream</h1>
     <p>
-        <video id="localVideo" playsinline muted style="width: 100%" autoplay></video>
+        <video id="localVideo" playsinline muted style="width: 100px" autoplay></video>
+        <video id="localScreen" playsinline muted style="width: 100px" autoplay></video>
     </p>
     <h1>Remote Stream</h1>
     <p id="remoteVideos"></p>
@@ -28,10 +30,7 @@
                 const tagId = 'remoteVideo-' + stream.id;
                 if (document.getElementById(tagId)) return;
 
-                document.getElementById('remoteVideos').innerHTML += `
-                    <video id="${tagId}" playsinline style="width: 100%" autoplay></video>
-                `;
-                document.getElementById(tagId).srcObject = stream;
+                addRemoteVideoTag(stream);
             },
             signalingDisconnectedCallback: () => {
                 document.getElementById('remoteVideos').innerHTML = '';
@@ -48,6 +47,24 @@
         };
         const startBroadcasting = () => {
             return sparkRTC.start();
+        };
+        const requestShareScreen = async () => {
+            const stream = await sparkRTC.startShareScreen();
+            document.getElementById('localScreen').srcObject = stream;
+        };
+
+        const addRemoteVideoTag = (stream) => {
+            const tagId = 'remoteVideo-' + stream.id;
+            if (document.getElementById(tagId)) return;
+
+            const videoTag = document.createElement('video');
+            videoTag.playsInline = true;
+            videoTag.muted = true;
+            videoTag.autoplay = true;
+            videoTag.id = tagId;
+            videoTag.style.width = '100px';
+            videoTag.srcObject = stream;
+            document.getElementById('remoteVideos').appendChild(videoTag);
         };
     </script>
 </body>
