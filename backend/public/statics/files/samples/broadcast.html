@@ -71,6 +71,7 @@
             videoTag.style.width = '100px';
             videoTag.srcObject = stream;
             document.getElementById('remoteVideos').appendChild(videoTag);
+            videoTag.play();
         };
 
         const stopVideo = () => {
