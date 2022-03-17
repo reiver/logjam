@@ -218,6 +218,9 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 		// log.Alert("Log Received ", socket.Name)
 		msg := "Audiance " + socket.Name + " client log :\n    " + theMessage.Data
 		fmt.Fprintln(f, msg)
+	case "ping":
+		// log.Alert("Ping Received ", socket.Name)
+		socket.Socket.WriteJSON(message.MessageContract{Type: "pong", Data: "pong"})
 	case "tree":
 		// log.Alert("Tree Received ", socket.Name)
 		treeData := binarytreesrv.Tree(Map)

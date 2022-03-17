@@ -51,6 +51,7 @@ class SparkRTC {
     myUsername = 'NoUsername';
     myPeerConnectionArray = {};
     iceCandidates = [];
+    pingInterval;
     handleVideoOfferMsg = async (msg) => {
         const broadcasterPeerConnection = this.createOrGetPeerConnection(msg.name);
         await broadcasterPeerConnection.setRemoteDescription(new RTCSessionDescription(msg.sdp));
@@ -75,7 +76,7 @@ class SparkRTC {
         msg.data = (msg.Data && !msg.data) ? msg.Data : msg.data;
         msg.type = (msg.Type && !msg.type) ? msg.Type : msg.type;
 
-        if (msg.type !== 'new-ice-candidate') console.log(msg);
+        if (msg.type !== 'new-ice-candidate' && mag.type !== 'pong') console.log(msg);
         let audiencePeerConnection;
         switch (msg.type) {
             case 'video-offer':
@@ -148,8 +149,17 @@ class SparkRTC {
                 break;
         }
     };
+    ping = () => {
+        this.socket.send(JSON.stringify({
+            type: "ping",
+        }));
+    };
     setupSignalingSocket = (url, myName) => {
         return new Promise((resolve, reject) => {
+            if (this.pingInterval) {
+                clearInterval(this.pingInterval);
+                this.pingInterval = null;
+            }
             if (myName)
                 this.myName = myName;
             const socket = new WebSocket(url);
@@ -162,6 +172,7 @@ class SparkRTC {
                         data: myName,
                     })
                 );
+                this.pingInterval = setInterval(this.ping, 2000);
                 resolve(socket);
             };
             socket.onclose = () => {
