@@ -76,7 +76,7 @@ class SparkRTC {
         msg.data = (msg.Data && !msg.data) ? msg.Data : msg.data;
         msg.type = (msg.Type && !msg.type) ? msg.Type : msg.type;
 
-        if (msg.type !== 'new-ice-candidate' && mag.type !== 'pong') console.log(msg);
+        if (msg.type !== 'new-ice-candidate' && msg.type !== 'pong') console.log(msg);
         let audiencePeerConnection;
         switch (msg.type) {
             case 'video-offer':
