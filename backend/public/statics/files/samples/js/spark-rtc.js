@@ -85,7 +85,6 @@ class SparkRTC {
                 break;
             case 'video-answer':
             case 'alt-video-answer':
-                // console.log('Got answer.', msg);
                 audiencePeerConnection = this.createOrGetPeerConnection(msg.data, true);
                 try {
                     await audiencePeerConnection.setRemoteDescription(new RTCSessionDescription(msg.sdp));
@@ -97,7 +96,6 @@ class SparkRTC {
                 break;
             case 'new-ice-candidate':
             case 'alt-new-ice-candidate':
-                // console.log('Got ICE candidate.', msg);
                 audiencePeerConnection = this.createOrGetPeerConnection(msg.data);
                 this.iceCandidates.push(new RTCIceCandidate(msg.candidate));
                 if (audiencePeerConnection && audiencePeerConnection.remoteDescription) {
@@ -180,7 +178,7 @@ class SparkRTC {
                 this.remoteStreamNotified = false;
                 this.myPeerConnectionArray = {};
                 if (this.signalingDisconnectedCallback) this.signalingDisconnectedCallback;
-                this.setupSignalingSocket(url, myName);
+                // this.setupSignalingSocket(url, myName);
             };
             socket.onerror = (error) => {
                 console.log("WebSocket error: " + error);
@@ -311,8 +309,10 @@ class SparkRTC {
 
         peerConnection.oniceconnectionstatechange = (event) => {
             if (peerConnection.iceConnectionState == 'disconnected') {
-                console.log('Disconnected', peerConnection);
-                this.socket.close();
+                console.log('Disconnected', peerConnection, event);
+                // console.log(peerConnection.getRemoteStreams()[0].getTracks());
+                // this.socket.close();
+                if (this.remoteStreamDCCallback) this.remoteStreamDCCallback(target, peerConnection);
             }
         };
 
@@ -374,6 +374,7 @@ class SparkRTC {
         this.role = role;
         this.localStreamChangeCallback = options.localStreamChangeCallback;
         this.remoteStreamCallback = options.remoteStreamCallback;
+        this.remoteStreamDCCallback = options.remoteStreamDCCallback;
         this.signalingDisconnectedCallback = options.signalingDisconnectedCallback;
     }
 }

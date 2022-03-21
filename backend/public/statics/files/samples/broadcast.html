@@ -32,8 +32,13 @@
             remoteStreamCallback: (stream) => {
                 const tagId = 'remoteVideo-' + stream.id;
                 if (document.getElementById(tagId)) return;
-
                 addRemoteVideoTag(stream);
+            },
+            remoteStreamDCCallback: (target, pc) => {
+                const tagId = 'remoteVideo-' + pc.getRemoteStreams()[0].id;
+                if (!document.getElementById(tagId)) return;
+                console.log('disconnected remote stream', target, tagId);
+                document.getElementById(tagId).remove();
             },
             signalingDisconnectedCallback: () => {
                 document.getElementById('remoteVideos').innerHTML = '';
