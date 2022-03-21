@@ -24,10 +24,25 @@
     <script>
         const sparkRTC = new SparkRTC('audience', {
             remoteStreamCallback: (stream) => {
+                stream.onended = () => {
+                    console.log('remote stream ended', stream.id);
+                };
+                stream.getTracks().forEach(track => {
+                    console.log(track);
+                    track.onended = () => {
+                        console.log('remote track ended', stream.id, track.id);
+                    };
+                });
                 const tagId = 'remoteVideo-' + stream.id;
                 if (document.getElementById(tagId)) return;
 
                 addRemoteVideoTag(stream);
+            },
+            remoteStreamDCCallback: (target, pc) => {
+                const tagId = 'remoteVideo-' + pc.getRemoteStreams()[0].id;
+                if (!document.getElementById(tagId)) return;
+                console.log('disconnected remote stream', target, tagId);
+                document.getElementById(tagId).remove();
             },
             signalingDisconnectedCallback: () => {
                 document.getElementById('remoteVideos').innerHTML = '';
