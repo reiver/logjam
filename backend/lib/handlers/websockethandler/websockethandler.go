@@ -14,12 +14,14 @@ import (
 	// "github.com/sparkscience/logjam/backend/lib/websocketmap"
 	binarytreesrv "github.com/sparkscience/logjam/backend/srv/binarytree"
 
+	"github.com/mmcomp/go-binarytree"
 	"github.com/mmcomp/go-log"
 	logger "github.com/mmcomp/go-log"
 )
 
 type httpHandler struct {
 	Logger logger.Logger
+	// Maps   map[string]binarytree.Tree
 }
 
 var upgrader = websocket.Upgrader{
@@ -28,7 +30,11 @@ var upgrader = websocket.Upgrader{
 	CheckOrigin:     func(r *http.Request) bool { return true },
 }
 
-var Map = binarytreesrv.GetMap()
+var Maps map[string]binarytree.Tree = make(map[string]binarytree.Tree)
+
+// var Maps = make(map[string]binarytree.Tree)
+
+// var Map = binarytreesrv.GetMap()
 
 func Handler(logger logger.Logger) http.Handler {
 	return httpHandler{
@@ -38,7 +44,17 @@ func Handler(logger logger.Logger) http.Handler {
 
 var filename string
 
-func (receiver httpHandler) findBroadcaster() (bool, *binarytreesrv.MySocket) {
+func (receiver httpHandler) getMapByRoomName(roomName string) *binarytree.Tree {
+	tmp := Maps[roomName]
+	return &tmp
+}
+
+func (receiver httpHandler) setMapByRoomName(roomName string, Map *binarytree.Tree) {
+	Maps[roomName] = *Map
+}
+
+func (receiver httpHandler) findBroadcaster(roomName string) (bool, *binarytreesrv.MySocket) {
+	Map := receiver.getMapByRoomName(roomName)
 	broadcasterLevel := Map.LevelNodes(1)
 	var broadcaster *binarytreesrv.MySocket
 	ok := len(broadcasterLevel) == 1
@@ -48,9 +64,8 @@ func (receiver httpHandler) findBroadcaster() (bool, *binarytreesrv.MySocket) {
 	return ok, broadcaster
 }
 
-func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, messageJSON []byte, messageType int, userAgent string) {
-	// log := receiver.Logger.Begin()
-	// defer log.End()
+func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, messageJSON []byte, messageType int, userAgent string, roomName string) {
+	Map := receiver.getMapByRoomName(roomName)
 	f, err := os.OpenFile(filename, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
 	if err == nil {
 		defer f.Close()
@@ -60,34 +75,29 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 	{
 		err := json.Unmarshal(messageJSON, &theMessage)
 		if err != nil {
-			// log.Error("Error unmarshal message ", err)
 			return
 		}
-		// log.Highlight("TheMessage  Type : ", theMessage.Type, " Data : ", theMessage.Data, " Target : ", theMessage.Target)
 	}
 
 	var response message.MessageContract
 	switch theMessage.Type {
 	case "start":
 		response.Type = "start"
-		// websocketmap.Map.SetName(socket.Socket, theMessage.Data)
 		socket.SetName(theMessage.Data)
 		response.Data = strconv.FormatInt(int64(socket.ID), 10)
 		responseJSON, err := json.Marshal(response)
 		if err == nil {
 			socket.Socket.WriteMessage(messageType, responseJSON)
 		} else {
-			// log.Error("Marshal Error of `start` response", err)
 			return
 		}
 	case "role":
 		response.Type = "role"
 		if theMessage.Data == "broadcast" {
 			response.Data = "yes:broadcast"
-			// websocketmap.Map.RemoveBroadcasters()
-			// websocketmap.Map.SetBroadcaster(socket.Socket)
 			Map.ToggleHead(socket.Socket)
 			Map.ToggleCanConnect(socket.Socket)
+			receiver.setMapByRoomName(roomName, Map)
 			if _, err := os.Stat("./logs/" + socket.Name); os.IsNotExist(err) {
 				os.Mkdir("./logs/"+socket.Name, 0755)
 			}
@@ -96,14 +106,11 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 			filename = "./logs/" + socket.Name + "/" + logName + ".log"
 			f, err := os.OpenFile(filename, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
 			if err == nil {
-				// log.Alert("Set output to file")
 				defer f.Close()
 			}
-			fmt.Fprintln(f, "Broadcast "+socket.Name+" Started")
 		} else if theMessage.Data == "alt-broadcast" {
 			response.Data = "yes:broadcast"
-			fmt.Fprintln(f, "Alt Broadcast "+socket.Name+" Started")
-			ok, broadcaster := receiver.findBroadcaster()
+			ok, broadcaster := receiver.findBroadcaster(roomName)
 
 			var audianceResponse message.MessageContract
 			audianceResponse.Type = "alt-broadcast"
@@ -111,7 +118,6 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 				audianceResponse.Data = "no-broadcaster"
 				audianceResponseJSON, aerr := json.Marshal(audianceResponse)
 				if aerr != nil {
-					// log.Error("Marshal Error of `alt-broadcast` audianceResponse1", aerr)
 					return
 				}
 				socket.Socket.WriteMessage(messageType, audianceResponseJSON)
@@ -120,7 +126,6 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 			audianceResponse.Data = strconv.FormatInt(int64(broadcaster.ID), 10)
 			audianceResponseJSON, aerr := json.Marshal(audianceResponse)
 			if aerr != nil {
-				// log.Error("Marshal Error of `alt-broadcast` audianceResponse2", aerr)
 				return
 			}
 			var broadResponse map[string]interface{} = make(map[string]interface{})
@@ -129,29 +134,22 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 			broadResponse["name"] = socket.Name
 			broadResponseJSON, err := json.Marshal(broadResponse)
 			if err != nil {
-				// log.Error("Marshal Error of `alt-broadcast` broadResponse", err)
 				return
 			}
 			broadcaster.Socket.WriteMessage(messageType, broadResponseJSON)
 			socket.Socket.WriteMessage(messageType, audianceResponseJSON)
 			return
 		} else {
-			// log.Highlight("userAgent : ", userAgent)
 			if socket.IsBroadcaster {
 				response.Data = "no:broadcast"
-				// websocketmap.Map.RemoveBroadcaster(socket.Socket)
 				Map.ToggleHead(socket.Socket)
+				receiver.setMapByRoomName(roomName, Map)
 
 				msg := "Broadcaster " + socket.Name + " removed broadcasting role from himself"
 				fmt.Fprintln(f, msg)
 			} else {
 				response.Data = "yes:audience"
-				ok, broadcaster := receiver.findBroadcaster()
-				// broadcasterLevel := Map.LevelNodes(1)
-				// broadcaster, ok := websocketmap.Map.GetBroadcaster()
-				// var broadcaster *binarytreesrv.MySocket
-				// ok := len(broadcasterLevel) == 1
-				// log.Alert("broadcasterLevel ", broadcasterLevel)
+				ok, broadcaster := receiver.findBroadcaster(roomName)
 
 				msg := "Audiance " + socket.Name + " trying to receive stream\n" + "    " + userAgent
 				fmt.Fprintln(f, msg)
@@ -171,17 +169,12 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 					fmt.Fprintln(f, msg)
 
 					if err == nil {
-						// log.Highlight("Deciding to connect ...")
-						targetSocketNode, e := binarytreesrv.InsertChild(socket.Socket, Map)
-						// targetSocketNode, e := Map.InsertChild(socket.Socket, false)
+						targetSocketNode, e := binarytreesrv.InsertChild(socket.Socket, *Map)
 						if e != nil {
-							// log.Error("Insert Child Error ", e)
 							socket.Socket.WriteMessage(messageType, []byte("{\"type\":\"error\",\"data\":\"Insert Child Error : "+e.Error()+" \"}"))
 							return
 						}
-						// log.Highlight("Deciding to connect end")
 						targetSocket := targetSocketNode.(*binarytreesrv.MySocket)
-						// log.Highlight("target ", targetSocket.ID)
 
 						msg := "Audiance " + socket.Name + " is starting to connect to " + targetSocket.Name
 						fmt.Fprintln(f, msg)
@@ -191,7 +184,6 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 						}
 						targetSocket.Socket.WriteMessage(messageType, broadResponseJSON)
 					} else {
-						// log.Error("Marshal Error of `add_audience` broadResponse", err)
 						return
 					}
 				}
@@ -201,12 +193,11 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 		if err == nil {
 			socket.Socket.WriteMessage(messageType, responseJSON)
 		} else {
-			// log.Error("Marshal Error of `role` response", err)
 			return
 		}
 	case "stream":
-		// log.Alert("Stream Received ", socket.Name)
 		Map.ToggleCanConnect(socket.Socket)
+		receiver.setMapByRoomName(roomName, Map)
 
 		msg := "Audiance " + socket.Name + " is receiving stream!"
 		fmt.Fprintln(f, msg)
@@ -215,53 +206,41 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 		socket.SetIsTurn(theMessage.Data == "on")
 		fmt.Fprintln(f, msg)
 	case "log":
-		// log.Alert("Log Received ", socket.Name)
 		msg := "Audiance " + socket.Name + " client log :\n    " + theMessage.Data
 		fmt.Fprintln(f, msg)
 	case "ping":
-		// log.Alert("Ping Received ", socket.Name)
 		socket.Socket.WriteJSON(message.MessageContract{Type: "pong", Data: "pong"})
 	case "tree":
-		// log.Alert("Tree Received ", socket.Name)
-		treeData := binarytreesrv.Tree(Map)
-		// log.Inform("treeData ", treeData)
+		treeData := binarytreesrv.Tree(*Map)
 		j, e := json.Marshal(treeData)
 		if e != nil {
 			log.Error(e)
 			return
 		}
 		output := string(j)
-		// log.Inform("treeData ", output)
 		response.Type = "tree"
 		response.Data = output
 		responseJSON, err := json.Marshal(response)
 		if err == nil {
 			socket.Socket.WriteMessage(messageType, responseJSON)
 		} else {
-			// log.Error("Marshal Error of `tree` response", err)
 			return
 		}
 	default:
-		// log.Alert("Default Message")
 		ID, err := strconv.ParseUint(theMessage.Target, 10, 64)
 		if err != nil {
-			// log.Error("Inavlid Target : ", theMessage.Target)
 			return
 		}
-		// log.Alert("Target ", ID)
 		allockets := Map.All()
 		var ok = false
 		var target *binarytreesrv.MySocket
-		// target, ok := Map. .GetSocketByID(ID)
 		for _, node := range allockets {
-			// log.Alert(node.(*binarytreesrv.MySocket).ID)
 			if node.(*binarytreesrv.MySocket).ID == ID {
 				ok = true
 				target = node.(*binarytreesrv.MySocket)
 				break
 			} else {
 				for _, child := range node.All() {
-					// log.Alert(child.(*binarytreesrv.MySocket).ID)
 					if child.(*binarytreesrv.MySocket).ID == ID {
 						ok = true
 						target = child.(*binarytreesrv.MySocket)
@@ -270,20 +249,16 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 				}
 			}
 		}
-		// log.Alert("Find target ? ", ok)
 		if ok {
-			// log.Inform("Default sending to ", ID, " ", string(messageJSON))
 			var fullMessage map[string]interface{}
 			err := json.Unmarshal(messageJSON, &fullMessage)
 			if err != nil {
-				// log.Error("Error unmarshal message ", err)
 				return
 			}
 			fullMessage["username"] = socket.Name
 			fullMessage["data"] = strconv.FormatInt(int64(socket.ID), 10)
 			messageJSON, err = json.Marshal(fullMessage)
 			if err != nil {
-				// log.Error("Error marshal message ", err)
 				return
 			}
 			target.Socket.WriteMessage(messageType, messageJSON)
@@ -291,43 +266,43 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 	}
 }
 
-func (receiver httpHandler) reader(conn *websocket.Conn, userAgent string) {
-	// log := receiver.Logger.Begin()
-	// defer log.End()
+func (receiver httpHandler) reader(conn *websocket.Conn, userAgent string, roomName string) {
+	Map := receiver.getMapByRoomName(roomName)
 	for {
 		messageType, p, err := conn.ReadMessage()
 		if err != nil {
 			_, closedError := err.(*websocket.CloseError)
 			_, handshakeError := err.(*websocket.HandshakeError)
 			if closedError || handshakeError {
-				// log.Warn("Socket ", Map.Get(conn).(*binarytreesrv.MySocket).ID, " Closed!")
 				Map.Delete(conn)
-				// log.Inform("Socket closed!")
+				receiver.setMapByRoomName(roomName, Map)
 				return
 			}
-			// log.Error("Read from socket error : ", err)
 			return
 		}
-		// log.Informf("Message from socket ID %d name %s ", Map.Get(conn).(*binarytreesrv.MySocket).ID, Map.Get(conn).(*binarytreesrv.MySocket).Name)
-		// log.Inform("Message", string(p))
-		receiver.parseMessage(Map.Get(conn).(*binarytreesrv.MySocket), p, messageType, userAgent)
-		// log.Alert(messageType, p, Map.Get(conn))
+		receiver.parseMessage(Map.Get(conn).(*binarytreesrv.MySocket), p, messageType, userAgent, roomName)
 	}
-
 }
 
 func (receiver httpHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	log := receiver.Logger.Begin()
 	defer log.End()
-	// log.Highlight("Method", req.Method)
-	// log.Highlight("Path", req.URL.Path)
+
 	ws, err := upgrader.Upgrade(w, req, nil)
 	if err != nil {
 		log.Error("Upgrade Error : ", err)
 		return
 	}
-	// log.Log("Client Connected")
+	roomName := req.URL.Query().Get("room")
+	var mapFound bool
+	_, mapFound = Maps[roomName]
+	if !mapFound {
+		AMap := binarytreesrv.GetMap()
+		receiver.setMapByRoomName(roomName, &AMap)
+	}
+	Map := receiver.getMapByRoomName(roomName)
 	Map.Insert(ws)
+	receiver.setMapByRoomName(roomName, Map)
 	userAgent := req.Header.Get("User-Agent")
-	receiver.reader(ws, userAgent)
+	receiver.reader(ws, userAgent, roomName)
 }
