@@ -8,6 +8,7 @@
 
 <body>
     <label for="myName">Name:</label>
+    <input id="roomName" type="text" placeholder="Enter your room" />
     <input id="myName" type="text" placeholder="Enter your name" />
     <button onclick="startReadingBroadcast()">Start Receiving Broadcast</button>
     <button onclick="raisHand()">Raise Hand</button>
@@ -56,7 +57,7 @@
             if (window.location.href.split("//")[0] == "http:") {
                 protocol = "ws";
             }
-            return sparkRTC.setupSignalingSocket(`${protocol}://${baseUrl}/ws`, document.getElementById("myName").value);
+            return sparkRTC.setupSignalingSocket(`${protocol}://${baseUrl}/ws`, document.getElementById("myName").value, document.getElementById("roomName").value);
         };
 
         const startReadingBroadcast = async () => {

@@ -48,6 +48,7 @@ class SparkRTC {
     remoteStreams = [];
     socket;
     myName = 'NoName';
+    roomName = 'SparkRTC';
     myUsername = 'NoUsername';
     myPeerConnectionArray = {};
     iceCandidates = [];
@@ -152,7 +153,7 @@ class SparkRTC {
             type: "ping",
         }));
     };
-    setupSignalingSocket = (url, myName) => {
+    setupSignalingSocket = (url, myName, roomName) => {
         return new Promise((resolve, reject) => {
             if (this.pingInterval) {
                 clearInterval(this.pingInterval);
@@ -160,7 +161,10 @@ class SparkRTC {
             }
             if (myName)
                 this.myName = myName;
-            const socket = new WebSocket(url);
+            if (roomName)
+                this.roomName = roomName;
+
+            const socket = new WebSocket(url + '?room=' + this.roomName);
             socket.onmessage = this.handleMessage;
             socket.onopen = () => {
                 console.log("WebSocket connection opened");
@@ -181,7 +185,7 @@ class SparkRTC {
                 // this.setupSignalingSocket(url, myName);
             };
             socket.onerror = (error) => {
-                console.log("WebSocket error: " + error);
+                console.log("WebSocket error: ", error);
                 reject(error);
             };
             this.socket = socket;
