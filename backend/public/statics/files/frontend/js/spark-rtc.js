@@ -48,9 +48,11 @@ class SparkRTC {
     remoteStreams = [];
     socket;
     myName = 'NoName';
+    roomName = 'SparkRTC';
     myUsername = 'NoUsername';
     myPeerConnectionArray = {};
     iceCandidates = [];
+    pingInterval;
     handleVideoOfferMsg = async (msg) => {
         const broadcasterPeerConnection = this.createOrGetPeerConnection(msg.name);
         await broadcasterPeerConnection.setRemoteDescription(new RTCSessionDescription(msg.sdp));
@@ -75,7 +77,7 @@ class SparkRTC {
         msg.data = (msg.Data && !msg.data) ? msg.Data : msg.data;
         msg.type = (msg.Type && !msg.type) ? msg.Type : msg.type;
 
-        if (msg.type !== 'new-ice-candidate') console.log(msg);
+        if (msg.type !== 'new-ice-candidate' && msg.type !== 'pong') console.log(msg);
         let audiencePeerConnection;
         switch (msg.type) {
             case 'video-offer':
@@ -84,7 +86,6 @@ class SparkRTC {
                 break;
             case 'video-answer':
             case 'alt-video-answer':
-                // console.log('Got answer.', msg);
                 audiencePeerConnection = this.createOrGetPeerConnection(msg.data, true);
                 try {
                     await audiencePeerConnection.setRemoteDescription(new RTCSessionDescription(msg.sdp));
@@ -96,7 +97,6 @@ class SparkRTC {
                 break;
             case 'new-ice-candidate':
             case 'alt-new-ice-candidate':
-                // console.log('Got ICE candidate.', msg);
                 audiencePeerConnection = this.createOrGetPeerConnection(msg.data);
                 this.iceCandidates.push(new RTCIceCandidate(msg.candidate));
                 if (audiencePeerConnection && audiencePeerConnection.remoteDescription) {
@@ -148,11 +148,23 @@ class SparkRTC {
                 break;
         }
     };
-    setupSignalingSocket = (url, myName) => {
+    ping = () => {
+        this.socket.send(JSON.stringify({
+            type: "ping",
+        }));
+    };
+    setupSignalingSocket = (url, myName, roomName) => {
         return new Promise((resolve, reject) => {
+            if (this.pingInterval) {
+                clearInterval(this.pingInterval);
+                this.pingInterval = null;
+            }
             if (myName)
                 this.myName = myName;
-            const socket = new WebSocket(url);
+            if (roomName)
+                this.roomName = roomName;
+
+            const socket = new WebSocket(url + '?room=' + this.roomName);
             socket.onmessage = this.handleMessage;
             socket.onopen = () => {
                 console.log("WebSocket connection opened");
@@ -162,6 +174,7 @@ class SparkRTC {
                         data: myName,
                     })
                 );
+                this.pingInterval = setInterval(this.ping, 2000);
                 resolve(socket);
             };
             socket.onclose = () => {
@@ -169,10 +182,10 @@ class SparkRTC {
                 this.remoteStreamNotified = false;
                 this.myPeerConnectionArray = {};
                 if (this.signalingDisconnectedCallback) this.signalingDisconnectedCallback;
-                this.setupSignalingSocket(url, myName);
+                // this.setupSignalingSocket(url, myName);
             };
             socket.onerror = (error) => {
-                console.log("WebSocket error: " + error);
+                console.log("WebSocket error: ", error);
                 reject(error);
             };
             this.socket = socket;
@@ -300,8 +313,10 @@ class SparkRTC {
 
         peerConnection.oniceconnectionstatechange = (event) => {
             if (peerConnection.iceConnectionState == 'disconnected') {
-                console.log('Disconnected', peerConnection);
-                this.socket.close();
+                console.log('Disconnected', peerConnection, event);
+                // console.log(peerConnection.getRemoteStreams()[0].getTracks());
+                // this.socket.close();
+                if (this.remoteStreamDCCallback) this.remoteStreamDCCallback(target, peerConnection);
             }
         };
 
@@ -363,6 +378,7 @@ class SparkRTC {
         this.role = role;
         this.localStreamChangeCallback = options.localStreamChangeCallback;
         this.remoteStreamCallback = options.remoteStreamCallback;
+        this.remoteStreamDCCallback = options.remoteStreamDCCallback;
         this.signalingDisconnectedCallback = options.signalingDisconnectedCallback;
     }
 }
