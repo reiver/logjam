@@ -2,6 +2,8 @@ const CAMERA_ON = "images/cam-on.png";
 const CAMERA_OFF = "images/cam-off.png";
 const MIC_ON = "images/mic-on.png";
 const MIC_OFF = "images/mic-off.png";
+const SCREEN_ON = "images/screen-on.png";
+const SCREEN_OFF = "images/screen-off.png";
 // const SPARK_LOGO = "images/spark-logo.png";
 const CHARACTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
 
@@ -38,13 +40,13 @@ function arrangeVideoContainers() {
 function onCameraButtonClick() {
     const img = document.getElementById("camera");
     if (img.dataset.status === 'on') {
-        sparkRTC.disableVideo();
         img.dataset.status = 'off';
         img.src = CAMERA_OFF;
+        sparkRTC.disableVideo();
     } else {
-        sparkRTC.disableVideo(true);
         img.dataset.status = 'on';
         img.src = CAMERA_ON;
+        sparkRTC.disableVideo(true);
     }
 }
 
@@ -52,21 +54,26 @@ function onCameraButtonClick() {
 function onMicButtonClick() {
     const img = document.getElementById("mic");
     if (img.dataset.status === 'on') {
-        sparkRTC.disableAudio();
         img.dataset.status = 'off';
         img.src = MIC_OFF;
+        sparkRTC.disableAudio();
     } else {
-        sparkRTC.disableAudio(true);
         img.dataset.status = 'on';
         img.src = MIC_ON;
+        sparkRTC.disableAudio(true);
     }
 }
 
 async function onShareScreen() {
+    const img = document.getElementById("share_screen");
     if (!shareScreenStream) {
+        img.dataset.status = 'on';
+        img.src = SCREEN_ON;
         shareScreenStream = await sparkRTC.startShareScreen();
         document.getElementById('localScreen').srcObject = shareScreenStream;
     } else {
+        img.dataset.status = 'off';
+        img.src = SCREEN_OFF;
         shareScreenStream.getTracks().forEach(track => track.stop());
         shareScreenStream = null;
         document.getElementById('localScreen').srcObject = null;
