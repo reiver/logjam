@@ -26,6 +26,7 @@ function arrangeVideoContainers() {
     const videoContainers = document.getElementById('screen')
         .getElementsByClassName('video-container');
     const videoCount = videoContainers.length;
+    console.log('videoCount=', videoCount);
     const flexGap = 1;
     let flexRatio = 100 / Math.ceil(Math.sqrt(videoCount));
     let flex = "0 0 calc(" + flexRatio + "% - " + flexGap + "px)";
@@ -64,21 +65,52 @@ function onMicButtonClick() {
     }
 }
 
+function createVideoElement(videoId) {
+    let container = document.createElement('div');
+    container.className = 'video-container';
+    let video = document.createElement('video');
+    video.id = videoId;
+    video.autoplay = true;
+    video.playsInline = true;
+    video.muted = true;
+    container.appendChild(video);
+    document.getElementById('screen').appendChild(container);
+    arrangeVideoContainers();
+    return video;
+}
+
+function getVideoElement(videoId) {
+    let video = document.getElementById(videoId);
+    return video ? video : createVideoElement(videoId);
+}
+
+function removeVideoElement(videoId){
+    let video = document.getElementById(videoId);
+    if (!video) return;
+    let videoContainer = video.parentNode;
+    if (!videoContainer) return;
+    document.getElementById('screen').removeChild(videoContainer);
+}
+
+
 async function onShareScreen() {
     const img = document.getElementById("share_screen");
+    const localScreen = getVideoElement('localScreen');
     if (!shareScreenStream) {
         img.dataset.status = 'on';
         img.src = SCREEN_ON;
         shareScreenStream = await sparkRTC.startShareScreen();
-        document.getElementById('localScreen').srcObject = shareScreenStream;
+        localScreen.srcObject = shareScreenStream;
     } else {
         img.dataset.status = 'off';
         img.src = SCREEN_OFF;
         shareScreenStream.getTracks().forEach(track => track.stop());
         shareScreenStream = null;
-        document.getElementById('localScreen').srcObject = null;
+        localScreen.srcObject = null;
+        removeVideoElement('localScreen');
     }
 }
+
 
 function setMyName() {
     try {
@@ -97,6 +129,7 @@ function setMyName() {
     }
 }
 
+
 function handleClick() {
     let newName = document.getElementById("inputName").value;
     if (newName) {
@@ -111,6 +144,7 @@ function handleClick() {
     return false;
 }
 
+
 function handleResize() {
     clearTimeout(window.resizedFinished);
     window.resizedFinished = setTimeout(function () {
@@ -119,19 +153,23 @@ function handleResize() {
 
 }
 
+
 function getMyRole() {
     const queryString = window.location.search;
     const urlParams = new URLSearchParams(queryString);
     return urlParams.get('role') === 'broadcast' ? "broadcast" : "audience";
 }
 
+
 function setupSignalingSocket() {
     return sparkRTC.setupSignalingSocket(getWsUrl(), myName);
 }
 
-function start(){
+
+function start() {
     return sparkRTC.start();
 }
+
 
 function onLoad() {
     myRole = getMyRole();
@@ -144,4 +182,9 @@ function onLoad() {
     graph.draw(DATA);
 
     arrangeVideoContainers();
+}
+
+
+function onRaiseHand() {
+
 }
