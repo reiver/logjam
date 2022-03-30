@@ -65,13 +65,14 @@ function onMicButtonClick() {
     }
 }
 
-function createVideoElement(videoId) {
+function createVideoElement(videoId, muted = false) {
     let container = document.createElement('div');
     container.className = 'video-container';
     let video = document.createElement('video');
     video.id = videoId;
     video.autoplay = true;
     video.playsInline = true;
+    video.muted = muted;
     container.appendChild(video);
     document.getElementById('screen').appendChild(container);
     arrangeVideoContainers();
@@ -80,7 +81,7 @@ function createVideoElement(videoId) {
 
 function getVideoElement(videoId) {
     let video = document.getElementById(videoId);
-    return video ? video : createVideoElement(videoId);
+    return video ? video : createVideoElement(videoId, true);
 }
 
 function removeVideoElement(videoId){
@@ -191,6 +192,6 @@ async function onRaiseHand() {
     const stream = await sparkRTC.raiseHand();
     const tagId = 'localVideo-' + stream.id;
     if (document.getElementById(tagId)) return;
-    const video = createVideoElement(tagId);
+    const video = createVideoElement(tagId, true);
     video.srcObject = stream;
 }
