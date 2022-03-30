@@ -185,6 +185,10 @@ function onLoad() {
 }
 
 
-function onRaiseHand() {
-
+async function onRaiseHand() {
+    const stream = await sparkRTC.raiseHand();
+    const tagId = 'localVideo-' + stream.id;
+    if (document.getElementById(tagId)) return;
+    const video = createVideoElement(tagId);
+    video.srcObject = stream;
 }
