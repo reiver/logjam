@@ -4,8 +4,6 @@ Private repo for logjam.
 
 **DO NOT SHARE THIS!**
 
-
-
 # Endpoints
 To broadcast
 ```

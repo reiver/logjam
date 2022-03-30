@@ -4,54 +4,46 @@ function getWsUrl() {
     return `${protocol}://${baseUrl}/ws`
 }
 
-function addRemoteVideoTag(stream) {
-    const tagId = 'remoteVideo-' + stream.id;
-    if (document.getElementById(tagId)) return;
 
-    const videoTag = document.createElement('video');
-    videoTag.className = 'video-container remote-video';
-    videoTag.playsInline = true;
-    videoTag.autoplay = true;
-    videoTag.id = tagId;
-    videoTag.srcObject = stream;
-    document.getElementById('screen').appendChild(videoTag);
-    arrangeVideoContainers();
-};
-
-function clearRemoteVideos() {
-    document.getElementsByClassName('remote-video').remove();
+function clearScreen() {
+    let screen = document.getElementById('screen');
+    if (!screen) return;
+    while (screen.hasChildNodes()) {
+        screen.removeChild(screen.firstChild);
+    }
 }
 
 function createSparkRTC() {
+    clearScreen();
     if (myRole === 'broadcast'){
         return new SparkRTC('broadcast', {
             localStreamChangeCallback: (stream) => {
                 console.log('got stream', stream);
-                document.getElementById('localVideo').srcObject = stream;
+                getVideoElement('localVideo').srcObject = stream;
                 console.log('Set Local Stream');
             },
             remoteStreamCallback: (stream) => {
                 const tagId = 'remoteVideo-' + stream.id;
                 if (document.getElementById(tagId)) return;
-
-                addRemoteVideoTag(stream);
+                const video = createVideoElement(tagId);
+                video.srcObject = stream;
             },
             signalingDisconnectedCallback: () => {
-                clearRemoteVideos()
+                clearScreen();
             },
         });
-    }
-    document.getElementById('localVideo').remove();
-    document.getElementById('localScreen').remove();
-    return new SparkRTC('audience', {
-        remoteStreamCallback: (stream) => {
-            const tagId = 'remoteVideo-' + stream.id;
-            if (document.getElementById(tagId)) return;
+    }else{
+        return new SparkRTC('audience', {
+            remoteStreamCallback: (stream) => {
+                const tagId = 'remoteVideo-' + stream.id;
+                if (document.getElementById(tagId)) return;
+                const video = createVideoElement(tagId);
+                video.srcObject = stream;
+            },
+            signalingDisconnectedCallback: () => {
+                clearScreen();
+            },
+        });
 
-            addRemoteVideoTag(stream);
-        },
-        signalingDisconnectedCallback: () => {
-            clearRemoteVideos();
-        },
-    });
+    }
 }

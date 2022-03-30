@@ -6,7 +6,7 @@
     <title>SparkScience Demo</title>
     <link rel="stylesheet" href="css/main.css">
     <link rel="stylesheet" href="css/graph.css">
-    <link rel="icon" type="image/png" href="/images/spark-logo.png">
+    <link rel="icon" type="image/png" href="images/spark-logo.png">
     <script src="https://d3js.org/d3.v4.min.js"></script>
     <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
     <script src="js/spark-rtc.js"></script>
@@ -40,8 +40,7 @@
         <button class="button" onclick="setupSignalingSocket();">Setup </button>
         <button class="button" onclick="start()">Start </button>
         <div id="screen">
-            <video id="localVideo" class="video-container" autoPlay playsInline muted></video>
-            <video id="localScreen" class="video-container" autoPlay playsInline muted></video>
+
         </div>
         <!--bottom bar-->
         <div id="bottom-bar-wrapper">
@@ -49,13 +48,15 @@
             <div id="bottom-bar-container">
                 <p id="myName"></p>
                 <div id="control-buttons-container">
-                    <img id="camera" data-status="on" class="control-button-image" src="images/cam-on.png" alt="icon"
+                    <img id="camera" data-status="on" class="control-button-image" src="images/cam-on.png" alt="camera"
                         onclick="onCameraButtonClick()" />
+                    <img id="mic" data-status="on" class="control-button-image" src="images/mic-on.png" alt="mic"
+                         onclick="onMicButtonClick()" />
                     <img id="spark" class="control-button-image" src="images/spark-logo.png" alt="logo" />
-                    <img id="mic" data-status="on" class="control-button-image" src="images/mic-on.png" alt="icon"
-                        onclick="onMicButtonClick()" />
                     <img id="share_screen" data-status="off" class="control-button-image" src="images/screen-off.png"
-                        alt="icon" onclick="onShareScreen()" />
+                         alt="share screen" onclick="onShareScreen()" />
+                    <img id="raise_hand" data-status="off" class="control-button-image" src="images/hand.png"
+                         alt="raise hand" onclick="onRaiseHand()" />
                 </div>
             </div>
         </div>
