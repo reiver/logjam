@@ -16,6 +16,7 @@ function clearScreen() {
 function createSparkRTC() {
     clearScreen();
     if (myRole === 'broadcast'){
+        document.getElementById('raise_hand').style.display = 'none';
         return new SparkRTC('broadcast', {
             localStreamChangeCallback: (stream) => {
                 console.log('got stream', stream);
@@ -33,6 +34,7 @@ function createSparkRTC() {
             },
         });
     }else{
+        document.getElementById('share_screen').style.display = 'none';
         return new SparkRTC('audience', {
             remoteStreamCallback: (stream) => {
                 const tagId = 'remoteVideo-' + stream.id;
