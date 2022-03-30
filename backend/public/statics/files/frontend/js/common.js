@@ -6,6 +6,8 @@ function getWsUrl() {
 
 
 function clearScreen() {
+    document.getElementById('raise_hand').style.display = 'block';
+    document.getElementById('share_screen').style.display = 'block';
     let screen = document.getElementById('screen');
     if (!screen) return;
     while (screen.hasChildNodes()) {
