@@ -141,6 +141,8 @@ function handleClick() {
     document.getElementById("getName").style.display = "none";
     document.getElementById("myName").innerText = newName;
 
+    start();
+
     return false;
 }
 
@@ -166,7 +168,8 @@ function setupSignalingSocket() {
 }
 
 
-function start() {
+async function start() {
+    await setupSignalingSocket();
     return sparkRTC.start();
 }
 
