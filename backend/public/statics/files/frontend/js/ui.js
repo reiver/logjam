@@ -72,7 +72,6 @@ function createVideoElement(videoId) {
     video.id = videoId;
     video.autoplay = true;
     video.playsInline = true;
-    video.muted = true;
     container.appendChild(video);
     document.getElementById('screen').appendChild(container);
     arrangeVideoContainers();
