@@ -90,22 +90,26 @@ function removeVideoElement(videoId){
     let videoContainer = video.parentNode;
     if (!videoContainer) return;
     document.getElementById('screen').removeChild(videoContainer);
+    arrangeVideoContainers();
 }
 
 
 async function onShareScreen() {
     const img = document.getElementById("share_screen");
-    const localScreen = getVideoElement('localScreen');
     if (!shareScreenStream) {
-        img.dataset.status = 'on';
-        img.src = SCREEN_ON;
         shareScreenStream = await sparkRTC.startShareScreen();
-        localScreen.srcObject = shareScreenStream;
+        if (shareScreenStream){
+            img.dataset.status = 'on';
+            img.src = SCREEN_ON;
+            const localScreen = getVideoElement('localScreen');
+            localScreen.srcObject = shareScreenStream;
+        }
     } else {
         img.dataset.status = 'off';
         img.src = SCREEN_OFF;
         shareScreenStream.getTracks().forEach(track => track.stop());
         shareScreenStream = null;
+        const localScreen = getVideoElement('localScreen');
         localScreen.srcObject = null;
         removeVideoElement('localScreen');
     }
@@ -151,6 +155,7 @@ function handleResize() {
     clearTimeout(window.resizedFinished);
     window.resizedFinished = setTimeout(function () {
         graph.draw(graph.treeData);
+        arrangeVideoContainers();
     }, 250);
 
 }
