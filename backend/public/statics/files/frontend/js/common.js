@@ -34,6 +34,14 @@ function createSparkRTC() {
             signalingDisconnectedCallback: () => {
                 clearScreen();
             },
+            treeCallback: (tree) => {
+                try {
+                    const treeData = JSON.parse(tree);
+                    graph.draw(treeData[0]);
+                } catch (e) {
+                    console.error(e);
+                }
+            },
         });
     }else{
         document.getElementById('share_screen').style.display = 'none';
@@ -46,6 +54,14 @@ function createSparkRTC() {
             },
             signalingDisconnectedCallback: () => {
                 clearScreen();
+            },
+            treeCallback: (tree) => {
+                try {
+                    const treeData = JSON.parse(tree);
+                    graph.draw(treeData[0]);
+                } catch (e) {
+                    console.error(e);
+                }
             },
         });
 

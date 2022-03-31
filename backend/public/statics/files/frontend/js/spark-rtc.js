@@ -144,13 +144,16 @@ class SparkRTC {
                     );
                 }
                 break;
+            case 'tree':
+                if (this.treeCallback) this.treeCallback(msg.data);
+                break;
             default:
                 break;
         }
     };
     ping = () => {
         this.socket.send(JSON.stringify({
-            type: "ping",
+            type: this.treeCallback ? "tree" : "ping",
         }));
     };
     setupSignalingSocket = (url, myName, roomName) => {
@@ -380,5 +383,6 @@ class SparkRTC {
         this.remoteStreamCallback = options.remoteStreamCallback;
         this.remoteStreamDCCallback = options.remoteStreamDCCallback;
         this.signalingDisconnectedCallback = options.signalingDisconnectedCallback;
+        this.treeCallback = options.treeCallback;
     }
 }
