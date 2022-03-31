@@ -35,7 +35,7 @@ body {
     flex-direction: row;
     flex-wrap: wrap;
     justify-content: center;
-    background-color: green;
+    background-color: black;
     gap: 1px;
     height: 95%;
     overflow: hidden
