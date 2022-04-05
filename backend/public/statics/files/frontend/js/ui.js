@@ -84,7 +84,7 @@ function getVideoElement(videoId) {
     return video ? video : createVideoElement(videoId, true);
 }
 
-function removeVideoElement(videoId){
+function removeVideoElement(videoId) {
     let video = document.getElementById(videoId);
     if (!video) return;
     let videoContainer = video.parentNode;
@@ -98,7 +98,7 @@ async function onShareScreen() {
     const img = document.getElementById("share_screen");
     if (!shareScreenStream) {
         shareScreenStream = await sparkRTC.startShareScreen();
-        if (shareScreenStream){
+        if (shareScreenStream) {
             img.dataset.status = 'on';
             img.src = SCREEN_ON;
             const localScreen = getVideoElement('localScreen');
