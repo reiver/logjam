@@ -23,6 +23,10 @@ function createSparkRTC() {
             localStreamChangeCallback: (stream) => {
                 console.log('got stream', stream);
                 getVideoElement('localVideo').srcObject = stream;
+                // getVideoElement('localVideo2').srcObject = stream;
+                // getVideoElement('localVideo3').srcObject = stream;
+                // getVideoElement('localVideo4').srcObject = stream;
+                // getVideoElement('localVideo5').srcObject = stream;
                 console.log('Set Local Stream');
             },
             remoteStreamCallback: (stream) => {

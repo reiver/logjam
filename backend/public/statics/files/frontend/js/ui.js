@@ -27,7 +27,7 @@ function arrangeVideoContainers() {
         .getElementsByClassName('video-container');
     const videoCount = videoContainers.length;
     console.log('videoCount=', videoCount);
-    const flexGap = 1;
+    const flexGap = 10;
     let flexRatio = 100 / Math.ceil(Math.sqrt(videoCount));
     let flex = "0 0 calc(" + flexRatio + "% - " + flexGap + "px)";
 
@@ -143,7 +143,7 @@ function handleClick() {
     }
     document.getElementById("page").style.visibility = "visible";
     document.getElementById("getName").style.display = "none";
-    document.getElementById("myName").innerText = newName;
+    // document.getElementById("myName").innerText = newName;
 
     start();
 
