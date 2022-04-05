@@ -23,16 +23,20 @@ function makeId(length) {
 
 
 function arrangeVideoContainers() {
+    console.log('arrangeVideoContainers')
     const videoContainers = document.getElementById('screen')
         .getElementsByClassName('video-container');
     const videoCount = videoContainers.length;
     console.log('videoCount=', videoCount);
-    const flexGap = 10;
+    const flexGap = 1;
+    console.log('math=', Math.ceil(Math.sqrt(videoCount)));
     let flexRatio = 100 / Math.ceil(Math.sqrt(videoCount));
-    let flex = "0 0 calc(" + flexRatio + "% - " + flexGap + "px)";
-
+    // let flex = "0 0 calc(" + flexRatio + "% - " + flexGap + "px)";
+    let flex = "0 0 " + flexRatio + "%";
+    let maxHeight = 100 / Math.ceil(videoCount / Math.ceil(Math.sqrt(videoCount)));
     Array.from(videoContainers).forEach(div => {
             div.style.setProperty('flex', flex);
+            div.style.setProperty('max-height', maxHeight + "%");
         }
     )
 }
