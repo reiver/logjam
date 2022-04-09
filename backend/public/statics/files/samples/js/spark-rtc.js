@@ -41,7 +41,6 @@ class SparkRTC {
             },
         ],
     };
-
     role = 'broadcast';
     localStream;
     remoteStreamNotified = false;
@@ -53,6 +52,7 @@ class SparkRTC {
     myPeerConnectionArray = {};
     iceCandidates = [];
     pingInterval;
+    senders = {};
     handleVideoOfferMsg = async (msg) => {
         const broadcasterPeerConnection = this.createOrGetPeerConnection(msg.name);
         await broadcasterPeerConnection.setRemoteDescription(new RTCSessionDescription(msg.sdp));
@@ -276,7 +276,6 @@ class SparkRTC {
                         name: this.myUsername,
                     })
                 );
-                console.log('onnegotiationneeded done');
             } catch (e) {
                 console.log(e);
                 alert('onnegotiationneeded failed:', e);
@@ -285,13 +284,13 @@ class SparkRTC {
 
         peerConnection.ontrack = (event) => {
             const stream = event.streams[0];
-            console.log({ stream });
-            if (this.remoteStreams.indexOf(event.streams[0]) !== -1) return;
+            if (this.remoteStreams.indexOf(stream) !== -1) return;
+            stream.oninactive = (event) => {
+                if (this.remoteStreamDCCallback) this.remoteStreamDCCallback(event.target);
+            };
             if (this.remoteStreamCallback)
                 this.remoteStreamCallback(stream);
-            if (this.remoteStreams.indexOf(stream) === -1)
-                this.remoteStreams.push(stream);
-            console.log("onTrack");
+            this.remoteStreams.push(stream);
             if (!this.remoteStreamNotified) {
                 this.remoteStreamNotified = true;
                 this.socket.send(
@@ -302,24 +301,37 @@ class SparkRTC {
                 );
             }
 
-            console.log('Sending to all peers');
             for (const userId in this.myPeerConnectionArray) {
                 if (userId === target) continue;
                 const apeerConnection = this.myPeerConnectionArray[userId];
                 if (!apeerConnection.isAdience) return;
 
                 stream.getTracks().forEach((track) => {
-                    apeerConnection.addTrack(track, stream);
+                    const sender = apeerConnection.addTrack(track, stream);
+                    this.senders[track.id] = sender;
                 });
             }
         };
 
         peerConnection.oniceconnectionstatechange = (event) => {
             if (peerConnection.iceConnectionState == 'disconnected') {
-                console.log('Disconnected', peerConnection, event);
-                // console.log(peerConnection.getRemoteStreams()[0].getTracks());
-                // this.socket.close();
-                if (this.remoteStreamDCCallback) this.remoteStreamDCCallback(target, peerConnection);
+                const trackIds = peerConnection.getReceivers().map((receiver) => receiver.track.id);
+                console.log(trackIds);
+                trackIds.forEach((trackId) => {
+                    console.log('removing trackId', trackId);
+                    const sender = this.senders[trackId];
+                    if (!sender) return;
+                    for (const userId in this.myPeerConnectionArray) {
+                        if (userId === target) continue;
+                        const apeerConnection = this.myPeerConnectionArray[userId];
+                        if (!apeerConnection.isAdience) return;
+        
+                        apeerConnection.removeTrack(sender);
+                    }
+                    
+                    delete this.senders[trackId];
+                });
+                if (this.remoteStreamDCCallback) this.remoteStreamDCCallback(peerConnection.getRemoteStreams()[0]);
             }
         };
 
