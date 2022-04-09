@@ -53,6 +53,8 @@ class SparkRTC {
     iceCandidates = [];
     pingInterval;
     senders = {};
+    raiseHands = [];
+    startedRaiseHand = false;
     handleVideoOfferMsg = async (msg) => {
         const broadcasterPeerConnection = this.createOrGetPeerConnection(msg.name);
         await broadcasterPeerConnection.setRemoteDescription(new RTCSessionDescription(msg.sdp));
@@ -135,13 +137,17 @@ class SparkRTC {
                 this.sendStreamTo(msg.data, this.localStream);
                 break;
             case 'alt-broadcast':
-                if (this.role === 'broadcast' && confirm(`${msg.name} wants to broadcast, do you approve?`)) {
-                    this.socket.send(
-                        JSON.stringify({
-                            type: "alt-broadcast-approve",
-                            target: msg.data,
-                        })
-                    );
+                if (this.role === 'broadcast') {
+                    if (this.raiseHands.indexOf(msg.data) === -1) {
+                        this.raiseHands.push(msg.data);
+                        if (!this.raiseHandConfirmation(`${msg.name} wants to broadcast, do you approve?`)) return;
+                        this.socket.send(
+                            JSON.stringify({
+                                type: "alt-broadcast-approve",
+                                target: msg.data,
+                            })
+                        );
+                    }
                 }
                 break;
             case 'tree':
@@ -245,6 +251,8 @@ class SparkRTC {
         );
     };
     raiseHand = () => {
+        if (this.startedRaiseHand) return;
+        this.startedRaiseHand = true;
         return this.startBroadcasting('alt-broadcast');
     };
     newPeerConnectionInstance = (target, theStream, isAdience = false) => {
@@ -396,5 +404,8 @@ class SparkRTC {
         this.remoteStreamDCCallback = options.remoteStreamDCCallback;
         this.signalingDisconnectedCallback = options.signalingDisconnectedCallback;
         this.treeCallback = options.treeCallback;
+        this.raiseHandConfirmation = options.raiseHandConfirmation || ((msg) => {
+            return window.confirm(msg);
+        });
     }
 }
