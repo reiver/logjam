@@ -37,6 +37,12 @@ function createSparkRTC() {
                 const video = createVideoElement(tagId);
                 video.srcObject = stream;
             },
+            remoteStreamDCCallback: (stream) => {
+                const tagId = 'remoteVideo-' + stream.id;
+                if (!document.getElementById(tagId)) return;
+                console.log('disconnected remote stream', tagId);
+                document.getElementById(tagId).remove();
+            },
             signalingDisconnectedCallback: () => {
                 clearScreen();
             },
@@ -57,6 +63,12 @@ function createSparkRTC() {
                 if (document.getElementById(tagId)) return;
                 const video = createVideoElement(tagId);
                 video.srcObject = stream;
+            },
+            remoteStreamDCCallback: (stream) => {
+                const tagId = 'remoteVideo-' + stream.id;
+                if (!document.getElementById(tagId)) return;
+                console.log('disconnected remote stream', tagId);
+                document.getElementById(tagId).remove();
             },
             signalingDisconnectedCallback: () => {
                 clearScreen();
