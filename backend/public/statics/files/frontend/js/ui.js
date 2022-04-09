@@ -23,16 +23,20 @@ function makeId(length) {
 
 
 function arrangeVideoContainers() {
+    console.log('arrangeVideoContainers')
     const videoContainers = document.getElementById('screen')
         .getElementsByClassName('video-container');
     const videoCount = videoContainers.length;
     console.log('videoCount=', videoCount);
     const flexGap = 1;
+    console.log('math=', Math.ceil(Math.sqrt(videoCount)));
     let flexRatio = 100 / Math.ceil(Math.sqrt(videoCount));
-    let flex = "0 0 calc(" + flexRatio + "% - " + flexGap + "px)";
-
+    // let flex = "0 0 calc(" + flexRatio + "% - " + flexGap + "px)";
+    let flex = "0 0 " + flexRatio + "%";
+    let maxHeight = 100 / Math.ceil(videoCount / Math.ceil(Math.sqrt(videoCount)));
     Array.from(videoContainers).forEach(div => {
             div.style.setProperty('flex', flex);
+            div.style.setProperty('max-height', maxHeight + "%");
         }
     )
 }
@@ -84,7 +88,7 @@ function getVideoElement(videoId) {
     return video ? video : createVideoElement(videoId, true);
 }
 
-function removeVideoElement(videoId){
+function removeVideoElement(videoId) {
     let video = document.getElementById(videoId);
     if (!video) return;
     let videoContainer = video.parentNode;
@@ -98,7 +102,7 @@ async function onShareScreen() {
     const img = document.getElementById("share_screen");
     if (!shareScreenStream) {
         shareScreenStream = await sparkRTC.startShareScreen();
-        if (shareScreenStream){
+        if (shareScreenStream) {
             img.dataset.status = 'on';
             img.src = SCREEN_ON;
             const localScreen = getVideoElement('localScreen');
@@ -143,7 +147,7 @@ function handleClick() {
     }
     document.getElementById("page").style.visibility = "visible";
     document.getElementById("getName").style.display = "none";
-    document.getElementById("myName").innerText = newName;
+    // document.getElementById("myName").innerText = newName;
 
     start();
 
