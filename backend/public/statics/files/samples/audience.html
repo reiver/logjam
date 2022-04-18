@@ -40,6 +40,8 @@
                 addRemoteVideoTag(stream);
             },
             remoteStreamDCCallback: (stream) => {
+                console.log('remote stream dc callback', stream);
+                if (!stream) return;
                 const tagId = 'remoteVideo-' + stream.id;
                 if (!document.getElementById(tagId)) return;
                 console.log('disconnected remote stream', tagId);

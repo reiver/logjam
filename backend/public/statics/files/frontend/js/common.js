@@ -54,6 +54,10 @@ function createSparkRTC() {
                     console.error(e);
                 }
             },
+            raiseHandConfirmation: (msg) => {
+                console.log('raise hand confirmation', msg);
+                return true;
+            }
         });
     }else{
         document.getElementById('share_screen').style.display = 'none';
