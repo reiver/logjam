@@ -55,6 +55,7 @@ class SparkRTC {
     senders = {};
     raiseHands = [];
     startedRaiseHand = false;
+    targetStreams = {};
     handleVideoOfferMsg = async (msg) => {
         const broadcasterPeerConnection = this.createOrGetPeerConnection(msg.name);
         await broadcasterPeerConnection.setRemoteDescription(new RTCSessionDescription(msg.sdp));
@@ -79,7 +80,7 @@ class SparkRTC {
         msg.data = (msg.Data && !msg.data) ? msg.Data : msg.data;
         msg.type = (msg.Type && !msg.type) ? msg.Type : msg.type;
 
-        if (msg.type !== 'new-ice-candidate' && msg.type !== 'pong') console.log(msg);
+        // if (msg.type !== 'new-ice-candidate' && msg.type !== 'pong') console.log(msg);
         let audiencePeerConnection;
         switch (msg.type) {
             case 'video-offer':
@@ -93,8 +94,8 @@ class SparkRTC {
                     await audiencePeerConnection.setRemoteDescription(new RTCSessionDescription(msg.sdp));
                 } catch (e) {
                     console.log('setRemoteDescription failed with exception: ' + e.message);
-                    console.log(audiencePeerConnection);
-                    console.log(msg.sdp);
+                    // console.log(audiencePeerConnection);
+                    // console.log(msg.sdp);
                 }
                 break;
             case 'new-ice-candidate':
@@ -102,7 +103,6 @@ class SparkRTC {
                 audiencePeerConnection = this.createOrGetPeerConnection(msg.data);
                 this.iceCandidates.push(new RTCIceCandidate(msg.candidate));
                 if (audiencePeerConnection && audiencePeerConnection.remoteDescription) {
-                    console.log('Adding Candidate');
                     audiencePeerConnection.addIceCandidate(this.iceCandidates.pop());
                 }
                 break;
@@ -133,7 +133,6 @@ class SparkRTC {
                 this.connectToAudience(msg.data);
                 break;
             case 'alt-broadcast-approve':
-                console.log('Start connecting to broadcaster');
                 this.sendStreamTo(msg.data, this.localStream);
                 break;
             case 'alt-broadcast':
@@ -176,7 +175,6 @@ class SparkRTC {
             const socket = new WebSocket(url + '?room=' + this.roomName);
             socket.onmessage = this.handleMessage;
             socket.onopen = () => {
-                console.log("WebSocket connection opened");
                 socket.send(
                     JSON.stringify({
                         type: "start",
@@ -187,7 +185,6 @@ class SparkRTC {
                 resolve(socket);
             };
             socket.onclose = () => {
-                console.log("WebSocket connection closed");
                 this.remoteStreamNotified = false;
                 this.myPeerConnectionArray = {};
                 if (this.signalingDisconnectedCallback) this.signalingDisconnectedCallback;
@@ -208,7 +205,6 @@ class SparkRTC {
                     video: true,
                 });
             this.remoteStreams.push(shareStream);
-            console.log('Sending to all peers');
             for (const userId in this.myPeerConnectionArray) {
                 const apeerConnection = this.myPeerConnectionArray[userId];
                 if (!apeerConnection.isAdience) return;
@@ -308,6 +304,7 @@ class SparkRTC {
                     })
                 );
             }
+            this.targetStreams[target] = stream.id;
 
             for (const userId in this.myPeerConnectionArray) {
                 if (userId === target) continue;
@@ -315,31 +312,40 @@ class SparkRTC {
                 if (!apeerConnection.isAdience) return;
 
                 stream.getTracks().forEach((track) => {
+                    // track.onended = (event) => {
+                    //     console.log('Track ended:', event);
+                    //     if (this.remoteStreamDCCallback) this.remoteStreamDCCallback(event.target);
+                    // };
                     const sender = apeerConnection.addTrack(track, stream);
-                    this.senders[track.id] = sender;
+                    if (!this.senders[track.id]) this.senders[track.id] = [];
+                    this.senders[track.id].push(sender);
                 });
             }
         };
 
         peerConnection.oniceconnectionstatechange = (event) => {
-            if (peerConnection.iceConnectionState == 'disconnected') {
+            if (peerConnection.iceConnectionState == 'disconnected' && this.role === 'broadcast') {
+                if (peerConnection.getRemoteStreams().length === 0) return;
+                if (this.remoteStreamDCCallback) this.remoteStreamDCCallback(peerConnection.getRemoteStreams()[0]);
                 const trackIds = peerConnection.getReceivers().map((receiver) => receiver.track.id);
-                console.log(trackIds);
                 trackIds.forEach((trackId) => {
-                    console.log('removing trackId', trackId);
-                    const sender = this.senders[trackId];
-                    if (!sender) return;
+                    const senders = this.senders[trackId];
+                    if (!senders) return;
                     for (const userId in this.myPeerConnectionArray) {
                         if (userId === target) continue;
                         const apeerConnection = this.myPeerConnectionArray[userId];
                         if (!apeerConnection.isAdience) return;
-        
-                        apeerConnection.removeTrack(sender);
+                        for (const sender of senders) {
+                            try {
+                                apeerConnection.removeTrack(sender);
+                            } catch (e) {
+                                console.log(e);
+                            }
+                        }
                     }
-                    
+
                     delete this.senders[trackId];
                 });
-                if (this.remoteStreamDCCallback) this.remoteStreamDCCallback(peerConnection.getRemoteStreams()[0]);
             }
         };
 
@@ -353,7 +359,6 @@ class SparkRTC {
         return this.myPeerConnectionArray[audienceName];
     };
     connectToAudience = (audienceName) => {
-        console.log('connecting to', audienceName, !!this.localStream, this.remoteStreams.length);
         if (!this.localStream && this.remoteStreams.length === 0) return;
         if (!this.myPeerConnectionArray[audienceName]) {
             this.myPeerConnectionArray[audienceName] = this.newPeerConnectionInstance(audienceName, this.localStream || this.remoteStreams, true);
@@ -361,12 +366,10 @@ class SparkRTC {
 
         if (this.remoteStreams.length > 0) {
             this.remoteStreams.forEach((astream) => {
-                console.log('Adding remote stream to peer connection', astream.id);
                 astream.getTracks().forEach((track) => {
                     this.myPeerConnectionArray[audienceName].addTrack(track, astream);
                 });
             });
-            console.log('remoteStreams', this.remoteStreams);
         }
     };
     sendStreamTo = (target, stream) => {
