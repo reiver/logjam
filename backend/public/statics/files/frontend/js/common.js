@@ -41,8 +41,7 @@ function createSparkRTC() {
                 const tagId = 'remoteVideo-' + stream.id;
                 if (!document.getElementById(tagId)) return;
                 console.log('disconnected remote stream', tagId);
-                document.getElementById(tagId).remove();
-                arrangeVideoContainers();
+                removeVideoElement(tagId);
             },
             signalingDisconnectedCallback: () => {
                 clearScreen();
@@ -73,8 +72,7 @@ function createSparkRTC() {
                 const tagId = 'remoteVideo-' + stream.id;
                 if (!document.getElementById(tagId)) return;
                 console.log('disconnected remote stream', tagId);
-                document.getElementById(tagId).remove();
-                arrangeVideoContainers();
+                removeVideoElement(tagId);
             },
             signalingDisconnectedCallback: () => {
                 clearScreen();
