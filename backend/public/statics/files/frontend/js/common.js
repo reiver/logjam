@@ -85,6 +85,9 @@ function createSparkRTC() {
                     console.error(e);
                 }
             },
+            startProcedure: async () => {
+                await handleClick();
+            },
         });
 
     }

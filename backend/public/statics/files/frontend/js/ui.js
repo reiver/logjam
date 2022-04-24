@@ -138,7 +138,7 @@ function setMyName() {
 }
 
 
-function handleClick() {
+async function handleClick() {
     let newName = document.getElementById("inputName").value;
     if (newName) {
         myName = newName;
@@ -149,7 +149,7 @@ function handleClick() {
     document.getElementById("getName").style.display = "none";
     // document.getElementById("myName").innerText = newName;
 
-    start();
+    await start();
 
     return false;
 }
