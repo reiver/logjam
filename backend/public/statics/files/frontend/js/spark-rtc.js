@@ -1,4 +1,5 @@
 class SparkRTC {
+    started = false;
     myPeerConnectionConfig = {
         iceServers: [
             {
@@ -185,7 +186,6 @@ class SparkRTC {
                 this.remoteStreamNotified = false;
                 this.myPeerConnectionArray = {};
                 if (this.signalingDisconnectedCallback) this.signalingDisconnectedCallback;
-                // this.setupSignalingSocket(url, myName);
             };
             socket.onerror = (error) => {
                 console.log("WebSocket error: ", error);
@@ -335,6 +335,10 @@ class SparkRTC {
                     this.senders[track.id].push(sender);
                 });
             }
+            if (!this.started) {
+                this.started = true;
+                this.checkState();
+            }
         };
 
         peerConnection.oniceconnectionstatechange = (event) => {
@@ -415,6 +419,17 @@ class SparkRTC {
         });
     };
 
+    checkState = () => {
+        if (!this.started || !this.startProcedure) return;
+
+        if (this.remoteStreams.length === 0)
+            this.startProcedure().then(() => {
+                setTimeout(this.checkState, 1000);
+            });
+        else 
+            setTimeout(this.checkState, 1000);
+    };
+
     constructor(role, options = {}) {
         this.role = role;
         this.localStreamChangeCallback = options.localStreamChangeCallback;
@@ -426,5 +441,6 @@ class SparkRTC {
             return window.confirm(msg);
         });
         this.newTrackCallback = options.newTrackCallback;
+        this.startProcedure = options.startProcedure;
     }
 }
