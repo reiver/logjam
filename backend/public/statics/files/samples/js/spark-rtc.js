@@ -80,7 +80,6 @@ class SparkRTC {
         msg.data = (msg.Data && !msg.data) ? msg.Data : msg.data;
         msg.type = (msg.Type && !msg.type) ? msg.Type : msg.type;
 
-        // if (msg.type !== 'new-ice-candidate' && msg.type !== 'pong') console.log(msg);
         let audiencePeerConnection;
         switch (msg.type) {
             case 'video-offer':
@@ -94,8 +93,6 @@ class SparkRTC {
                     await audiencePeerConnection.setRemoteDescription(new RTCSessionDescription(msg.sdp));
                 } catch (e) {
                     console.log('setRemoteDescription failed with exception: ' + e.message);
-                    // console.log(audiencePeerConnection);
-                    // console.log(msg.sdp);
                 }
                 break;
             case 'new-ice-candidate':
@@ -288,9 +285,30 @@ class SparkRTC {
 
         peerConnection.ontrack = (event) => {
             const stream = event.streams[0];
+            if (this.newTrackCallback && !this.newTrackCallback(stream)) return;
             if (this.remoteStreams.indexOf(stream) !== -1) return;
             stream.oninactive = (event) => {
                 if (this.remoteStreamDCCallback) this.remoteStreamDCCallback(event.target);
+                const trackIds = peerConnection.getReceivers().map((receiver) => receiver.track.id);
+                trackIds.forEach((trackId) => {
+                    const senders = this.senders[trackId];
+                    if (!senders) return;
+                    for (const userId in this.myPeerConnectionArray) {
+                        if (userId === target) continue;
+                        const apeerConnection = this.myPeerConnectionArray[userId];
+                        if (!apeerConnection.isAdience) return;
+                        for (const sender of senders) {
+                            try {
+                                apeerConnection.removeTrack(sender);
+                            } catch (e) {
+                                console.log(e);
+                            }
+                        }
+                    }
+
+                    delete this.senders[trackId];
+                });
+                this.remoteStreams.splice(this.remoteStreams.indexOf(peerConnection.getRemoteStreams()[0]), 1);
             };
             if (this.remoteStreamCallback)
                 this.remoteStreamCallback(stream);
@@ -312,10 +330,6 @@ class SparkRTC {
                 if (!apeerConnection.isAdience) return;
 
                 stream.getTracks().forEach((track) => {
-                    // track.onended = (event) => {
-                    //     console.log('Track ended:', event);
-                    //     if (this.remoteStreamDCCallback) this.remoteStreamDCCallback(event.target);
-                    // };
                     const sender = apeerConnection.addTrack(track, stream);
                     if (!this.senders[track.id]) this.senders[track.id] = [];
                     this.senders[track.id].push(sender);
@@ -324,7 +338,7 @@ class SparkRTC {
         };
 
         peerConnection.oniceconnectionstatechange = (event) => {
-            if (peerConnection.iceConnectionState == 'disconnected' && this.role === 'broadcast') {
+            if (peerConnection.iceConnectionState == 'disconnected') {
                 if (peerConnection.getRemoteStreams().length === 0) return;
                 if (this.remoteStreamDCCallback) this.remoteStreamDCCallback(peerConnection.getRemoteStreams()[0]);
                 const trackIds = peerConnection.getReceivers().map((receiver) => receiver.track.id);
@@ -346,6 +360,7 @@ class SparkRTC {
 
                     delete this.senders[trackId];
                 });
+                this.remoteStreams.splice(this.remoteStreams.indexOf(peerConnection.getRemoteStreams()[0]), 1);
             }
         };
 
@@ -410,5 +425,6 @@ class SparkRTC {
         this.raiseHandConfirmation = options.raiseHandConfirmation || ((msg) => {
             return window.confirm(msg);
         });
+        this.newTrackCallback = options.newTrackCallback;
     }
 }
