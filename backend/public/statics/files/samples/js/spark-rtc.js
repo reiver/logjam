@@ -53,7 +53,6 @@ class SparkRTC {
     myPeerConnectionArray = {};
     iceCandidates = [];
     pingInterval;
-    senders = {};
     raiseHands = [];
     startedRaiseHand = false;
     targetStreams = {};
@@ -292,22 +291,22 @@ class SparkRTC {
                 if (this.remoteStreamDCCallback) this.remoteStreamDCCallback(event.target);
                 const trackIds = peerConnection.getReceivers().map((receiver) => receiver.track.id);
                 trackIds.forEach((trackId) => {
-                    const senders = this.senders[trackId];
-                    if (!senders) return;
                     for (const userId in this.myPeerConnectionArray) {
                         if (userId === target) continue;
                         const apeerConnection = this.myPeerConnectionArray[userId];
                         if (!apeerConnection.isAdience) return;
-                        for (const sender of senders) {
-                            try {
-                                apeerConnection.removeTrack(sender);
-                            } catch (e) {
-                                console.log(e);
+                        const allSenders = apeerConnection.getSenders();
+                        for (const sender of allSenders) {
+                            if (!sender.track) continue;
+                            if (sender.track.id === trackId) {
+                                try {
+                                    apeerConnection.removeTrack(sender);
+                                } catch (e) {
+                                    console.log(e);
+                                }
                             }
                         }
                     }
-
-                    delete this.senders[trackId];
                 });
                 this.remoteStreams.splice(this.remoteStreams.indexOf(peerConnection.getRemoteStreams()[0]), 1);
             };
@@ -325,17 +324,6 @@ class SparkRTC {
             }
             this.targetStreams[target] = stream.id;
 
-            for (const userId in this.myPeerConnectionArray) {
-                if (userId === target) continue;
-                const apeerConnection = this.myPeerConnectionArray[userId];
-                if (!apeerConnection.isAdience) return;
-
-                stream.getTracks().forEach((track) => {
-                    const sender = apeerConnection.addTrack(track, stream);
-                    if (!this.senders[track.id]) this.senders[track.id] = [];
-                    this.senders[track.id].push(sender);
-                });
-            }
             if (!this.started) {
                 this.started = true;
                 this.checkState();
@@ -348,8 +336,6 @@ class SparkRTC {
                 if (this.remoteStreamDCCallback) this.remoteStreamDCCallback(peerConnection.getRemoteStreams()[0]);
                 const trackIds = peerConnection.getReceivers().map((receiver) => receiver.track.id);
                 trackIds.forEach((trackId) => {
-                    const senders = this.senders[trackId];
-                    if (!senders) return;
                     for (const userId in this.myPeerConnectionArray) {
                         if (userId === target) continue;
                         const apeerConnection = this.myPeerConnectionArray[userId];
@@ -366,8 +352,6 @@ class SparkRTC {
                             }
                         }
                     }
-
-                    delete this.senders[trackId];
                 });
                 this.remoteStreams.splice(this.remoteStreams.indexOf(peerConnection.getRemoteStreams()[0]), 1);
             }
