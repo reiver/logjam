@@ -354,11 +354,15 @@ class SparkRTC {
                         if (userId === target) continue;
                         const apeerConnection = this.myPeerConnectionArray[userId];
                         if (!apeerConnection.isAdience) return;
-                        for (const sender of senders) {
-                            try {
-                                apeerConnection.removeTrack(sender);
-                            } catch (e) {
-                                console.log(e);
+                        const allSenders = apeerConnection.getSenders();
+                        for (const sender of allSenders) {
+                            if (!sender.track) continue;
+                            if (sender.track.id === trackId) {
+                                try {
+                                    apeerConnection.removeTrack(sender);
+                                } catch (e) {
+                                    console.log(e);
+                                }
                             }
                         }
                     }
