@@ -49,6 +49,7 @@ function createSparkRTC() {
             treeCallback: (tree) => {
                 try {
                     const treeData = JSON.parse(tree);
+                    if (!treeData) return;
                     graph.draw(treeData[0]);
                 } catch (e) {
                     console.error(e);
@@ -80,6 +81,7 @@ function createSparkRTC() {
             treeCallback: (tree) => {
                 try {
                     const treeData = JSON.parse(tree);
+                    if (!treeData) return;
                     graph.draw(treeData[0]);
                 } catch (e) {
                     console.error(e);

@@ -11,17 +11,14 @@ import (
 	"github.com/gorilla/websocket"
 
 	"github.com/sparkscience/logjam/backend/lib/message"
-	// "github.com/sparkscience/logjam/backend/lib/websocketmap"
 	binarytreesrv "github.com/sparkscience/logjam/backend/srv/binarytree"
 
 	"github.com/mmcomp/go-binarytree"
-	"github.com/mmcomp/go-log"
 	logger "github.com/mmcomp/go-log"
 )
 
 type httpHandler struct {
 	Logger logger.Logger
-	// Maps   map[string]binarytree.Tree
 }
 
 var upgrader = websocket.Upgrader{
@@ -31,10 +28,6 @@ var upgrader = websocket.Upgrader{
 }
 
 var Maps map[string]binarytree.Tree = make(map[string]binarytree.Tree)
-
-// var Maps = make(map[string]binarytree.Tree)
-
-// var Map = binarytreesrv.GetMap()
 
 func Handler(logger logger.Logger) http.Handler {
 	return httpHandler{
@@ -65,6 +58,8 @@ func (receiver httpHandler) findBroadcaster(roomName string) (bool, *binarytrees
 }
 
 func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, messageJSON []byte, messageType int, userAgent string, roomName string) {
+	log := receiver.Logger.Begin()
+	defer log.End()
 	Map := receiver.getMapByRoomName(roomName)
 	f, err := os.OpenFile(filename, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
 	if err == nil {
@@ -80,6 +75,7 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 	}
 
 	var response message.MessageContract
+	log.Alert("Before switch ", theMessage)
 	switch theMessage.Type {
 	case "start":
 		response.Type = "start"
@@ -192,6 +188,8 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 		responseJSON, err := json.Marshal(response)
 		if err == nil {
 			socket.Socket.WriteMessage(messageType, responseJSON)
+			log.Alert("After switch ", responseJSON)
+			return
 		} else {
 			return
 		}
@@ -267,8 +265,13 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 }
 
 func (receiver httpHandler) reader(conn *websocket.Conn, userAgent string, roomName string) {
+	log := receiver.Logger.Begin()
+	defer log.End()
+	defer conn.Close()
 	Map := receiver.getMapByRoomName(roomName)
+	log.Alert("Before for loop")
 	for {
+		log.Alert("Before conn.ReadMessage")
 		messageType, p, err := conn.ReadMessage()
 		if err != nil {
 			_, closedError := err.(*websocket.CloseError)
@@ -280,6 +283,8 @@ func (receiver httpHandler) reader(conn *websocket.Conn, userAgent string, roomN
 			}
 			return
 		}
+		log.Alert("After conn.ReadMessage")
+
 		receiver.parseMessage(Map.Get(conn).(*binarytreesrv.MySocket), p, messageType, userAgent, roomName)
 	}
 }
@@ -293,6 +298,7 @@ func (receiver httpHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) 
 		log.Error("Upgrade Error : ", err)
 		return
 	}
+	defer ws.Close()
 	roomName := req.URL.Query().Get("room")
 	var mapFound bool
 	_, mapFound = Maps[roomName]
@@ -304,5 +310,7 @@ func (receiver httpHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) 
 	Map.Insert(ws)
 	receiver.setMapByRoomName(roomName, Map)
 	userAgent := req.Header.Get("User-Agent")
+	log.Alert("Before reader ")
 	receiver.reader(ws, userAgent, roomName)
+	log.Alert("After reader")
 }

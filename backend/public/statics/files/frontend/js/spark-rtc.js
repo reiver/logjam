@@ -284,6 +284,7 @@ class SparkRTC {
 
         peerConnection.ontrack = (event) => {
             const stream = event.streams[0];
+            console.log('ontrack', stream);
             if (this.localStream && this.localStream.id === stream.id) return;
             if (this.newTrackCallback && !this.newTrackCallback(stream)) return;
             if (this.remoteStreams.indexOf(stream) !== -1) return;
@@ -323,6 +324,16 @@ class SparkRTC {
                 );
             }
             this.targetStreams[target] = stream.id;
+
+            for (const userId in this.myPeerConnectionArray) {
+                if (userId === target) continue;
+                const apeerConnection = this.myPeerConnectionArray[userId];
+                if (!apeerConnection.isAdience) return;
+
+                stream.getTracks().forEach((track) => {
+                    apeerConnection.addTrack(track, stream);
+                });
+            }
 
             if (!this.started) {
                 this.started = true;
@@ -409,13 +420,16 @@ class SparkRTC {
     };
 
     checkState = () => {
+        console.log('checkState');
         if (!this.started || !this.startProcedure) return;
 
-        if (this.remoteStreams.length === 0)
-            this.startProcedure().then(() => {
+        if (this.remoteStreams.length === 0) {
+            console.log('running startProcedure');
+            this.startProcedure().finally(() => {
+                console.log('after startProcedure');
                 setTimeout(this.checkState, 1000);
             });
-        else 
+        } else 
             setTimeout(this.checkState, 1000);
     };
 
