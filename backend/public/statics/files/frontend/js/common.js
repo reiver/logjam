@@ -21,15 +21,7 @@ function createSparkRTC() {
         document.getElementById('raise_hand').style.display = 'none';
         return new SparkRTC('broadcast', {
             localStreamChangeCallback: (stream) => {
-                console.log('got stream', stream);
                 getVideoElement('localVideo').srcObject = stream;
-                // getVideoElement('localVideo2').srcObject = stream;
-                // getVideoElement('localVideo3').srcObject = stream;
-                // getVideoElement('localVideo4').srcObject = stream;
-                // getVideoElement('localVideo5').srcObject = stream;
-                // getVideoElement('localVideo6').srcObject = stream;
-                // getVideoElement('localVideo7').srcObject = stream;
-                console.log('Set Local Stream');
             },
             remoteStreamCallback: (stream) => {
                 const tagId = 'remoteVideo-' + stream.id;
@@ -38,9 +30,11 @@ function createSparkRTC() {
                 video.srcObject = stream;
             },
             remoteStreamDCCallback: (stream) => {
-                const tagId = 'remoteVideo-' + stream.id;
-                if (!document.getElementById(tagId)) return;
-                console.log('disconnected remote stream', tagId);
+                let tagId = 'remoteVideo-' + stream.id;
+                if (!document.getElementById(tagId)) {
+                    tagId = 'localVideo-' + stream.id ;
+                    if (!document.getElementById(tagId)) return;
+                }
                 removeVideoElement(tagId);
             },
             signalingDisconnectedCallback: () => {
@@ -56,7 +50,6 @@ function createSparkRTC() {
                 }
             },
             raiseHandConfirmation: (msg) => {
-                console.log('raise hand confirmation', msg);
                 return true;
             }
         });
@@ -70,9 +63,11 @@ function createSparkRTC() {
                 video.srcObject = stream;
             },
             remoteStreamDCCallback: (stream) => {
-                const tagId = 'remoteVideo-' + stream.id;
-                if (!document.getElementById(tagId)) return;
-                console.log('disconnected remote stream', tagId);
+                let tagId = 'remoteVideo-' + stream.id;
+                if (!document.getElementById(tagId)) {
+                    tagId = 'localVideo-' + stream.id ;
+                    if (!document.getElementById(tagId)) return;
+                }
                 removeVideoElement(tagId);
             },
             signalingDisconnectedCallback: () => {

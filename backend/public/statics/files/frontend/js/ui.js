@@ -23,15 +23,11 @@ function makeId(length) {
 
 
 function arrangeVideoContainers() {
-    console.log('arrangeVideoContainers')
     const videoContainers = document.getElementById('screen')
         .getElementsByClassName('video-container');
     const videoCount = videoContainers.length;
-    console.log('videoCount=', videoCount);
     const flexGap = 1;
-    console.log('math=', Math.ceil(Math.sqrt(videoCount)));
     let flexRatio = 100 / Math.ceil(Math.sqrt(videoCount));
-    // let flex = "0 0 calc(" + flexRatio + "% - " + flexGap + "px)";
     let flex = "0 0 " + flexRatio + "%";
     let maxHeight = 100 / Math.ceil(videoCount / Math.ceil(Math.sqrt(videoCount)));
     Array.from(videoContainers).forEach(div => {
@@ -80,6 +76,7 @@ function createVideoElement(videoId, muted = false) {
     container.appendChild(video);
     document.getElementById('screen').appendChild(container);
     arrangeVideoContainers();
+    video.play();
     return video;
 }
 
@@ -143,11 +140,9 @@ async function handleClick() {
     if (newName) {
         myName = newName;
         localStorage.setItem('logjam_myName', myName);
-        console.log('myName=', myName);
     }
     document.getElementById("page").style.visibility = "visible";
     document.getElementById("getName").style.display = "none";
-    // document.getElementById("myName").innerText = newName;
 
     await start();
 
@@ -185,7 +180,6 @@ async function start() {
 
 function onLoad() {
     myRole = getMyRole();
-    console.log('myRole=', myRole);
     sparkRTC = createSparkRTC();
 
     setMyName();
