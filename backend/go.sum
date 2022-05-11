@@ -6,3 +6,5 @@ github.com/mmcomp/go-httprouter v0.0.0-20210926145836-f315fe985361 h1:yOkbfnGRxN
 github.com/mmcomp/go-httprouter v0.0.0-20210926145836-f315fe985361/go.mod h1:NVedyMu1sEntEWBwJsMriX2gK0Qzsu17Q37QxvwPRNE=
 github.com/mmcomp/go-log v0.0.0-20210715133403-ea696e01f947 h1:SoTP/pKBpKdFi109QySZdxsdy+Rvtvf2Il+QIiyvHJE=
 github.com/mmcomp/go-log v0.0.0-20210715133403-ea696e01f947/go.mod h1:i8FWyCykjMADh+wE8ZDh56AJmRh2Sx7nHfsJs+39bzc=
+github.com/reiver/go-fck v0.0.0-20211123074246-f43373f19997 h1:pTo9rO614NkHJuzrxiCcARQ78HIkQ1cSlGLysgeiMVs=
+github.com/reiver/go-fck v0.0.0-20211123074246-f43373f19997/go.mod h1:i77J0nD9GkSF0osPcURZbv9u19F0keF/mrhkgIu9wvM=
