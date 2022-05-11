@@ -76,7 +76,6 @@ function createVideoElement(videoId, muted = false) {
     container.appendChild(video);
     document.getElementById('screen').appendChild(container);
     arrangeVideoContainers();
-    video.play();
     return video;
 }
 
