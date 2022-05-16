@@ -12,6 +12,7 @@ let sparkRTC;
 let myName;
 let myRole;
 let shareScreenStream;
+let roomName;
 
 function makeId(length) {
     let result = '';
@@ -165,9 +166,14 @@ function getMyRole() {
     return urlParams.get('role') === 'broadcast' ? "broadcast" : "audience";
 }
 
+function getRoomName() {
+    const queryString = window.location.search;
+    const urlParams = new URLSearchParams(queryString);
+    return urlParams.get('room');
+}
 
 function setupSignalingSocket() {
-    return sparkRTC.setupSignalingSocket(getWsUrl(), myName);
+    return sparkRTC.setupSignalingSocket(getWsUrl(), myName, roomName);
 }
 
 
@@ -179,6 +185,7 @@ async function start() {
 
 function onLoad() {
     myRole = getMyRole();
+    roomName = getRoomName();
     sparkRTC = createSparkRTC();
 
     setMyName();
