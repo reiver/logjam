@@ -6,18 +6,20 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/gorilla/websocket"
 
 	"github.com/sparkscience/logjam/backend/lib/message"
 	binarytreesrv "github.com/sparkscience/logjam/backend/srv/binarytree"
-	"github.com/sparkscience/logjam/backend/srv/roommaps"
+	roommapssrv "github.com/sparkscience/logjam/backend/srv/roommaps"
 
 	logger "github.com/mmcomp/go-log"
 )
 
 type httpHandler struct {
+	mutex  *sync.Mutex
 	Logger logger.Logger
 }
 
@@ -35,7 +37,22 @@ func Handler(logger logger.Logger) http.Handler {
 
 var filename string
 
+func (receiver httpHandler) detectRole(roomName string) string {
+	receiver.mutex.Lock()
+	defer receiver.mutex.Unlock()
+
+	ok, _ := receiver.findBroadcaster(roomName)
+	if ok {
+		return "audience"
+	}
+
+	return "broadcast"
+}
+
 func (receiver httpHandler) findBroadcaster(roomName string) (bool, *binarytreesrv.MySocket) {
+	receiver.mutex.Lock()
+	defer receiver.mutex.Unlock()
+
 	log := receiver.Logger.Begin()
 	defer log.End()
 
@@ -77,6 +94,15 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 
 	var response message.MessageContract
 	switch theMessage.Type {
+	case "detect-role":
+		response.Type = "detect-role"
+		response.Data = receiver.detectRole(roomName)
+		responseJSON, err := json.Marshal(response)
+		if err == nil {
+			socket.Socket.WriteMessage(messageType, responseJSON)
+		} else {
+			return
+		}
 	case "start":
 		response.Type = "start"
 		socket.SetName(theMessage.Data)
