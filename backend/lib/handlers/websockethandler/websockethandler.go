@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"os"
 	"strconv"
-	"sync"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -19,7 +18,6 @@ import (
 )
 
 type httpHandler struct {
-	mutex  *sync.Mutex
 	Logger logger.Logger
 }
 
@@ -38,9 +36,7 @@ func Handler(logger logger.Logger) http.Handler {
 var filename string
 
 func (receiver httpHandler) detectRole(roomName string) string {
-	receiver.mutex.Lock()
-	defer receiver.mutex.Unlock()
-
+	fmt.Println("detecting role ", roomName)
 	ok, _ := receiver.findBroadcaster(roomName)
 	if ok {
 		return "audience"
@@ -50,9 +46,6 @@ func (receiver httpHandler) detectRole(roomName string) string {
 }
 
 func (receiver httpHandler) findBroadcaster(roomName string) (bool, *binarytreesrv.MySocket) {
-	receiver.mutex.Lock()
-	defer receiver.mutex.Unlock()
-
 	log := receiver.Logger.Begin()
 	defer log.End()
 
@@ -94,15 +87,6 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 
 	var response message.MessageContract
 	switch theMessage.Type {
-	case "detect-role":
-		response.Type = "detect-role"
-		response.Data = receiver.detectRole(roomName)
-		responseJSON, err := json.Marshal(response)
-		if err == nil {
-			socket.Socket.WriteMessage(messageType, responseJSON)
-		} else {
-			return
-		}
 	case "start":
 		response.Type = "start"
 		socket.SetName(theMessage.Data)
@@ -183,10 +167,33 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 				fmt.Fprintln(f, msg)
 
 				if !ok {
-					response.Data = "no:audience"
+					// response.Data = "no:audience"
 
 					msg := "Audiance " + socket.Name + " could not receive stream because there is no broadcaster now!"
 					fmt.Fprintln(f, msg)
+
+					// GVE
+					msg = "Switching to broadcast"
+					fmt.Fprintln(f, msg)
+
+					response.Data = "yes:broadcast"
+					Map.ToggleHead(socket.Socket)
+					Map.ToggleCanConnect(socket.Socket)
+					{
+						err := roommapssrv.RoomMaps.Set(roomName, Map)
+						log.Error("could not set room in map: %s", err)
+					}
+					if _, err := os.Stat("./logs/" + socket.Name); os.IsNotExist(err) {
+						os.Mkdir("./logs/"+socket.Name, 0755)
+					}
+					currentTime := time.Now()
+					logName := currentTime.Format("2006-01-02_15-04-05")
+					filename = "./logs/" + socket.Name + "/" + logName + ".log"
+					f, err := os.OpenFile(filename, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
+					if err == nil {
+						defer f.Close()
+					}
+					//\GVE
 				} else {
 					var broadResponse message.MessageContract
 					broadResponse.Type = "add_audience"

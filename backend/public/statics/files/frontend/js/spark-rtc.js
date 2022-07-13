@@ -107,6 +107,7 @@ class SparkRTC {
                 }
                 break;
             case 'role':
+                console.log('role: ', msg);
                 if (this.role === 'broadcast') {
                     if (msg.data === "no:broadcast") {
                         alert("You are not a broadcaster anymore!");
@@ -118,7 +119,19 @@ class SparkRTC {
                         if (this.localStreamChangeCallback)
                             this.localStreamChangeCallback(null);
                     }
+                    // GVE
+                } else if (msg.data === "yes:broadcast") {
+                    console.log("You are a broadcaster now!");
+                    this.role = 'broadcast';
+                    this.localStream = await navigator.mediaDevices.getUserMedia({
+                        audio: true,
+                        video: true,
+                    });
+                    this.remoteStreams.push(this.localStream);
+                    if (this.localStreamChangeCallback)
+                        this.localStreamChangeCallback(this.localStream);
                 }
+                //\GVE
                 break;
             case 'start':
                 if (msg.error) {
@@ -333,6 +346,8 @@ class SparkRTC {
             };
             if (this.remoteStreamCallback)
                 this.remoteStreamCallback(stream);
+            if (this.role === 'audience')
+                this.raiseHand();
             this.remoteStreams.push(stream);
             if (!this.remoteStreamNotified) {
                 this.remoteStreamNotified = true;
@@ -458,7 +473,7 @@ class SparkRTC {
             this.startProcedure().finally(() => {
                 setTimeout(this.checkState, 1000);
             });
-        } else 
+        } else
             setTimeout(this.checkState, 1000);
     };
 

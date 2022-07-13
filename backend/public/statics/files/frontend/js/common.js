@@ -57,6 +57,9 @@ function createSparkRTC() {
     }else{
         document.getElementById('share_screen').style.display = 'none';
         return new SparkRTC('audience', {
+            localStreamChangeCallback: (stream) => {
+                getVideoElement('localVideo').srcObject = stream;
+            },
             remoteStreamCallback: (stream) => {
                 const tagId = 'remoteVideo-' + stream.id;
                 if (document.getElementById(tagId)) return;
@@ -87,6 +90,9 @@ function createSparkRTC() {
             startProcedure: async () => {
                 await handleClick();
             },
+            raiseHandConfirmation: (msg) => {
+                return true;
+            }
         });
 
     }
