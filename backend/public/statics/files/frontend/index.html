@@ -14,8 +14,6 @@
     <script src="js/data.js"></script>
     <script src="js/graph.js"></script>
     <script src="js/common.js"></script>
-    <!-- MultiBrain Interface -->
-    <script src="js/lib.js"></script>
 </head>
 
 <body onload="onLoad()">
@@ -45,19 +43,19 @@
         <div id="bottom-bar-wrapper">
             <div id="bottom-bar-slider"></div>
             <div id="bottom-bar-container">
-                <!--                <div id="name-container">-->
-                <!--                    <p id="myName"></p>-->
-                <!--                </div>-->
+<!--                <div id="name-container">-->
+<!--                    <p id="myName"></p>-->
+<!--                </div>-->
                 <div id="control-buttons-container">
                     <img id="camera" data-status="on" class="control-button-image" src="images/cam-on.png" alt="camera"
                         onclick="onCameraButtonClick()" />
                     <img id="mic" data-status="on" class="control-button-image" src="images/mic-on.png" alt="mic"
-                        onclick="onMicButtonClick()" />
+                         onclick="onMicButtonClick()" />
                     <img id="spark" class="control-button-image" src="images/spark-logo.png" alt="logo" />
                     <img id="share_screen" data-status="off" class="control-button-image" src="images/screen-off.png"
-                        alt="share screen" onclick="onShareScreen()" />
+                         alt="share screen" onclick="onShareScreen()" />
                     <img id="raise_hand" data-status="off" class="control-button-image" src="images/hand.png"
-                        alt="raise hand" onclick="onRaiseHand()" />
+                         alt="raise hand" onclick="onRaiseHand()" />
                 </div>
             </div>
         </div>
@@ -73,18 +71,6 @@
         </div>
     </div>
 
-    <!-- MultiBrain Test -->
-    <script>
-        (async () => {
-            if (!(await GroupVideo.requestPermissions())) {
-                alert(
-                    "Uh oh! — Could you get permission to use your camera and microphone 🙁"
-                );
-            }else {
-                console.log("Permission granted!");
-            }
-        })();
-    </script>
 </body>
 
 </html>
