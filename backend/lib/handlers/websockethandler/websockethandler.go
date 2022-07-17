@@ -12,7 +12,7 @@ import (
 
 	"github.com/sparkscience/logjam/backend/lib/message"
 	binarytreesrv "github.com/sparkscience/logjam/backend/srv/binarytree"
-	roommapssrv "github.com/sparkscience/logjam/backend/srv/roommaps"
+	"github.com/sparkscience/logjam/backend/srv/roommaps"
 
 	logger "github.com/mmcomp/go-log"
 )
@@ -34,16 +34,6 @@ func Handler(logger logger.Logger) http.Handler {
 }
 
 var filename string
-
-func (receiver httpHandler) detectRole(roomName string) string {
-	fmt.Println("detecting role ", roomName)
-	ok, _ := receiver.findBroadcaster(roomName)
-	if ok {
-		return "audience"
-	}
-
-	return "broadcast"
-}
 
 func (receiver httpHandler) findBroadcaster(roomName string) (bool, *binarytreesrv.MySocket) {
 	log := receiver.Logger.Begin()
@@ -167,33 +157,10 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 				fmt.Fprintln(f, msg)
 
 				if !ok {
-					// response.Data = "no:audience"
+					response.Data = "no:audience"
 
 					msg := "Audiance " + socket.Name + " could not receive stream because there is no broadcaster now!"
 					fmt.Fprintln(f, msg)
-
-					// GVE
-					msg = "Switching to broadcast"
-					fmt.Fprintln(f, msg)
-
-					response.Data = "yes:broadcast"
-					Map.ToggleHead(socket.Socket)
-					Map.ToggleCanConnect(socket.Socket)
-					{
-						err := roommapssrv.RoomMaps.Set(roomName, Map)
-						log.Error("could not set room in map: %s", err)
-					}
-					if _, err := os.Stat("./logs/" + socket.Name); os.IsNotExist(err) {
-						os.Mkdir("./logs/"+socket.Name, 0755)
-					}
-					currentTime := time.Now()
-					logName := currentTime.Format("2006-01-02_15-04-05")
-					filename = "./logs/" + socket.Name + "/" + logName + ".log"
-					f, err := os.OpenFile(filename, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
-					if err == nil {
-						defer f.Close()
-					}
-					//\GVE
 				} else {
 					var broadResponse message.MessageContract
 					broadResponse.Type = "add_audience"

@@ -7,20 +7,17 @@ Private repo for logjam.
 # Endpoints
 To broadcast
 ```
-/files/broadcast.html
+/files/frontend/?role=broadcast
 ```
 
-To be audiance
+To be audience
 ```
-/files/
-```
-
-Get Status of nodes
-```
-/v1/connections/graph
+/files/frontend/?role=audience
 ```
 
 View logs
 ```
 /logs
 ```
+
+If you want to use it in a specific `room`  then you need to pass the `room` as a query param.

@@ -57,7 +57,6 @@ class SparkRTC {
     startedRaiseHand = false;
     targetStreams = {};
     parentStreamId;
-
     handleVideoOfferMsg = async (msg) => {
         const broadcasterPeerConnection = this.createOrGetPeerConnection(msg.name);
         await broadcasterPeerConnection.setRemoteDescription(new RTCSessionDescription(msg.sdp));
@@ -72,7 +71,6 @@ class SparkRTC {
             })
         );
     };
-
     handleMessage = async (event) => {
         let msg;
         try {
@@ -107,7 +105,6 @@ class SparkRTC {
                 }
                 break;
             case 'role':
-                console.log('role: ', msg);
                 if (this.role === 'broadcast') {
                     if (msg.data === "no:broadcast") {
                         alert("You are not a broadcaster anymore!");
@@ -119,19 +116,7 @@ class SparkRTC {
                         if (this.localStreamChangeCallback)
                             this.localStreamChangeCallback(null);
                     }
-                    // GVE
-                } else if (msg.data === "yes:broadcast") {
-                    console.log("You are a broadcaster now!");
-                    this.role = 'broadcast';
-                    this.localStream = await navigator.mediaDevices.getUserMedia({
-                        audio: true,
-                        video: true,
-                    });
-                    this.remoteStreams.push(this.localStream);
-                    if (this.localStreamChangeCallback)
-                        this.localStreamChangeCallback(this.localStream);
                 }
-                //\GVE
                 break;
             case 'start':
                 if (msg.error) {
@@ -169,13 +154,11 @@ class SparkRTC {
                 break;
         }
     };
-
     ping = () => {
         this.socket.send(JSON.stringify({
             type: this.treeCallback ? "tree" : "ping",
         }));
     };
-
     setupSignalingSocket = (url, myName, roomName) => {
         return new Promise((resolve, reject) => {
             if (this.pingInterval) {
@@ -211,7 +194,6 @@ class SparkRTC {
             this.socket = socket;
         })
     };
-
     startShareScreen = async () => {
         try {
             const shareStream = await navigator.mediaDevices
@@ -234,7 +216,6 @@ class SparkRTC {
             alert('Unable to get access to screenshare.');
         }
     };
-
     startBroadcasting = async (data = 'broadcast') => {
         try {
             this.localStream = await navigator.mediaDevices.getUserMedia({
@@ -254,7 +235,6 @@ class SparkRTC {
             alert('Unable to get access to your webcam and microphone.');
         }
     };
-
     startReadingBroadcast = async () => {
         this.socket.send(
             JSON.stringify({
@@ -263,13 +243,11 @@ class SparkRTC {
             })
         );
     };
-
     raiseHand = () => {
         if (this.startedRaiseHand) return;
         this.startedRaiseHand = true;
         return this.startBroadcasting('alt-broadcast');
     };
-
     newPeerConnectionInstance = (target, theStream, isAdience = false) => {
         const peerConnection = new RTCPeerConnection(this.myPeerConnectionConfig);
         peerConnection.isAdience = isAdience;
@@ -346,8 +324,6 @@ class SparkRTC {
             };
             if (this.remoteStreamCallback)
                 this.remoteStreamCallback(stream);
-            if (this.role === 'audience')
-                this.raiseHand();
             this.remoteStreams.push(stream);
             if (!this.remoteStreamNotified) {
                 this.remoteStreamNotified = true;
@@ -413,7 +389,6 @@ class SparkRTC {
 
         return peerConnection;
     };
-
     createOrGetPeerConnection = (audienceName, isAdience = false) => {
         if (this.myPeerConnectionArray[audienceName]) return this.myPeerConnectionArray[audienceName];
 
@@ -421,7 +396,6 @@ class SparkRTC {
 
         return this.myPeerConnectionArray[audienceName];
     };
-
     connectToAudience = (audienceName) => {
         if (!this.localStream && this.remoteStreams.length === 0) return;
         if (!this.myPeerConnectionArray[audienceName]) {
@@ -436,14 +410,12 @@ class SparkRTC {
             });
         }
     };
-
     sendStreamTo = (target, stream) => {
         const peerConnection = this.createOrGetPeerConnection(target, false);
         stream.getTracks().forEach((track) => {
             peerConnection.addTrack(track, stream);
         });
     };
-
     start = () => {
         if (this.role === 'broadcast') {
             return this.startBroadcasting();
@@ -473,7 +445,7 @@ class SparkRTC {
             this.startProcedure().finally(() => {
                 setTimeout(this.checkState, 1000);
             });
-        } else
+        } else 
             setTimeout(this.checkState, 1000);
     };
 
