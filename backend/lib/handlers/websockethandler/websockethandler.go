@@ -12,7 +12,7 @@ import (
 
 	"github.com/sparkscience/logjam/backend/lib/message"
 	binarytreesrv "github.com/sparkscience/logjam/backend/srv/binarytree"
-	"github.com/sparkscience/logjam/backend/srv/roommaps"
+	roommapssrv "github.com/sparkscience/logjam/backend/srv/roommaps"
 
 	logger "github.com/mmcomp/go-log"
 )
@@ -88,7 +88,17 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 			return
 		}
 	case "role":
+		log.Alert("role message received ", theMessage.Data)
 		response.Type = "role"
+		if theMessage.Data == "unknown" {
+			ok, _ := receiver.findBroadcaster(roomName)
+			if ok {
+				theMessage.Data = "audience"
+			} else {
+				theMessage.Data = "broadcast"
+			}
+		}
+		log.Alert("role message processed ", theMessage.Data)
 		if theMessage.Data == "broadcast" {
 			response.Data = "yes:broadcast"
 			Map.ToggleHead(socket.Socket)
