@@ -159,7 +159,6 @@ function handleResize() {
 
 }
 
-
 function getMyRole() {
     const queryString = window.location.search;
     const urlParams = new URLSearchParams(queryString);
@@ -170,6 +169,12 @@ function getRoomName() {
     const queryString = window.location.search;
     const urlParams = new URLSearchParams(queryString);
     return urlParams.get('room');
+}
+
+function getName() {
+    const queryString = window.location.search;
+    const urlParams = new URLSearchParams(queryString);
+    return urlParams.get('name');
 }
 
 function setupSignalingSocket() {
