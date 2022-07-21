@@ -13,6 +13,7 @@ let myName;
 let myRole;
 let shareScreenStream;
 let roomName;
+let adminAccess = false;
 
 function makeId(length) {
     let result = '';
@@ -187,7 +188,6 @@ function handleResize() {
 
 }
 
-
 function getMyRole() {
     return "unknown";
 }
@@ -202,6 +202,11 @@ function setupSignalingSocket() {
     return sparkRTC.setupSignalingSocket(getWsUrl(), myName, roomName);
 }
 
+function isAdmin() {
+    const queryString = window.location.search;
+    const urlParams = new URLSearchParams(queryString);
+    return !Boolean(urlParams.get('is_call'));
+}
 
 async function start() {
     await setupSignalingSocket();
@@ -214,6 +219,10 @@ function onLoad() {
     myRole = getMyRole();
     roomName = getRoomName();
     sparkRTC = createSparkRTC();
+    adminAccess = isAdmin();
+    if (!adminAccess) {
+        document.getElementById('raise_hand').style.display = '';
+    }
 
     setMyName();
     graph = new Graph();
@@ -221,6 +230,21 @@ function onLoad() {
     graph.draw(DATA);
 
     arrangeVideoContainers();
+
+    window.addEventListener("message", (event) => {
+        try {
+            const msg = JSON.parse(event.data);
+            if (msg.type === 'MUTE_ALL') {
+                const img = document.getElementById("mic");
+                if (img.dataset.status === 'on') {
+                    img.dataset.status = 'off';
+                    img.src = MIC_OFF;
+                    sparkRTC.disableAudio();
+                }
+            }
+        } catch (e) {
+        }
+    });
 }
 
 
