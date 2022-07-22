@@ -234,13 +234,38 @@ function onLoad() {
     window.addEventListener("message", (event) => {
         try {
             const msg = JSON.parse(event.data);
-            if (msg.type === 'MUTE_ALL') {
-                const img = document.getElementById("mic");
-                if (img.dataset.status === 'on') {
-                    img.dataset.status = 'off';
-                    img.src = MIC_OFF;
-                    sparkRTC.disableAudio();
-                }
+            const micImg = document.getElementById("mic");
+            const camImg = document.getElementById("camera");
+
+            switch (msg.type) {
+                case 'MY_AUDIO_MUTED':
+                    if (micImg.dataset.status === 'on') {
+                        micImg.dataset.status = 'off';
+                        micImg.src = MIC_OFF;
+                        sparkRTC.disableAudio();
+                    }
+                    break;
+                case 'MY_AUDIO_UNMUTED':
+                    if (micImg.dataset.status === 'off') {
+                        micImg.dataset.status = 'on';
+                        micImg.src = MIC_ON;
+                        sparkRTC.disableAudio(true);
+                    }
+                    break;
+                case 'MY_VIDEO_HIDDEN':
+                    if (camImg.dataset.status === 'on') {
+                        camImg.dataset.status = 'off';
+                        camImg.src = CAMERA_OFF;
+                        sparkRTC.disableVideo();
+                    }
+                    break;
+                case 'MY_VIDEO_UNHIDDEN':
+                    if (camImg.dataset.status === 'off') {
+                        camImg.dataset.status = 'on';
+                        camImg.src = CAMERA_ON;
+                        sparkRTC.disableVideo(true);
+                    }
+                    break;
             }
         } catch (e) {
         }
