@@ -232,10 +232,12 @@ function onLoad() {
     arrangeVideoContainers();
 
     window.addEventListener("message", (event) => {
+        console.log("Received message: ", event);
         try {
             const msg = JSON.parse(event.data);
             const micImg = document.getElementById("mic");
             const camImg = document.getElementById("camera");
+            const scImg = document.getElementById("share_screen");
 
             switch (msg.type) {
                 case 'MY_AUDIO_MUTED':
@@ -264,6 +266,32 @@ function onLoad() {
                         camImg.dataset.status = 'on';
                         camImg.src = CAMERA_ON;
                         sparkRTC.disableVideo(true);
+                    }
+                    break;
+                case 'MY_SCREENSHARE_ACTIVATED':
+                    if (!shareScreenStream) {
+                        shareScreenStream = await sparkRTC.startShareScreen();
+                        if (shareScreenStream) {
+                            scImg.dataset.status = 'on';
+                            scImg.src = SCREEN_ON;
+                            let video;
+                            if (document.getElementById('screen-share')) {
+                                video = document.getElementById('screen-share');
+                            } else {
+                                video = createVideoElement('screen-share');
+                            }
+                            video.srcObject = shareScreenStream;
+                            video.play();
+                        }
+                    }
+                    break;
+                case 'MY_SCREENSHARE_DEACTIVATED':
+                    if (shareScreenStream) {
+                        scImg.dataset.status = 'off';
+                        scImg.src = SCREEN_OFF;
+                        if (document.getElementById('screen-share')) {
+                            removeVideoElement('screen-share');
+                        }
                     }
                     break;
             }
