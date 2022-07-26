@@ -179,7 +179,7 @@ class SparkRTC {
                         data: myName,
                     })
                 );
-                this.pingInterval = setInterval(this.ping, 2000);
+                // this.pingInterval = setInterval(this.ping, 2000);
                 resolve(socket);
             };
             socket.onclose = () => {
