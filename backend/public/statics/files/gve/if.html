@@ -1,17 +1,23 @@
 <html>
 
 <head>
-    <script src="js/lib.js"></script>
+    <script src="https://gve.wl.group.video/v1/lib.js"></script>
 </head>
 
 <body>
-    <iframe id="iframe" allow="microphone;camera" src="index.html?name=ali&room=room1"
+    <iframe id="iframe" allow="microphone;camera" src="http://localhost:8090/files/gve/?name=mehrdad&room=test1"
         style="width: 100%;height: 100%;"></iframe>
+    <div>
+        <button id="btn1" >Start</button>
+    </div>
     <script>
         const gv = new window.GroupVideo(document.getElementById("iframe"));
-        gv.addEventListener(GroupVideo.PARTICIPANT_ARRIVED, (participant) => {
-            // Do whatever you want with the participant that it has arrived.
-            console.log('PRT', participant);
+        // setTimeout(() => {
+        //     gv.start();
+        // }, 1000);
+        const button = document.getElementById("btn1");
+        button.addEventListener("click", () => {
+            gv.muteMyAudio();
         });
     </script>
 </body>
