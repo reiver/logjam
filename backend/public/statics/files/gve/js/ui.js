@@ -231,7 +231,7 @@ function onLoad() {
 
     arrangeVideoContainers();
 
-    window.addEventListener("message", (event) => {
+    window.addEventListener("message",async (event) => {
         console.log("Received message: ", event);
         try {
             const msg = JSON.parse(event.data);
@@ -240,14 +240,14 @@ function onLoad() {
             const scImg = document.getElementById("share_screen");
 
             switch (msg.type) {
-                case 'MY_AUDIO_MUTED':
+                case 'MUTE_AUDIO':
                     if (micImg.dataset.status === 'on') {
                         micImg.dataset.status = 'off';
                         micImg.src = MIC_OFF;
                         sparkRTC.disableAudio();
                     }
                     break;
-                case 'MY_AUDIO_UNMUTED':
+                case 'UNMUTE_AUDIO':
                     if (micImg.dataset.status === 'off') {
                         micImg.dataset.status = 'on';
                         micImg.src = MIC_ON;
