@@ -231,7 +231,7 @@ function onLoad() {
 
     arrangeVideoContainers();
 
-    window.addEventListener("message",async (event) => {
+    window.addEventListener("message", async (event) => {
         console.log("Received message: ", event);
         try {
             const msg = JSON.parse(event.data);
@@ -240,6 +240,24 @@ function onLoad() {
             const scImg = document.getElementById("share_screen");
 
             switch (msg.type) {
+                case 'GET_AUDIO_VIDEO_STATUS':
+                    const { data } = msg;
+                    data.isMyAudioMuted = micImg.dataset.status === 'off';
+                    data.isMyVideoHidden = camImg.dataset.status === 'off';
+                    const newMsg = { data, type: 'GOT_AUDIO_VIDEO_STATUS' };
+                    parent.postMessage(JSON.stringify(newMsg), "*");
+                    break;
+                case 'SCREENSHARE_STATUS':
+                    const scNewMsg = {
+                        data: {
+                            commandId: msg.data.commandId,
+                            status: scImg.dataset.status === 'on',
+                        },
+                        type: 'GOT_SCREENSHARE_STATUS',
+                    };
+                    console.log(scNewMsg);
+                    parent.postMessage(JSON.stringify(scNewMsg), "*");
+                    break;
                 case 'MUTE_AUDIO':
                     if (micImg.dataset.status === 'on') {
                         micImg.dataset.status = 'off';
@@ -254,21 +272,21 @@ function onLoad() {
                         sparkRTC.disableAudio(true);
                     }
                     break;
-                case 'MY_VIDEO_HIDDEN':
+                case 'HIDE_VIDEO':
                     if (camImg.dataset.status === 'on') {
                         camImg.dataset.status = 'off';
                         camImg.src = CAMERA_OFF;
                         sparkRTC.disableVideo();
                     }
                     break;
-                case 'MY_VIDEO_UNHIDDEN':
+                case 'UNHIDE_VIDEO':
                     if (camImg.dataset.status === 'off') {
                         camImg.dataset.status = 'on';
                         camImg.src = CAMERA_ON;
                         sparkRTC.disableVideo(true);
                     }
                     break;
-                case 'MY_SCREENSHARE_ACTIVATED':
+                case 'SHARE_SCREEN':
                     if (!shareScreenStream) {
                         shareScreenStream = await sparkRTC.startShareScreen();
                         if (shareScreenStream) {
@@ -285,7 +303,7 @@ function onLoad() {
                         }
                     }
                     break;
-                case 'MY_SCREENSHARE_DEACTIVATED':
+                case 'STOP_SCREENSHARE':
                     if (shareScreenStream) {
                         scImg.dataset.status = 'off';
                         scImg.src = SCREEN_OFF;
