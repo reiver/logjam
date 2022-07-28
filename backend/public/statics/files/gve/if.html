@@ -8,17 +8,17 @@
     <iframe id="iframe" allow="microphone;camera" src="http://localhost:8090/files/gve/?name=mehrdad&room=test1"
         style="width: 100%;height: 100%;"></iframe>
     <div>
-        <button id="btn1" >Start</button>
+        <button onclick="gv.muteMyAudio()" >muteMyAudio</button>
+        <button onclick="gv.unmuteMyAudio()" >unmuteMyAudio</button>
+        <button onclick="gv.hideMyVideo()" >hideMyVideo</button>
+        <button onclick="gv.unhideMyVideo()" >unhideMyVideo</button>
+        <button onclick="gv.activateMyScreenshare()" >activateMyScreenshare</button>
+        <button onclick="gv.deactivateMyScreenshare()" >deactivateMyScreenshare</button>
+        <button onclick="gv.getAudioVideoStatus().then(res => {alert(JSON.stringify(res));});" >getAudioVideoStatus</button>
+        <button onclick="gv.getScreenShareStatus().then(res => {alert(JSON.stringify(res));});" >getScreenShareStatus</button>
     </div>
     <script>
         const gv = new window.GroupVideo(document.getElementById("iframe"));
-        // setTimeout(() => {
-        //     gv.start();
-        // }, 1000);
-        const button = document.getElementById("btn1");
-        button.addEventListener("click", () => {
-            gv.muteMyAudio();
-        });
     </script>
 </body>
 
