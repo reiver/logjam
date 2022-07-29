@@ -51,6 +51,7 @@ function onCameraButtonClick() {
         img.src = CAMERA_ON;
         sparkRTC.disableVideo(true);
     }
+    callStatusUpdate();
 }
 
 
@@ -65,6 +66,7 @@ function onMicButtonClick() {
         img.src = MIC_ON;
         sparkRTC.disableAudio(true);
     }
+    callStatusUpdate();
 }
 
 function createVideoElement(videoId, infoText = '', muted = false) {
@@ -121,6 +123,7 @@ async function onShareScreen() {
         localScreen.srcObject = null;
         removeVideoElement('localScreen');
     }
+    callStatusUpdate();
 }
 
 
@@ -251,7 +254,7 @@ function onLoad() {
                     const scNewMsg = {
                         data: {
                             commandId: msg.data.commandId,
-                            status: scImg.dataset.status === 'on',
+                            status: scImg.dataset.status === 'on' ? 'MY_SCREENSHARE_ACTIVATED' : 'MY_SCREENSHARE_AVAILABLE',
                         },
                         type: 'GOT_SCREENSHARE_STATUS',
                     };
@@ -315,6 +318,7 @@ function onLoad() {
             }
         } catch (e) {
         }
+        callStatusUpdate();
     });
 }
 
@@ -325,4 +329,13 @@ async function onRaiseHand() {
     if (document.getElementById(tagId)) return;
     const video = createVideoElement(tagId, '', true);
     video.srcObject = stream;
+    callStatusUpdate();
+}
+
+function callStatusUpdate() {
+    parent.postMessage(JSON.stringify({ type: 'CALL_STATUS_UPDATE', data: {
+        isMyAudioMuted: document.getElementById("mic").dataset.status === 'off',
+        isMyVideoHidden: document.getElementById("camera").dataset.status === 'off',
+        screenShareState: document.getElementById("share_screen").dataset.status === 'on' ? 'MY_SCREENSHARE_ACTIVATED': 'MY_SCREENSHARE_AVAILABLE',
+    } }), "*");
 }
