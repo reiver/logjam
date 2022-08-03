@@ -18,11 +18,15 @@
     </div>
     <script>
         const gv = new window.GroupVideo(document.getElementById("iframe"));
-        window.addEventListener("message", async (event) => {
-            console.log("Received message: ", event);
+        console.log(GroupVideo.CALL_STATUS_UPDATED);
+        gv.addEventListener(GroupVideo.CALL_STATUS_UPDATED, (data) => {
+            console.log('call status updated', data);
+        });
+        const onMessage = async ({ data }) => {
+            console.log("Received message: ", data);
             try {
-                const msg = JSON.parse(event.data);
-                if (msg.type === 'CALL_STATUS_UPDATE') {
+                const msg = JSON.parse(data);
+                if (msg.type === 'CALL_STATUS_UPDATED') {
                     if (msg.data.isMyAudioMuted) {
                         document.getElementById("audio-btn").innerText = "unmuteMyAudio";
                     } else {
@@ -42,7 +46,8 @@
             } catch(e) {
                 console.log(e);
             }
-        });
+        };
+        window.addEventListener("message", onMessage);
         function audioClick(dobj) {
             if (dobj.innerText === 'muteMyAudio') {
                 gv.muteMyAudio();
