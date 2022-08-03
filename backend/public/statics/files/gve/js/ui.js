@@ -235,7 +235,7 @@ function onLoad() {
     arrangeVideoContainers();
 
     window.addEventListener("message", async (event) => {
-        console.log("Received message: ", event);
+        console.log("Inside Received message: ", event);
         try {
             const msg = JSON.parse(event.data);
             const micImg = document.getElementById("mic");
@@ -266,6 +266,15 @@ function onLoad() {
                         micImg.dataset.status = 'off';
                         micImg.src = MIC_OFF;
                         sparkRTC.disableAudio();
+                        parent.postMessage(
+                            JSON.stringify({
+                                type: 'MY_AUDIO_MUTED', data: {
+                                    isMyAudioMuted: document.getElementById("mic").dataset.status === 'off',
+                                    isMyVideoHidden: document.getElementById("camera").dataset.status === 'off',
+                                    screenShareState: document.getElementById("share_screen").dataset.status === 'on' ? 'MY_SCREENSHARE_ACTIVATED' : 'MY_SCREENSHARE_AVAILABLE',
+                                }
+                            })
+                            , "*");
                     }
                     break;
                 case 'UNMUTE_AUDIO':
@@ -273,6 +282,15 @@ function onLoad() {
                         micImg.dataset.status = 'on';
                         micImg.src = MIC_ON;
                         sparkRTC.disableAudio(true);
+                        parent.postMessage(
+                            JSON.stringify({
+                                type: 'MY_AUDIO_UNMUTED', data: {
+                                    isMyAudioMuted: document.getElementById("mic").dataset.status === 'off',
+                                    isMyVideoHidden: document.getElementById("camera").dataset.status === 'off',
+                                    screenShareState: document.getElementById("share_screen").dataset.status === 'on' ? 'MY_SCREENSHARE_ACTIVATED' : 'MY_SCREENSHARE_AVAILABLE',
+                                }
+                            })
+                            , "*");
                     }
                     break;
                 case 'HIDE_VIDEO':
@@ -280,6 +298,15 @@ function onLoad() {
                         camImg.dataset.status = 'off';
                         camImg.src = CAMERA_OFF;
                         sparkRTC.disableVideo();
+                        parent.postMessage(
+                            JSON.stringify({
+                                type: 'MY_VIDEO_HIDDEN', data: {
+                                    isMyAudioMuted: document.getElementById("mic").dataset.status === 'off',
+                                    isMyVideoHidden: document.getElementById("camera").dataset.status === 'off',
+                                    screenShareState: document.getElementById("share_screen").dataset.status === 'on' ? 'MY_SCREENSHARE_ACTIVATED' : 'MY_SCREENSHARE_AVAILABLE',
+                                }
+                            })
+                            , "*");
                     }
                     break;
                 case 'UNHIDE_VIDEO':
@@ -287,6 +314,15 @@ function onLoad() {
                         camImg.dataset.status = 'on';
                         camImg.src = CAMERA_ON;
                         sparkRTC.disableVideo(true);
+                        parent.postMessage(
+                            JSON.stringify({
+                                type: 'MY_VIDEO_UNHIDDEN', data: {
+                                    isMyAudioMuted: document.getElementById("mic").dataset.status === 'off',
+                                    isMyVideoHidden: document.getElementById("camera").dataset.status === 'off',
+                                    screenShareState: document.getElementById("share_screen").dataset.status === 'on' ? 'MY_SCREENSHARE_ACTIVATED' : 'MY_SCREENSHARE_AVAILABLE',
+                                }
+                            })
+                            , "*");
                     }
                     break;
                 case 'SHARE_SCREEN':
@@ -303,6 +339,15 @@ function onLoad() {
                             }
                             video.srcObject = shareScreenStream;
                             video.play();
+                            parent.postMessage(
+                                JSON.stringify({
+                                    type: 'MY_SCREENSHARE_ACTIVATED', data: {
+                                        isMyAudioMuted: document.getElementById("mic").dataset.status === 'off',
+                                        isMyVideoHidden: document.getElementById("camera").dataset.status === 'off',
+                                        screenShareState: document.getElementById("share_screen").dataset.status === 'on' ? 'MY_SCREENSHARE_ACTIVATED' : 'MY_SCREENSHARE_AVAILABLE',
+                                    }
+                                })
+                                , "*");
                         }
                     }
                     break;
@@ -313,6 +358,15 @@ function onLoad() {
                         if (document.getElementById('screen-share')) {
                             removeVideoElement('screen-share');
                         }
+                        parent.postMessage(
+                            JSON.stringify({
+                                type: 'MY_SCREENSHARE_AVAILABLE', data: {
+                                    isMyAudioMuted: document.getElementById("mic").dataset.status === 'off',
+                                    isMyVideoHidden: document.getElementById("camera").dataset.status === 'off',
+                                    screenShareState: document.getElementById("share_screen").dataset.status === 'on' ? 'MY_SCREENSHARE_ACTIVATED' : 'MY_SCREENSHARE_AVAILABLE',
+                                }
+                            })
+                            , "*");
                     }
                     break;
             }
@@ -333,9 +387,13 @@ async function onRaiseHand() {
 }
 
 function callStatusUpdate() {
-    parent.postMessage(JSON.stringify({ type: 'CALL_STATUS_UPDATE', data: {
-        isMyAudioMuted: document.getElementById("mic").dataset.status === 'off',
-        isMyVideoHidden: document.getElementById("camera").dataset.status === 'off',
-        screenShareState: document.getElementById("share_screen").dataset.status === 'on' ? 'MY_SCREENSHARE_ACTIVATED': 'MY_SCREENSHARE_AVAILABLE',
-    } }), "*");
+    parent.postMessage(
+        JSON.stringify({
+            type: 'CALL_STATUS_UPDATED', data: {
+                isMyAudioMuted: document.getElementById("mic").dataset.status === 'off',
+                isMyVideoHidden: document.getElementById("camera").dataset.status === 'off',
+                screenShareState: document.getElementById("share_screen").dataset.status === 'on' ? 'MY_SCREENSHARE_ACTIVATED' : 'MY_SCREENSHARE_AVAILABLE',
+            }
+        })
+        , "*");
 }
