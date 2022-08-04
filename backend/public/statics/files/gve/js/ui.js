@@ -372,7 +372,7 @@ function onLoad() {
             }
         } catch (e) {
         }
-        callStatusUpdate();
+        // callStatusUpdate();
     });
 }
 
