@@ -212,7 +212,7 @@ class SparkRTC {
             this.remoteStreams.push(shareStream);
             for (const userId in this.myPeerConnectionArray) {
                 const apeerConnection = this.myPeerConnectionArray[userId];
-                if (!apeerConnection.isAdience) return;
+                // if (!apeerConnection.isAdience) return;
 
                 shareStream.getTracks().forEach((track) => {
                     apeerConnection.addTrack(track, shareStream);
@@ -300,6 +300,7 @@ class SparkRTC {
                 this.parentStreamId = stream.id;
             }
             stream.oninactive = (event) => {
+                console.log('stream inactive', event);
                 if (this.remoteStreamDCCallback) this.remoteStreamDCCallback(event.target);
                 const trackIds = peerConnection.getReceivers().map((receiver) => receiver.track.id);
                 trackIds.forEach((trackId) => {
@@ -363,6 +364,7 @@ class SparkRTC {
         peerConnection.oniceconnectionstatechange = (event) => {
             if (peerConnection.iceConnectionState == 'disconnected') {
                 if (peerConnection.getRemoteStreams().length === 0) return;
+                console.log('disconnected', event);
                 if (this.remoteStreamDCCallback) this.remoteStreamDCCallback(peerConnection.getRemoteStreams()[0]);
                 const trackIds = peerConnection.getReceivers().map((receiver) => receiver.track.id);
                 trackIds.forEach((trackId) => {

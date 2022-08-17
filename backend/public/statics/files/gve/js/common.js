@@ -25,6 +25,7 @@ function createSparkRTC() {
             }
         },
         remoteStreamCallback: (stream) => {
+            console.log('remote stream', stream);
             const tagId = 'remoteVideo-' + stream.id;
             if (document.getElementById(tagId)) return;
             const video = createVideoElement(tagId);
@@ -35,6 +36,7 @@ function createSparkRTC() {
             }
         },
         remoteStreamDCCallback: (stream) => {
+            console.log('remoteStreamDCCallback', stream);
             let tagId = 'remoteVideo-' + stream.id;
             if (!document.getElementById(tagId)) {
                 tagId = 'localVideo-' + stream.id;
