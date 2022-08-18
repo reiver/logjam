@@ -326,41 +326,21 @@ function onLoad() {
                     }
                     break;
                 case 'SHARE_SCREEN':
-                    if (!shareScreenStream) {
-                        shareScreenStream = await sparkRTC.startShareScreen();
-                        if (shareScreenStream) {
-                            scImg.dataset.status = 'on';
-                            scImg.src = SCREEN_ON;
-                            let video;
-                            if (document.getElementById('screen-share')) {
-                                video = document.getElementById('screen-share');
-                            } else {
-                                video = createVideoElement('screen-share');
-                            }
-                            video.srcObject = shareScreenStream;
-                            video.play();
-                            parent.postMessage(
-                                JSON.stringify({
-                                    type: 'MY_SCREENSHARE_ACTIVATED', data: {
-                                        isMyAudioMuted: document.getElementById("mic").dataset.status === 'off',
-                                        isMyVideoHidden: document.getElementById("camera").dataset.status === 'off',
-                                        screenShareState: document.getElementById("share_screen").dataset.status === 'on' ? 'MY_SCREENSHARE_ACTIVATED' : 'MY_SCREENSHARE_AVAILABLE',
-                                    }
-                                })
-                                , "*");
-                        }
-                    }
-                    break;
-                case 'STOP_SCREENSHARE':
+                    shareScreenStream = await sparkRTC.startShareScreen();
                     if (shareScreenStream) {
-                        scImg.dataset.status = 'off';
-                        scImg.src = SCREEN_OFF;
+                        scImg.dataset.status = 'on';
+                        scImg.src = SCREEN_ON;
+                        let video;
                         if (document.getElementById('screen-share')) {
-                            removeVideoElement('screen-share');
+                            video = document.getElementById('screen-share');
+                        } else {
+                            video = createVideoElement('screen-share');
                         }
+                        video.srcObject = shareScreenStream;
+                        video.play();
                         parent.postMessage(
                             JSON.stringify({
-                                type: 'MY_SCREENSHARE_AVAILABLE', data: {
+                                type: 'MY_SCREENSHARE_ACTIVATED', data: {
                                     isMyAudioMuted: document.getElementById("mic").dataset.status === 'off',
                                     isMyVideoHidden: document.getElementById("camera").dataset.status === 'off',
                                     screenShareState: document.getElementById("share_screen").dataset.status === 'on' ? 'MY_SCREENSHARE_ACTIVATED' : 'MY_SCREENSHARE_AVAILABLE',
@@ -368,6 +348,22 @@ function onLoad() {
                             })
                             , "*");
                     }
+                    break;
+                case 'STOP_SCREENSHARE':
+                    scImg.dataset.status = 'off';
+                    scImg.src = SCREEN_OFF;
+                    if (document.getElementById('screen-share')) {
+                        removeVideoElement('screen-share');
+                    }
+                    parent.postMessage(
+                        JSON.stringify({
+                            type: 'MY_SCREENSHARE_AVAILABLE', data: {
+                                isMyAudioMuted: document.getElementById("mic").dataset.status === 'off',
+                                isMyVideoHidden: document.getElementById("camera").dataset.status === 'off',
+                                screenShareState: document.getElementById("share_screen").dataset.status === 'on' ? 'MY_SCREENSHARE_ACTIVATED' : 'MY_SCREENSHARE_AVAILABLE',
+                            }
+                        })
+                        , "*");
                     break;
             }
         } catch (e) {
