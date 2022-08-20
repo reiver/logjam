@@ -52,6 +52,9 @@ function createSparkRTC() {
             },
             raiseHandConfirmation: (msg) => {
                 return true;
+            },
+            log: (log) => {
+                addLog(log);
             }
         });
     }else{
@@ -86,6 +89,9 @@ function createSparkRTC() {
             },
             startProcedure: async () => {
                 await handleClick();
+            },
+            log: (log) => {
+                addLog(log);
             },
         });
 

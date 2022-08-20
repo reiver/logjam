@@ -172,6 +172,12 @@ function getRoomName() {
     return urlParams.get('room');
 }
 
+function getDebug() {
+    const queryString = window.location.search;
+    const urlParams = new URLSearchParams(queryString);
+    return Boolean(urlParams.get('debug'));
+}
+
 function setupSignalingSocket() {
     return sparkRTC.setupSignalingSocket(getWsUrl(), myName, roomName);
 }
@@ -187,6 +193,9 @@ function onLoad() {
     myRole = getMyRole();
     roomName = getRoomName();
     sparkRTC = createSparkRTC();
+    if (!getDebug()) {
+        document.getElementById('logs').style.display = 'none';
+    }
 
     setMyName();
     graph = new Graph();
@@ -203,4 +212,11 @@ async function onRaiseHand() {
     if (document.getElementById(tagId)) return;
     const video = createVideoElement(tagId, true);
     video.srcObject = stream;
+}
+
+function addLog(log) {
+    const logs = document.getElementById('logs');
+    const p = document.createElement('p');
+    p.innerText = log;
+    logs.appendChild(p);
 }
