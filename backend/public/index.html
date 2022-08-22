@@ -1,0 +1,40 @@
+<html>
+
+<head>
+    <title>Test Refactored</title>
+</head>
+
+<body>
+    <h1>Test Refactored</h1>
+
+    <input id="room" type="text" placeholder="Room" />
+    <button onclick="connectToRoom(document.getElementById('room').value);">Connect</button>
+
+    <script>
+        function connectToRoom(room) {
+            const exampleSocket = new WebSocket("ws://localhost:8090/rooms/" + room);
+            exampleSocket.onopen = (event) => {
+                console.log('OPEN');
+                exampleSocket.send(JSON.stringify({
+                    type: 'join',
+                    data: {
+                        name: 'Majid',
+                        role: 'broadcast'
+                    }
+                }));
+            };
+            exampleSocket.onmessage = (event) => {
+                console.log(event.data);
+            };
+            exampleSocket.onclose = (event) => {
+                console.log('CLOSE');
+            };
+            exampleSocket.onerror = (event) => {
+                console.log('ERROR');
+            };
+            return exampleSocket;
+        }
+    </script>
+</body>
+
+</html>

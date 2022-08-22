@@ -1,0 +1,17 @@
+Audiance a trying to receive stream
+    Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36
+Audiance a is going to get connected
+Audiance a is starting to connect to b
+Audiance a is receiving stream!
+Audiance b is receiving stream!
+Audiance c trying to receive stream
+    Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36
+Audiance c is going to get connected
+Audiance c is starting to connect to b
+Audiance c is receiving stream!
+Audiance a trying to receive stream
+    Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36
+Audiance a could not receive stream because there is no broadcaster now!
+Audiance c trying to receive stream
+    Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36
+Audiance c could not receive stream because there is no broadcaster now!
