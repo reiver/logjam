@@ -487,7 +487,7 @@ class SparkRTC {
         });
     };
     checkState = () => {
-        if (!this.started || !this.startProcedure || this.role === 'broadcast') return;
+        if (!this.started || !this.startProcedure) return;
 
         if (!this.parentStreamId) {
             this.startProcedure().finally(() => {
