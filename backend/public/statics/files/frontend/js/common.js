@@ -53,6 +53,9 @@ function createSparkRTC() {
             raiseHandConfirmation: (msg) => {
                 return true;
             },
+            startProcedure: async () => {
+                await handleClick();
+            },
             log: (log) => {
                 addLog(log);
             }
