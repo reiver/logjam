@@ -119,6 +119,7 @@ class SparkRTC {
                     } else if (msg.data === "yes:broadcast") {
                         if (this.localStreamChangeCallback)
                             this.localStreamChangeCallback(this.localStream);
+                        this.checkState();
                     } else {
                         if (this.localStreamChangeCallback)
                             this.localStreamChangeCallback(null);
@@ -211,10 +212,11 @@ class SparkRTC {
                 console.log("WebSocket error: ", error);
                 reject(error);
                 this.log(`[setupSignalingSocket] socket onerror`);
-                this.started = false;
-                if (this.startProcedure) this.startProcedure();
+                alert('Can not connect to server');
+                window.location.reload();
             };
             this.socket = socket;
+
         })
     };
     startShareScreen = async () => {
@@ -487,14 +489,25 @@ class SparkRTC {
         });
     };
     checkState = () => {
-        if (!this.started || !this.startProcedure) return;
-
-        if (!this.parentStreamId || this.role === 'broadcast') {
+        console.log('[checkState]');
+        if (!this.startProcedure) return;
+        if (this.role === 'broadcast') {
+            console.log('[checkState]', this.socket);
+            try {
+                this.ping();
+                console.log('ping ok');
+            } catch (e) {
+                console.log('ping error', e);
+            }
+            setTimeout(this.checkState, 10000);
+        }
+        else if (!this.parentStreamId) {
+            console.log('[checkState] startProcedure');
             this.startProcedure().finally(() => {
-                setTimeout(this.checkState, 1000);
+                setTimeout(this.checkState, 10000);
             });
         } else
-            setTimeout(this.checkState, 1000);
+            setTimeout(this.checkState, 10000);
     };
     constructor(role, options = {}) {
         this.role = role;
