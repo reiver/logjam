@@ -489,7 +489,7 @@ class SparkRTC {
     checkState = () => {
         if (!this.started || !this.startProcedure) return;
 
-        if (!this.parentStreamId) {
+        if (!this.parentStreamId || this.role === 'broadcast') {
             this.startProcedure().finally(() => {
                 setTimeout(this.checkState, 1000);
             });
