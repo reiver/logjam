@@ -195,7 +195,7 @@ class SparkRTC {
                         data: myName,
                     })
                 );
-                // this.pingInterval = setInterval(this.ping, 2000);
+                this.pingInterval = setInterval(this.ping, 60000);
                 this.log(`[setupSignalingSocket] socket onopen and sent start`);
                 resolve(socket);
             };
@@ -204,17 +204,21 @@ class SparkRTC {
                 this.myPeerConnectionArray = {};
                 if (this.signalingDisconnectedCallback) this.signalingDisconnectedCallback;
                 this.log(`[setupSignalingSocket] socket onclose`);
+                this.started = false;
+                if (this.startProcedure) this.startProcedure();
             };
             socket.onerror = (error) => {
                 console.log("WebSocket error: ", error);
                 reject(error);
                 this.log(`[setupSignalingSocket] socket onerror`);
+                this.started = false;
+                if (this.startProcedure) this.startProcedure();
             };
             this.socket = socket;
         })
     };
     startShareScreen = async () => {
-        this.log(`[handleMessage] startShareScreen`);                                                                                                              
+        this.log(`[handleMessage] startShareScreen`);
         try {
             const shareStream = await navigator.mediaDevices
                 .getDisplayMedia({
@@ -240,12 +244,14 @@ class SparkRTC {
     startBroadcasting = async (data = 'broadcast') => {
         this.log(`[startBroadcasting] ${data}`);
         try {
-            this.localStream = await navigator.mediaDevices.getUserMedia({
-                audio: true,
-                video: true,
-            });
-            this.log(`[startBroadcasting] localsream loaded`);
-            this.remoteStreams.push(this.localStream);
+            if (!this.localStream) {
+                this.localStream = await navigator.mediaDevices.getUserMedia({
+                    audio: true,
+                    video: true,
+                });
+                this.log(`[startBroadcasting] localsream loaded`);
+                this.remoteStreams.push(this.localStream);
+            }
             this.socket.send(
                 JSON.stringify({
                     type: "role",
@@ -279,6 +285,10 @@ class SparkRTC {
         this.log(`[newPeerConnectionInstance] target='${target}' theStream='${theStream}' isAdience='${isAdience}'`);
         const peerConnection = new RTCPeerConnection(this.myPeerConnectionConfig);
         peerConnection.isAdience = isAdience;
+
+        peerConnection.onconnectionstatechange = (ev) => {
+            console.log(`[newPeerConnectionInstance] peerConnection.onconnectionstatechange ${JSON.stringify(ev)}`);
+        }
 
         peerConnection.onicecandidate = (event) => {
             this.log(`[newPeerConnectionInstance] onicecandidate event.candidate='${JSON.stringify(event.candidate)}'`);
@@ -498,7 +508,7 @@ class SparkRTC {
         });
         this.newTrackCallback = options.newTrackCallback;
         this.startProcedure = options.startProcedure;
-        this.log = options.log || ((log) => {});
+        this.log = options.log || ((log) => { });
         this.log(`[constructor] ${this.role}`);
     }
 }
