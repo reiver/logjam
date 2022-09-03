@@ -246,10 +246,10 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 		if err != nil {
 			return
 		}
-		allockets := Map.All()
+		allSockets := Map.All()
 		var ok = false
 		var target *binarytreesrv.MySocket
-		for _, node := range allockets {
+		for _, node := range allSockets {
 			if node.(*binarytreesrv.MySocket).ID == ID {
 				ok = true
 				target = node.(*binarytreesrv.MySocket)
@@ -281,6 +281,30 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 	}
 }
 
+func (receiver httpHandler) deleteNode(conn *websocket.Conn, roomName string, messageType int) {
+	log := receiver.Logger.Begin()
+	defer log.End()
+	Map, found := roommapssrv.RoomMaps.Get(roomName)
+	if !found {
+		log.Errorf("could not get map for room %q when trying to reader", roomName)
+	}
+	socket := Map.Get(conn).(*binarytreesrv.MySocket)
+	var response message.MessageContract
+	response.Type = "event-broadcaster-disconnected"
+	response.Data = strconv.FormatInt(int64(socket.ID), 10)
+	messageTxt, _ := json.Marshal(response)
+	if socket.IsBroadcaster {
+		for _, s := range Map.All() {
+			if !s.(*binarytreesrv.MySocket).IsBroadcaster {
+				s.(*binarytreesrv.MySocket).Socket.WriteMessage(1, messageTxt)
+				// time.Sleep(2000 * time.Millisecond)
+				break
+			}
+		}
+	}
+	Map.Delete(conn)
+}
+
 func (receiver httpHandler) reader(conn *websocket.Conn, userAgent string, roomName string) {
 	log := receiver.Logger.Begin()
 	defer log.End()
@@ -296,10 +320,12 @@ func (receiver httpHandler) reader(conn *websocket.Conn, userAgent string, roomN
 			_, closedError := err.(*websocket.CloseError)
 			_, handshakeError := err.(*websocket.HandshakeError)
 			if closedError || handshakeError {
-				Map.Delete(conn)
+				receiver.deleteNode(conn, roomName, messageType)
 				{
 					err := roommapssrv.RoomMaps.Set(roomName, Map)
-					log.Error("could not set room in map: %s", err)
+					if err != nil {
+						log.Errorf("could not set room in map: %s", err)
+					}
 				}
 				return
 			}

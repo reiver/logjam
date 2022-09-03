@@ -72,6 +72,8 @@ class SparkRTC {
         );
     };
     handleMessage = async (event) => {
+        if (event.data.indexOf('pong') < 0)
+            console.log('onmessage event', event);
         let msg;
         try {
             msg = JSON.parse(event.data);
@@ -82,6 +84,8 @@ class SparkRTC {
         msg.type = (msg.Type && !msg.type) ? msg.Type : msg.type;
 
         let audiencePeerConnection;
+        if (msg.type!=='pong')
+            console.log('onmessage object', msg);
         switch (msg.type) {
             case 'video-offer':
             case 'alt-video-offer':
@@ -156,6 +160,12 @@ class SparkRTC {
                 break;
             case 'tree':
                 if (this.treeCallback) this.treeCallback(msg.data);
+                break;
+            case 'event-broadcaster-disconnected':
+                // onLoad();
+                // start();
+                // setTimeout(handleClick, 1000);
+                // window.location.reload();
                 break;
             default:
                 break;

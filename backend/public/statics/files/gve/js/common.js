@@ -20,8 +20,17 @@ function createSparkRTC() {
     document.getElementById('raise_hand').style.display = 'none';
     const sparkRTC = new SparkRTC('unknown', {
         localStreamChangeCallback: (stream) => {
+            console.log('Local Stream', stream);
             if (stream) {
                 getVideoElement('localVideo').srcObject = stream;
+                // if (document.getElementById("mic").dataset.status = 'off')
+                // {
+                //     sparkRTC.disableAudio();
+                // }
+                // if (document.getElementById("camera").dataset.status = 'off')
+                // {
+                //     sparkRTC.disableVideo();
+                // }
             }
         },
         remoteStreamCallback: (stream) => {
@@ -46,6 +55,12 @@ function createSparkRTC() {
         },
         signalingDisconnectedCallback: () => {
             clearScreen();
+        },
+        startProcedure: () => {
+            setTimeout(() => {
+                onLoad();
+                handleClick();
+            }, 1000);
         },
         raiseHandConfirmation: (msg) => {
             return true;
