@@ -165,7 +165,7 @@ class SparkRTC {
                 if (this.treeCallback) this.treeCallback(msg.data);
                 break;
             default:
-                this.log(`[handleMessage] default ${msg}`);
+                this.log(`[handleMessage] default ${JSON.stringify(msg)}`);
                 break;
         }
     };
