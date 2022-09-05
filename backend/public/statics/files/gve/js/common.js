@@ -60,7 +60,7 @@ function createSparkRTC() {
             setTimeout(() => {
                 onLoad();
                 handleClick();
-            }, 1000);
+            }, 100);
         },
         raiseHandConfirmation: (msg) => {
             return true;
