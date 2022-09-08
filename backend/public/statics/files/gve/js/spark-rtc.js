@@ -57,6 +57,7 @@ class SparkRTC {
     startedRaiseHand = false;
     targetStreams = {};
     parentStreamId;
+    checkStatusHandle;
     handleVideoOfferMsg = async (msg) => {
         const broadcasterPeerConnection = this.createOrGetPeerConnection(msg.name);
         await broadcasterPeerConnection.setRemoteDescription(new RTCSessionDescription(msg.sdp));
@@ -84,7 +85,7 @@ class SparkRTC {
         msg.type = (msg.Type && !msg.type) ? msg.Type : msg.type;
 
         let audiencePeerConnection;
-        if (msg.type!=='pong')
+        if (msg.type !== 'pong')
             console.log('onmessage object', msg);
         switch (msg.type) {
             case 'video-offer':
@@ -166,6 +167,8 @@ class SparkRTC {
                 // start();
                 // setTimeout(handleClick, 1000);
                 // window.location.reload();
+                if (this.startProcedure)
+                    this.startProcedure();
                 break;
             default:
                 break;
@@ -367,7 +370,8 @@ class SparkRTC {
 
             if (!this.started) {
                 this.started = true;
-                this.checkState();
+                clearTimeout(this.checkStatusHandle);
+                this.checkState().then(res => this.checkStatusHandle = res);
             }
         };
 
@@ -458,15 +462,15 @@ class SparkRTC {
         });
     };
 
-    checkState = () => {
+    checkState = async () => {
+        console.log('[checkState] startProcedure', this.started, this.role, this.parentStreamId);
         if (!this.started || !this.startProcedure || this.role === 'broadcast') return;
 
         if (!this.parentStreamId) {
-            this.startProcedure().finally(() => {
-                setTimeout(this.checkState, 1000);
-            });
-        } else
-            setTimeout(this.checkState, 1000);
+            //await this.startProcedure();
+        } 
+        this.checkStatusHandle = setTimeout(this.checkState, 1000);
+        return this.checkStatusHandle;
     };
 
     constructor(role, options = {}) {

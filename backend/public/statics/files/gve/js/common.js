@@ -56,11 +56,14 @@ function createSparkRTC() {
         signalingDisconnectedCallback: () => {
             clearScreen();
         },
-        startProcedure: () => {
-            setTimeout(() => {
-                onLoad();
-                handleClick();
-            }, 100);
+        startProcedure: async () => {
+            return new Promise((resolve) => {
+                setTimeout(() => {
+                    onLoad();
+                    handleClick();
+                    resolve();
+                }, 100);
+            });
         },
         raiseHandConfirmation: (msg) => {
             return true;
