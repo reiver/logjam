@@ -295,8 +295,10 @@ func (receiver httpHandler) deleteNode(conn *websocket.Conn, roomName string, me
 	messageTxt, _ := json.Marshal(response)
 	if socket.IsBroadcaster {
 		for _, s := range Map.All() {
+			log.Inform("[deleteNode] checking socket ", s.(*binarytreesrv.MySocket).Name)
 			if !s.(*binarytreesrv.MySocket).IsBroadcaster {
 				s.(*binarytreesrv.MySocket).Socket.WriteMessage(1, messageTxt)
+				log.Inform("[deleteNode] checking socket ", s.(*binarytreesrv.MySocket).Name, " SENT")
 				// time.Sleep(2000 * time.Millisecond)
 				break
 			}

@@ -167,6 +167,11 @@ class SparkRTC {
                 // start();
                 // setTimeout(handleClick, 1000);
                 // window.location.reload();
+                clearTimeout(this.checkStatusHandle);
+                this.parentStreamId = undefined;
+                this.remoteStreams = [];
+                this.remoteStreamNotified = false;
+                this.myPeerConnectionArray = {};
                 if (this.startProcedure)
                     this.startProcedure();
                 break;
@@ -343,6 +348,9 @@ class SparkRTC {
                     }
                     this.parentStreamId = undefined;
                 }
+                if (!this.parentStreamId && this.remoteStreams.filter((s) => s!==this.localStream).length > 0) {
+                    this.parentStreamId = this.remoteStreams[0].id;
+                }
             };
             if (this.remoteStreamCallback)
                 this.remoteStreamCallback(stream);
@@ -466,9 +474,13 @@ class SparkRTC {
         console.log('[checkState] startProcedure', this.started, this.role, this.parentStreamId);
         if (!this.started || !this.startProcedure || this.role === 'broadcast') return;
 
+        console.log('Should connect ?', this);
         if (!this.parentStreamId) {
-            //await this.startProcedure();
-        } 
+            console.log('Should connect !', this);
+            clearTimeout(this.checkStatusHandle);
+            await this.startProcedure();
+            return undefined;
+        }
         this.checkStatusHandle = setTimeout(this.checkState, 1000);
         return this.checkStatusHandle;
     };
