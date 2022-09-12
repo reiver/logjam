@@ -23,11 +23,11 @@ function createSparkRTC() {
             console.log('Local Stream', stream);
             if (stream) {
                 getVideoElement('localVideo').srcObject = stream;
-                if (document.getElementById("mic").dataset.status = 'off')
+                if (document.getElementById("mic").dataset.status === 'off')
                 {
                     sparkRTC.disableAudio();
                 }
-                if (document.getElementById("camera").dataset.status = 'off')
+                if (document.getElementById("camera").dataset.status === 'off')
                 {
                     sparkRTC.disableVideo();
                 }
