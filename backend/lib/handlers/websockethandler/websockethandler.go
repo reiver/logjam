@@ -14,6 +14,7 @@ import (
 	binarytreesrv "github.com/sparkscience/logjam/backend/srv/binarytree"
 	roommapssrv "github.com/sparkscience/logjam/backend/srv/roommaps"
 
+	"github.com/mmcomp/go-binarytree"
 	logger "github.com/mmcomp/go-log"
 )
 
@@ -293,14 +294,19 @@ func (receiver httpHandler) deleteNode(conn *websocket.Conn, roomName string, me
 	response.Type = "event-broadcaster-disconnected"
 	response.Data = strconv.FormatInt(int64(socket.ID), 10)
 	messageTxt, _ := json.Marshal(response)
+	response.Type = "event-reconnect"
+	otherMessageTxt, _ := json.Marshal(response)
+	var chosenOne binarytree.SingleNode
 	if socket.IsBroadcaster {
 		for _, s := range Map.All() {
 			log.Inform("[deleteNode] checking socket ", s.(*binarytreesrv.MySocket).Name)
-			if !s.(*binarytreesrv.MySocket).IsBroadcaster {
+			if chosenOne == nil {
+				chosenOne = s
 				s.(*binarytreesrv.MySocket).Socket.WriteMessage(1, messageTxt)
 				log.Inform("[deleteNode] checking socket ", s.(*binarytreesrv.MySocket).Name, " SENT")
-				// time.Sleep(2000 * time.Millisecond)
-				break
+			} else {
+				s.(*binarytreesrv.MySocket).Socket.WriteMessage(1, otherMessageTxt)
+				log.Inform("[deleteNode] checking other socket ", s.(*binarytreesrv.MySocket).Name, " SENT")
 			}
 		}
 	}

@@ -33,15 +33,17 @@ function createSparkRTC() {
                 }
             }
         },
-        remoteStreamCallback: (stream) => {
+        remoteStreamCallback: (stream, target) => {
             console.log('remote stream', stream);
             const tagId = 'remoteVideo-' + stream.id;
             if (document.getElementById(tagId)) return;
-            const video = createVideoElement(tagId);
+            const video = createVideoElement(tagId, stream.target ||  target);
             video.srcObject = stream;
             video.play();
             if (sparkRTC.role === 'audience' && !sparkRTC.localStream && adminAccess) {
-                sparkRTC.raiseHand();
+                // if (!sparkRTC.remoteStreams.includes(re => rs.id === sparkRTC.localStreamId))
+                // if (confirm('?'))
+                    sparkRTC.raiseHand();
             }
         },
         remoteStreamDCCallback: (stream) => {
@@ -49,21 +51,24 @@ function createSparkRTC() {
             let tagId = 'remoteVideo-' + stream.id;
             if (!document.getElementById(tagId)) {
                 tagId = 'localVideo-' + stream.id;
-                if (!document.getElementById(tagId)) return;
+                if (!document.getElementById(tagId)) {
+                  console.log('Stream not found');
+                  return;
+                }
             }
             removeVideoElement(tagId);
         },
         signalingDisconnectedCallback: () => {
             clearScreen();
         },
-        startProcedure: async () => {
-            return new Promise((resolve) => {
-                setTimeout(() => {
+        startProcedure: () => {
+            // return //new Promise((resolve) => {
+                // setTimeout(() => {
                     onLoad();
-                    handleClick();
-                    resolve();
-                }, 100);
-            });
+                    return handleClick();
+                    // resolve();
+                // }, 100);
+            // });
         },
         raiseHandConfirmation: (msg) => {
             return true;
