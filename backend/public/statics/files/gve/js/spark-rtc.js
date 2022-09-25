@@ -43,6 +43,7 @@ class SparkRTC {
         ],
     };
     role = 'unknown';
+    localStreamId;
     localStream;
     remoteStreamNotified = false;
     remoteStreams = [];
@@ -121,6 +122,7 @@ class SparkRTC {
                         video: true,
                     });
                     this.remoteStreams.push(this.localStream);
+                    this.localStreamId = this.localStream.id;
                     if (this.localStreamChangeCallback)
                         this.localStreamChangeCallback(this.localStream);
                 } else {
@@ -162,11 +164,9 @@ class SparkRTC {
             case 'tree':
                 if (this.treeCallback) this.treeCallback(msg.data);
                 break;
+            case 'event-reconnect':
+                break;
             case 'event-broadcaster-disconnected':
-                // onLoad();
-                // start();
-                // setTimeout(handleClick, 1000);
-                // window.location.reload();
                 clearTimeout(this.checkStatusHandle);
                 this.parentStreamId = undefined;
                 this.remoteStreams = [];
@@ -180,10 +180,15 @@ class SparkRTC {
         }
     };
     ping = () => {
-        console.log('ping');
-        this.socket.send(JSON.stringify({
-            type: this.treeCallback ? "tree" : "ping",
-        }));
+        // console.log('ping');
+        // this.socket.send(JSON.stringify({
+        //     type: this.treeCallback ? "tree" : "ping",
+        // }));
+    };
+    wait = async (seconds) => {
+        return new Promise((resolve) => {
+            setTimeout(resolve, seconds * 1000);
+        });
     };
     setupSignalingSocket = (url, myName, roomName) => {
         return new Promise((resolve, reject) => {
@@ -248,6 +253,7 @@ class SparkRTC {
                 audio: true,
                 video: true,
             });
+            this.localStreamId = this.localStream.id;
             this.remoteStreams.push(this.localStream);
             this.socket.send(
                 JSON.stringify({
@@ -311,6 +317,8 @@ class SparkRTC {
 
         peerConnection.ontrack = (event) => {
             const stream = event.streams[0];
+            console.log('[ontrack]', stream.id, this.localStreamId);
+            stream.target = target;
             if (this.localStream && this.localStream.id === stream.id) return;
             if (this.newTrackCallback && !this.newTrackCallback(stream)) return;
             if (this.remoteStreams.indexOf(stream) !== -1) return;
@@ -339,12 +347,12 @@ class SparkRTC {
                         }
                     }
                 });
-                this.remoteStreams.splice(this.remoteStreams.indexOf(peerConnection.getRemoteStreams()[0]), 1);
-                if (this.parentStreamId && this.parentStreamId === peerConnection.getRemoteStreams()[0].id) {
+                this.remoteStreams.splice(this.remoteStreams.indexOf(event.target), 1);
+                if (this.parentStreamId && this.parentStreamId === event.target.id) {
                     if (this.remoteStreamDCCallback) {
-                        this.remoteStreams.forEach((strm) => {
-                            this.remoteStreamDCCallback(strm);
-                        });
+                        // this.remoteStreams.forEach((strm) => {
+                        //     this.remoteStreamDCCallback(strm);
+                        // });
                     }
                     this.parentStreamId = undefined;
                 }
@@ -353,7 +361,7 @@ class SparkRTC {
                 }
             };
             if (this.remoteStreamCallback)
-                this.remoteStreamCallback(stream);
+                this.remoteStreamCallback(stream, target);
             this.remoteStreams.push(stream);
             if (!this.remoteStreamNotified) {
                 this.remoteStreamNotified = true;
@@ -386,6 +394,8 @@ class SparkRTC {
         peerConnection.oniceconnectionstatechange = (event) => {
             if (peerConnection.iceConnectionState == 'disconnected') {
                 if (peerConnection.getRemoteStreams().length === 0) return;
+                console.log('[oniceconnectionstatechange]', peerConnection.getRemoteStreams()[0].id, this.localStreamId);
+                if (peerConnection.getRemoteStreams()[0].id === this.localStreamId) return;
                 console.log('disconnected', event);
                 if (this.remoteStreamDCCallback) this.remoteStreamDCCallback(peerConnection.getRemoteStreams()[0]);
                 const trackIds = peerConnection.getReceivers().map((receiver) => receiver.track.id);
@@ -471,17 +481,20 @@ class SparkRTC {
     };
 
     checkState = async () => {
-        console.log('[checkState] startProcedure', this.started, this.role, this.parentStreamId);
+        // console.log('[checkState] startProcedure', this.started, this.role, this.parentStreamId);
         if (!this.started || !this.startProcedure || this.role === 'broadcast') return;
 
-        console.log('Should connect ?', this);
-        if (!this.parentStreamId) {
+        // console.log('Should connect ?', this);
+        if (!this.parentStreamId && !this.remoteStreams.includes(rs => rs.id === this.localStreamId)) {
             console.log('Should connect !', this);
             clearTimeout(this.checkStatusHandle);
+            for (const tid in this.myPeerConnectionArray) {
+                this.myPeerConnectionArray[tid].close();
+            }
             await this.startProcedure();
             return undefined;
         }
-        this.checkStatusHandle = setTimeout(this.checkState, 1000);
+        this.checkStatusHandle = setTimeout(this.checkState, 3000);
         return this.checkStatusHandle;
     };
 
