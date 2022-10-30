@@ -57,6 +57,7 @@ class SparkRTC {
     startedRaiseHand = false;
     targetStreams = {};
     parentStreamId;
+    metaData = {};
     handleVideoOfferMsg = async (msg) => {
         this.log(`[handleVideoOfferMsg] ${msg.name}`);
         const broadcasterPeerConnection = this.createOrGetPeerConnection(msg.name);
@@ -163,6 +164,11 @@ class SparkRTC {
             case 'tree':
                 this.log(`[handleMessage] ${msg.type}`);
                 if (this.treeCallback) this.treeCallback(msg.data);
+                break;
+            case 'metadata-get':
+            case 'metadata-set':
+                this.log(`[handleMessage] ${msg.type}`);
+                this.metaData = JSON.parse(msg.data);
                 break;
             default:
                 this.log(`[handleMessage] default ${JSON.stringify(msg)}`);

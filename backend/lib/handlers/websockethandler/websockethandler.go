@@ -12,6 +12,7 @@ import (
 
 	"github.com/sparkscience/logjam/backend/lib/message"
 	binarytreesrv "github.com/sparkscience/logjam/backend/srv/binarytree"
+	"github.com/sparkscience/logjam/backend/srv/metadata"
 	roommapssrv "github.com/sparkscience/logjam/backend/srv/roommaps"
 
 	"github.com/mmcomp/go-binarytree"
@@ -45,7 +46,7 @@ func (receiver httpHandler) findBroadcaster(roomName string) (bool, *binarytrees
 		log.Errorf("could not get map for room %q when trying to find broadcaster", roomName)
 		return false, nil
 	}
-	broadcasterLevel := Map.LevelNodes(1)
+	broadcasterLevel := Map.Room.LevelNodes(1)
 	var broadcaster *binarytreesrv.MySocket
 	ok := len(broadcasterLevel) == 1
 	if ok {
@@ -102,10 +103,10 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 		log.Alert("role message processed ", theMessage.Data)
 		if theMessage.Data == "broadcast" {
 			response.Data = "yes:broadcast"
-			Map.ToggleHead(socket.Socket)
-			Map.ToggleCanConnect(socket.Socket)
+			Map.Room.ToggleHead(socket.Socket)
+			Map.Room.ToggleCanConnect(socket.Socket)
 			{
-				err := roommapssrv.RoomMaps.Set(roomName, Map)
+				err := roommapssrv.RoomMaps.Set(roomName, Map.Room)
 				log.Error("could not set room in map: %s", err)
 			}
 			if _, err := os.Stat("./logs/" + socket.Name); os.IsNotExist(err) {
@@ -152,9 +153,9 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 		} else {
 			if socket.IsBroadcaster {
 				response.Data = "no:broadcast"
-				Map.ToggleHead(socket.Socket)
+				Map.Room.ToggleHead(socket.Socket)
 				{
-					err := roommapssrv.RoomMaps.Set(roomName, Map)
+					err := roommapssrv.RoomMaps.Set(roomName, Map.Room)
 					log.Error("could not set room in map: %s", err)
 				}
 
@@ -182,7 +183,7 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 					fmt.Fprintln(f, msg)
 
 					if err == nil {
-						targetSocketNode, e := binarytreesrv.InsertChild(socket.Socket, *Map)
+						targetSocketNode, e := binarytreesrv.InsertChild(socket.Socket, *Map.Room)
 						if e != nil {
 							socket.Socket.WriteMessage(messageType, []byte("{\"type\":\"error\",\"data\":\"Insert Child Error : "+e.Error()+" \"}"))
 							return
@@ -210,9 +211,9 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 			return
 		}
 	case "stream":
-		Map.ToggleCanConnect(socket.Socket)
+		Map.Room.ToggleCanConnect(socket.Socket)
 		{
-			err = roommapssrv.RoomMaps.Set(roomName, Map)
+			err = roommapssrv.RoomMaps.Set(roomName, Map.Room)
 			log.Error("could not set room in map: %s", err)
 		}
 
@@ -228,7 +229,7 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 	case "ping":
 		socket.Socket.WriteJSON(message.MessageContract{Type: "pong", Data: "pong"})
 	case "tree":
-		treeData := binarytreesrv.Tree(*Map)
+		treeData := binarytreesrv.Tree(*Map.Room)
 		j, e := json.Marshal(treeData)
 		if e != nil {
 			return
@@ -242,12 +243,45 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 		} else {
 			return
 		}
+	case "metadata-set":
+		var metaData *metadata.MetaData = &metadata.MetaData{
+			BackgroundURL: "",
+		}
+		metaDataJsonError := json.Unmarshal([]byte(theMessage.Data), metaData)
+		if metaDataJsonError == nil {
+			roommapssrv.RoomMaps.SetMetData(roomName, *metaData)
+			response.Type = "metadata-set"
+			response.Data = theMessage.Data
+			responseJSON, err := json.Marshal(response)
+			if err == nil {
+				socket.Socket.WriteMessage(messageType, responseJSON)
+			}
+		}
+
+		return
+	case "metadata-get":
+		log.Alert("metadata-get")
+		metaData := Map.MetaData
+		metaDataJson, metaDataJsonError := json.Marshal(metaData)
+		if metaDataJsonError == nil {
+			response.Type = "metadata-get"
+			response.Data = string(metaDataJson)
+			responseJSON, err := json.Marshal(response)
+			if err == nil {
+				log.Alert(responseJSON)
+				socket.Socket.WriteMessage(messageType, responseJSON)
+			} else {
+				return
+			}
+		}
+
+		return
 	default:
 		ID, err := strconv.ParseUint(theMessage.Target, 10, 64)
 		if err != nil {
 			return
 		}
-		allSockets := Map.All()
+		allSockets := Map.Room.All()
 		var ok = false
 		var target *binarytreesrv.MySocket
 		for _, node := range allSockets {
@@ -289,7 +323,7 @@ func (receiver httpHandler) deleteNode(conn *websocket.Conn, roomName string, me
 	if !found {
 		log.Errorf("could not get map for room %q when trying to reader", roomName)
 	}
-	socket := Map.Get(conn).(*binarytreesrv.MySocket)
+	socket := Map.Room.Get(conn).(*binarytreesrv.MySocket)
 	var response message.MessageContract
 	response.Type = "event-broadcaster-disconnected"
 	response.Data = strconv.FormatInt(int64(socket.ID), 10)
@@ -298,7 +332,7 @@ func (receiver httpHandler) deleteNode(conn *websocket.Conn, roomName string, me
 	otherMessageTxt, _ := json.Marshal(response)
 	var chosenOne binarytree.SingleNode
 	if socket.IsBroadcaster {
-		for _, s := range Map.All() {
+		for _, s := range Map.Room.All() {
 			log.Inform("[deleteNode] checking socket ", s.(*binarytreesrv.MySocket).Name)
 			if chosenOne == nil {
 				chosenOne = s
@@ -310,7 +344,7 @@ func (receiver httpHandler) deleteNode(conn *websocket.Conn, roomName string, me
 			}
 		}
 	}
-	Map.Delete(conn)
+	Map.Room.Delete(conn)
 }
 
 func (receiver httpHandler) reader(conn *websocket.Conn, userAgent string, roomName string) {
@@ -330,7 +364,7 @@ func (receiver httpHandler) reader(conn *websocket.Conn, userAgent string, roomN
 			if closedError || handshakeError {
 				receiver.deleteNode(conn, roomName, messageType)
 				{
-					err := roommapssrv.RoomMaps.Set(roomName, Map)
+					err := roommapssrv.RoomMaps.Set(roomName, Map.Room)
 					if err != nil {
 						log.Errorf("could not set room in map: %s", err)
 					}
@@ -340,7 +374,7 @@ func (receiver httpHandler) reader(conn *websocket.Conn, userAgent string, roomN
 			return
 		}
 
-		receiver.parseMessage(Map.Get(conn).(*binarytreesrv.MySocket), p, messageType, userAgent, roomName)
+		receiver.parseMessage(Map.Room.Get(conn).(*binarytreesrv.MySocket), p, messageType, userAgent, roomName)
 	}
 }
 
@@ -370,9 +404,9 @@ func (receiver httpHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) 
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
-	Map.Insert(ws)
+	Map.Room.Insert(ws)
 	{
-		err := roommapssrv.RoomMaps.Set(roomName, Map)
+		err := roommapssrv.RoomMaps.Set(roomName, Map.Room)
 		log.Error("could not set room in map: %s", err)
 	}
 	userAgent := req.Header.Get("User-Agent")

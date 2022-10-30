@@ -5,5 +5,6 @@ import (
 )
 
 const (
-	errNilReceiver = fck.Error("roommaps: nil receiver")
+	errNilReceiver  = fck.Error("roommaps: nil receiver")
+	errRoomNotFound = fck.Error("roommaps: room not found")
 )
