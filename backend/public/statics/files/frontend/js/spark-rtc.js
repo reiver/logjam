@@ -337,6 +337,9 @@ class SparkRTC {
             }
             stream.oninactive = (event) => {
                 this.log(`[newPeerConnectionInstance] stream.oninactive ${JSON.stringify(event)}`);
+                console.log('[stream.oninactive] event', event);
+                this.remoteStreamNotified = false;
+                const theEventStream = event.currentTarget;
                 if (this.remoteStreamDCCallback) this.remoteStreamDCCallback(event.target);
                 const trackIds = peerConnection.getReceivers().map((receiver) => receiver.track.id);
                 trackIds.forEach((trackId) => {
@@ -357,8 +360,8 @@ class SparkRTC {
                         }
                     }
                 });
-                this.remoteStreams.splice(this.remoteStreams.indexOf(peerConnection.getRemoteStreams()[0]), 1);
-                if (this.parentStreamId && this.parentStreamId === peerConnection.getRemoteStreams()[0].id) {
+                this.remoteStreams.splice(this.remoteStreams.indexOf(theEventStream), 1);
+                if (this.parentStreamId && this.parentStreamId === theEventStream.id) {
                     if (this.remoteStreamDCCallback) {
                         this.remoteStreams.forEach((strm) => {
                             this.remoteStreamDCCallback(strm);
@@ -400,6 +403,7 @@ class SparkRTC {
         peerConnection.oniceconnectionstatechange = (event) => {
             this.log(`[newPeerConnectionInstance] oniceconnectionstatechange peerConnection.iceConnectionState = ${peerConnection.iceConnectionState} event = ${JSON.stringify(event)}`);
             if (peerConnection.iceConnectionState == 'disconnected') {
+                this.remoteStreamNotified = false;
                 if (peerConnection.getRemoteStreams().length === 0) return;
                 if (this.remoteStreamDCCallback) this.remoteStreamDCCallback(peerConnection.getRemoteStreams()[0]);
                 const trackIds = peerConnection.getReceivers().map((receiver) => receiver.track.id);
