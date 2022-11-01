@@ -69,6 +69,7 @@ function createSparkRTC() {
                 const video = createVideoElement(tagId);
                 video.srcObject = stream;
                 video.play();
+                document.getElementById('dc-place-holder').remove();
             },
             remoteStreamDCCallback: (stream) => {
                 let tagId = 'remoteVideo-' + stream.id;
@@ -77,6 +78,10 @@ function createSparkRTC() {
                     if (!document.getElementById(tagId)) return;
                 }
                 removeVideoElement(tagId);
+                document.getElementById('screen').innerHTML = `<div id="dc-place-holder" style="display: block;">
+                <img style="width: 100%;" src="images/broken-link-mistake-error-disconnect-svgrepo-com.svg" />
+                <h1>Broadcaster is disconnected now, wait for it...</h1>
+                </div>`;
             },
             signalingDisconnectedCallback: () => {
                 clearScreen();
