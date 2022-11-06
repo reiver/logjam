@@ -6,6 +6,8 @@ const SCREEN_ON = "images/screen-on.png";
 const SCREEN_OFF = "images/screen-off.png";
 // const SPARK_LOGO = "images/spark-logo.png";
 const CHARACTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+const verySlowColor = 'invert(64%) sepia(66%) saturate(4174%) hue-rotate(334deg) brightness(100%) contrast(92%)';
+const DCColor = 'invert(13%) sepia(99%) saturate(4967%) hue-rotate(350deg) brightness(92%) contrast(96%)';
 
 let graph;
 let sparkRTC;
@@ -32,9 +34,9 @@ function arrangeVideoContainers() {
     let flex = "0 0 " + flexRatio + "%";
     let maxHeight = 100 / Math.ceil(videoCount / Math.ceil(Math.sqrt(videoCount)));
     Array.from(videoContainers).forEach(div => {
-            div.style.setProperty('flex', flex);
-            div.style.setProperty('max-height', maxHeight + "%");
-        }
+        div.style.setProperty('flex', flex);
+        div.style.setProperty('max-height', maxHeight + "%");
+    }
     )
 }
 
@@ -94,6 +96,24 @@ function removeVideoElement(videoId) {
     arrangeVideoContainers();
 }
 
+function onNetworkIsSlow(downlink) {
+    let msg = '';
+    if (downlink > 0) {
+        document.getElementById('net').style.filter = verySlowColor;
+        document.getElementById('net').title = 'Network Status is Very Slow!';
+        msg = 'You network speed is lower than normal, therefor you may experience some difficulties.';
+    } else {
+        document.getElementById('net').style.filter = DCColor;
+        document.getElementById('net').title = 'Network Status is Disconnected!'
+        msg = 'You are DISCONNECTED!';
+    }
+    document.getElementById('net').onclick = () => { alert(msg); };
+    document.getElementById('net').style.display = '';
+}
+
+function onNetworkIsNormal() {
+    document.getElementById('net').style.display = 'none';
+}
 
 async function onShareScreen() {
     const img = document.getElementById("share_screen");
@@ -190,6 +210,7 @@ async function start() {
 
 
 function onLoad() {
+    registerNetworkEvent();
     myRole = getMyRole();
     roomName = getRoomName();
     sparkRTC = createSparkRTC();
