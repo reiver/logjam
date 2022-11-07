@@ -9,6 +9,7 @@ import (
 	"os"
 
 	"github.com/gorilla/mux"
+	"github.com/rs/cors"
 )
 
 func UploadFile(w http.ResponseWriter, r *http.Request) {
@@ -84,5 +85,6 @@ func main() {
 	router.HandleFunc("/", homeLink)
 	port := 8081
 	log.Printf("Server listening on port %d\n", port)
-	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", port), router))
+	handler := cors.Default().Handler(router)
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", port), handler))
 }
