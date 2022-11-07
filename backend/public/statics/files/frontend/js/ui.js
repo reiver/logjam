@@ -127,13 +127,25 @@ function onRequestChangeBackground() {
         fetch(
             'https://upload.logjam.server.group.video/file',
             { method: "POST", body: formData }
-        ).then(() => {
-            alert('Uploaded successfully')
+        ).then(async (res) => {
+            const { path } = await res.json();
+            // sparkRtc.metaData.backgroundUrl = `https://upload.logjam.server.group.video${path}`
+            sparkRTC.socket.send(
+                JSON.stringify({
+                    type: "metadata-set",
+                    data: JSON.stringify({"backgroundUrl": `https://upload.logjam.server.group.video${path}`})
+                })
+            );
         });
     };
     input.click();
 }
 
+setInterval(() => {
+    console.log(sparkRTC.metaData.backgroundUrl);
+    console.log(document.getElementById('page').style.background);
+    document.getElementById('page').style.background = `url(${sparkRTC.metaData.backgroundUrl})`
+}, 300);
 
 function setMyName() {
     try {
