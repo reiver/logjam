@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 
 	"github.com/gorilla/mux"
@@ -20,7 +21,10 @@ func UploadFile(w http.ResponseWriter, r *http.Request) {
 	}
 	defer file.Close()
 
+	// TODO: sanitize the filename
 	path := fmt.Sprintf("public/%s", handler.Filename)
+
+	pathEscaped := fmt.Sprintf("public/%s", url.PathEscape(handler.Filename))
 
 	type writeError struct {
 		Message string `json:"message"`
@@ -58,7 +62,7 @@ func UploadFile(w http.ResponseWriter, r *http.Request) {
 
 	defer f.Close()
 
-	b, err := json.Marshal(response{fmt.Sprintf("/%s", path), fmt.Sprintf("Sucessfully written %s!", fileName)})
+	b, err := json.Marshal(response{fmt.Sprintf("/%s", pathEscaped), fmt.Sprintf("Sucessfully written %s!", fileName)})
 	if err != nil {
 		panic(err)
 	}
