@@ -35,6 +35,11 @@ func UploadFile(w http.ResponseWriter, r *http.Request) {
 		w.Write(b)
 	}
 
+	err = os.MkdirAll("public", os.ModePerm)
+	if err != nil {
+		respondError()
+		return
+	}
 	f, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE, 0666)
 	if err != nil {
 		respondError()

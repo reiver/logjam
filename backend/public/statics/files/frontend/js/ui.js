@@ -117,7 +117,21 @@ async function onShareScreen() {
 }
 
 function onRequestChangeBackground() {
-    alert('Requesting to change the background')
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.onchange = _ => {
+        const file = input.files[0];
+
+        const formData = new FormData();
+        formData.append('file', file);
+        fetch(
+            'https://upload.logjam.server.group.video/file',
+            { method: "POST", body: formData }
+        ).then(() => {
+            alert('Uploaded successfully')
+        });
+    };
+    input.click();
 }
 
 
