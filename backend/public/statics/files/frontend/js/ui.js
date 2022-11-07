@@ -116,6 +116,10 @@ async function onShareScreen() {
     }
 }
 
+function onRequestChangeBackground() {
+    alert('Requesting to change the background')
+}
+
 
 function setMyName() {
     try {
