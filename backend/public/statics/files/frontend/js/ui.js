@@ -133,7 +133,7 @@ function onRequestChangeBackground() {
             sparkRTC.socket.send(
                 JSON.stringify({
                     type: "metadata-set",
-                    data: JSON.stringify({"backgroundUrl": `https://upload.logjam.server.group.video${path}`})
+                    data: JSON.stringify({"backgroundURL": `https://upload.logjam.server.group.video${path}`})
                 })
             );
         });
@@ -142,9 +142,15 @@ function onRequestChangeBackground() {
 }
 
 setInterval(() => {
-    console.log(sparkRTC.metaData.backgroundUrl);
+    sparkRTC.socket.send(
+        JSON.stringify({
+            type: "metadata-get",
+            // data: JSON.stringify({"backgroundUrl": `https://upload.logjam.server.group.video${path}`})
+        })
+    );
+    console.log(sparkRTC.metaData.backgroundURL);
     console.log(document.getElementById('page').style.background);
-    document.getElementById('page').style.background = `url(${sparkRTC.metaData.backgroundUrl})`
+    document.getElementById('page').style.background = `url(${sparkRTC.metaData.backgroundURL})`
 }, 300);
 
 function setMyName() {

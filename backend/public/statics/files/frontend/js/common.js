@@ -62,6 +62,7 @@ function createSparkRTC() {
         });
     }else{
         document.getElementById('share_screen').style.display = 'none';
+        document.getElementById('upload_image').style.display = 'none';
         return new SparkRTC('audience', {
             remoteStreamCallback: (stream) => {
                 const tagId = 'remoteVideo-' + stream.id;
