@@ -2,14 +2,13 @@ package roommaps
 
 import (
 	"github.com/mmcomp/go-binarytree"
-	metaDataPackage "github.com/sparkscience/logjam/backend/srv/metadata"
 
 	"sync"
 )
 
 type RoomType struct {
 	Room     *binarytree.Tree
-	MetaData metaDataPackage.MetaData
+	MetaData map[string]string
 }
 
 type Type struct {
@@ -48,7 +47,7 @@ func (receiver *Type) Set(roomName string, mapptr *binarytree.Tree) error {
 		receiver.roomMaps = make(map[string]*RoomType)
 	}
 
-	var metaData = metaDataPackage.MetaData{}
+	var metaData = make(map[string]string)
 	_, ok := receiver.roomMaps[roomName]
 	if ok {
 		metaData = receiver.roomMaps[roomName].MetaData
@@ -65,7 +64,7 @@ func (receiver *Type) Set(roomName string, mapptr *binarytree.Tree) error {
 	return nil
 }
 
-func (receiver *Type) SetMetData(roomName string, metaData metaDataPackage.MetaData) error {
+func (receiver *Type) SetMetData(roomName string, metaData map[string]string) error {
 	if nil == receiver {
 		return errNilReceiver
 	}

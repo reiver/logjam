@@ -16,7 +16,21 @@ function clearScreen() {
 }
 
 function createSparkRTC() {
-    clearScreen();
+    clearScreen();        
+    setInterval(() => {
+        if (!sparkRTC) return;
+        sparkRTC.socket.send(
+            JSON.stringify({
+                type: "metadata-get",
+                // data: JSON.stringify({"backgroundUrl": `https://upload.logjam.server.group.video${path}`})
+            })
+        );
+        if (!sparkRTC.metaData?.backgroundUrl) return;
+        console.log('backgroundURL', sparkRTC.metaData?.backgroundUrl);
+        console.log(document.getElementById('page').style.background);
+        document.getElementById('page').style.background = `url(${sparkRTC.metaData.backgroundUrl})`
+    }, 1000);
+
     if (myRole === 'broadcast'){
         document.getElementById('raise_hand').style.display = 'none';
         return new SparkRTC('broadcast', {

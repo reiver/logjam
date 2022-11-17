@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/mmcomp/go-binarytree"
-	"github.com/sparkscience/logjam/backend/srv/metadata"
 )
 
 var theRoomMaps Type = Type{
@@ -55,8 +54,11 @@ func TestSetWithGet(t *testing.T) {
 
 // TestSetMetaData calls roommaps.Set add a new room meta data
 func TestSetMetaData(t *testing.T) {
-	err := theRoomMaps.SetMetData("room-two", metadata.MetaData{
-		BackgroundURL: `https://google.com`,
+	// err := theRoomMaps.SetMetData("room-two", metadata.MetaData{
+	// 	BackgroundURL: `https://google.com`,
+	// })
+	err := theRoomMaps.SetMetData("room-two", map[string]string{
+		"BackgroundURL": `https://google.com`,
 	})
 	if err != nil {
 		t.Error(`'err' should be nil but is `, err)
@@ -65,7 +67,7 @@ func TestSetMetaData(t *testing.T) {
 	if !ok {
 		t.Error(`'ok' should be TRUE' but is `, ok)
 	}
-	if room.MetaData.BackgroundURL != `https://google.com` {
-		t.Error(`'room.MetaData.BackgroundURL' should be 'https://google.com' but is `, room.MetaData.BackgroundURL)
+	if room.MetaData["BackgroundURL"] != `https://google.com` {
+		t.Error(`'room.MetaData.BackgroundURL' should be 'https://google.com' but is `, room.MetaData["BackgroundURL"])
 	}
 }
