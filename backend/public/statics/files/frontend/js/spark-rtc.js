@@ -1,46 +1,47 @@
 class SparkRTC {
     started = false;
     myPeerConnectionConfig = {
-        iceServers: [
-            {
-                url: 'stun:stun.l.google.com:19302'
-            },
-            {
-                url: 'stun:stun1.l.google.com:19302'
-            },
-            {
+        iceServers,
+        // iceServers: [
+        //     {
+        //         url: 'stun:stun.l.google.com:19302'
+        //     },
+        //     {
+        //         url: 'stun:stun1.l.google.com:19302'
+        //     },
+        //     {
 
-                url: 'stun:stun2.l.google.com:19302'
-            },
-            {
+        //         url: 'stun:stun2.l.google.com:19302'
+        //     },
+        //     {
 
-                url: 'stun:stun3.l.google.com:19302'
-            },
-            {
+        //         url: 'stun:stun3.l.google.com:19302'
+        //     },
+        //     {
 
-                url: 'stun:stun4.l.google.com:19302'
-            },
-            {
-                url: "turn:turn1.turn.group.video:3478",
-                username: "turnuser",
-                credential: "dJ4kP05PHcKN8Ubu",
-            },
-            {
-                url: "turn:turn2.turn.group.video:3478",
-                username: "turnuser",
-                credential: "XzfVP8cpNEy17hws",
-            },
-            {
-                url: "turns:turn1.turn.group.video:443",
-                username: "turnuser",
-                credential: "dJ4kP05PHcKN8Ubu",
-            },
-            {
-                url: "turns:turn2.turn.group.video:443",
-                username: "turnuser",
-                credential: "XzfVP8cpNEy17hws",
-            },
-        ],
+        //         url: 'stun:stun4.l.google.com:19302'
+        //     },
+        //     {
+        //         url: "turn:turn1.turn.group.video:3478",
+        //         username: "turnuser",
+        //         credential: "dJ4kP05PHcKN8Ubu",
+        //     },
+        //     {
+        //         url: "turn:turn2.turn.group.video:3478",
+        //         username: "turnuser",
+        //         credential: "XzfVP8cpNEy17hws",
+        //     },
+        //     {
+        //         url: "turns:turn1.turn.group.video:443",
+        //         username: "turnuser",
+        //         credential: "dJ4kP05PHcKN8Ubu",
+        //     },
+        //     {
+        //         url: "turns:turn2.turn.group.video:443",
+        //         username: "turnuser",
+        //         credential: "XzfVP8cpNEy17hws",
+        //     },
+        // ],
     };
     role = 'broadcast';
     localStream;
