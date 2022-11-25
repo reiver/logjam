@@ -12,7 +12,6 @@ import (
 
 	"github.com/sparkscience/logjam/backend/lib/message"
 	binarytreesrv "github.com/sparkscience/logjam/backend/srv/binarytree"
-	"github.com/sparkscience/logjam/backend/srv/metadata"
 	roommapssrv "github.com/sparkscience/logjam/backend/srv/roommaps"
 
 	"github.com/mmcomp/go-binarytree"
@@ -244,12 +243,12 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 			return
 		}
 	case "metadata-set":
-		var metaData *metadata.MetaData = &metadata.MetaData{
-			BackgroundURL: "",
-		}
-		metaDataJsonError := json.Unmarshal([]byte(theMessage.Data), metaData)
+		log.Alert("Set Meta Data ", theMessage.Data)
+		metaData := make(map[string]string)
+		metaDataJsonError := json.Unmarshal([]byte(theMessage.Data), &metaData)
+		log.Alert("Set Meta Data ", metaData)
 		if metaDataJsonError == nil {
-			roommapssrv.RoomMaps.SetMetData(roomName, *metaData)
+			roommapssrv.RoomMaps.SetMetData(roomName, metaData)
 			response.Type = "metadata-set"
 			response.Data = theMessage.Data
 			responseJSON, err := json.Marshal(response)
@@ -260,7 +259,7 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 
 		return
 	case "metadata-get":
-		log.Alert("metadata-get")
+		// log.Alert("metadata-get")
 		metaData := Map.MetaData
 		metaDataJson, metaDataJsonError := json.Marshal(metaData)
 		if metaDataJsonError == nil {
@@ -268,10 +267,44 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 			response.Data = string(metaDataJson)
 			responseJSON, err := json.Marshal(response)
 			if err == nil {
-				log.Alert(responseJSON)
+				// log.Alert(responseJSON)
 				socket.Socket.WriteMessage(messageType, responseJSON)
 			} else {
 				return
+			}
+		}
+
+		return
+	case "user-metadata-get":
+		// log.Alert("metadata-get")
+		metaData := socket.MetaData
+		metaDataJson, metaDataJsonError := json.Marshal(metaData)
+		if metaDataJsonError == nil {
+			response.Type = "metadata-get"
+			response.Data = string(metaDataJson)
+			responseJSON, err := json.Marshal(response)
+			if err == nil {
+				// log.Alert(responseJSON)
+				socket.Socket.WriteMessage(messageType, responseJSON)
+			} else {
+				return
+			}
+		}
+
+		return
+	case "user-metadata-set":
+		log.Alert("Set Meta Data ", theMessage.Data)
+		metaData := make(map[string]string)
+		metaDataJsonError := json.Unmarshal([]byte(theMessage.Data), &metaData)
+		log.Alert("Set Meta Data ", metaData)
+		if metaDataJsonError == nil {
+			socket.SetMetaData(Map.MetaData)
+			roommapssrv.RoomMaps.SetMetData(roomName, metaData)
+			response.Type = "metadata-set"
+			response.Data = theMessage.Data
+			responseJSON, err := json.Marshal(response)
+			if err == nil {
+				socket.Socket.WriteMessage(messageType, responseJSON)
 			}
 		}
 
@@ -343,6 +376,10 @@ func (receiver httpHandler) deleteNode(conn *websocket.Conn, roomName string, me
 				log.Inform("[deleteNode] checking other socket ", s.(*binarytreesrv.MySocket).Name, " SENT")
 			}
 		}
+	}
+	metaData := socket.MetaData
+	if metaData != nil {
+		roommapssrv.RoomMaps.SetMetData(roomName, metaData)
 	}
 	Map.Room.Delete(conn)
 }
