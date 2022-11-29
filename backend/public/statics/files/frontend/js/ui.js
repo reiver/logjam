@@ -160,7 +160,7 @@ function onRequestChangeBackground() {
                     type: "user-metadata-set",
                     // This will set room specific MetaData
                     // type: "metadata-set",
-                    data: JSON.stringify({"backgroundUrl": `https://upload.logjam.server.group.video${path}`})
+                    data: JSON.stringify({ ...getMeta(), backgroundUrl: `https://upload.logjam.server.group.video${path}`})
                 })
             );
         });
@@ -226,31 +226,30 @@ setInterval(() => {
             // data: JSON.stringify({"backgroundUrl": `https://upload.logjam.server.group.video${path}`})
         })
     );
-    console.log(sparkRTC.metaData.backgroundUrl);
+    console.log(sparkRTC.metaData.backgroundLayout);
 
     const page = document.getElementById('page');
 
     page.style.backgroundPosition = 'center';
 
-    console.log(sparkRTC.metaData);
-
     switch (sparkRTC.metaData.backgroundLayout) {
         case 'contain':
-            console.log(document.getElementById('page').style.background);
 
             page.style.backgroundSize = 'contain';
             page.style.backgroundRepeat = 'no-repeat';
             break;
         case 'cover':
+
             page.style.backgroundSize = 'cover';
             break;
         case 'tiled':
         default:
+
             page.style.backgroundSize = 'contain';
             page.style.backgroundRepeat = 'repeat'
     }
 
-    page.style.background = `url(${sparkRTC.metaData.backgroundUrl})`;
+    page.style.backgroundImage = `url(${sparkRTC.metaData.backgroundUrl})`;
 }, 300);
 
 
