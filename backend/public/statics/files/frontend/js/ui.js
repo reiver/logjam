@@ -23,24 +23,43 @@ function makeId(length) {
 }
 
 
+let currentBackground 
+
+
+function handleVideoDrag() {
+
+}
+
+
 function arrangeVideoContainers() {
+    
+
     const videoContainers = document.getElementById('screen')
         .getElementsByClassName('video-container');
     const videoCount = videoContainers.length;
     // const flexGap = 1;
     let flexRatio = 100 / Math.ceil(Math.sqrt(videoCount));
-    let flex = "0 0 " + flexRatio + "%";
-    let maxHeight = 100 / Math.ceil(videoCount / Math.ceil(Math.sqrt(videoCount)));
+    // let flex = "0 0 " + flexRatio + "%";
+    // let maxHeight = 100 / Math.ceil(videoCount / Math.ceil(Math.sqrt(videoCount)));
     Array.from(videoContainers).forEach((div, i) => {
-            if (i === 0) {
-                div.style.setProperty('grid-column-start', '1');
-                div.style.setProperty('grid-column-end', '-1');
-                div.style.setProperty('grid-row-start', 'span 2');
-            }
-            div.style.setProperty('flex', flex);
-            div.style.setProperty('max-height', maxHeight + "%");
-        }
-    )
+        // if (i === 0) {
+        //     div.style.setProperty('grid-column-start', '1');
+        //     div.style.setProperty('grid-column-end', '-1');
+        //     div.style.setProperty('grid-row-start', 'span 2');
+        // }
+        // div.style.setProperty('flex', flex);
+        // div.style.setProperty('max-height', maxHeight + "%");
+
+        div.style.setProperty('position', 'absolute');
+
+        const width = Math.round(Math.random() * 480);
+        const height = Math.round(Math.random() * 480);
+        
+        div.style.setProperty('width', `${width}px`);
+        div.style.setProperty('height', `${height}px`);
+        div.style.setProperty('top', `${Math.random() * window.innerWidth}px`)
+        div.style.setProperty('left', `${Math.random() * window.innerHeight}px`)
+    });
 }
 
 
@@ -148,6 +167,92 @@ function onRequestChangeBackground() {
     };
     input.click();
 }
+
+
+// All background layout values:
+//
+// - contain
+// - cover
+// - tiled
+// let currentBackgroundLayout = 'contain';
+
+let currentBackgroundIndex = 0;
+const possibleBackgrounds = [
+    'contain',
+    'cover',
+    'tiled'
+];
+
+function currentBackgroundLayout() {
+    return possibleBackgrounds[currentBackgroundIndex];
+}
+
+
+function getMeta() {
+    return {
+        backgroundUrl: sparkRTC.metaData.backgroundUrl,
+        backgroundLayout: sparkRTC.metaData.backgroundLayout
+    }
+}
+
+
+document.addEventListener('keydown', (event) => {
+    if (!sparkRTC || !sparkRTC.socket) {
+        return;
+    }
+    currentBackgroundIndex =
+        (currentBackgroundIndex + 1) % possibleBackgrounds.length
+
+    if (event.key === 'b') {
+        // TODO: filter out the event
+
+        console.log(currentBackgroundLayout());
+
+        sparkRTC.socket.send(JSON.stringify({
+            type: 'metadata-set',
+            data: JSON.stringify({
+                ...getMeta(),
+                backgroundLayout: currentBackgroundLayout(),
+            })
+        }))
+    }
+});
+
+
+setInterval(() => {
+    sparkRTC.socket.send(
+        JSON.stringify({
+            type: "metadata-get",
+            // data: JSON.stringify({"backgroundUrl": `https://upload.logjam.server.group.video${path}`})
+        })
+    );
+    console.log(sparkRTC.metaData.backgroundUrl);
+
+    const page = document.getElementById('page');
+
+    page.style.backgroundPosition = 'center';
+
+    console.log(sparkRTC.metaData);
+
+    switch (sparkRTC.metaData.backgroundLayout) {
+        case 'contain':
+            console.log(document.getElementById('page').style.background);
+
+            page.style.backgroundSize = 'contain';
+            page.style.backgroundRepeat = 'no-repeat';
+            break;
+        case 'cover':
+            page.style.backgroundSize = 'cover';
+            break;
+        case 'tiled':
+        default:
+            page.style.backgroundSize = 'contain';
+            page.style.backgroundRepeat = 'repeat'
+    }
+
+    page.style.background = `url(${sparkRTC.metaData.backgroundUrl})`;
+}, 300);
+
 
 function setMyName() {
     try {

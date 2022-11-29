@@ -26,7 +26,7 @@ function createSparkRTC() {
             })
         );
         if (!sparkRTC.metaData?.backgroundUrl) return;
-        console.log('backgroundURL', sparkRTC.metaData?.backgroundUrl);
+        console.log('backgroundUrl', sparkRTC.metaData?.backgroundUrl);
         console.log(document.getElementById('page').style.background);
         document.getElementById('page').style.background = `url(${sparkRTC.metaData.backgroundUrl})`
     }, 1000);

@@ -58,7 +58,8 @@ func TestSetMetaData(t *testing.T) {
 	// 	BackgroundURL: `https://google.com`,
 	// })
 	err := theRoomMaps.SetMetData("room-two", map[string]string{
-		"BackgroundURL": `https://google.com`,
+		"BackgroundURL":    `https://google.com`,
+		"BackgroundLayout": "tile",
 	})
 	if err != nil {
 		t.Error(`'err' should be nil but is `, err)
@@ -69,5 +70,8 @@ func TestSetMetaData(t *testing.T) {
 	}
 	if room.MetaData["BackgroundURL"] != `https://google.com` {
 		t.Error(`'room.MetaData.BackgroundURL' should be 'https://google.com' but is `, room.MetaData["BackgroundURL"])
+	}
+	if room.MetaData["BackgroundLayout"] != "tile" {
+		t.Error(`'room.MetaData.BackgroundLayout should be 'tile' but is `, room.MetaData["BackgroundLayout"])
 	}
 }

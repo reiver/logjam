@@ -33,7 +33,7 @@ body {
 #screen {
     position: relative;
     /* display: flex; */
-    display: grid;
+    /* display: grid; */
     /* flex-direction: row;
     flex-wrap: wrap;
     justify-content: center; */
@@ -44,8 +44,8 @@ body {
     overflow: hidden;
     /* max-height: 100%; */
     /*border: 10px solid red;*/
-    grid-template-columns: repeat(3, 1fr);
-    grid-template-rows: repeat(3, 1fr);
+    /* grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr); */
 }
 
 .video-container {
