@@ -89,6 +89,19 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 			return
 		}
 	case "role":
+		var msgData map[string]string
+		err := json.Unmarshal(messageJSON, &msgData)
+		if err != nil {
+			return
+		}
+		streamId, ok := msgData["streamId"]
+		if ok {
+			if socket.MetaData == nil {
+				socket.MetaData = make(map[string]string)
+			}
+			socket.MetaData["streamId"] = streamId
+		}
+
 		log.Alert("role message received ", theMessage.Data)
 		response.Type = "role"
 		if theMessage.Data == "unknown" {
@@ -119,6 +132,9 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 				defer f.Close()
 			}
 		} else if theMessage.Data == "alt-broadcast" {
+
+			log.Alert("Setting Alt Br Session Id ", socket.MetaData)
+
 			response.Data = "yes:broadcast"
 			ok, broadcaster := receiver.findBroadcaster(roomName)
 
@@ -308,6 +324,24 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 			}
 		}
 
+		return
+	case "user-by-stream":
+		log.Alert("Get User buy Stream Id ", theMessage.Data)
+		node, e := roommapssrv.RoomMaps.GetSocketByStreamId(roomName, theMessage.Data)
+		log.Alert("Get User buy Stream Id res", node)
+		if e == nil {
+			user := node.(*binarytreesrv.MySocket)
+			response.Type = "user-by-stream"
+			userRole := "audience"
+			if user.IsBroadcaster {
+				userRole = "broadcast"
+			}
+			response.Data = strconv.FormatInt(int64(user.ID), 10) + "," + user.Name + "," + theMessage.Data + "," + userRole
+			responseJSON, err := json.Marshal(response)
+			if err == nil {
+				socket.Socket.WriteMessage(messageType, responseJSON)
+			}
+		}
 		return
 	default:
 		ID, err := strconv.ParseUint(theMessage.Target, 10, 64)

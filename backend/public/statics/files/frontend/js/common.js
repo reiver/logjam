@@ -27,9 +27,12 @@ function createSparkRTC() {
             remoteStreamCallback: (stream) => {
                 const tagId = 'remoteVideo-' + stream.id;
                 if (document.getElementById(tagId)) return;
-                const video = createVideoElement(tagId);
-                video.srcObject = stream;
-                video.play();
+                setTimeout(() => {
+                    const userData = sparkRTC.getStreamDetails(stream.id);
+                    const video = createVideoElement(tagId, userData);
+                    video.srcObject = stream;
+                    video.play();    
+                }, 1000);
             },
             remoteStreamDCCallback: (stream) => {
                 let tagId = 'remoteVideo-' + stream.id;
@@ -68,9 +71,12 @@ function createSparkRTC() {
             remoteStreamCallback: (stream) => {
                 const tagId = 'remoteVideo-' + stream.id;
                 if (document.getElementById(tagId)) return;
-                const video = createVideoElement(tagId);
-                video.srcObject = stream;
-                video.play();
+                setTimeout(() => {
+                    const userData = sparkRTC.getStreamDetails(stream.id);
+                    const video = createVideoElement(tagId, userData);
+                    video.srcObject = stream;
+                    video.play();
+                }, 1000);
             },
             remoteStreamDCCallback: (stream) => {
                 let tagId = 'remoteVideo-' + stream.id;

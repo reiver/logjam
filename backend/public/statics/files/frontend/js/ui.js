@@ -90,7 +90,7 @@ function onMicButtonClick() {
     }
 }
 
-function createVideoElement(videoId, muted = false) {
+function createVideoElement(videoId, userData, muted = false) {
     let container = document.createElement('div');
     container.className = 'video-container';
     let video = document.createElement('video');
@@ -99,6 +99,11 @@ function createVideoElement(videoId, muted = false) {
     video.playsInline = true;
     video.muted = muted;
     container.appendChild(video);
+    if (userData) {
+        let details = document.createElement('div');
+        details.innerText = userData.userName + '[' + userData.userRole +']';
+        container.appendChild(details);
+    }
     document.getElementById('screen').appendChild(container);
     arrangeVideoContainers();
     return video;
@@ -106,7 +111,8 @@ function createVideoElement(videoId, muted = false) {
 
 function getVideoElement(videoId) {
     let video = document.getElementById(videoId);
-    return video ? video : createVideoElement(videoId, true);
+    const userData = sparkRTC.getStreamDetails(videoId);
+    return video ? video : createVideoElement(videoId, userData, true);
 }
 
 function removeVideoElement(videoId) {
@@ -218,7 +224,6 @@ document.addEventListener('keydown', (event) => {
     }
 });
 
-
 setInterval(() => {
     sparkRTC.socket.send(
         JSON.stringify({
@@ -226,7 +231,7 @@ setInterval(() => {
             // data: JSON.stringify({"backgroundUrl": `https://upload.logjam.server.group.video${path}`})
         })
     );
-    console.log(sparkRTC.metaData.backgroundLayout);
+    console.log(sparkRTC.metaData);
 
     const page = document.getElementById('page');
 
@@ -251,7 +256,6 @@ setInterval(() => {
 
     page.style.backgroundImage = `url(${sparkRTC.metaData.backgroundUrl})`;
 }, 300);
-
 
 function setMyName() {
     try {
@@ -346,7 +350,8 @@ async function onRaiseHand() {
     const stream = await sparkRTC.raiseHand();
     const tagId = 'localVideo-' + stream.id;
     if (document.getElementById(tagId)) return;
-    const video = createVideoElement(tagId, true);
+    const userData = sparkRTC.getStreamDetails(stream.id);
+    const video = createVideoElement(tagId, userData, true);
     video.srcObject = stream;
 }
 

@@ -58,6 +58,7 @@ class SparkRTC {
     targetStreams = {};
     parentStreamId;
     metaData = {};
+    userStreamData = {};
     handleVideoOfferMsg = async (msg) => {
         this.log(`[handleVideoOfferMsg] ${msg.name}`);
         const broadcasterPeerConnection = this.createOrGetPeerConnection(msg.name);
@@ -75,6 +76,7 @@ class SparkRTC {
         this.log(`[handleVideoOfferMsg] send video-answer to ${msg.name} from ${this.myUsername}`);
     };
     handleMessage = async (event) => {
+        console.log(`[handleMessage] ${event.data}`);
         this.log(`[handleMessage] ${event.data}`);
         let msg;
         try {
@@ -170,6 +172,15 @@ class SparkRTC {
                 this.log(`[handleMessage] ${msg.type}`);
                 this.metaData = JSON.parse(msg.data);
                 break;
+            case 'user-by-stream':
+                this.log(`[handleMessage] ${msg.type}`, msg.data);
+                const [userId, userName, streamId, userRole] = msg.Data.split(',');
+                this.userStreamData[streamId] = {
+                    userId,
+                    userName,
+                    userRole,
+                };
+                break;
             default:
                 this.log(`[handleMessage] default ${JSON.stringify(msg)}`);
                 break;
@@ -264,6 +275,7 @@ class SparkRTC {
                 JSON.stringify({
                     type: "role",
                     data,
+                    streamId: this.localStream.id,
                 })
             );
             this.log(`[startBroadcasting] send role`);
@@ -338,9 +350,15 @@ class SparkRTC {
             if (this.localStream && this.localStream.id === stream.id) return;
             if (this.newTrackCallback && !this.newTrackCallback(stream)) return;
             if (this.remoteStreams.indexOf(stream) !== -1) return;
+
             if (this.remoteStreams.length === 0) {
                 this.parentStreamId = stream.id;
             }
+            console.log('user-by-stream', stream.id);
+            this.socket.send(JSON.stringify({
+                type: 'user-by-stream',
+                data: stream.id,
+            }));
             stream.oninactive = (event) => {
                 this.log(`[newPeerConnectionInstance] stream.oninactive ${JSON.stringify(event)}`);
                 if (this.remoteStreamDCCallback) this.remoteStreamDCCallback(event.target);
@@ -514,6 +532,21 @@ class SparkRTC {
             });
         } else
             setTimeout(this.checkState, 10000);
+    };
+    getStreamDetails = (streamId) => {
+        if (this.localStream && this.localStream.id === streamId) {
+            return {
+                userId: this.myUsername,
+                userName: this.myName,
+                userRole: this.role,
+            };
+        }
+
+        if (this.userStreamData[streamId]) {
+            return this.userStreamData[streamId];
+        }
+
+        return null;
     };
     constructor(role, options = {}) {
         this.role = role;
