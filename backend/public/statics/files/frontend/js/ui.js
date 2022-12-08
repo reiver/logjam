@@ -39,20 +39,9 @@ function arrangeVideoContainers() {
             const videoContainers = document.getElementById('screen')
                 .getElementsByClassName('video-container');
             const videoCount = videoContainers.length;
-            // const flexGap = 1;
             let flexRatio = 100 / Math.ceil(Math.sqrt(videoCount));
-            // let flex = "0 0 " + flexRatio + "%";
-            // let maxHeight = 100 / Math.ceil(videoCount / Math.ceil(Math.sqrt(videoCount)));
 
             for (const [i, div] of Array.from(videoContainers).entries()) {
-                 // if (i === 0) {
-                //     div.style.setProperty('grid-column-start', '1');
-                //     div.style.setProperty('grid-column-end', '-1');
-                //     div.style.setProperty('grid-row-start', 'span 2');
-                // }
-                // div.style.setProperty('flex', flex);
-                // div.style.setProperty('max-height', maxHeight + "%");
-
                 div.style.setProperty('position', 'absolute');
 
                 if (i === 0) {
