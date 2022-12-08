@@ -25,12 +25,6 @@ function makeId(length) {
 
 let currentBackground 
 
-
-function handleVideoDrag() {
-
-}
-
-
 function arrangeVideoContainers() {
 
     console.log('Video layout', sparkRTC.metaData)
