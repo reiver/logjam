@@ -32,34 +32,60 @@ function handleVideoDrag() {
 
 
 function arrangeVideoContainers() {
+
+    console.log('Video layout', sparkRTC.metaData)
+
+    const videoLayout = JSON.parse(sparkRTC.metaData.videoLayout ?? "null");
+    console.log(videoLayout);
     
+    switch (videoLayout?.type) {
+        case 'silly-frame':
+            console.log('Silly frame');
 
-    const videoContainers = document.getElementById('screen')
-        .getElementsByClassName('video-container');
-    const videoCount = videoContainers.length;
-    // const flexGap = 1;
-    let flexRatio = 100 / Math.ceil(Math.sqrt(videoCount));
-    // let flex = "0 0 " + flexRatio + "%";
-    // let maxHeight = 100 / Math.ceil(videoCount / Math.ceil(Math.sqrt(videoCount)));
-    Array.from(videoContainers).forEach((div, i) => {
-        // if (i === 0) {
-        //     div.style.setProperty('grid-column-start', '1');
-        //     div.style.setProperty('grid-column-end', '-1');
-        //     div.style.setProperty('grid-row-start', 'span 2');
-        // }
-        // div.style.setProperty('flex', flex);
-        // div.style.setProperty('max-height', maxHeight + "%");
+            const videoContainers = document.getElementById('screen')
+                .getElementsByClassName('video-container');
+            const videoCount = videoContainers.length;
+            // const flexGap = 1;
+            let flexRatio = 100 / Math.ceil(Math.sqrt(videoCount));
+            // let flex = "0 0 " + flexRatio + "%";
+            // let maxHeight = 100 / Math.ceil(videoCount / Math.ceil(Math.sqrt(videoCount)));
 
-        div.style.setProperty('position', 'absolute');
+            for (const [i, div] of Array.from(videoContainers).entries()) {
+                 // if (i === 0) {
+                //     div.style.setProperty('grid-column-start', '1');
+                //     div.style.setProperty('grid-column-end', '-1');
+                //     div.style.setProperty('grid-row-start', 'span 2');
+                // }
+                // div.style.setProperty('flex', flex);
+                // div.style.setProperty('max-height', maxHeight + "%");
 
-        const width = Math.round(Math.random() * 480);
-        const height = Math.round(Math.random() * 480);
-        
-        div.style.setProperty('width', `${width}px`);
-        div.style.setProperty('height', `${height}px`);
-        div.style.setProperty('top', `${Math.random() * window.innerWidth}px`)
-        div.style.setProperty('left', `${Math.random() * window.innerHeight}px`)
-    });
+                div.style.setProperty('position', 'absolute');
+
+                if (i === 0) {
+                    div.style.setProperty('width', `${videoLayout.meta.adminSize[0]}px`);
+                    div.style.setProperty('height', `${videoLayout.meta.adminSize[1]}px`);
+                    div.style.setProperty('top', `${videoLayout.meta.adminLocation[1]}px`);
+                    div.style.setProperty('left', `${videoLayout.meta.adminLocation[0]}px`);
+                }
+            }
+            break;
+        case 'tiled':
+        default:{
+                console.log('Arranging video here');
+                const videoContainers = document.getElementById('screen')
+                    .getElementsByClassName('video-container');
+                const videoCount = videoContainers.length;
+                const flexGap = 1;
+                let flexRatio = 100 / Math.ceil(Math.sqrt(videoCount));
+                let flex = "0 0 " + flexRatio + "%";
+                let maxHeight = 100 / Math.ceil(videoCount / Math.ceil(Math.sqrt(videoCount)));
+                Array.from(videoContainers).forEach(div => {
+                    div.style = {};
+                    div.style.setProperty('flex', flex);
+                    div.style.setProperty('max-height', maxHeight + "%");
+                })
+            }
+        }
 }
 
 
@@ -189,17 +215,65 @@ const possibleBackgrounds = [
     'tiled'
 ];
 
+
 function currentBackgroundLayout() {
     return possibleBackgrounds[currentBackgroundIndex];
+}
+
+
+let currentLayoutIndex = 0;
+const possibleLayouts = [
+    { type: 'tiled', meta: null },
+    { type: 'silly-frame', meta: { adminLocation: [171, 200], adminSize: [400, 400] } }
+];
+
+
+function currentLayout() {
+    return JSON.stringify(possibleLayouts[currentLayoutIndex])
 }
 
 
 function getMeta() {
     return {
         backgroundUrl: sparkRTC.metaData.backgroundUrl,
-        backgroundLayout: sparkRTC.metaData.backgroundLayout
+        backgroundLayout: sparkRTC.metaData.backgroundLayout,
+        videoLayout: sparkRTC.metaData.videoLayout
     }
 }
+
+document.addEventListener('keydown', (event) => {
+    if (!sparkRTC || !sparkRTC.socket) {
+        return;
+    }
+
+    if (event.key === 'b') {
+        // TODO: filter out the event if not admin
+        currentBackgroundIndex =
+            (currentBackgroundIndex + 1) % possibleBackgrounds.length;
+
+        sparkRTC.socket.send(JSON.stringify({
+            type: 'metadata-set',
+            data: JSON.stringify({
+                ...getMeta(),
+                backgroundLayout: currentBackgroundLayout(),
+            })
+        }))
+    }
+
+    if (event.key === 'l') {
+        console.log('Setting layout');
+        currentLayoutIndex =
+            (currentLayoutIndex + 1) % possibleLayouts.length;
+
+        sparkRTC.socket.send(JSON.stringify({
+            type: 'metadata-set',
+            data: JSON.stringify({
+                ...getMeta(),
+                videoLayout: currentLayout()
+            })
+        }))
+    }
+});
 
 
 document.addEventListener('keydown', (event) => {
@@ -255,6 +329,7 @@ setInterval(() => {
     }
 
     page.style.backgroundImage = `url(${sparkRTC.metaData.backgroundUrl})`;
+    arrangeVideoContainers();
 }, 300);
 
 function setMyName() {
