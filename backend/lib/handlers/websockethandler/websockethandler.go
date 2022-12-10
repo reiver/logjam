@@ -121,6 +121,11 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 			if err == nil {
 				defer f.Close()
 			}
+
+			receiver.broadcastMessage(roomName, messageType, message.MessageContract{
+				Type: "broadcasting",
+				Data: strconv.FormatInt(int64(socket.ID), 10),
+			})
 		} else if theMessage.Data == "alt-broadcast" {
 			response.Data = "yes:broadcast"
 			ok, broadcaster := receiver.findBroadcaster(roomName)
@@ -210,6 +215,7 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 		}
 		responseJSON, err := json.Marshal(response)
 		if err == nil {
+
 			socket.Socket.WriteMessage(messageType, responseJSON)
 			return
 		} else {
@@ -288,6 +294,25 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 			}
 			target.Socket.WriteMessage(messageType, messageJSON)
 		}
+	}
+}
+
+func (receiver httpHandler) broadcastMessage(roomName string, messageType int, message message.MessageContract) {
+	log := receiver.Logger.Begin()
+	defer log.End()
+	Map, found := roommapssrv.RoomMaps.Get(roomName)
+	if !found {
+		log.Errorf("could not get map for room %q when trying to reader", roomName)
+		return
+	}
+	messageTxt, err := json.Marshal(message)
+	if err != nil {
+		return
+	}
+
+	for _, s := range Map.All() {
+		s.(*binarytreesrv.MySocket).Socket.WriteMessage(messageType, messageTxt)
+		log.Inform("[broadcastMessage] socket ", s.(*binarytreesrv.MySocket).Name, " SENT ", messageTxt)
 	}
 }
 
