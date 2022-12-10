@@ -58,6 +58,7 @@ class SparkRTC {
     startedRaiseHand = false;
     targetStreams = {};
     parentStreamId;
+    broadcasterStatus = '';
     handleVideoOfferMsg = async (msg) => {
         this.log(`[handleVideoOfferMsg] ${msg.name}`);
         const broadcasterPeerConnection = this.createOrGetPeerConnection(msg.name);
@@ -170,6 +171,12 @@ class SparkRTC {
                 this.log(`[handleMessage] ${msg.type}`);
                 // alert('Broadcaster is back!');
                 this.startProcedure();
+                break;
+            case 'broadcaster-status':
+                this.log(`[handleMessage] ${msg.type} ${msg.data}`);
+                console.log('Message', msg);
+                this.broadcasterStatus = msg.data;
+                // this.startProcedure();
                 break;
             default:
                 this.log(`[handleMessage] default ${JSON.stringify(msg)}`);
@@ -405,6 +412,8 @@ class SparkRTC {
                 this.started = true;
                 // this.checkState();
             }
+
+            if (this.role !== 'broadcast') this.getBroadcasterStatus();
         };
 
         peerConnection.oniceconnectionstatechange = (event) => {
@@ -441,6 +450,7 @@ class SparkRTC {
                     }
                     this.parentStreamId = undefined;
                 }
+                if (this.role !== 'broadcast') this.getBroadcasterStatus();
             }
         };
 
@@ -500,26 +510,56 @@ class SparkRTC {
         });
     };
     // checkState = () => {
-        // console.log('[checkState]');
-        // if (!this.startProcedure) return;
-        // if (this.role === 'broadcast') {
-        //     console.log('[checkState]', this.socket);
-        //     try {
-        //         this.ping();
-        //         console.log('ping ok');
-        //     } catch (e) {
-        //         console.log('ping error', e);
-        //     }
-        //     setTimeout(this.checkState, 10000);
-        // }
-        // else if (!this.parentStreamId) {
-        //     console.log('[checkState] startProcedure');
-        //     this.startProcedure().finally(() => {
-        //         setTimeout(this.checkState, 10000);
-        //     });
-        // } else
-        //     setTimeout(this.checkState, 10000);
+    // console.log('[checkState]');
+    // if (!this.startProcedure) return;
+    // if (this.role === 'broadcast') {
+    //     console.log('[checkState]', this.socket);
+    //     try {
+    //         this.ping();
+    //         console.log('ping ok');
+    //     } catch (e) {
+    //         console.log('ping error', e);
+    //     }
+    //     setTimeout(this.checkState, 10000);
+    // }
+    // else if (!this.parentStreamId) {
+    //     console.log('[checkState] startProcedure');
+    //     this.startProcedure().finally(() => {
+    //         setTimeout(this.checkState, 10000);
+    //     });
+    // } else
+    //     setTimeout(this.checkState, 10000);
     // };
+    wait = async (mil = 1000) => {
+        return new Promise((res) => {
+            setTimeout(() => {
+                res();
+            }, mil);
+        });
+    };
+    getBroadcasterStatus = async () => {
+        const max = 5;
+        const reconnect = true;
+        return new Promise((resolve, reject) => {
+            this.socket.send(JSON.stringify({
+                type:"broadcaster-status"
+            }));
+    
+            let i = 0
+            while (this.broadcasterStatus === '' && i < max) {
+                this.wait();
+                i++;
+            }
+
+            if (this.broadcasterStatus === '') {
+                return reject(new Error('No response'));
+            }
+
+            if (reconnect) this.startProcedure();
+            resolve(this.broadcasterStatus);
+        });
+
+    };
     constructor(role, options = {}) {
         this.role = role;
         this.localStreamChangeCallback = options.localStreamChangeCallback;

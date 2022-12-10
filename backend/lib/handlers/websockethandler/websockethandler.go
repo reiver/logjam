@@ -257,6 +257,22 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 		} else {
 			return
 		}
+	case "broadcaster-status":
+		ok, _ := receiver.findBroadcaster(roomName)
+		data := "available"
+		if !ok {
+			data = "unavailable"
+		}
+		log.Alert("broadcaster-status ", data)
+		response.Type = "broadcaster-status"
+		response.Data = data
+		responseJSON, err := json.Marshal(response)
+		if err == nil {
+			log.Alert("broadcaster-status sending ", string(responseJSON))
+			socket.Socket.WriteMessage(messageType, responseJSON)
+		} else {
+			return
+		}
 	default:
 		ID, err := strconv.ParseUint(theMessage.Target, 10, 64)
 		if err != nil {
