@@ -37,9 +37,9 @@ const iceServers = [
         username: "turnuser",
         credential: "XzfVP8cpNEy17hws",
     },
-    {
-        urls: ["turn:95.215.59.228:3478"],
-        username: "mehrdad",
-        credential: "spark",
-    },
+    // {
+    //     urls: ["turn:95.215.59.228:3478"],
+    //     username: "mehrdad",
+    //     credential: "spark",
+    // },
 ];

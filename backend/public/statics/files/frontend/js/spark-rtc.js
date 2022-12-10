@@ -120,7 +120,7 @@ class SparkRTC {
                     } else if (msg.data === "yes:broadcast") {
                         if (this.localStreamChangeCallback)
                             this.localStreamChangeCallback(this.localStream);
-                        this.checkState();
+                        // this.checkState();
                     } else {
                         if (this.localStreamChangeCallback)
                             this.localStreamChangeCallback(null);
@@ -164,6 +164,12 @@ class SparkRTC {
             case 'tree':
                 this.log(`[handleMessage] ${msg.type}`);
                 if (this.treeCallback) this.treeCallback(msg.data);
+                break;
+            case 'broadcasting':
+                if (this.role === 'broadcast') return;
+                this.log(`[handleMessage] ${msg.type}`);
+                // alert('Broadcaster is back!');
+                this.startProcedure();
                 break;
             default:
                 this.log(`[handleMessage] default ${JSON.stringify(msg)}`);
@@ -397,7 +403,7 @@ class SparkRTC {
 
             if (!this.started) {
                 this.started = true;
-                this.checkState();
+                // this.checkState();
             }
         };
 
@@ -493,27 +499,27 @@ class SparkRTC {
                 track.enabled = enabled;
         });
     };
-    checkState = () => {
-        console.log('[checkState]');
-        if (!this.startProcedure) return;
-        if (this.role === 'broadcast') {
-            console.log('[checkState]', this.socket);
-            try {
-                this.ping();
-                console.log('ping ok');
-            } catch (e) {
-                console.log('ping error', e);
-            }
-            setTimeout(this.checkState, 10000);
-        }
-        else if (!this.parentStreamId) {
-            console.log('[checkState] startProcedure');
-            this.startProcedure().finally(() => {
-                setTimeout(this.checkState, 10000);
-            });
-        } else
-            setTimeout(this.checkState, 10000);
-    };
+    // checkState = () => {
+        // console.log('[checkState]');
+        // if (!this.startProcedure) return;
+        // if (this.role === 'broadcast') {
+        //     console.log('[checkState]', this.socket);
+        //     try {
+        //         this.ping();
+        //         console.log('ping ok');
+        //     } catch (e) {
+        //         console.log('ping error', e);
+        //     }
+        //     setTimeout(this.checkState, 10000);
+        // }
+        // else if (!this.parentStreamId) {
+        //     console.log('[checkState] startProcedure');
+        //     this.startProcedure().finally(() => {
+        //         setTimeout(this.checkState, 10000);
+        //     });
+        // } else
+        //     setTimeout(this.checkState, 10000);
+    // };
     constructor(role, options = {}) {
         this.role = role;
         this.localStreamChangeCallback = options.localStreamChangeCallback;
