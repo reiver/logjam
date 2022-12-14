@@ -38,8 +38,6 @@ function arrangeVideoContainers() {
 
             const videoContainers = document.getElementById('screen')
                 .getElementsByClassName('video-container');
-            const videoCount = videoContainers.length;
-            let flexRatio = 100 / Math.ceil(Math.sqrt(videoCount));
 
             for (const [i, div] of Array.from(videoContainers).entries()) {
                 div.style.setProperty('position', 'absolute');
@@ -52,13 +50,40 @@ function arrangeVideoContainers() {
                 }
             }
             break;
+        case 'control-freak': {
+            console.log(videoLayout.meta);
+            console.log('Arranging video here');
+            const videoContainers = document.getElementById('screen')
+                .getElementsByClassName('video-container');
+           
+
+            const streamsMap = new Map(videoLayout.meta.participants.map(({ key, value }) => [ key, value ]));
+            for (const [i, div] of Array.from(videoContainers).entries()) {
+                const id = div.querySelector('video').id.replace('localVideo-', '').replace('remoteVideo-', '');
+
+                div.style.setProperty('position', 'absolute');
+                console.error(id, streamsMap);
+
+                if (streamsMap.has(id)) {
+                    const properties = streamsMap.get(id);
+                    div.style.setProperty('width', `${properties.size[0]}px`)
+                    div.style.setProperty('height', `${properties.size[1]}px`)
+                    div.style.setProperty('top', `${properties.location[0]}px`)
+                    div.style.setProperty('left', `${properties.location[1]}px`)
+                } else {
+                    div.style.setProperty('width', '200px');
+                    div.style.setProperty('height', '200px');
+                    div.style.setProperty('top', '0');
+                    div.style.setProperty('left', '0');
+                }
+            }
+        }; break;
         case 'tiled':
         default:{
                 console.log('Arranging video here');
                 const videoContainers = document.getElementById('screen')
                     .getElementsByClassName('video-container');
                 const videoCount = videoContainers.length;
-                const flexGap = 1;
                 let flexRatio = 100 / Math.ceil(Math.sqrt(videoCount));
                 let flex = "0 0 " + flexRatio + "%";
                 let maxHeight = 100 / Math.ceil(videoCount / Math.ceil(Math.sqrt(videoCount)));
@@ -207,12 +232,17 @@ function currentBackgroundLayout() {
 let currentLayoutIndex = 0;
 const possibleLayouts = [
     { type: 'tiled', meta: null },
-    { type: 'silly-frame', meta: { adminLocation: [171, 200], adminSize: [400, 400] } }
+    { type: 'silly-frame', meta: { adminLocation: [171, 200], adminSize: [400, 400] } },
+    { type: 'control-freak', meta: { participants: [] } }
 ];
 
 
+function currentLayoutJSON() {
+    return JSON.stringify(currentLayout())
+}
+
 function currentLayout() {
-    return JSON.stringify(possibleLayouts[currentLayoutIndex])
+    return possibleLayouts[currentLayoutIndex]
 }
 
 
@@ -224,37 +254,83 @@ function getMeta() {
     }
 }
 
+function getRandomInt(min, max) {
+    // The maximum is exclusive and the minimum is inclusive
+    min = Math.ceil(min);
+    max = Math.floor(max);
+    return Math.floor(Math.random() * (max - min)) + min;
+}
+
+function handleControlFreak(videoLayout) {
+    videoLayout.meta.participants = Object.entries(sparkRTC.userStreamData).map(([ key ]) => ({
+        key,
+        value: {
+            location: [getRandomInt(10, 1024), getRandomInt(10, 768)],
+            size: [getRandomInt(200, 800), getRandomInt(150, 600)]
+        }
+    }));
+}
+
+
+setTimeout(() => {
+    if (getMyRole() === 'broadcast') {
+        const videoLayout = currentLayout();
+        if (videoLayout.type === 'control-freak') {
+            alert(JSON.stringify(sparkRTC.userStreamData))
+            handleControlFreak(videoLayout);
+        }
+
+        sparkRTC.socket.send(JSON.stringify({
+            type: 'metadata-set',
+            data: JSON.stringify({
+                ...getMeta(),
+                videoLayout: JSON.stringify(videoLayout)
+            })
+        }))
+    }
+}, [300]);
+
+
 document.addEventListener('keydown', (event) => {
     if (!sparkRTC || !sparkRTC.socket) {
         return;
     }
 
-    if (event.key === 'b') {
-        // TODO: filter out the event if not admin
-        currentBackgroundIndex =
-            (currentBackgroundIndex + 1) % possibleBackgrounds.length;
-
-        sparkRTC.socket.send(JSON.stringify({
-            type: 'metadata-set',
-            data: JSON.stringify({
-                ...getMeta(),
-                backgroundLayout: currentBackgroundLayout(),
-            })
-        }))
-    }
-
-    if (event.key === 'l') {
-        console.log('Setting layout');
-        currentLayoutIndex =
-            (currentLayoutIndex + 1) % possibleLayouts.length;
-
-        sparkRTC.socket.send(JSON.stringify({
-            type: 'metadata-set',
-            data: JSON.stringify({
-                ...getMeta(),
-                videoLayout: currentLayout()
-            })
-        }))
+    if (getMyRole() === 'broadcast') {
+        if (event.key === 'b') {
+            // TODO: filter out the event if not admin
+            currentBackgroundIndex =
+                (currentBackgroundIndex + 1) % possibleBackgrounds.length;
+    
+            sparkRTC.socket.send(JSON.stringify({
+                type: 'metadata-set',
+                data: JSON.stringify({
+                    ...getMeta(),
+                    backgroundLayout: currentBackgroundLayout(),
+                })
+            }))
+        }
+    
+        
+        if (event.key === 'l') {
+            console.log('Setting layout');
+            currentLayoutIndex =
+                (currentLayoutIndex + 1) % possibleLayouts.length;
+    
+            const videoLayout = currentLayout();
+            if (videoLayout.type === 'control-freak') {
+                alert(JSON.stringify(sparkRTC.userStreamData))
+                handleControlFreak(videoLayout);
+            }
+    
+            sparkRTC.socket.send(JSON.stringify({
+                type: 'metadata-set',
+                data: JSON.stringify({
+                    ...getMeta(),
+                    videoLayout: JSON.stringify(videoLayout)
+                })
+            }))
+        }
     }
 });
 
