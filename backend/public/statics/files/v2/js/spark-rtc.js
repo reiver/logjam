@@ -507,6 +507,7 @@ class SparkRTC {
         if (!res.find((r) => r.kind === 'videoinput')) {
             this.constraints.video = false;
         }
+        if (this.constraintResults) this.constraintResults(this.constraints);
     };
     constructor(role, options = {}) {
         this.role = role;
@@ -521,6 +522,7 @@ class SparkRTC {
         this.newTrackCallback = options.newTrackCallback;
         this.startProcedure = options.startProcedure;
         this.log = options.log || ((log) => { });
+        this.constraintResults = options.constraintResults;
         this.log(`[constructor] ${this.role}`);
     }
 }

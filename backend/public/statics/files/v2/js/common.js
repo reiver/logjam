@@ -58,6 +58,11 @@ function createSparkRTC() {
             },
             log: (log) => {
                 addLog(log);
+            },
+            constraintResults: (constraints) => {
+                if (!constraints.audio) {
+                    document.getElementById('mic').remove();
+                }
             }
         });
     }else{
