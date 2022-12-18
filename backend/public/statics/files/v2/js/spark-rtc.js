@@ -356,6 +356,7 @@ class SparkRTC {
                         data: "true",
                     })
                 );
+                this.log(`[newPeerConnectionInstance] stream message`);
             }
             this.targetStreams[target] = stream.id;
 
@@ -481,9 +482,9 @@ class SparkRTC {
         const reconnect = true;
         return new Promise((resolve, reject) => {
             this.socket.send(JSON.stringify({
-                type:"broadcaster-status"
+                type: "broadcaster-status"
             }));
-    
+
             let i = 0
             while (this.broadcasterStatus === '' && i < max) {
                 this.wait();
