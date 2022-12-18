@@ -129,16 +129,16 @@ class SparkRTC {
                 this.log(`[handleMessage] ${msg.type}`);
                 if (this.treeCallback) this.treeCallback(msg.data);
                 break;
-            case 'broadcasting':
-                if (this.role === 'broadcast') return;
-                this.log(`[handleMessage] ${msg.type}`);
-                this.startProcedure();
-                break;
-            case 'broadcaster-status':
-                this.log(`[handleMessage] ${msg.type} ${msg.data}`);
-                console.log('Message', msg);
-                this.broadcasterStatus = msg.data;
-                break;
+            // case 'broadcasting':
+            //     if (this.role === 'broadcast') return;
+            //     this.log(`[handleMessage] ${msg.type}`);
+            //     this.startProcedure();
+            //     break;
+            // case 'broadcaster-status':
+            //     this.log(`[handleMessage] ${msg.type} ${msg.data}`);
+            //     console.log('Message', msg);
+            //     this.broadcasterStatus = msg.data;
+            //     break;
             default:
                 this.log(`[handleMessage] default ${JSON.stringify(msg)}`);
                 break;
