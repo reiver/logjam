@@ -350,8 +350,10 @@ class SparkRTC {
                 }
             };
             this.log(`[newPeerConnectionInstance] A5`);
-            if (this.remoteStreamCallback)
-                this.remoteStreamCallback(stream);
+            try {
+                if (this.remoteStreamCallback)
+                    this.remoteStreamCallback(stream);
+            } catch {}
             this.log(`[newPeerConnectionInstance] A6`);
             this.remoteStreams.push(stream);
             this.log(`[newPeerConnectionInstance] A6.5`);
