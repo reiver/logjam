@@ -318,7 +318,6 @@ class SparkRTC {
                 this.log(`[newPeerConnectionInstance] stream.oninactive ${JSON.stringify(event)}`);
                 console.log('[stream.oninactive] event', event);
                 this.remoteStreamNotified = false;
-                /*
                 const theEventStream = event.currentTarget;
                 if (this.remoteStreamDCCallback) this.remoteStreamDCCallback(event.target);
                 const trackIds = peerConnection.getReceivers().map((receiver) => receiver.track.id);
@@ -349,7 +348,6 @@ class SparkRTC {
                     }
                     this.parentStreamId = undefined;
                 }
-                */
             };
             this.log(`[newPeerConnectionInstance] A5`);
             try {
