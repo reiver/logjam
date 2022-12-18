@@ -305,11 +305,15 @@ class SparkRTC {
             this.log(`[newPeerConnectionInstance] ontrack ${JSON.stringify(event.streams)}`);
             const stream = event.streams[0];
             if (this.localStream && this.localStream.id === stream.id) return;
+            this.log(`[newPeerConnectionInstance] A1`);
             if (this.newTrackCallback && !this.newTrackCallback(stream)) return;
+            this.log(`[newPeerConnectionInstance] A2`);
             if (this.remoteStreams.indexOf(stream) !== -1) return;
+            this.log(`[newPeerConnectionInstance] A3`);
             if (this.remoteStreams.length === 0) {
                 this.parentStreamId = stream.id;
             }
+            this.log(`[newPeerConnectionInstance] A4`);
             stream.oninactive = (event) => {
                 this.log(`[newPeerConnectionInstance] stream.oninactive ${JSON.stringify(event)}`);
                 console.log('[stream.oninactive] event', event);
@@ -345,11 +349,14 @@ class SparkRTC {
                     this.parentStreamId = undefined;
                 }
             };
+            this.log(`[newPeerConnectionInstance] A5`);
             if (this.remoteStreamCallback)
                 this.remoteStreamCallback(stream);
             this.remoteStreams.push(stream);
+            this.log(`[newPeerConnectionInstance] A6`);
             if (!this.remoteStreamNotified) {
                 this.remoteStreamNotified = true;
+                this.log(`[newPeerConnectionInstance] A7`);
                 this.socket.send(
                     JSON.stringify({
                         type: "stream",
