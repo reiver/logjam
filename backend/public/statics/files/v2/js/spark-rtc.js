@@ -133,7 +133,7 @@ class SparkRTC {
                 if (this.role === 'broadcast') return;
                 console.log('Broadcaster is back');
                 this.log(`[handleMessage] ${msg.type}`);
-                // this.startProcedure();
+                this.startProcedure();
                 break;
             // case 'broadcaster-status':
             //     this.log(`[handleMessage] ${msg.type} ${msg.data}`);
