@@ -394,19 +394,23 @@ class SparkRTC {
             if (peerConnection.iceConnectionState == 'disconnected') {
                 this.remoteStreamNotified = false;
                 console.log('[peerConnection.oniceconnectionstatechange] DC event', event);
-                /*
                 if (peerConnection.getRemoteStreams().length === 0) return;
-                if (this.remoteStreamDCCallback) this.remoteStreamDCCallback(peerConnection.getRemoteStreams()[0]);
+                try {
+                    if (this.remoteStreamDCCallback) this.remoteStreamDCCallback(peerConnection.getRemoteStreams()[0]);
+                } catch {}
                 const trackIds = peerConnection.getReceivers().map((receiver) => receiver.track.id);
                 trackIds.forEach((trackId) => {
+                    console.log('[peerConnection.oniceconnectionstatechange] DC trackId', trackId);
                     for (const userId in this.myPeerConnectionArray) {
                         if (userId === target) continue;
+                        console.log('[peerConnection.oniceconnectionstatechange] DC userId', userId);
                         const apeerConnection = this.myPeerConnectionArray[userId];
                         if (!apeerConnection.isAdience) return;
                         const allSenders = apeerConnection.getSenders();
                         for (const sender of allSenders) {
                             if (!sender.track) continue;
                             if (sender.track.id === trackId) {
+                                console.log('[peerConnection.oniceconnectionstatechange] DC sender');
                                 try {
                                     apeerConnection.removeTrack(sender);
                                 } catch (e) {
@@ -426,7 +430,6 @@ class SparkRTC {
                     this.parentStreamId = undefined;
                 }
                 if (this.role !== 'broadcast') this.getBroadcasterStatus();
-                */
             }
         };
 
