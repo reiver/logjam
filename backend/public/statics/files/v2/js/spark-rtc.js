@@ -265,7 +265,7 @@ class SparkRTC {
         peerConnection.isAdience = isAdience;
 
         peerConnection.onconnectionstatechange = (ev) => {
-            console.log(`[newPeerConnectionInstance] peerConnection.onconnectionstatechange ${JSON.stringify(ev)}`);
+            console.log(`[newPeerConnectionInstance] peerConnection.onconnectionstatechange `, ev);
         }
 
         peerConnection.onicecandidate = (event) => {
