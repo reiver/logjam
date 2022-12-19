@@ -140,6 +140,9 @@ class SparkRTC {
             //     console.log('Message', msg);
             //     this.broadcasterStatus = msg.data;
             //     break;
+            case 'event-broadcaster-disconnected':
+                console.log('event-broadcaster-disconnected');
+                break;
             default:
                 this.log(`[handleMessage] default ${JSON.stringify(msg)}`);
                 break;
