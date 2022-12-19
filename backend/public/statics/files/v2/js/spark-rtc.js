@@ -142,6 +142,8 @@ class SparkRTC {
             //     break;
             case 'event-broadcaster-disconnected':
                 console.log('event-broadcaster-disconnected');
+                if (this.role === 'broadcast') return;
+                this.startProcedure();
                 break;
             default:
                 this.log(`[handleMessage] default ${JSON.stringify(msg)}`);
