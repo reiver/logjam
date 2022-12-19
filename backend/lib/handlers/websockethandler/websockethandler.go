@@ -360,6 +360,10 @@ func (receiver httpHandler) deleteNode(conn *websocket.Conn, roomName string, me
 				log.Inform("[deleteNode] checking other socket ", s.(*binarytreesrv.MySocket).Name, " SENT")
 			}
 		}
+	} else {
+		for _, s := range socket.ConnectedSockets {
+			s.Socket.WriteMessage(1, messageTxt)
+		}
 	}
 	Map.Delete(conn)
 }
