@@ -143,8 +143,10 @@ class SparkRTC {
             case 'event-broadcaster-disconnected':
                 console.log('event-broadcaster-disconnected');
                 if (this.role === 'broadcast') return;
-                console.log('Reconnecting ...');
-                this.startProcedure();
+                setTimeout(() => {
+                    console.log('Reconnecting ...');
+                    this.startProcedure();    
+                }, 1000);
                 break;
             default:
                 this.log(`[handleMessage] default ${JSON.stringify(msg)}`);
