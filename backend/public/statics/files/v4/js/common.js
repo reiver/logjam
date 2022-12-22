@@ -67,6 +67,9 @@ function createSparkRTC() {
         });
     } else {
         document.getElementById('share_screen').style.display = 'none';
+        document.getElementById('mic').style.display = 'none';
+        document.getElementById('camera').style.display = 'none';
+        const img = document.getElementById("raise_hand");
         return new SparkRTC('audience', {
             remoteStreamCallback: (stream) => {
                 const tagId = 'remoteVideo-' + stream.id;
@@ -75,6 +78,8 @@ function createSparkRTC() {
                 video.srcObject = stream;
                 video.play();
                 document.getElementById('dc-place-holder').remove();
+                img.dataset.status = 'on';
+                img.src = RAISE_HAND_ON;
             },
             remoteStreamDCCallback: (stream) => {
                 if (stream !== 'no-stream') {
@@ -89,6 +94,10 @@ function createSparkRTC() {
                 <img style="width: 100%;" src="images/broken-link-mistake-error-disconnect-svgrepo-com.svg" />
                 <h1>Broadcaster is disconnected now, wait for it...</h1>
                 </div>`;
+                img.dataset.status = 'off';
+                img.src = RAISE_HAND_OFF;
+                document.getElementById('mic').style.display = 'none';
+                document.getElementById('camera').style.display = 'none';
             },
             signalingDisconnectedCallback: () => {
                 clearScreen();
