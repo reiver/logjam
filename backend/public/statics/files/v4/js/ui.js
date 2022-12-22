@@ -5,6 +5,8 @@ const MIC_OFF = "images/mic-off.png";
 const SCREEN_ON = "images/screen-on.png";
 const SCREEN_OFF = "images/screen-off.png";
 // const SPARK_LOGO = "images/spark-logo.png";
+const RAISE_HAND_ON = "images/hand.png";
+const RAISE_HAND_OFF = "images/hand-off.png";
 const CHARACTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
 const verySlowColor = 'invert(64%) sepia(66%) saturate(4174%) hue-rotate(334deg) brightness(100%) contrast(92%)';
 const DCColor = 'invert(13%) sepia(99%) saturate(4967%) hue-rotate(350deg) brightness(92%) contrast(96%)';
@@ -228,11 +230,16 @@ function onLoad() {
 
 
 async function onRaiseHand() {
-    const stream = await sparkRTC.raiseHand();
-    const tagId = 'localVideo-' + stream.id;
-    if (document.getElementById(tagId)) return;
-    const video = createVideoElement(tagId, true);
-    video.srcObject = stream;
+    const img = document.getElementById("raise_hand");
+    if (img.dataset.status === 'on') {
+        const stream = await sparkRTC.raiseHand();
+        const tagId = 'localVideo-' + stream.id;
+        if (document.getElementById(tagId)) return;
+        const video = createVideoElement(tagId, true);
+        video.srcObject = stream;
+        document.getElementById('mic').style.display = '';
+        document.getElementById('camera').style.display = '';
+    }
 }
 
 function addLog(log) {
