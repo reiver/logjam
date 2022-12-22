@@ -210,7 +210,7 @@ async function start() {
 
 
 function onLoad() {
-    registerNetworkEvent();
+    // registerNetworkEvent();
     myRole = getMyRole();
     roomName = getRoomName();
     sparkRTC = createSparkRTC();

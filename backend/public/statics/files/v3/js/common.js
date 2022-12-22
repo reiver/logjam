@@ -1,6 +1,6 @@
 function getWsUrl() {
     const baseUrl = window.location.href.split("//")[1].split("/")[0];
-    const protocol = window.location.href.split("//")[0] === "http:" ? "ws" :"wss";
+    const protocol = window.location.href.split("//")[0] === "http:" ? "ws" : "wss";
     return `${protocol}://${baseUrl}/ws`
 }
 
@@ -17,7 +17,7 @@ function clearScreen() {
 
 function createSparkRTC() {
     clearScreen();
-    if (myRole === 'broadcast'){
+    if (myRole === 'broadcast') {
         document.getElementById('raise_hand').style.display = 'none';
         return new SparkRTC('broadcast', {
             localStreamChangeCallback: (stream) => {
@@ -33,7 +33,7 @@ function createSparkRTC() {
             remoteStreamDCCallback: (stream) => {
                 let tagId = 'remoteVideo-' + stream.id;
                 if (!document.getElementById(tagId)) {
-                    tagId = 'localVideo-' + stream.id ;
+                    tagId = 'localVideo-' + stream.id;
                     if (!document.getElementById(tagId)) return;
                 }
                 removeVideoElement(tagId);
@@ -65,7 +65,7 @@ function createSparkRTC() {
                 }
             }
         });
-    }else{
+    } else {
         document.getElementById('share_screen').style.display = 'none';
         return new SparkRTC('audience', {
             remoteStreamCallback: (stream) => {
@@ -77,12 +77,14 @@ function createSparkRTC() {
                 document.getElementById('dc-place-holder').remove();
             },
             remoteStreamDCCallback: (stream) => {
-                let tagId = 'remoteVideo-' + stream.id;
-                if (!document.getElementById(tagId)) {
-                    tagId = 'localVideo-' + stream.id ;
-                    if (!document.getElementById(tagId)) return;
+                if (stream !== 'no-stream') {
+                    let tagId = 'remoteVideo-' + stream.id;
+                    if (!document.getElementById(tagId)) {
+                        tagId = 'localVideo-' + stream.id;
+                        if (!document.getElementById(tagId)) return;
+                    }
+                    removeVideoElement(tagId);
                 }
-                removeVideoElement(tagId);
                 document.getElementById('screen').innerHTML = `<div id="dc-place-holder" style="display: block;">
                 <img style="width: 100%;" src="images/broken-link-mistake-error-disconnect-svgrepo-com.svg" />
                 <h1>Broadcaster is disconnected now, wait for it...</h1>
@@ -124,6 +126,6 @@ function handleNetworkStatus(event) {
     if (net.downlink <= 1) {
         console.log('Network is slow.');
         return onNetworkIsSlow(net.downlink);
-    } 
+    }
     onNetworkIsNormal();
 }

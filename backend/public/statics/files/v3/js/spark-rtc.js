@@ -79,6 +79,7 @@ class SparkRTC {
                 break;
             case 'role':
                 this.log(`[handleMessage] ${msg.type}`);
+                console.log(msg);
                 if (this.role === 'broadcast') {
                     if (msg.data === "no:broadcast") {
                         alert("You are not a broadcaster anymore!");
@@ -89,6 +90,13 @@ class SparkRTC {
                     } else {
                         if (this.localStreamChangeCallback)
                             this.localStreamChangeCallback(null);
+                    }
+                } else if (msg.data === 'no:audience') {
+                    console.log('OK');
+                    if (this.remoteStreamDCCallback) {
+                        try {
+                            this.remoteStreamDCCallback('no-stream');
+                        } catch(e) {console.log(e)}
                     }
                 }
                 break;
@@ -308,7 +316,7 @@ class SparkRTC {
             } catch (e) {
                 console.log(e);
                 this.log(`[newPeerConnectionInstance] failed ${e}`);
-                alert('onnegotiationneeded failed:', e);
+                // alert('onnegotiationneeded failed:', e);
             }
         };
 
