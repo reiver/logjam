@@ -1,0 +1,20 @@
+.chart{
+    overflow: auto;
+    /*border: 5px solid red;*/
+}
+
+.node circle {
+    stroke: steelblue;
+    stroke-width: 3px;
+}
+
+.node text {
+    font: 12px sans-serif;
+    fill: white;
+}
+
+.link {
+    fill: none;
+    stroke: #ccc;
+    stroke-width: 2px;
+}
