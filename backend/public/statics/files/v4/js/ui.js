@@ -231,6 +231,7 @@ function onLoad() {
 
 async function onRaiseHand() {
     const img = document.getElementById("raise_hand");
+    console.log(img.dataset.status);
     if (img.dataset.status === 'on') {
         const stream = await sparkRTC.raiseHand();
         const tagId = 'localVideo-' + stream.id;
