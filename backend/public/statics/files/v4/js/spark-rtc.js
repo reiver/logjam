@@ -497,11 +497,6 @@ class SparkRTC {
                 document.getElementById('raise_hand').remove();
                 return;
             }
-            // try {
-            //     this.localStream = await navigator.mediaDevices.getUserMedia(this.constraints);
-            //     this.log(`[startBroadcasting] localsream loaded`);
-            //     this.remoteStreams.push(this.localStream);
-            // } catch {}
         }
 
         return this.startReadingBroadcast();
