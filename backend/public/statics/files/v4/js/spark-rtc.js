@@ -491,6 +491,17 @@ class SparkRTC {
         await this.getSupportedConstraints();
         if (this.role === 'broadcast') {
             return this.startBroadcasting();
+        } else {
+            if (!this.constraints.audio && !this.constraints.video) {
+                // throw new Error('No media device available');
+                document.getElementById('raise_hand').remove();
+                return;
+            }
+            try {
+                this.localStream = await navigator.mediaDevices.getUserMedia(this.constraints);
+                this.log(`[startBroadcasting] localsream loaded`);
+                this.remoteStreams.push(this.localStream);
+            } catch {}
         }
 
         return this.startReadingBroadcast();
