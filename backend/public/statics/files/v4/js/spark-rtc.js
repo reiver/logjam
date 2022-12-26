@@ -96,7 +96,7 @@ class SparkRTC {
                     if (this.remoteStreamDCCallback) {
                         try {
                             this.remoteStreamDCCallback('no-stream');
-                        } catch(e) {console.log(e)}
+                        } catch (e) { console.log(e) }
                     }
                 }
                 break;
@@ -373,7 +373,7 @@ class SparkRTC {
             try {
                 if (this.remoteStreamCallback)
                     this.remoteStreamCallback(stream);
-            } catch {}
+            } catch { }
             this.log(`[newPeerConnectionInstance] A6`);
             this.remoteStreams.push(stream);
             this.log(`[newPeerConnectionInstance] A6.5`);
@@ -415,7 +415,7 @@ class SparkRTC {
                 if (peerConnection.getRemoteStreams().length === 0) return;
                 try {
                     if (this.remoteStreamDCCallback) this.remoteStreamDCCallback(peerConnection.getRemoteStreams()[0]);
-                } catch {}
+                } catch { }
                 const trackIds = peerConnection.getReceivers().map((receiver) => receiver.track.id);
                 trackIds.forEach((trackId) => {
                     console.log('[peerConnection.oniceconnectionstatechange] DC trackId', trackId);
@@ -491,12 +491,8 @@ class SparkRTC {
         await this.getSupportedConstraints();
         if (this.role === 'broadcast') {
             return this.startBroadcasting();
-        } else {
-            if (!this.constraints.audio && !this.constraints.video) {
-                // throw new Error('No media device available');
-                document.getElementById('raise_hand').remove();
-                return;
-            }
+        } else if (!this.constraints.audio && !this.constraints.video) {
+            document.getElementById('raise_hand').remove();
         }
 
         return this.startReadingBroadcast();
