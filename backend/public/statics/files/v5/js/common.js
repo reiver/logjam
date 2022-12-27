@@ -90,14 +90,16 @@ function createSparkRTC() {
                     }
                     removeVideoElement(tagId);
                 }
-                document.getElementById('screen').innerHTML = `<div id="dc-place-holder" style="display: block;">
-                <img style="width: 100%;" src="images/broken-link-mistake-error-disconnect-svgrepo-com.svg" />
-                <h1>Broadcaster is disconnected now, wait for it...</h1>
-                </div>`;
-                img.dataset.status = 'off';
-                img.src = RAISE_HAND_OFF;
-                document.getElementById('mic').style.display = 'none';
-                document.getElementById('camera').style.display = 'none';
+                if (sparkRTC.remoteStreams.length === 0) {
+                    document.getElementById('screen').innerHTML = `<div id="dc-place-holder" style="display: block;">
+                    <img style="width: 100%;" src="images/broken-link-mistake-error-disconnect-svgrepo-com.svg" />
+                    <h1>Broadcaster is disconnected now, wait for it...</h1>
+                    </div>`;
+                    img.dataset.status = 'off';
+                    img.src = RAISE_HAND_OFF;
+                    document.getElementById('mic').style.display = 'none';
+                    document.getElementById('camera').style.display = 'none';
+                }
             },
             signalingDisconnectedCallback: () => {
                 clearScreen();
