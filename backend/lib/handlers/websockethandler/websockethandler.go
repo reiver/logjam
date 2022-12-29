@@ -411,10 +411,10 @@ func (receiver httpHandler) deleteNode(conn *websocket.Conn, roomName string, me
 			}
 		}
 	}
-	metaData := socket.MetaData
-	if metaData != nil {
-		roommapssrv.RoomMaps.SetMetData(roomName, metaData)
-	}
+	// metaData := socket.MetaData
+	// if metaData != nil {
+	// 	roommapssrv.RoomMaps.SetMetData(roomName, metaData)
+	// }
 	Map.Room.Delete(conn)
 }
 
