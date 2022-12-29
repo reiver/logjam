@@ -87,6 +87,7 @@ function createSparkRTC() {
                 img.src = RAISE_HAND_ON;
             },
             remoteStreamDCCallback: (stream) => {
+                console.log(`[remoteStreamDCCallback]`, stream);
                 if (stream !== 'no-stream') {
                     let tagId = 'remoteVideo-' + stream.id;
                     if (!document.getElementById(tagId)) {

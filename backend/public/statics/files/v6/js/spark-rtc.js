@@ -413,9 +413,6 @@ class SparkRTC {
                 this.remoteStreamNotified = false;
                 console.log('[peerConnection.oniceconnectionstatechange] DC event', event);
                 if (peerConnection.getRemoteStreams().length === 0) return;
-                try {
-                    if (this.remoteStreamDCCallback) this.remoteStreamDCCallback(peerConnection.getRemoteStreams()[0]);
-                } catch { }
                 const trackIds = peerConnection.getReceivers().map((receiver) => receiver.track.id);
                 trackIds.forEach((trackId) => {
                     console.log('[peerConnection.oniceconnectionstatechange] DC trackId', trackId);
@@ -438,17 +435,30 @@ class SparkRTC {
                         }
                     }
                 });
-                this.remoteStreams.splice(this.remoteStreams.indexOf(peerConnection.getRemoteStreams()[0]), 1);
-                if (this.parentStreamId && this.parentStreamId === peerConnection.getRemoteStreams()[0].id) {
+                const allStreams = peerConnection.getRemoteStreams();
+                console.log({allStreams});
+                for (let i = 0; i < allStreams.length; i++)
+                    this.remoteStreams.splice(this.remoteStreams.indexOf(allStreams[i]), 1);
+                
+                if (this.parentStreamId && allStreams.map((s) => s.id).includes(this.parentStreamId)) {
+                    this.updateTheStatus(`Parent stream is disconnected`);
                     if (this.remoteStreamDCCallback) {
                         this.remoteStreams.forEach((strm) => {
-                            this.remoteStreamDCCallback(strm);
+                            try {
+                                this.remoteStreamDCCallback(strm);
+                            } catch {}
                         });
                     }
                     this.parentStreamId = undefined;
+                    this.remoteStreams = [];
                 }
+                this.startedRaiseHand = false;
                 // if (this.role !== 'broadcast') this.getBroadcasterStatus();
+                try {
+                    if (this.remoteStreamDCCallback) this.remoteStreamDCCallback(peerConnection.getRemoteStreams()[0]);
+                } catch { }
                 if (this.parentDC) this.startProcedure();
+
             }
         };
 
