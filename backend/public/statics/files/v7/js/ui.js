@@ -157,7 +157,7 @@ function setMyName() {
 }
 
 
-async function handleClick() {
+async function handleClick(turn = true) {
     let newName = document.getElementById("inputName").value;
     if (newName) {
         myName = newName;
@@ -166,7 +166,7 @@ async function handleClick() {
     document.getElementById("page").style.visibility = "visible";
     document.getElementById("getName").style.display = "none";
 
-    await start();
+    await start(turn);
 
     return false;
 }
@@ -205,9 +205,9 @@ function setupSignalingSocket() {
 }
 
 
-async function start() {
+async function start(turn = true) {
     await setupSignalingSocket();
-    return sparkRTC.start();
+    return sparkRTC.start(turn);
 }
 
 

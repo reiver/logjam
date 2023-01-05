@@ -121,14 +121,20 @@ class SparkRTC {
                 this.log(`[handleMessage] ${msg.type}`);
                 if (this.role === 'broadcast') {
                     if (this.raiseHands.indexOf(msg.data) === -1) {
-                        this.raiseHands.push(msg.data);
-                        if (!this.raiseHandConfirmation(`${msg.name} wants to broadcast, do you approve?`)) return;
+                        if (this.raiseHandConfirmation) {
+                            try {
+                                const result = this.raiseHandConfirmation(`${msg.name} wants to broadcast, do you approve?`)
+                                console.log(`[handleMessage] alt-broadcast result`, result);
+                                if (result !== true) return;
+                            } catch {}
+                        }
                         this.socket.send(
                             JSON.stringify({
                                 type: "alt-broadcast-approve",
                                 target: msg.data,
                             })
                         );
+                        this.raiseHands.push(msg.data);
                         this.log(`[handleMessage] ${msg.type} approving raised hand ${msg.data}`);
                     }
                 } else {
@@ -498,7 +504,10 @@ class SparkRTC {
             peerConnection.addTrack(track, stream);
         });
     };
-    start = async () => {
+    start = async (turn = true) => {
+        if (!turn) {
+            this.myPeerConnectionConfig.iceServers = iceServers.filter((i) => i.url.indexOf('turn') < 0);
+        }
         this.updateTheStatus(`Starting`);
         this.log(`[start] ${this.role}`);
         this.updateTheStatus(`Getting media capabilities`);

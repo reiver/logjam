@@ -53,7 +53,12 @@ function createSparkRTC() {
                 }
             },
             raiseHandConfirmation: (msg) => {
+                console.log(`[raiseHandConfirmation] msg`, msg);
                 return true;
+                // if (confirm(msg)) {
+                //     return true;
+                // }
+                // return false;
             },
             startProcedure: async () => {
                 await handleClick();
