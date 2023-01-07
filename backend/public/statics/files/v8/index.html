@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>SparkScience Demo</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/graph.css">
+    <link rel="icon" type="image/png" href="images/spark-logo.png">
+    <script src="https://d3js.org/d3.v4.min.js"></script>
+    <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
+    <script src="../config.js"></script>
+    <script src="js/spark-rtc.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/data.js"></script>
+    <script src="js/graph.js"></script>
+    <script src="js/common.js"></script>
+</head>
+
+<body onload="onLoad()">
+
+    <!--getName-->
+    <div id="getName" class="Modal-Wrapper">
+        <div id="logo"></div>
+        <div class="Modal-Container">
+            <div class="Modal-Content">
+                <br />
+                <h2>Welcome to Group Video!</h2>
+                <form class="form">
+                    <label for="inputName">Name: </label>
+                    <input id="inputName" type="text" value="" placeholder="enter a nickname" />
+                    <button type="button" onclick="handleClick()">Enter</button>
+                    <!-- <button type="button" style="background-color: #c98303" onclick="handleClick(false)">Enter Without TURN</button> -->
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!--main page-->
+    <div id="page">
+        <div id="status" style="position: fixed;color: black;z-index: 1;padding: 20px;background: #b9aaaa4a;"></div>
+        <!--video containers-->
+        <div id="screen">
+        </div>
+        <div id="logs" style="background: black;color: white;margin: 10px;padding: 5px;">
+            DEBUG LOGS
+            <hr />
+        </div>
+        <!--bottom bar-->
+        <div id="bottom-bar-wrapper">
+            <div id="bottom-bar-slider"></div>
+            <div id="bottom-bar-container">
+                <!--                <div id="name-container">-->
+                <!--                    <p id="myName"></p>-->
+                <!--                </div>-->
+                <div id="control-buttons-container">
+                    <img id="camera" data-status="on" class="control-button-image" src="images/cam-on.png" alt="camera"
+                        onclick="onCameraButtonClick()" />
+                    <img id="mic" data-status="on" class="control-button-image" src="images/mic-on.png" alt="mic"
+                        onclick="onMicButtonClick()" />
+                    <img id="spark" class="control-button-image" src="images/spark-logo.png" alt="logo" />
+                    <img id="share_screen" data-status="off" class="control-button-image" src="images/screen-off.png"
+                        alt="share screen" onclick="onShareScreen()" />
+                    <img id="raise_hand" data-status="on" class="control-button-image" src="images/hand.png"
+                        alt="raise hand" onclick="onRaiseHand()" />
+                    <img id="net" class="control-button-image" style="display: none;" src="images/network.svg"
+                        alt="net stat" title="Network Status" />
+                </div>
+            </div>
+        </div>
+
+        <!--sidebar-->
+        <div id="sidebar-wrapper">
+            <div id="sidebar-slider"></div>
+            <div id="sidebar-container">
+                <div class="chart">
+                    <svg id="svg"></svg>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+
+</html>
