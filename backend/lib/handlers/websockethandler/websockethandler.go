@@ -347,6 +347,8 @@ func (receiver httpHandler) deleteNode(conn *websocket.Conn, roomName string, me
 	messageTxt, _ := json.Marshal(response)
 	response.Type = "event-reconnect"
 	otherMessageTxt, _ := json.Marshal(response)
+	response.Type = "event-parent-dc"
+	theMessageTxt, _ := json.Marshal(response)
 	var chosenOne binarytree.SingleNode
 	if socket.IsBroadcaster {
 		for _, s := range Map.All() {
@@ -362,7 +364,7 @@ func (receiver httpHandler) deleteNode(conn *websocket.Conn, roomName string, me
 		}
 	} else {
 		for _, s := range socket.ConnectedSockets {
-			s.Socket.WriteMessage(1, messageTxt)
+			s.Socket.WriteMessage(1, theMessageTxt)
 		}
 	}
 	Map.Delete(conn)
