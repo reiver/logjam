@@ -230,16 +230,17 @@ function onLoad() {
 
 
 async function onRaiseHand() {
+    return;
     const img = document.getElementById("raise_hand");
     console.log(img.dataset.status);
     if (img.dataset.status === 'on') {
         if (sparkRTC.localStream) {
-            if (confirm(`Do you want to stop streaming?`)) {
-                console.log('stopping...');
-                removeVideoElement('localVideo-' + sparkRTC.localStream.id);
-                disableAudioVideoControls();
-                sparkRTC.lowerHand();
-            }
+            // if (confirm(`Do you want to stop streaming?`)) {
+            //     console.log('stopping...');
+            //     removeVideoElement('localVideo-' + sparkRTC.localStream.id);
+            //     disableAudioVideoControls();
+            //     sparkRTC.lowerHand();
+            // }
             return;
         }
         const stream = await sparkRTC.raiseHand();
