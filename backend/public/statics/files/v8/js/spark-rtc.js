@@ -23,8 +23,8 @@ class SparkRTC {
         audio: true,
         video: true,
     };
-    parentDC = false;
-    broadcasterDC = false;
+    parentDC = true;
+    broadcasterDC = true;
     handleVideoOfferMsg = async (msg) => {
         this.log(`[handleVideoOfferMsg] ${msg.name}`);
         const broadcasterPeerConnection = this.createOrGetPeerConnection(msg.name);
@@ -155,6 +155,9 @@ class SparkRTC {
             case 'event-broadcaster-disconnected':
                 console.log('broadcaster dc', msg.type);
                 this.broadcasterDC = true;
+                try {
+                    if (this.remoteStreamDCCallback) this.remoteStreamDCCallback('no-stream');
+                } catch { }
                 // this.parentDC = true;
                 // if (this.startedRaiseHand) {
                 //     this.lowerHand();
@@ -383,6 +386,7 @@ class SparkRTC {
                         });
                     }
                     this.parentStreamId = undefined;
+                    this.parentDC = true;
                 }
                 if (this.remoteStreamDCCallback) {
                     try {
@@ -468,12 +472,15 @@ class SparkRTC {
                     this.parentStreamId = undefined;
                     this.remoteStreams = [];
                 }
-                if (this.startedRaiseHand) this.lowerHand();
+                // if (this.startedRaiseHand) this.lowerHand();
                 // if (this.role !== 'broadcast') this.getBroadcasterStatus();
+                this.localStream.getTracks().forEach((track) => {
+                    track.stop();
+                });
                 try {
                     if (this.remoteStreamDCCallback) this.remoteStreamDCCallback(peerConnection.getRemoteStreams()[0]);
                 } catch { }
-                if (this.parentDC) this.startProcedure();
+                if (this.parentDC || this.startedRaiseHand) this.startProcedure();
 
             }
         };

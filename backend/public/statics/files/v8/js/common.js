@@ -103,7 +103,7 @@ function createSparkRTC() {
                     }
                     removeVideoElement(tagId);
                 }
-                if (sparkRTC.broadcasterDC) {
+                if (sparkRTC.broadcasterDC || stream === 'no-stream') {
                     document.getElementById('screen').innerHTML = `<div id="dc-place-holder" style="display: block;">
                     <img style="width: 100%;" src="images/broken-link-mistake-error-disconnect-svgrepo-com.svg" />
                     <h1>Broadcaster is disconnected now, please stand by</h1>
