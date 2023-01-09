@@ -474,9 +474,11 @@ class SparkRTC {
                 }
                 // if (this.startedRaiseHand) this.lowerHand();
                 // if (this.role !== 'broadcast') this.getBroadcasterStatus();
-                this.localStream.getTracks().forEach((track) => {
-                    track.stop();
-                });
+                if (this.localStream) {
+                    this.localStream.getTracks().forEach((track) => {
+                        track.stop();
+                    });    
+                }
                 try {
                     if (this.remoteStreamDCCallback) this.remoteStreamDCCallback(peerConnection.getRemoteStreams()[0]);
                 } catch { }
