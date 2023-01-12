@@ -25,6 +25,7 @@ class SparkRTC {
     };
     parentDC = false;
     metaData = {};
+    userStreamData = {};
     handleVideoOfferMsg = async (msg) => {
         this.log(`[handleVideoOfferMsg] ${msg.name}`);
         const broadcasterPeerConnection = this.createOrGetPeerConnection(msg.name);
@@ -260,6 +261,7 @@ class SparkRTC {
                 JSON.stringify({
                     type: "role",
                     data,
+                    streamId: this.localStream.id,
                 })
             );
             this.log(`[startBroadcasting] send role`);
@@ -343,6 +345,11 @@ class SparkRTC {
             if (this.remoteStreams.length === 0) {
                 this.parentStreamId = stream.id;
             }
+            console.log('user-by-stream', stream.id);
+            this.socket.send(JSON.stringify({
+                type: 'user-by-stream',
+                data: stream.id,
+            }));
             stream.oninactive = (event) => {
                 this.log(`[newPeerConnectionInstance] stream.oninactive ${JSON.stringify(event)}`);
                 console.log('[stream.oninactive] event', event);
@@ -614,6 +621,21 @@ class SparkRTC {
         for (const target in this.myPeerConnectionArray) {
             this.sendStreamTo(target, this.localStream);
         }
+    };
+    getStreamDetails = (streamId) => {
+        if (this.localStream && this.localStream.id === streamId) {
+            return {
+                userId: this.myUsername,
+                userName: this.myName,
+                userRole: this.role,
+            };
+        }
+
+        if (this.userStreamData[streamId]) {
+            return this.userStreamData[streamId];
+        }
+
+        return null;
     };
     constructor(role, options = {}) {
         this.role = role;
