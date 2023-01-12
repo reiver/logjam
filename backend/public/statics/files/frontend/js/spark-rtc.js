@@ -1,46 +1,47 @@
 class SparkRTC {
     started = false;
     myPeerConnectionConfig = {
-        iceServers: [
-            {
-                url: 'stun:stun.l.google.com:19302'
-            },
-            {
-                url: 'stun:stun1.l.google.com:19302'
-            },
-            {
+        iceServers,
+        // iceServers: [
+        //     {
+        //         url: 'stun:stun.l.google.com:19302'
+        //     },
+        //     {
+        //         url: 'stun:stun1.l.google.com:19302'
+        //     },
+        //     {
 
-                url: 'stun:stun2.l.google.com:19302'
-            },
-            {
+        //         url: 'stun:stun2.l.google.com:19302'
+        //     },
+        //     {
 
-                url: 'stun:stun3.l.google.com:19302'
-            },
-            {
+        //         url: 'stun:stun3.l.google.com:19302'
+        //     },
+        //     {
 
-                url: 'stun:stun4.l.google.com:19302'
-            },
-            {
-                url: "turn:turn1.turn.group.video:3478",
-                username: "turnuser",
-                credential: "dJ4kP05PHcKN8Ubu",
-            },
-            {
-                url: "turn:turn2.turn.group.video:3478",
-                username: "turnuser",
-                credential: "XzfVP8cpNEy17hws",
-            },
-            {
-                url: "turns:turn1.turn.group.video:443",
-                username: "turnuser",
-                credential: "dJ4kP05PHcKN8Ubu",
-            },
-            {
-                url: "turns:turn2.turn.group.video:443",
-                username: "turnuser",
-                credential: "XzfVP8cpNEy17hws",
-            },
-        ],
+        //         url: 'stun:stun4.l.google.com:19302'
+        //     },
+        //     {
+        //         url: "turn:turn1.turn.group.video:3478",
+        //         username: "turnuser",
+        //         credential: "dJ4kP05PHcKN8Ubu",
+        //     },
+        //     {
+        //         url: "turn:turn2.turn.group.video:3478",
+        //         username: "turnuser",
+        //         credential: "XzfVP8cpNEy17hws",
+        //     },
+        //     {
+        //         url: "turns:turn1.turn.group.video:443",
+        //         username: "turnuser",
+        //         credential: "dJ4kP05PHcKN8Ubu",
+        //     },
+        //     {
+        //         url: "turns:turn2.turn.group.video:443",
+        //         username: "turnuser",
+        //         credential: "XzfVP8cpNEy17hws",
+        //     },
+        // ],
     };
     role = 'broadcast';
     localStream;
@@ -59,6 +60,7 @@ class SparkRTC {
     parentStreamId;
     metaData = {};
     userStreamData = {};
+    broadcasterStatus = '';
     handleVideoOfferMsg = async (msg) => {
         this.log(`[handleVideoOfferMsg] ${msg.name}`);
         const broadcasterPeerConnection = this.createOrGetPeerConnection(msg.name);
@@ -122,7 +124,7 @@ class SparkRTC {
                     } else if (msg.data === "yes:broadcast") {
                         if (this.localStreamChangeCallback)
                             this.localStreamChangeCallback(this.localStream);
-                        this.checkState();
+                        // this.checkState();
                     } else {
                         if (this.localStreamChangeCallback)
                             this.localStreamChangeCallback(null);
@@ -180,6 +182,18 @@ class SparkRTC {
                     userName,
                     userRole,
                 };
+                break;
+            case 'broadcasting':
+                if (this.role === 'broadcast') return;
+                this.log(`[handleMessage] ${msg.type}`);
+                // alert('Broadcaster is back!');
+                this.startProcedure();
+                break;
+            case 'broadcaster-status':
+                this.log(`[handleMessage] ${msg.type} ${msg.data}`);
+                console.log('Message', msg);
+                this.broadcasterStatus = msg.data;
+                // this.startProcedure();
                 break;
             default:
                 this.log(`[handleMessage] default ${JSON.stringify(msg)}`);
@@ -361,6 +375,9 @@ class SparkRTC {
             }));
             stream.oninactive = (event) => {
                 this.log(`[newPeerConnectionInstance] stream.oninactive ${JSON.stringify(event)}`);
+                console.log('[stream.oninactive] event', event);
+                this.remoteStreamNotified = false;
+                const theEventStream = event.currentTarget;
                 if (this.remoteStreamDCCallback) this.remoteStreamDCCallback(event.target);
                 const trackIds = peerConnection.getReceivers().map((receiver) => receiver.track.id);
                 trackIds.forEach((trackId) => {
@@ -381,8 +398,8 @@ class SparkRTC {
                         }
                     }
                 });
-                this.remoteStreams.splice(this.remoteStreams.indexOf(peerConnection.getRemoteStreams()[0]), 1);
-                if (this.parentStreamId && this.parentStreamId === peerConnection.getRemoteStreams()[0].id) {
+                this.remoteStreams.splice(this.remoteStreams.indexOf(theEventStream), 1);
+                if (this.parentStreamId && this.parentStreamId === theEventStream.id) {
                     if (this.remoteStreamDCCallback) {
                         this.remoteStreams.forEach((strm) => {
                             this.remoteStreamDCCallback(strm);
@@ -417,13 +434,16 @@ class SparkRTC {
 
             if (!this.started) {
                 this.started = true;
-                this.checkState();
+                // this.checkState();
             }
+
+            if (this.role !== 'broadcast') this.getBroadcasterStatus();
         };
 
         peerConnection.oniceconnectionstatechange = (event) => {
             this.log(`[newPeerConnectionInstance] oniceconnectionstatechange peerConnection.iceConnectionState = ${peerConnection.iceConnectionState} event = ${JSON.stringify(event)}`);
             if (peerConnection.iceConnectionState == 'disconnected') {
+                this.remoteStreamNotified = false;
                 if (peerConnection.getRemoteStreams().length === 0) return;
                 if (this.remoteStreamDCCallback) this.remoteStreamDCCallback(peerConnection.getRemoteStreams()[0]);
                 const trackIds = peerConnection.getReceivers().map((receiver) => receiver.track.id);
@@ -454,6 +474,7 @@ class SparkRTC {
                     }
                     this.parentStreamId = undefined;
                 }
+                if (this.role !== 'broadcast') this.getBroadcasterStatus();
             }
         };
 
@@ -512,26 +533,56 @@ class SparkRTC {
                 track.enabled = enabled;
         });
     };
-    checkState = () => {
-        console.log('[checkState]');
-        if (!this.startProcedure) return;
-        if (this.role === 'broadcast') {
-            console.log('[checkState]', this.socket);
-            try {
-                this.ping();
-                console.log('ping ok');
-            } catch (e) {
-                console.log('ping error', e);
+    // checkState = () => {
+    // console.log('[checkState]');
+    // if (!this.startProcedure) return;
+    // if (this.role === 'broadcast') {
+    //     console.log('[checkState]', this.socket);
+    //     try {
+    //         this.ping();
+    //         console.log('ping ok');
+    //     } catch (e) {
+    //         console.log('ping error', e);
+    //     }
+    //     setTimeout(this.checkState, 10000);
+    // }
+    // else if (!this.parentStreamId) {
+    //     console.log('[checkState] startProcedure');
+    //     this.startProcedure().finally(() => {
+    //         setTimeout(this.checkState, 10000);
+    //     });
+    // } else
+    //     setTimeout(this.checkState, 10000);
+    // };
+    wait = async (mil = 1000) => {
+        return new Promise((res) => {
+            setTimeout(() => {
+                res();
+            }, mil);
+        });
+    };
+    getBroadcasterStatus = async () => {
+        const max = 5;
+        const reconnect = true;
+        return new Promise((resolve, reject) => {
+            this.socket.send(JSON.stringify({
+                type:"broadcaster-status"
+            }));
+    
+            let i = 0
+            while (this.broadcasterStatus === '' && i < max) {
+                this.wait();
+                i++;
             }
-            setTimeout(this.checkState, 10000);
-        }
-        else if (!this.parentStreamId) {
-            console.log('[checkState] startProcedure');
-            this.startProcedure().finally(() => {
-                setTimeout(this.checkState, 10000);
-            });
-        } else
-            setTimeout(this.checkState, 10000);
+
+            if (this.broadcasterStatus === '') {
+                return reject(new Error('No response'));
+            }
+
+            if (reconnect) this.startProcedure();
+            resolve(this.broadcasterStatus);
+        });
+
     };
     getStreamDetails = (streamId) => {
         if (this.localStream && this.localStream.id === streamId) {

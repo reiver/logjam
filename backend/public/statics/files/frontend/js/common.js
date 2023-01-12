@@ -76,6 +76,7 @@ function createSparkRTC() {
                     const video = createVideoElement(tagId, userData);
                     video.srcObject = stream;
                     video.play();
+                    document.getElementById('dc-place-holder').remove();
                 }, 1000);
             },
             remoteStreamDCCallback: (stream) => {
@@ -85,6 +86,10 @@ function createSparkRTC() {
                     if (!document.getElementById(tagId)) return;
                 }
                 removeVideoElement(tagId);
+                document.getElementById('screen').innerHTML = `<div id="dc-place-holder" style="display: block;">
+                <img style="width: 100%;" src="images/broken-link-mistake-error-disconnect-svgrepo-com.svg" />
+                <h1>Broadcaster is disconnected now, wait for it...</h1>
+                </div>`;
             },
             signalingDisconnectedCallback: () => {
                 clearScreen();
@@ -107,4 +112,21 @@ function createSparkRTC() {
         });
 
     }
+}
+
+function registerNetworkEvent() {
+    if (!navigator?.connection) {
+        return alert('The browser is not a standard one so we can not monitor network status.');
+    }
+    handleNetworkStatus();
+    navigator.connection.onchange = handleNetworkStatus;
+}
+
+function handleNetworkStatus(event) {
+    const net = event?.currentTarget || navigator.connection;
+    if (net.downlink <= 1) {
+        console.log('Network is slow.');
+        return onNetworkIsSlow(net.downlink);
+    } 
+    onNetworkIsNormal();
 }

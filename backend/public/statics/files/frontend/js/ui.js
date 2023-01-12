@@ -5,8 +5,9 @@ const MIC_OFF = "images/mic-off.png";
 const SCREEN_ON = "images/screen-on.png";
 const SCREEN_OFF = "images/screen-off.png";
 // const SPARK_LOGO = "images/spark-logo.png";
-const CHARACTERS =
-	"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+const CHARACTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+const verySlowColor = 'invert(64%) sepia(66%) saturate(4174%) hue-rotate(334deg) brightness(100%) contrast(92%)';
+const DCColor = 'invert(13%) sepia(99%) saturate(4967%) hue-rotate(350deg) brightness(92%) contrast(96%)';
 
 let graph;
 let sparkRTC;
@@ -293,6 +294,25 @@ function removeVideoElement(videoId) {
 	if (!videoContainer) return;
 	document.getElementById("screen").removeChild(videoContainer);
 	arrangeVideoContainers();
+}
+
+function onNetworkIsSlow(downlink) {
+    let msg = '';
+    if (downlink > 0) {
+        document.getElementById('net').style.filter = verySlowColor;
+        document.getElementById('net').title = 'Network Status is Very Slow!';
+        msg = 'You network speed is lower than normal, therefor you may experience some difficulties.';
+    } else {
+        document.getElementById('net').style.filter = DCColor;
+        document.getElementById('net').title = 'Network Status is Disconnected!'
+        msg = 'You are DISCONNECTED!';
+    }
+    document.getElementById('net').onclick = () => { alert(msg); };
+    document.getElementById('net').style.display = '';
+}
+
+function onNetworkIsNormal() {
+    document.getElementById('net').style.display = 'none';
 }
 
 async function onShareScreen() {
@@ -642,12 +662,13 @@ async function start() {
 }
 
 function onLoad() {
-	myRole = getMyRole();
-	roomName = getRoomName();
-	sparkRTC = createSparkRTC();
-	if (!getDebug()) {
-		document.getElementById("logs").style.display = "none";
-	}
+    registerNetworkEvent();
+    myRole = getMyRole();
+    roomName = getRoomName();
+    sparkRTC = createSparkRTC();
+    if (!getDebug()) {
+        document.getElementById('logs').style.display = 'none';
+    }
 
 	setMyName();
 	graph = new Graph();
