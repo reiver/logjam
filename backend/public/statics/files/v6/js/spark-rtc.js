@@ -24,6 +24,7 @@ class SparkRTC {
         video: true,
     };
     parentDC = false;
+    metaData = {};
     handleVideoOfferMsg = async (msg) => {
         this.log(`[handleVideoOfferMsg] ${msg.name}`);
         const broadcasterPeerConnection = this.createOrGetPeerConnection(msg.name);
@@ -145,13 +146,21 @@ class SparkRTC {
                 this.startProcedure();
                 break;
             case 'event-broadcaster-disconnected':
-                // console.log('event-broadcaster-disconnected');
                 this.parentDC = true;
-                // if (this.role === 'broadcast') return;
-                // setTimeout(() => {
-                //     console.log('Reconnecting ...');
-                //     this.startProcedure();    
-                // }, 1000);
+                break;
+            case 'metadata-get':
+            case 'metadata-set':
+                this.log(`[handleMessage] ${msg.type}`);
+                this.metaData = JSON.parse(msg.data);
+                break;
+            case 'user-by-stream':
+                this.log(`[handleMessage] ${msg.type}`, msg.data);
+                const [userId, userName, streamId, userRole] = msg.Data.split(',');
+                this.userStreamData[streamId] = {
+                    userId,
+                    userName,
+                    userRole,
+                };
                 break;
             default:
                 this.log(`[handleMessage] default ${JSON.stringify(msg)}`);
@@ -370,7 +379,7 @@ class SparkRTC {
                 if (this.remoteStreamDCCallback) {
                     try {
                         this.remoteStreamDCCallback(event.target);
-                    } catch {}
+                    } catch { }
                 }
             };
             try {
@@ -435,17 +444,17 @@ class SparkRTC {
                     }
                 });
                 const allStreams = peerConnection.getRemoteStreams();
-                console.log({allStreams});
+                console.log({ allStreams });
                 for (let i = 0; i < allStreams.length; i++)
                     this.remoteStreams.splice(this.remoteStreams.indexOf(allStreams[i]), 1);
-                
+
                 if (this.parentStreamId && allStreams.map((s) => s.id).includes(this.parentStreamId)) {
                     this.updateTheStatus(`Parent stream is disconnected`);
                     if (this.remoteStreamDCCallback) {
                         this.remoteStreams.forEach((strm) => {
                             try {
                                 this.remoteStreamDCCallback(strm);
-                            } catch {}
+                            } catch { }
                         });
                     }
                     this.parentStreamId = undefined;

@@ -118,7 +118,7 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 			Map.Room.ToggleHead(socket.Socket)
 			Map.Room.ToggleCanConnect(socket.Socket)
 			{
-				err := roommapssrv.RoomMaps.Set(roomName, Map)
+				err := roommapssrv.RoomMaps.Set(roomName, Map.Room)
 				if err != nil {
 					log.Errorf("could not set room in map: %s", err)
 					return
@@ -178,7 +178,7 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 				response.Data = "no:broadcast"
 				Map.Room.ToggleHead(socket.Socket)
 				{
-					err := roommapssrv.RoomMaps.Set(roomName, Map)
+					err := roommapssrv.RoomMaps.Set(roomName, Map.Room)
 					if err != nil {
 						log.Errorf("could not set room in map: %s", err)
 						return
@@ -240,7 +240,7 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 	case "stream":
 		Map.Room.ToggleCanConnect(socket.Socket)
 		{
-			err = roommapssrv.RoomMaps.Set(roomName, Map)
+			err = roommapssrv.RoomMaps.Set(roomName, Map.Room)
 			if err != nil {
 				log.Errorf("could not set room in map: %s", err)
 				return
@@ -427,7 +427,7 @@ func (receiver httpHandler) broadcastMessage(roomName string, messageType int, m
 		return
 	}
 
-	for _, s := range Map.All() {
+	for _, s := range Map.Room.All() {
 		s.(*binarytreesrv.MySocket).Socket.WriteMessage(messageType, messageTxt)
 		log.Inform("[broadcastMessage] socket ", s.(*binarytreesrv.MySocket).Name, " SENT ", messageTxt)
 	}
@@ -538,7 +538,7 @@ func (receiver httpHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) 
 	}
 	Map.Room.Insert(ws)
 	{
-		err := roommapssrv.RoomMaps.Set(roomName, Map)
+		err := roommapssrv.RoomMaps.Set(roomName, Map.Room)
 		if err != nil {
 			log.Errorf("could not set room in map: %s", err)
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
