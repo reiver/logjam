@@ -20,10 +20,12 @@ function createSparkRTC() {
     if (myRole === 'broadcast') {
         document.getElementById('raise_hand').style.display = 'none';
         disableAudioVideoControls();
-        return new SparkRTC('broadcast', {
+        
+        const sparkRTC = new SparkRTC('broadcast', {
             localStreamChangeCallback: (stream) => {
                 getVideoElement('localVideo').srcObject = stream;
                 enableAudioVideoControls();
+                sparkRTC.setAdminStreamId(stream.id);
             },
             remoteStreamCallback: (stream) => {
                 const tagId = 'remoteVideo-' + stream.id;
@@ -31,6 +33,7 @@ function createSparkRTC() {
                 const video = createVideoElement(tagId);
                 video.srcObject = stream;
                 video.play();
+                sparkRTC.addStreamId(stream.id);
             },
             remoteStreamDCCallback: (stream) => {
                 let tagId = 'remoteVideo-' + stream.id;
@@ -39,6 +42,7 @@ function createSparkRTC() {
                     if (!document.getElementById(tagId)) return;
                 }
                 removeVideoElement(tagId);
+                sparkRTC.removeStreamId(stream.id);
             },
             signalingDisconnectedCallback: () => {
                 clearScreen();
@@ -71,6 +75,8 @@ function createSparkRTC() {
                 document.getElementById('status').innerText = status;
             },
         });
+
+        return sparkRTC;
     } else {
         document.getElementById('share_screen').style.display = 'none';
         document.getElementById('mic').style.display = 'none';

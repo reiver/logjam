@@ -38,8 +38,7 @@ function arrangeVideoContainers() {
     Array.from(videoContainers).forEach(div => {
         div.style.setProperty('flex', flex);
         div.style.setProperty('max-height', maxHeight + "%");
-    }
-    )
+    })
 }
 
 
@@ -219,6 +218,27 @@ function onLoad() {
     if (!getDebug()) {
         document.getElementById('logs').style.display = 'none';
     }
+
+    window.addEventListener("message", (event) => {
+        const parsed = JSON.parse(event.data);
+        
+    
+        if (parsed.type === "set_layout") {
+            console.log("Parsed layout", parsed);
+            currentLayoutIndex = possibleLayouts.findIndex(
+                (l) => l.type === parsed.data.type
+            );
+    
+            if (parsed.data.type === "custom") {
+                possibleLayouts[currentLayoutIndex].meta.background =
+                    parsed.data.layout.background;
+                possibleLayouts[currentLayoutIndex].meta.placements =
+                    parsed.data.layout.placements;
+            }
+    
+            setAndSendLayout();
+        }
+    });
 
     setMyName();
     graph = new Graph();

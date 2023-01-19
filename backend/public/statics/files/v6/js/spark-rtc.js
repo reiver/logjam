@@ -637,6 +637,30 @@ class SparkRTC {
 
         return null;
     };
+    setMetadata = (metadata) => {
+        this.socket.send(JSON.stringify({
+            type: 'metadata-set',
+            data: JSON.stringify(metadata)
+        }));
+    };
+    setAdminStreamId = (streamId) => {
+        this.setMetadata({
+            ...this.metaData,
+            adminVideo: streamId
+        })
+    };
+    addStreamId = (streamId) => {
+        this.setMetadata({
+            ...this.metaData,
+            streams: [...(this.metaData.streams || []), streamId]
+        })
+    }
+    removeStreamId = (streamId) => {
+        this.setMetadata({
+            ...this.metaData,
+            streams: this.metaData.streams.filter(s => s !== streamId)
+        })
+    }
     constructor(role, options = {}) {
         this.role = role;
         this.localStreamChangeCallback = options.localStreamChangeCallback;
