@@ -494,13 +494,7 @@ class SparkRTC {
                     this.parentStreamId = undefined;
                     this.remoteStreams = [];
                 }
-                // if (this.startedRaiseHand) this.lowerHand();
-                // if (this.role !== 'broadcast') this.getBroadcasterStatus();
-                if (this.localStream) {
-                    this.localStream.getTracks().forEach((track) => {
-                        track.stop();
-                    });    
-                }
+  
                 try {
                     if (this.remoteStreamDCCallback) this.remoteStreamDCCallback(peerConnection.getRemoteStreams()[0]);
                 } catch { }
