@@ -28,9 +28,13 @@ class Graph {
         let svg = d3.select(this.svgElement).select('g');
         // Assigns the x and y position for the nodes
 
+        console.log("source node name: ",source.data.name);
+
         // Compute the new tree layout.
         let nodes = this.treeData.descendants(),
             links = this.treeData.descendants().slice(1);
+
+        console.log("nodes: ",nodes);
 
         // Normalize for fixed-depth.
         nodes.forEach(function (d) {
@@ -42,8 +46,10 @@ class Graph {
         // Update the nodes...
         let node = svg.selectAll('g.node')
             .data(nodes, function (d) {
+                console.log("node id: ",d.id);
                 return d.id || (d.id = ++i);
             });
+            console.log("node >=: ",node);
 
         // Enter any new modes at the parent's previous position.
         let nodeEnter = node.enter().append('g')
@@ -71,8 +77,13 @@ class Graph {
             // .attr("text-anchor", function (d) {
             //     return d.children || d._children ? "end" : "start";
             // })
-            .attr("stroke", "white")
+            .attr("stroke", "black")
+            .style("fill", "white")
+            .style("background-color", "black")
+            .style("font-size","14px")
+            .style("font-weight","bold")
             .text(function (d) {
+                console.log("name on graph: ",d.data.name)
                 return d.data.name;
             });
 
@@ -172,6 +183,7 @@ class Graph {
                 d.children = d._children;
                 d._children = null;
             }
+            
             self.update(d);
         }
     }
@@ -181,8 +193,11 @@ class Graph {
 
         // Assigns parent, children, height, depth
         this.root = d3.hierarchy(data, function (d) {
+            console.log("chilern: ",d);
             return d.children;
         });
+        console.log("root: ",this.root);
+        
         this.root.x0 = this.height / 2;
         this.root.y0 = 0;
 
