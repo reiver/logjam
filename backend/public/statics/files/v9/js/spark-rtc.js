@@ -498,8 +498,9 @@ class SparkRTC {
                 try {
                     if (this.remoteStreamDCCallback) this.remoteStreamDCCallback(peerConnection.getRemoteStreams()[0]);
                 } catch { }
-                if (this.parentDC || this.startedRaiseHand) this.startProcedure();
-
+                // if (this.parentDC || this.startedRaiseHand) this.startProcedure();
+                console.log("ice connection state changed to disconnected, restarting the start procedure ...");
+                setTimeout(this.startProcedure,1000);
             }
         };
 
