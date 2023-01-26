@@ -312,14 +312,76 @@ class SparkRTC {
         this.startedRaiseHand = true;
         return this.startBroadcasting('alt-broadcast');
     };
+
+    onDataChannelOpened(dc,target){
+
+            console.log("DataChannel opened:", dc);
+
+            setInterval(() => {
+
+                if (dc.readyState === "open") {
+                    // console.log("DataChannel is open and ready to send and receive data. target: ",target);
+
+                    console.log(`Data in sending queue: ${dc.bufferedAmount} bytes`);
+
+                    dc.send(`Hello from ${this.myName}`);
+            
+                } else if (dc.readyState === "connecting") {
+                    console.log("DataChannel is in the process of connecting.");
+                } else if (dc.readyState === "closing") {
+                    console.log("DataChannel is in the process of closing.");
+                } else if (dc.readyState === "closed") {
+                    console.log("DataChannel is closed and no longer able to send or receive data.");
+                }
+
+                
+            }, 5000);
+            
+    }
+
     newPeerConnectionInstance = (target, theStream, isAdience = false) => {
         this.log(`[newPeerConnectionInstance] target='${target}' theStream='${theStream}' isAdience='${isAdience}'`);
         const peerConnection = new RTCPeerConnection(this.myPeerConnectionConfig);
+        let intervalId;
+
         peerConnection.isAdience = isAdience;
 
-        peerConnection.onconnectionstatechange = (ev) => {
-            // console.log(`[newPeerConnectionInstance] peerConnection.onconnectionstatechange `, ev);
+        // Create DataChannel
+        const dataChannel = peerConnection.createDataChannel("chat");
+
+    
+        // Handle open event for DataChannel
+        dataChannel.onopen = this.onDataChannelOpened(dataChannel,target);
+        
+        peerConnection.ondatachannel = event =>{
+            let receive = event.channel;
+
+            receive.onmessage = e =>{
+                console.log("Received message:", e.data);
+            }
+
+            receive.onerror = e=>{
+                console.error("DataChannel error: ", e);
+            }
+
+            receive.onbufferedamountlow = () =>{
+                console.log("bufferedAmount dropped below threshold.");
+            }
+
+            // Handle close event for DataChannel
+            receive.onclose = e => {
+                console.log("DataChannel closed:", e);
+            };
         }
+
+
+        // Handle connectionstatechange event
+        peerConnection.onconnectionstatechange = event => {
+            console.log("Connection state:", peerConnection.connectionState);
+            if(peerConnection.connectionState == "disconnected"){
+                dataChannel.send("peer disconnected");
+            }
+        };
 
         peerConnection.onicecandidate = (event) => {
             this.updateStatus(`Peer Connection ice candidate arrived for ${target}: [${event.candidate}]`);
