@@ -225,7 +225,7 @@ class SparkRTC {
                         data: myName,
                     })
                 );
-                this.pingInterval = setInterval(this.ping, 50000);
+                this.pingInterval = setInterval(this.ping, 5000);
                 this.log(`[setupSignalingSocket] socket onopen and sent start`);
                 resolve(socket);
             };

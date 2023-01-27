@@ -77,10 +77,10 @@ class Graph {
             // .attr("text-anchor", function (d) {
             //     return d.children || d._children ? "end" : "start";
             // })
-            .attr("stroke", "black")
-            .style("fill", "white")
-            .style("background-color", "black")
-            .style("font-size","14px")
+            // .attr("stroke", "black")
+            // .style("fill", "white")
+            // .style("background-color", "black")
+            // .style("font-size","14px")
             .style("font-weight","bold")
             .text(function (d) {
                 console.log("name on graph: ",d.data.name)
