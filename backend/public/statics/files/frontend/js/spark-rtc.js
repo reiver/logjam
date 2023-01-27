@@ -25,6 +25,12 @@ class SparkRTC {
     };
     parentDC = true;
     broadcasterDC = true;
+
+    parentAlive = false; // bool to check parent status
+    parentDisconnectionTimeOut = 1000; //1 second timeout to check parent is alive or not
+    sendMessageInterval = 100; //send message to child after every 100 ms
+
+
     handleVideoOfferMsg = async (msg) => {
         this.log(`[handleVideoOfferMsg] ${msg.name}`);
         const broadcasterPeerConnection = this.createOrGetPeerConnection(msg.name);
@@ -316,26 +322,29 @@ class SparkRTC {
     onDataChannelOpened(dc,target){
 
             console.log("DataChannel opened:", dc);
-
-            setInterval(() => {
+           
+            let intervalId = setInterval(() => {
 
                 if (dc.readyState === "open") {
                     // console.log("DataChannel is open and ready to send and receive data. target: ",target);
 
-                    console.log(`Data in sending queue: ${dc.bufferedAmount} bytes`);
+                  //  console.log(`Data in sending queue: ${dc.bufferedAmount} bytes`);
 
                     dc.send(`Hello from ${this.myName}`);
-            
+                  
+        
                 } else if (dc.readyState === "connecting") {
                     console.log("DataChannel is in the process of connecting.");
                 } else if (dc.readyState === "closing") {
                     console.log("DataChannel is in the process of closing.");
                 } else if (dc.readyState === "closed") {
                     console.log("DataChannel is closed and no longer able to send or receive data.");
+                    
+                    clearInterval(intervalId); //if closed leave the loop
                 }
 
                 
-            }, 5000);
+            }, this.sendMessageInterval);
             
     }
 
@@ -353,17 +362,39 @@ class SparkRTC {
         // Handle open event for DataChannel
         dataChannel.onopen = this.onDataChannelOpened(dataChannel,target);
         
+        //callback for datachannel
         peerConnection.ondatachannel = event =>{
             let receive = event.channel;
 
             receive.onmessage = e =>{
-                console.log("Received message:", e.data);
+                //check if message came from Only My Parent
+                if(!peerConnection.isAdience){
+
+                    this.parentAlive = true;
+
+                    console.log("Received message from Parent:", e.data);
+                }
             }
 
+
+            // Check for disconnection of Parent
+            let id = setInterval(function() {
+                if(!peerConnection.isAdience){
+                    if (!this.parentAlive) {
+                        console.log("Parent disconnected");
+                        clearInterval(id); //if disconnected leave the loop
+                    }
+                    this.parentAlive = false;
+                }
+            }, this.parentDisconnectionTimeOut);
+
+
+            //handle error event
             receive.onerror = e=>{
                 console.error("DataChannel error: ", e);
             }
 
+            //handle beffer amount low event
             receive.onbufferedamountlow = () =>{
                 console.log("bufferedAmount dropped below threshold.");
             }
