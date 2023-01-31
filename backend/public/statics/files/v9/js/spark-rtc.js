@@ -73,9 +73,10 @@ class SparkRTC {
             case 'alt-new-ice-candidate':
                 this.log(`[handleMessage] addIceCandidate ${msg.type}`);
                 audiencePeerConnection = this.createOrGetPeerConnection(msg.data);
-                this.iceCandidates.push(new RTCIceCandidate(msg.candidate));
+                // this.iceCandidates.push(new RTCIceCandidate(msg.candidate));
                 if (audiencePeerConnection && audiencePeerConnection.remoteDescription) {
-                    audiencePeerConnection.addIceCandidate(this.iceCandidates.pop());
+                    // audiencePeerConnection.addIceCandidate(this.iceCandidates.pop());
+                    audiencePeerConnection.addIceCandidate(new RTCIceCandidate(msg.candidate));
                 }
                 break;
             case 'role':
