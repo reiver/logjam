@@ -5,6 +5,8 @@ const MIC_OFF = "images/mic-off.png";
 const SCREEN_ON = "images/screen-on.png";
 const SCREEN_OFF = "images/screen-off.png";
 // const SPARK_LOGO = "images/spark-logo.png";
+const RAISE_HAND_ON = "images/hand.png";
+const RAISE_HAND_OFF = "images/hand-off.png";
 const CHARACTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
 const verySlowColor = 'invert(64%) sepia(66%) saturate(4174%) hue-rotate(334deg) brightness(100%) contrast(92%)';
 const DCColor = 'invert(13%) sepia(99%) saturate(4967%) hue-rotate(350deg) brightness(92%) contrast(96%)';
@@ -155,7 +157,7 @@ function setMyName() {
 }
 
 
-async function handleClick() {
+async function handleClick(turn = true) {
     let newName = document.getElementById("inputName").value;
     if (newName) {
         myName = newName;
@@ -164,7 +166,7 @@ async function handleClick() {
     document.getElementById("page").style.visibility = "visible";
     document.getElementById("getName").style.display = "none";
 
-    await start();
+    await start(turn);
 
     return false;
 }
@@ -203,14 +205,14 @@ function setupSignalingSocket() {
 }
 
 
-async function start() {
+async function start(turn = true) {
     await setupSignalingSocket();
-    return sparkRTC.start();
+    return sparkRTC.start(turn);
 }
 
 
 function onLoad() {
-    registerNetworkEvent();
+    // registerNetworkEvent();
     myRole = getMyRole();
     roomName = getRoomName();
     sparkRTC = createSparkRTC();
@@ -221,18 +223,33 @@ function onLoad() {
     setMyName();
     graph = new Graph();
     window.onresize = handleResize;
-    graph.draw(DATA);
+    //console.log("DATA: ",DATA);
+    //graph.draw(DATA);
 
     arrangeVideoContainers();
 }
 
 
 async function onRaiseHand() {
-    const stream = await sparkRTC.raiseHand();
-    const tagId = 'localVideo-' + stream.id;
-    if (document.getElementById(tagId)) return;
-    const video = createVideoElement(tagId, true);
-    video.srcObject = stream;
+    const img = document.getElementById("raise_hand");
+    console.log(img.dataset.status);
+    if (img.dataset.status === 'on') {
+        if (sparkRTC.localStream) {
+            // if (confirm(`Do you want to stop streaming?`)) {
+            //     console.log('stopping...');
+            //     removeVideoElement('localVideo-' + sparkRTC.localStream.id);
+            //     disableAudioVideoControls();
+            //     sparkRTC.lowerHand();
+            // }
+            return;
+        }
+        const stream = await sparkRTC.raiseHand();
+        // const tagId = 'localVideo-' + stream.id;
+        // const video = createVideoElement(tagId, true);
+        // video.srcObject = stream;
+        document.getElementById('mic').style.display = '';
+        document.getElementById('camera').style.display = '';
+    }
 }
 
 function addLog(log) {
@@ -240,4 +257,16 @@ function addLog(log) {
     const p = document.createElement('p');
     p.innerText = log;
     logs.appendChild(p);
+}
+
+function enableAudioVideoControls() {
+    document.getElementById('mic').style.display = '';
+    document.getElementById('camera').style.display = '';
+    document.getElementById('share_screen').style.display = '';
+}
+
+function disableAudioVideoControls() {
+    document.getElementById('mic').style.display = 'none';
+    document.getElementById('camera').style.display = 'none';    
+    document.getElementById('share_screen').style.display = 'none';
 }

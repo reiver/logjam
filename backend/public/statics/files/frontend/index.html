@@ -30,6 +30,7 @@
                     <label for="inputName">Name: </label>
                     <input id="inputName" type="text" value="" placeholder="enter a nickname" />
                     <button type="button" onclick="handleClick()">Enter</button>
+                    <!-- <button type="button" style="background-color: #c98303" onclick="handleClick(false)">Enter Without TURN</button> -->
                 </form>
             </div>
         </div>
@@ -37,6 +38,7 @@
 
     <!--main page-->
     <div id="page">
+        <div id="status" style="position: fixed;color: black;z-index: 1;padding: 20px;background: #b9aaaa4a;display:none;"></div>
         <!--video containers-->
         <div id="screen">
         </div>
@@ -59,9 +61,10 @@
                     <img id="spark" class="control-button-image" src="images/spark-logo.png" alt="logo" />
                     <img id="share_screen" data-status="off" class="control-button-image" src="images/screen-off.png"
                         alt="share screen" onclick="onShareScreen()" />
-                    <img id="raise_hand" data-status="off" class="control-button-image" src="images/hand.png"
+                    <img id="raise_hand" data-status="on" class="control-button-image" src="images/hand.png"
                         alt="raise hand" onclick="onRaiseHand()" />
-                    <img id="net" class="control-button-image" src="images/network.svg" alt="net stat" title="Network Status" />
+                    <img id="net" class="control-button-image" style="display: none;" src="images/network.svg"
+                        alt="net stat" title="Network Status" />
                 </div>
             </div>
         </div>
