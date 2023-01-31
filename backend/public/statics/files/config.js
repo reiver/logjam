@@ -1,10 +1,5 @@
 const iceServers = [
     {
-        url:"stun:65.21.156.193:3478",
-        username:"testyu",
-        credential:"testyu123"
-    },
-    {
         url:"turn:65.21.156.193:3478",
         username:"testyu",
         credential:"testyu123"
