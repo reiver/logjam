@@ -26,7 +26,7 @@ class SparkRTC {
     parentDC = true;
     broadcasterDC = true;
 
-    parentAlive = false; // bool to check parent status
+    parentAlive = true; // bool to check parent status
     parentDisconnectionTimeOut = 1000; //1 second timeout to check parent is alive or not
     sendMessageInterval = 100; //send message to child after every 100 ms
 
@@ -319,7 +319,7 @@ class SparkRTC {
         return this.startBroadcasting('alt-broadcast');
     };
 
-    onDataChannelOpened(dc,target){
+    onDataChannelOpened(dc,target,pc){
 
             console.log("DataChannel opened:", dc);
            
@@ -340,12 +340,37 @@ class SparkRTC {
                 } else if (dc.readyState === "closed") {
                     console.log("DataChannel is closed and no longer able to send or receive data.");
                     
+                    if(!pc.isAdience){ //only parent
+                        this.parentAlive = false;
+                    }
+
                     clearInterval(intervalId); //if closed leave the loop
                 }
 
                 
             }, this.sendMessageInterval);
             
+    }
+
+    checkParentDisconnection(pc){
+        
+         // Check for disconnection of Parent
+         let id = setInterval(function() {
+            if(!pc.isAdience){
+                if(this.parentAlive!=undefined){
+                    console.log("parent alive: ",this.parentAlive);
+                    if (!this.parentAlive) {
+                        alert("Parent disconnected");
+                        console.log("Parent disconnected");
+                        clearInterval(id); //if disconnected leave the loop
+                    }
+                    // this.parentAlive = false;
+                }else{
+                    console.log("Undefined");
+                }
+                
+            }
+        }, this.parentDisconnectionTimeOut);
     }
 
     newPeerConnectionInstance = (target, theStream, isAdience = false) => {
@@ -360,7 +385,7 @@ class SparkRTC {
 
     
         // Handle open event for DataChannel
-        dataChannel.onopen = this.onDataChannelOpened(dataChannel,target);
+        dataChannel.onopen = this.onDataChannelOpened(dataChannel,target,peerConnection);
         
         //callback for datachannel
         peerConnection.ondatachannel = event =>{
@@ -377,17 +402,9 @@ class SparkRTC {
             }
 
 
-            // Check for disconnection of Parent
-            let id = setInterval(function() {
-                if(!peerConnection.isAdience){
-                    if (!this.parentAlive) {
-                        console.log("Parent disconnected");
-                        clearInterval(id); //if disconnected leave the loop
-                    }
-                    this.parentAlive = false;
-                }
-            }, this.parentDisconnectionTimeOut);
+            this.checkParentDisconnection(peerConnection);
 
+        
 
             //handle error event
             receive.onerror = e=>{
@@ -410,7 +427,10 @@ class SparkRTC {
         peerConnection.onconnectionstatechange = event => {
             console.log("Connection state:", peerConnection.connectionState);
             if(peerConnection.connectionState == "disconnected"){
-                dataChannel.send("peer disconnected");
+                if(!peerConnection.isAdience){
+                    this.parentAlive = false;
+                    this.checkParentDisconnection(peerConnection);
+                }
             }
         };
 
@@ -591,7 +611,9 @@ class SparkRTC {
                 try {
                     if (this.remoteStreamDCCallback) this.remoteStreamDCCallback(peerConnection.getRemoteStreams()[0]);
                 } catch { }
-                if (this.parentDC || this.startedRaiseHand) this.startProcedure();
+              
+                //commented by zaid
+              //  if (this.parentDC || this.startedRaiseHand) this.startProcedure();
 
             }
         };
