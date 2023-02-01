@@ -39,9 +39,13 @@
     <script>
         const params = new URLSearchParams(document.location.search);
         const title = params.get("modal_title");
+        const hideLogo = params.get("hide_logo");
         if (title) {
             const header = document.getElementById('modal-title');
             header.innerText = title;
+        }
+        if (hideLogo) {
+            document.getElementById("logo").remove();
         }
     </script>
 
