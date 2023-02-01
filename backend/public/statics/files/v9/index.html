@@ -21,9 +21,11 @@
 
     <!--getName-->
     <div id="getName" class="Modal-Wrapper">
+        <div id="logo"></div>
         <div class="Modal-Container">
             <div class="Modal-Content">
                 <br />
+                <h2 id="modal-title">Welcome to Group Video!</h2>
                 <form class="form">
                     <label for="inputName">Name: </label>
                     <input id="inputName" type="text" value="" placeholder="enter a nickname" />
@@ -33,6 +35,15 @@
             </div>
         </div>
     </div>
+
+    <script>
+        const params = new URLSearchParams(document.location.search);
+        const title = params.get("modal_title");
+        if (title) {
+            const header = document.getElementById('modal-title');
+            header.innerText = title;
+        }
+    </script>
 
     <!--main page-->
     <div id="page">
