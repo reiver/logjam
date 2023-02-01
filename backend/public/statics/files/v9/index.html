@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>SparkScience Demo</title>
+    <title>LOGJAM</title>
     <link rel="stylesheet" href="css/main.css">
     <link rel="stylesheet" href="css/graph.css">
     <link rel="icon" type="image/png" href="images/spark-logo.png">
@@ -25,7 +25,7 @@
         <div class="Modal-Container">
             <div class="Modal-Content">
                 <br />
-                <h2>Welcome to Group Video!</h2>
+                <h2 id="modal-title">Welcome to Group Video!</h2>
                 <form class="form">
                     <label for="inputName">Name: </label>
                     <input id="inputName" type="text" value="" placeholder="enter a nickname" />
@@ -35,6 +35,19 @@
             </div>
         </div>
     </div>
+
+    <script>
+        const params = new URLSearchParams(document.location.search);
+        const title = params.get("modal_title");
+        const hideLogo = params.get("hide_logo");
+        if (title) {
+            const header = document.getElementById('modal-title');
+            header.innerText = title;
+        }
+        if (hideLogo) {
+            document.getElementById("logo").remove();
+        }
+    </script>
 
     <!--main page-->
     <div id="page">
