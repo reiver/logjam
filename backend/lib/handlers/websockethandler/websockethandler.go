@@ -45,7 +45,7 @@ func (receiver httpHandler) findBroadcaster(roomName string) (bool, *binarytrees
 		log.Errorf("could not get map for room %q when trying to find broadcaster", roomName)
 		return false, nil
 	}
-	broadcasterLevel := Map.LevelNodes(1)
+	broadcasterLevel := Map.Room.LevelNodes(1)
 	var broadcaster *binarytreesrv.MySocket
 	ok := len(broadcasterLevel) == 1
 	if ok {
@@ -89,6 +89,19 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 			return
 		}
 	case "role":
+		var msgData map[string]string
+		err := json.Unmarshal(messageJSON, &msgData)
+		if err != nil {
+			return
+		}
+		streamId, ok := msgData["streamId"]
+		if ok {
+			if socket.MetaData == nil {
+				socket.MetaData = make(map[string]string)
+			}
+			socket.MetaData["streamId"] = streamId
+		}
+
 		log.Alert("role message received ", theMessage.Data)
 		response.Type = "role"
 		if theMessage.Data == "unknown" {
@@ -102,10 +115,10 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 		log.Alert("role message processed ", theMessage.Data)
 		if theMessage.Data == "broadcast" {
 			response.Data = "yes:broadcast"
-			Map.ToggleHead(socket.Socket)
-			Map.ToggleCanConnect(socket.Socket)
+			Map.Room.ToggleHead(socket.Socket)
+			Map.Room.ToggleCanConnect(socket.Socket)
 			{
-				err := roommapssrv.RoomMaps.Set(roomName, Map)
+				err := roommapssrv.RoomMaps.Set(roomName, Map.Room)
 				if err != nil {
 					log.Errorf("could not set room in map: %s", err)
 					return
@@ -160,9 +173,9 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 		} else {
 			if socket.IsBroadcaster {
 				response.Data = "no:broadcast"
-				Map.ToggleHead(socket.Socket)
+				Map.Room.ToggleHead(socket.Socket)
 				{
-					err := roommapssrv.RoomMaps.Set(roomName, Map)
+					err := roommapssrv.RoomMaps.Set(roomName, Map.Room)
 					if err != nil {
 						log.Errorf("could not set room in map: %s", err)
 						return
@@ -193,7 +206,7 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 					fmt.Fprintln(f, msg)
 
 					if err == nil {
-						targetSocketNode, e := binarytreesrv.InsertChild(socket.Socket, *Map)
+						targetSocketNode, e := binarytreesrv.InsertChild(socket.Socket, *Map.Room)
 						if e != nil {
 							socket.Socket.WriteMessage(messageType, []byte("{\"type\":\"error\",\"data\":\"Insert Child Error : "+e.Error()+" \"}"))
 							return
@@ -222,9 +235,9 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 			return
 		}
 	case "stream":
-		Map.ToggleCanConnect(socket.Socket)
+		Map.Room.ToggleCanConnect(socket.Socket)
 		{
-			err = roommapssrv.RoomMaps.Set(roomName, Map)
+			err = roommapssrv.RoomMaps.Set(roomName, Map.Room)
 			if err != nil {
 				log.Errorf("could not set room in map: %s", err)
 				return
@@ -243,7 +256,7 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 	case "ping":
 		socket.Socket.WriteJSON(message.MessageContract{Type: "pong", Data: "pong"})
 	case "tree":
-		treeData := binarytreesrv.Tree(*Map)
+		treeData := binarytreesrv.Tree(*Map.Room)
 		j, e := json.Marshal(treeData)
 		if e != nil {
 			return
@@ -257,6 +270,91 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 		} else {
 			return
 		}
+	case "metadata-set":
+		log.Alert("Set Meta Data ", theMessage.Data)
+		metaData := make(map[string]string)
+		metaDataJsonError := json.Unmarshal([]byte(theMessage.Data), &metaData)
+		log.Alert("Set Meta Data ", metaData)
+		if metaDataJsonError == nil {
+			roommapssrv.RoomMaps.SetMetData(roomName, metaData)
+			response.Type = "metadata-set"
+			response.Data = theMessage.Data
+			responseJSON, err := json.Marshal(response)
+			if err == nil {
+				socket.Socket.WriteMessage(messageType, responseJSON)
+			}
+		}
+
+		return
+	case "metadata-get":
+		// log.Alert("metadata-get")
+		metaData := Map.MetaData
+		metaDataJson, metaDataJsonError := json.Marshal(metaData)
+		if metaDataJsonError == nil {
+			response.Type = "metadata-get"
+			response.Data = string(metaDataJson)
+			responseJSON, err := json.Marshal(response)
+			if err == nil {
+				// log.Alert(responseJSON)
+				socket.Socket.WriteMessage(messageType, responseJSON)
+			} else {
+				return
+			}
+		}
+
+		return
+	case "user-metadata-get":
+		// log.Alert("metadata-get")
+		metaData := socket.MetaData
+		metaDataJson, metaDataJsonError := json.Marshal(metaData)
+		if metaDataJsonError == nil {
+			response.Type = "metadata-get"
+			response.Data = string(metaDataJson)
+			responseJSON, err := json.Marshal(response)
+			if err == nil {
+				// log.Alert(responseJSON)
+				socket.Socket.WriteMessage(messageType, responseJSON)
+			} else {
+				return
+			}
+		}
+
+		return
+	case "user-metadata-set":
+		log.Alert("Set Meta Data ", theMessage.Data)
+		metaData := make(map[string]string)
+		metaDataJsonError := json.Unmarshal([]byte(theMessage.Data), &metaData)
+		log.Alert("Set Meta Data ", metaData)
+		if metaDataJsonError == nil {
+			socket.SetMetaData(Map.MetaData)
+			roommapssrv.RoomMaps.SetMetData(roomName, metaData)
+			response.Type = "metadata-set"
+			response.Data = theMessage.Data
+			responseJSON, err := json.Marshal(response)
+			if err == nil {
+				socket.Socket.WriteMessage(messageType, responseJSON)
+			}
+		}
+
+		return
+	case "user-by-stream":
+		log.Alert("Get User buy Stream Id ", theMessage.Data)
+		node, e := roommapssrv.RoomMaps.GetSocketByStreamId(roomName, theMessage.Data)
+		log.Alert("Get User buy Stream Id res", node)
+		if e == nil {
+			user := node.(*binarytreesrv.MySocket)
+			response.Type = "user-by-stream"
+			userRole := "audience"
+			if user.IsBroadcaster {
+				userRole = "broadcast"
+			}
+			response.Data = strconv.FormatInt(int64(user.ID), 10) + "," + user.Name + "," + theMessage.Data + "," + userRole
+			responseJSON, err := json.Marshal(response)
+			if err == nil {
+				socket.Socket.WriteMessage(messageType, responseJSON)
+			}
+		}
+		return
 	case "broadcaster-status":
 		ok, _ := receiver.findBroadcaster(roomName)
 		data := "available"
@@ -273,12 +371,13 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 		} else {
 			return
 		}
+
 	default:
 		ID, err := strconv.ParseUint(theMessage.Target, 10, 64)
 		if err != nil {
 			return
 		}
-		allSockets := Map.All()
+		allSockets := Map.Room.All()
 		var ok = false
 		var target *binarytreesrv.MySocket
 		for _, node := range allSockets {
@@ -326,7 +425,7 @@ func (receiver httpHandler) broadcastMessage(roomName string, messageType int, m
 		return
 	}
 
-	for _, s := range Map.All() {
+	for _, s := range Map.Room.All() {
 		s.(*binarytreesrv.MySocket).Socket.WriteMessage(messageType, messageTxt)
 		log.Inform("[broadcastMessage] socket ", s.(*binarytreesrv.MySocket).Name, " SENT ", messageTxt)
 	}
@@ -340,7 +439,7 @@ func (receiver httpHandler) deleteNode(conn *websocket.Conn, roomName string, me
 		log.Errorf("could not get map for room %q when trying to reader", roomName)
 		return
 	}
-	socket := Map.Get(conn).(*binarytreesrv.MySocket)
+	socket := Map.Room.Get(conn).(*binarytreesrv.MySocket)
 	var response message.MessageContract
 	response.Type = "event-broadcaster-disconnected"
 	response.Data = strconv.FormatInt(int64(socket.ID), 10)
@@ -351,7 +450,7 @@ func (receiver httpHandler) deleteNode(conn *websocket.Conn, roomName string, me
 	theMessageTxt, _ := json.Marshal(response)
 	var chosenOne binarytree.SingleNode
 	if socket.IsBroadcaster {
-		for _, s := range Map.All() {
+		for _, s := range Map.Room.All() {
 			log.Inform("[deleteNode] checking socket ", s.(*binarytreesrv.MySocket).Name)
 			if chosenOne == nil {
 				chosenOne = s
@@ -367,7 +466,7 @@ func (receiver httpHandler) deleteNode(conn *websocket.Conn, roomName string, me
 			s.Socket.WriteMessage(1, theMessageTxt)
 		}
 	}
-	Map.Delete(conn)
+	Map.Room.Delete(conn)
 }
 
 func (receiver httpHandler) reader(conn *websocket.Conn, userAgent string, roomName string) {
@@ -388,7 +487,7 @@ func (receiver httpHandler) reader(conn *websocket.Conn, userAgent string, roomN
 			if closedError || handshakeError {
 				receiver.deleteNode(conn, roomName, messageType)
 				{
-					err := roommapssrv.RoomMaps.Set(roomName, Map)
+					err := roommapssrv.RoomMaps.Set(roomName, Map.Room)
 					if err != nil {
 						log.Errorf("could not set room in map: %s", err)
 					}
@@ -397,7 +496,7 @@ func (receiver httpHandler) reader(conn *websocket.Conn, userAgent string, roomN
 			return
 		}
 
-		receiver.parseMessage(Map.Get(conn).(*binarytreesrv.MySocket), p, messageType, userAgent, roomName)
+		receiver.parseMessage(Map.Room.Get(conn).(*binarytreesrv.MySocket), p, messageType, userAgent, roomName)
 	}
 }
 
@@ -431,9 +530,9 @@ func (receiver httpHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) 
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
-	Map.Insert(ws)
+	Map.Room.Insert(ws)
 	{
-		err := roommapssrv.RoomMaps.Set(roomName, Map)
+		err := roommapssrv.RoomMaps.Set(roomName, Map.Room)
 		if err != nil {
 			log.Errorf("could not set room in map: %s", err)
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
