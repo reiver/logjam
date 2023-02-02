@@ -340,10 +340,6 @@ class SparkRTC {
                 } else if (dc.readyState === "closed") {
                     console.log("DataChannel is closed and no longer able to send or receive data.");
                     
-                    if(!pc.isAdience){ //only parent
-                        this.parentAlive = false;
-                    }
-
                     clearInterval(intervalId); //if closed leave the loop
                 }
 
@@ -353,32 +349,29 @@ class SparkRTC {
     }
 
     checkParentDisconnection(pc){
-        var self = this;
          // Check for disconnection of Parent
-         let id = setInterval(function() {
+         let id = setInterval(()=> {
             if(!pc.isAdience){
-                if(self.parentAlive!=undefined){
-                    console.log("parent alive: ",self.parentAlive);
-                    if (!self.parentAlive) {
+                if(this.parentAlive!=undefined){
+                    console.log("parent alive: ",this.parentAlive);
+                    if (!this.parentAlive) {
                         alert("Parent disconnected");
                         console.log("Parent disconnected");
 
                         //start proc
-                        if (self.startProcedure){
-                            console.log("starting neew proc")
-                            try{
-                                self.startProcedure();
-                            }catch(e){
-                                console.log("error while starting proc: ",e);
-                            }
-                            
+                        try{
+                            console.log("starting neew proc");
+                            this.startProcedure?.();
+                        }catch(e){
+                            console.log("error while starting proc: ",e);
                         }
-
+                            
+                    
                         clearInterval(id); //if disconnected leave the loop
                     }
-                    self.parentAlive = false;
+                    this.parentAlive = false;
                 }else{
-                    console.log("Undefined: ",self.parentAlive);
+                    console.log("Undefined: ",this.parentAlive);
                 }
                 
             }
