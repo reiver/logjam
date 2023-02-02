@@ -36,6 +36,29 @@ func Handler(logger logger.Logger) http.Handler {
 
 var filename string
 
+func (receiver httpHandler) emitUserEvent(roomName string) error {
+	log := receiver.Logger.Begin()
+	defer log.End()
+
+	users, err := roommapssrv.RoomMaps.GetUsers(roomName)
+	if err != nil {
+		return err
+	}
+
+	usersJsonString, err := json.Marshal(users)
+	if err != nil {
+		return err
+	}
+
+	msg := message.MessageContract {
+		Type: "user-event",
+		Data: string(usersJsonString),
+	}
+
+	receiver.broadcastMessage(roomName, 1, msg)
+	return nil
+}
+
 func (receiver httpHandler) findBroadcaster(roomName string) (bool, *binarytreesrv.MySocket) {
 	log := receiver.Logger.Begin()
 	defer log.End()
@@ -169,6 +192,7 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 			}
 			broadcaster.Socket.WriteMessage(messageType, broadResponseJSON)
 			socket.Socket.WriteMessage(messageType, audianceResponseJSON)
+			receiver.emitUserEvent(roomName)
 			return
 		} else {
 			if socket.IsBroadcaster {
@@ -227,13 +251,12 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 			}
 		}
 		responseJSON, err := json.Marshal(response)
-		if err == nil {
-
-			socket.Socket.WriteMessage(messageType, responseJSON)
-			return
-		} else {
+		if err != nil {
 			return
 		}
+		socket.Socket.WriteMessage(messageType, responseJSON)
+		receiver.emitUserEvent(roomName)
+		return
 	case "stream":
 		Map.Room.ToggleCanConnect(socket.Socket)
 		{
@@ -467,6 +490,7 @@ func (receiver httpHandler) deleteNode(conn *websocket.Conn, roomName string, me
 		}
 	}
 	Map.Room.Delete(conn)
+	receiver.emitUserEvent(roomName)
 }
 
 func (receiver httpHandler) reader(conn *websocket.Conn, userAgent string, roomName string) {

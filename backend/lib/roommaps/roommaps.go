@@ -18,6 +18,13 @@ type Type struct {
 	roomMaps map[string]*RoomType
 }
 
+type User struct {
+	Id uint64 `json:"id"`
+	Name string `json:"name"`
+	Role string `json:"role"`
+	StreamId string `json:"streamId"`
+}
+
 func (receiver *Type) Get(roomName string) (*RoomType, bool) {
 	if nil == receiver {
 		return nil, false
@@ -114,4 +121,41 @@ func (receiver *Type) GetSocketByStreamId(roomName, streamId string) (binarytree
 	}
 
 	return nil, errNodeNotFound
+}
+
+func (receiver *Type) GetUsers(roomName string) ([]User, error) {
+	output := []User{}
+	if nil == receiver {
+		return nil, errRoomNotFound
+	}
+
+	receiver.mutex.Lock()
+	defer receiver.mutex.Unlock()
+
+	if nil == receiver.roomMaps {
+		receiver.roomMaps = make(map[string]*RoomType)
+	}
+
+	room, ok := receiver.roomMaps[roomName]
+	if !ok {
+		return nil, errRoomNotFound
+	}
+
+	for _, node := range room.Room.All() {
+		nodeStreamId := node.(*binarytreesrv.MySocket).MetaData["streamId"]
+		role := "audience"
+		if node.(*binarytreesrv.MySocket).IsBroadcaster {
+			role = "broadcaster"
+		}
+		user := User {
+			Id: node.(*binarytreesrv.MySocket).ID,
+			Name: node.(*binarytreesrv.MySocket).Name,
+			StreamId: nodeStreamId,
+			Role: role,
+		}
+
+		output = append(output, user)
+	}
+
+	return output, nil
 }
