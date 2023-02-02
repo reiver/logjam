@@ -27,6 +27,7 @@ class SparkRTC {
     broadcasterDC = true;
     metaData = {};
     userStreamData = {};
+    users = [];
     handleVideoOfferMsg = async (msg) => {
         this.log(`[handleVideoOfferMsg] ${msg.name}`);
         const broadcasterPeerConnection = this.createOrGetPeerConnection(msg.name);
@@ -125,7 +126,7 @@ class SparkRTC {
             case 'alt-broadcast':
                 this.log(`[handleMessage] ${msg.type}`);
                 if (this.role === 'broadcast') {
-                    if (this.raiseHands.indexOf(msg.data) === -1) {
+                    if (this.raiseHands.indexOf(msg.data) === -1 && this.raiseHand.length <= 2) {
                         if (this.raiseHandConfirmation) {
                             try {
                                 const result = this.raiseHandConfirmation(`${msg.name} wants to broadcast, do you approve?`)
@@ -141,6 +142,12 @@ class SparkRTC {
                         );
                         this.raiseHands.push(msg.data);
                         this.log(`[handleMessage] ${msg.type} approving raised hand ${msg.data}`);
+                        this.getMetadata();
+                        setTimeout(() => {
+                            const metaData = this.metaData;
+                            metaData.raiseHands = JSON.stringify(this.raiseHands);
+                            this.setMetadata(metaData);
+                        }, 1000);
                     }
                 } else {
                     // this.spreadLocalStream();
@@ -201,9 +208,10 @@ class SparkRTC {
                 break;
             case 'user-event':
                 this.log(`[handleMessage] ${msg.type}`, msg.data);
+                this.getMetadata();
                 setTimeout(() => {
                     const users = JSON.parse(msg.data).map((u) => {
-                        const video = u.streamId!=='' ? this.streamById(u.streamId) : null;
+                        const video = u.streamId !== '' ? this.streamById(u.streamId) : null;
                         return {
                             id: u.id,
                             name: u.name,
@@ -211,13 +219,13 @@ class SparkRTC {
                             video,
                         };
                     });
-                    console.log({ users });
-    
+                    this.users = users;
+
                     if (this.userListUpdated) {
                         try {
                             this.userListUpdated(users);
-                        } catch {}
-                    }    
+                        } catch { }
+                    }
                 }, 1000);
                 break;
             default:
