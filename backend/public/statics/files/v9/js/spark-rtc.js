@@ -470,8 +470,13 @@ class SparkRTC {
         };
 
         peerConnection.oniceconnectionstatechange = (event) => {
+            console.log(`new ice connection state => ${peerConnection.iceConnectionState}`);
             this.log(`[newPeerConnectionInstance] oniceconnectionstatechange peerConnection.iceConnectionState = ${peerConnection.iceConnectionState} event = ${JSON.stringify(event)}`);
-            if (peerConnection.iceConnectionState == 'disconnected') {
+            if (peerConnection.iceConnectionState == 'disconnected' || peerConnection.iceConnectionState == 'failed' || peerConnection.iceConnectionState == 'closed') {
+                setTimeout(()=>{
+                    console.log("restarting ice");
+                    peerConnection.restartIce();
+                },0);
                 this.remoteStreamNotified = false;
                 console.log('[peerConnection.oniceconnectionstatechange] DC event', event);
                 if (peerConnection.getRemoteStreams().length === 0) return;
