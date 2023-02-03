@@ -22,6 +22,7 @@ type MySocket struct {
 	HasStream        bool
 	IsTURN           bool
 	ConnectedSockets map[*websocket.Conn]MySocket
+	MetaData         map[string]string
 }
 
 func (receiver *MySocket) Insert(node binarytree.SingleNode) {
@@ -113,6 +114,13 @@ func (receiver *MySocket) SetIsTurn(isTurn bool) {
 	defer receiver.mutex.Unlock()
 
 	receiver.IsTURN = isTurn
+}
+
+func (receiver *MySocket) SetMetaData(metaData map[string]string) {
+	receiver.mutex.Lock()
+	defer receiver.mutex.Unlock()
+
+	receiver.MetaData = metaData
 }
 
 func fillFunction(node interface{}, socketIndex uint64) binarytree.SingleNode {

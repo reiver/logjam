@@ -27,6 +27,7 @@ class SparkRTC {
     broadcasterDC = true;
     metaData = {};
     userStreamData = {};
+    users = [];
     handleVideoOfferMsg = async (msg) => {
         this.log(`[handleVideoOfferMsg] ${msg.name}`);
         const broadcasterPeerConnection = this.createOrGetPeerConnection(msg.name);
@@ -51,6 +52,7 @@ class SparkRTC {
         } catch (e) {
             return;
         }
+
         msg.data = (msg.Data && !msg.data) ? msg.Data : msg.data;
         msg.type = (msg.Type && !msg.type) ? msg.Type : msg.type;
 
@@ -124,7 +126,7 @@ class SparkRTC {
             case 'alt-broadcast':
                 this.log(`[handleMessage] ${msg.type}`);
                 if (this.role === 'broadcast') {
-                    if (this.raiseHands.indexOf(msg.data) === -1) {
+                    if (this.raiseHands.indexOf(msg.data) === -1 && this.raiseHand.length <= 2) {
                         if (this.raiseHandConfirmation) {
                             try {
                                 const result = this.raiseHandConfirmation(`${msg.name} wants to broadcast, do you approve?`)
@@ -140,6 +142,12 @@ class SparkRTC {
                         );
                         this.raiseHands.push(msg.data);
                         this.log(`[handleMessage] ${msg.type} approving raised hand ${msg.data}`);
+                        this.getMetadata();
+                        setTimeout(() => {
+                            const metaData = this.metaData;
+                            metaData.raiseHands = JSON.stringify(this.raiseHands);
+                            this.setMetadata(metaData);
+                        }, 1000);
                     }
                 } else {
                     // this.spreadLocalStream();
@@ -197,6 +205,28 @@ class SparkRTC {
                     userName,
                     userRole,
                 };
+                break;
+            case 'user-event':
+                this.log(`[handleMessage] ${msg.type}`, msg.data);
+                this.getMetadata();
+                setTimeout(() => {
+                    const users = JSON.parse(msg.data).map((u) => {
+                        const video = u.streamId !== '' ? this.streamById(u.streamId) : null;
+                        return {
+                            id: u.id,
+                            name: u.name,
+                            role: u.role,
+                            video,
+                        };
+                    });
+                    this.users = users;
+
+                    if (this.userListUpdated) {
+                        try {
+                            this.userListUpdated(users);
+                        } catch { }
+                    }
+                }, 1000);
                 break;
             default:
                 this.log(`[handleMessage] default ${JSON.stringify(msg)}`);
@@ -332,7 +362,6 @@ class SparkRTC {
     };
     newPeerConnectionInstance = (target, theStream, isAdience = false) => {
         this.log(`[newPeerConnectionInstance] target='${target}' theStream='${theStream}' isAdience='${isAdience}'`);
-        /** @type {RTCPeerConnection & {_iceIsConnected?: boolean}} */
         const peerConnection = new RTCPeerConnection(this.myPeerConnectionConfig);
         peerConnection.isAdience = isAdience;
 
@@ -471,22 +500,8 @@ class SparkRTC {
         };
 
         peerConnection.oniceconnectionstatechange = (event) => {
-            console.log(`new ice connection state => ${peerConnection.iceConnectionState}`);
-            switch (peerConnection.iceConnectionState) {
-                case "connected": {
-                    peerConnection._iceIsConnected = true;
-                    break;
-                }
-                default:
-                    peerConnection._iceIsConnected = false;
-                    break;
-            }
             this.log(`[newPeerConnectionInstance] oniceconnectionstatechange peerConnection.iceConnectionState = ${peerConnection.iceConnectionState} event = ${JSON.stringify(event)}`);
-            if (peerConnection.iceConnectionState == 'disconnected' || peerConnection.iceConnectionState == 'failed' || peerConnection.iceConnectionState == 'closed') {
-                setTimeout(() => {
-                    console.log("restarting ice");
-                    peerConnection.restartIce();
-                }, 0);
+            if (peerConnection.iceConnectionState == 'disconnected') {
                 this.remoteStreamNotified = false;
                 console.log('[peerConnection.oniceconnectionstatechange] DC event', event);
                 if (peerConnection.getRemoteStreams().length === 0) return;
@@ -537,12 +552,6 @@ class SparkRTC {
 
             }
         };
-
-        setTimeout(() => {
-            if (!peerConnection._iceIsConnected) {
-                peerConnection.restartIce();
-            }
-        }, 4000);
 
         return peerConnection;
     };
@@ -724,6 +733,9 @@ class SparkRTC {
             type: 'metadata-get',
         }));
     };
+    streamById = (streamId) => {
+        return this.remoteStreams.find((s) => s.id === streamId);
+    };
     constructor(role, options = {}) {
         this.role = role;
         this.localStreamChangeCallback = options.localStreamChangeCallback;
@@ -740,5 +752,6 @@ class SparkRTC {
         this.constraintResults = options.constraintResults;
         this.log(`[constructor] ${this.role}`);
         this.updateStatus = options.updateStatus;
+        this.userListUpdated = options.userListUpdated;
     }
 }
