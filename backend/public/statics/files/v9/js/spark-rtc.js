@@ -332,6 +332,7 @@ class SparkRTC {
     };
     newPeerConnectionInstance = (target, theStream, isAdience = false) => {
         this.log(`[newPeerConnectionInstance] target='${target}' theStream='${theStream}' isAdience='${isAdience}'`);
+        /** @type {RTCPeerConnection & {_iceIsConnected?: boolean}} */
         const peerConnection = new RTCPeerConnection(this.myPeerConnectionConfig);
         peerConnection.isAdience = isAdience;
 
@@ -471,12 +472,21 @@ class SparkRTC {
 
         peerConnection.oniceconnectionstatechange = (event) => {
             console.log(`new ice connection state => ${peerConnection.iceConnectionState}`);
+            switch (peerConnection.iceConnectionState) {
+                case "connected": {
+                    peerConnection._iceIsConnected = true;
+                    break;
+                }
+                default:
+                    peerConnection._iceIsConnected = false;
+                    break;
+            }
             this.log(`[newPeerConnectionInstance] oniceconnectionstatechange peerConnection.iceConnectionState = ${peerConnection.iceConnectionState} event = ${JSON.stringify(event)}`);
             if (peerConnection.iceConnectionState == 'disconnected' || peerConnection.iceConnectionState == 'failed' || peerConnection.iceConnectionState == 'closed') {
-                setTimeout(()=>{
+                setTimeout(() => {
                     console.log("restarting ice");
                     peerConnection.restartIce();
-                },0);
+                }, 0);
                 this.remoteStreamNotified = false;
                 console.log('[peerConnection.oniceconnectionstatechange] DC event', event);
                 if (peerConnection.getRemoteStreams().length === 0) return;
@@ -527,6 +537,12 @@ class SparkRTC {
 
             }
         };
+
+        setTimeout(() => {
+            if (!peerConnection._iceIsConnected) {
+                peerConnection.restartIce();
+            }
+        }, 4000);
 
         return peerConnection;
     };
