@@ -359,12 +359,12 @@ class SparkRTC {
                         console.log("Parent disconnected");
 
                         //start proc
-                        try{
-                            console.log("starting neew proc");
-                            this.startProcedure?.();
-                        }catch(e){
-                            console.log("error while starting proc: ",e);
-                        }
+                        // try{
+                        //     console.log("starting neew proc");
+                        //     this.startProcedure?.();
+                        // }catch(e){
+                        //     console.log("error while starting proc: ",e);
+                        // }
                             
                     
                         clearInterval(id); //if disconnected leave the loop
@@ -402,7 +402,7 @@ class SparkRTC {
 
                     this.parentAlive = true;
 
-                    console.log("Received message from Parent:", e.data);
+                    console.log("Received message from Parent:", e.data, " , I am: ",this.myName);
                 }
             }
 
@@ -617,12 +617,8 @@ class SparkRTC {
                     if (this.remoteStreamDCCallback) this.remoteStreamDCCallback(peerConnection.getRemoteStreams()[0]);
                 } catch { }
               
-                //commented by zaid
-                //if (this.parentDC || this.startedRaiseHand) this.startProcedure();
 
-                //[updated by Zaid] moved parent DC and startProc to data Channel
-                if (this.startedRaiseHand) this.startProcedure();
-
+                if (this.parentDC || this.startedRaiseHand) this.startProcedure();
 
             }
         };
