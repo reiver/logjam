@@ -347,7 +347,62 @@ class SparkRTC {
             
     }
 
-    checkParentDisconnection(pc){
+
+    restartEverything(peerConnection,target){
+            this.remoteStreamNotified = false;
+            // console.log('[peerConnection.oniceconnectionstatechange] DC event', event);
+            if (peerConnection.getRemoteStreams().length === 0) return;
+            const trackIds = peerConnection.getReceivers().map((receiver) => receiver.track.id);
+            trackIds.forEach((trackId) => {
+                console.log('[peerConnection.oniceconnectionstatechange] DC trackId', trackId);
+                for (const userId in this.myPeerConnectionArray) {
+                    if (userId === target) continue;
+                    console.log('[peerConnection.oniceconnectionstatechange] DC userId', userId);
+                    const apeerConnection = this.myPeerConnectionArray[userId];
+                    if (!apeerConnection.isAdience) return;
+                    const allSenders = apeerConnection.getSenders();
+                    for (const sender of allSenders) {
+                        if (!sender.track) continue;
+                        if (sender.track.id === trackId) {
+                            console.log('[peerConnection.oniceconnectionstatechange] DC sender');
+                            try {
+                                apeerConnection.removeTrack(sender);
+                            } catch (e) {
+                                console.log(e);
+                            }
+                        }
+                    }
+                }
+            });
+            const allStreams = peerConnection.getRemoteStreams();
+            console.log({allStreams});
+            for (let i = 0; i < allStreams.length; i++)
+                this.remoteStreams.splice(this.remoteStreams.indexOf(allStreams[i]), 1);
+            
+            if (this.parentStreamId && allStreams.map((s) => s.id).includes(this.parentStreamId)) {
+                this.updateTheStatus(`Parent stream is disconnected`);
+                if (this.remoteStreamDCCallback) {
+                    this.remoteStreams.forEach((strm) => {
+                        try {
+                            this.remoteStreamDCCallback(strm);
+                        } catch {}
+                    });
+                }
+                this.parentStreamId = undefined;
+                this.remoteStreams = [];
+            }
+
+            try {
+                if (this.remoteStreamDCCallback) this.remoteStreamDCCallback(peerConnection.getRemoteStreams()[0]);
+            } catch { }
+          
+
+            if (this.parentDC || this.startedRaiseHand) this.startProcedure();
+
+        
+    }
+
+    checkParentDisconnection(pc,target){
          // Check for disconnection of Parent
          let id = setInterval(()=> {
             if(!pc.isAdience){
@@ -358,6 +413,10 @@ class SparkRTC {
                     if (!pc.alive /*&& pc.connectionState!= "connected"*/) { //not connected and not alive
                         alert("Parent disconnected");
                         console.log("Parent disconnected");
+
+                        this.parentDC = true;
+
+                        this.restartEverything(pc,target);
 
                         //start proc
                         // try{
@@ -370,7 +429,7 @@ class SparkRTC {
                     
                         clearInterval(id); //if disconnected leave the loop
                     }
-                    pc.alive = false;
+                    pc.alive = false; 
                 }else{
                     console.log("Undefined: ",pc.alive);
                 }
@@ -408,7 +467,7 @@ class SparkRTC {
             }
 
 
-            this.checkParentDisconnection(peerConnection);
+            this.checkParentDisconnection(peerConnection,target);
 
         
 
@@ -562,60 +621,15 @@ class SparkRTC {
             }
         };
 
+
+
+
         peerConnection.oniceconnectionstatechange = (event) => {
             this.log(`[newPeerConnectionInstance] oniceconnectionstatechange peerConnection.iceConnectionState = ${peerConnection.iceConnectionState} event = ${JSON.stringify(event)}`);
-            if (peerConnection.iceConnectionState == 'disconnected') {
-                this.remoteStreamNotified = false;
-                console.log('[peerConnection.oniceconnectionstatechange] DC event', event);
-                if (peerConnection.getRemoteStreams().length === 0) return;
-                const trackIds = peerConnection.getReceivers().map((receiver) => receiver.track.id);
-                trackIds.forEach((trackId) => {
-                    console.log('[peerConnection.oniceconnectionstatechange] DC trackId', trackId);
-                    for (const userId in this.myPeerConnectionArray) {
-                        if (userId === target) continue;
-                        console.log('[peerConnection.oniceconnectionstatechange] DC userId', userId);
-                        const apeerConnection = this.myPeerConnectionArray[userId];
-                        if (!apeerConnection.isAdience) return;
-                        const allSenders = apeerConnection.getSenders();
-                        for (const sender of allSenders) {
-                            if (!sender.track) continue;
-                            if (sender.track.id === trackId) {
-                                console.log('[peerConnection.oniceconnectionstatechange] DC sender');
-                                try {
-                                    apeerConnection.removeTrack(sender);
-                                } catch (e) {
-                                    console.log(e);
-                                }
-                            }
-                        }
-                    }
-                });
-                const allStreams = peerConnection.getRemoteStreams();
-                console.log({allStreams});
-                for (let i = 0; i < allStreams.length; i++)
-                    this.remoteStreams.splice(this.remoteStreams.indexOf(allStreams[i]), 1);
-                
-                if (this.parentStreamId && allStreams.map((s) => s.id).includes(this.parentStreamId)) {
-                    this.updateTheStatus(`Parent stream is disconnected`);
-                    if (this.remoteStreamDCCallback) {
-                        this.remoteStreams.forEach((strm) => {
-                            try {
-                                this.remoteStreamDCCallback(strm);
-                            } catch {}
-                        });
-                    }
-                    this.parentStreamId = undefined;
-                    this.remoteStreams = [];
-                }
-  
-                try {
-                    if (this.remoteStreamDCCallback) this.remoteStreamDCCallback(peerConnection.getRemoteStreams()[0]);
-                } catch { }
-              
-
-                if (this.parentDC || this.startedRaiseHand) this.startProcedure();
-
-            }
+            
+            // if (peerConnection.iceConnectionState == 'disconnected') {
+            //     this.restartEverything(peerConnection,target);
+            // }
         };
 
         return peerConnection;
