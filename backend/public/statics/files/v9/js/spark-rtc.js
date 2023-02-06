@@ -27,6 +27,7 @@ class SparkRTC {
     broadcasterDC = true;
     metaData = {};
     userStreamData = {};
+    users = [];
     handleVideoOfferMsg = async (msg) => {
         this.log(`[handleVideoOfferMsg] ${msg.name}`);
         const broadcasterPeerConnection = this.createOrGetPeerConnection(msg.name);
@@ -51,6 +52,7 @@ class SparkRTC {
         } catch (e) {
             return;
         }
+
         msg.data = (msg.Data && !msg.data) ? msg.Data : msg.data;
         msg.type = (msg.Type && !msg.type) ? msg.Type : msg.type;
 
@@ -124,7 +126,7 @@ class SparkRTC {
             case 'alt-broadcast':
                 this.log(`[handleMessage] ${msg.type}`);
                 if (this.role === 'broadcast') {
-                    if (this.raiseHands.indexOf(msg.data) === -1) {
+                    if (this.raiseHands.indexOf(msg.data) === -1 && this.raiseHand.length <= 2) {
                         if (this.raiseHandConfirmation) {
                             try {
                                 const result = this.raiseHandConfirmation(`${msg.name} wants to broadcast, do you approve?`)
@@ -140,6 +142,12 @@ class SparkRTC {
                         );
                         this.raiseHands.push(msg.data);
                         this.log(`[handleMessage] ${msg.type} approving raised hand ${msg.data}`);
+                        this.getMetadata();
+                        setTimeout(() => {
+                            const metaData = this.metaData;
+                            metaData.raiseHands = JSON.stringify(this.raiseHands);
+                            this.setMetadata(metaData);
+                        }, 1000);
                     }
                 } else {
                     // this.spreadLocalStream();
@@ -198,6 +206,28 @@ class SparkRTC {
                     userRole,
                 };
                 break;
+            case 'user-event':
+                this.log(`[handleMessage] ${msg.type}`, msg.data);
+                this.getMetadata();
+                setTimeout(() => {
+                    const users = JSON.parse(msg.data).map((u) => {
+                        const video = u.streamId !== '' ? this.streamById(u.streamId) : null;
+                        return {
+                            id: u.id,
+                            name: u.name,
+                            role: u.role,
+                            video,
+                        };
+                    });
+                    this.users = users;
+
+                    if (this.userListUpdated) {
+                        try {
+                            this.userListUpdated(users);
+                        } catch { }
+                    }
+                }, 1000);
+                break;
             default:
                 this.log(`[handleMessage] default ${JSON.stringify(msg)}`);
                 break;
@@ -240,13 +270,16 @@ class SparkRTC {
                 this.log(`[setupSignalingSocket] socket onopen and sent start`);
                 resolve(socket);
             };
-            socket.onclose = () => {
+            socket.onclose = (ee) => {
+                console.log({ ee })
                 this.remoteStreamNotified = false;
                 this.myPeerConnectionArray = {};
                 if (this.signalingDisconnectedCallback) this.signalingDisconnectedCallback;
                 this.log(`[setupSignalingSocket] socket onclose`);
                 this.started = false;
                 if (this.startProcedure) this.startProcedure();
+                // alert('Can not connect to server');
+                // window.location.reload();
             };
             socket.onerror = (error) => {
                 console.log("WebSocket error: ", error);
@@ -724,6 +757,17 @@ class SparkRTC {
             type: 'metadata-get',
         }));
     };
+    streamById = (streamId) => {
+        return this.remoteStreams.find((s) => s.id === streamId);
+    };
+    stopSignaling = () => {
+        if (this.pingInterval) {
+            clearInterval(this.pingInterval);
+            this.pingInterval = null;
+        }
+        this.socket.onclose = () => {};
+        this.socket.close();
+    };
     constructor(role, options = {}) {
         this.role = role;
         this.localStreamChangeCallback = options.localStreamChangeCallback;
@@ -740,5 +784,6 @@ class SparkRTC {
         this.constraintResults = options.constraintResults;
         this.log(`[constructor] ${this.role}`);
         this.updateStatus = options.updateStatus;
+        this.userListUpdated = options.userListUpdated;
     }
 }

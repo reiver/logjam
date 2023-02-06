@@ -270,13 +270,16 @@ class SparkRTC {
                 this.log(`[setupSignalingSocket] socket onopen and sent start`);
                 resolve(socket);
             };
-            socket.onclose = () => {
+            socket.onclose = (ee) => {
+                console.log({ ee })
                 this.remoteStreamNotified = false;
                 this.myPeerConnectionArray = {};
                 if (this.signalingDisconnectedCallback) this.signalingDisconnectedCallback;
                 this.log(`[setupSignalingSocket] socket onclose`);
                 this.started = false;
                 if (this.startProcedure) this.startProcedure();
+                // alert('Can not connect to server');
+                // window.location.reload();
             };
             socket.onerror = (error) => {
                 console.log("WebSocket error: ", error);
@@ -735,6 +738,14 @@ class SparkRTC {
     };
     streamById = (streamId) => {
         return this.remoteStreams.find((s) => s.id === streamId);
+    };
+    stopSignaling = () => {
+        if (this.pingInterval) {
+            clearInterval(this.pingInterval);
+            this.pingInterval = null;
+        }
+        this.socket.onclose = () => {};
+        this.socket.close();
     };
     constructor(role, options = {}) {
         this.role = role;
