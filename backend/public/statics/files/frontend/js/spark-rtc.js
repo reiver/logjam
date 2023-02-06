@@ -26,9 +26,8 @@ class SparkRTC {
     parentDC = true;
     broadcasterDC = true;
 
-    parentAlive = true; // bool to check parent status
-    parentDisconnectionTimeOut = 1000; //1 second timeout to check parent is alive or not
-    sendMessageInterval = 10; //send message to child after every 10 ms
+    parentDisconnectionTimeOut = 2000; //2 second timeout to check parent is alive or not
+    sendMessageInterval = 1; //send message to child after every 1 ms
 
 
     handleVideoOfferMsg = async (msg) => {
@@ -352,9 +351,11 @@ class SparkRTC {
          // Check for disconnection of Parent
          let id = setInterval(()=> {
             if(!pc.isAdience){
-                if(this.parentAlive!=undefined){
-                    console.log("parent alive: ",this.parentAlive);
-                    if (!this.parentAlive) {
+
+                if(pc.alive!=undefined){
+                    console.log("parent alive: ",pc.alive, "state: ",pc.connectionState);
+
+                    if (!pc.alive /*&& pc.connectionState!= "connected"*/) { //not connected and not alive
                         alert("Parent disconnected");
                         console.log("Parent disconnected");
 
@@ -369,9 +370,9 @@ class SparkRTC {
                     
                         clearInterval(id); //if disconnected leave the loop
                     }
-                    this.parentAlive = false;
+                    pc.alive = false;
                 }else{
-                    console.log("Undefined: ",this.parentAlive);
+                    console.log("Undefined: ",pc.alive);
                 }
                 
             }
@@ -384,6 +385,7 @@ class SparkRTC {
         let intervalId;
 
         peerConnection.isAdience = isAdience;
+        peerConnection.alive = true;
 
         // Create DataChannel
         const dataChannel = peerConnection.createDataChannel("chat");
@@ -399,10 +401,9 @@ class SparkRTC {
             receive.onmessage = e =>{
                 //check if message came from Only My Parent
                 if(!peerConnection.isAdience){
+                    peerConnection.alive = true;
 
-                    this.parentAlive = true;
-
-                    console.log("Received message from Parent:", e.data, " , I am: ",this.myName);
+                    //console.log("Received message from Parent:", e.data, " , I am: ",this.myName);
                 }
             }
 
@@ -431,12 +432,6 @@ class SparkRTC {
         // Handle connectionstatechange event
         peerConnection.onconnectionstatechange = event => {
             console.log("Connection state:", peerConnection.connectionState);
-            if(peerConnection.connectionState == "disconnected"){
-                if(!peerConnection.isAdience){
-                    //this.parentAlive = false;
-                    //this.checkParentDisconnection(peerConnection);
-                }
-            }
         };
 
         peerConnection.onicecandidate = (event) => {
@@ -793,6 +788,5 @@ class SparkRTC {
         this.constraintResults = options.constraintResults;
         this.log(`[constructor] ${this.role}`);
         this.updateStatus = options.updateStatus;
-        this.parentAlive = true;
     }
 }
