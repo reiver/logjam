@@ -15,6 +15,8 @@ function clearScreen() {
     }
 }
 
+let localStream = null;
+
 function createSparkRTC() {
     clearScreen();
     if (myRole === 'broadcast') {
@@ -22,23 +24,25 @@ function createSparkRTC() {
         disableAudioVideoControls();
         return new SparkRTC('broadcast', {
             localStreamChangeCallback: (stream) => {
-                getVideoElement('localVideo').srcObject = stream;
+                // getVideoElement('localVideo').srcObject = stream;
+                localStream = stream;
                 enableAudioVideoControls();
             },
             remoteStreamCallback: (stream) => {
-                const tagId = 'remoteVideo-' + stream.id;
-                if (document.getElementById(tagId)) return;
-                const video = createVideoElement(tagId);
-                video.srcObject = stream;
-                video.play();
+                // const tagId = 'remoteVideo-' + stream.id;
+                // if (document.getElementById(tagId)) return;
+                // const video = createVideoElement(tagId);
+                // video.srcObject = stream;
+                // video.play();
             },
             remoteStreamDCCallback: (stream) => {
-                let tagId = 'remoteVideo-' + stream.id;
-                if (!document.getElementById(tagId)) {
-                    tagId = 'localVideo-' + stream.id;
-                    if (!document.getElementById(tagId)) return;
-                }
-                removeVideoElement(tagId);
+                // let tagId = 'remoteVideo-' + stream.id;
+                // if (!document.getElementById(tagId)) {
+                //     tagId = 'localVideo-' + stream.id;
+                //     if (!document.getElementById(tagId)) return;
+                // }
+                // removeVideoElement(tagId);
+                clearVideos();
             },
             signalingDisconnectedCallback: () => {
                 clearScreen();
@@ -77,6 +81,16 @@ function createSparkRTC() {
             },
             userListUpdated: (users) => {
                 console.log('User List is updated', { users });
+
+                clearVideos();
+                updateUsersList(users);
+
+                for (const user of users) {
+                    console.log(user);
+                    if (user.video) {
+                        createUserVideo(user, localStream.id === user.video.id);
+                    }
+                }
             },
         });
     } else {
@@ -99,12 +113,7 @@ function createSparkRTC() {
             remoteStreamDCCallback: (stream) => {
                 console.log(`[remoteStreamDCCallback]`, stream);
                 if (stream !== 'no-stream') {
-                    let tagId = 'remoteVideo-' + stream.id;
-                    if (!document.getElementById(tagId)) {
-                        tagId = 'localVideo-' + stream.id;
-                        if (!document.getElementById(tagId)) return;
-                    }
-                    removeVideoElement(tagId);
+                    clearVideos();
                 }
                 if (sparkRTC.broadcasterDC || stream === 'no-stream') {
                     document.getElementById('screen').innerHTML = `<div id="dc-place-holder" style="display: block;">
@@ -138,6 +147,18 @@ function createSparkRTC() {
             },
             userListUpdated: (users) => {
                 console.log('User List is updated', { users });
+
+                // clearVideos();
+                updateUsersList(users);
+
+                for (const user of users) {
+                    console.log(user);
+
+                    if (user.video) {
+                        console.log(user);
+                        createUserVideo(user, localStream.id === user.video.id);
+                    }
+                }
             },
         });
 

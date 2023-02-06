@@ -84,6 +84,25 @@ function createVideoElement(videoId, muted = false) {
     return video;
 }
 
+function clearVideos() {
+    document.getElementById('screen').innerHTML = "";
+}
+
+function createUserVideo(user, muted = false) {
+    let container = document.createElement('div');
+    container.className = 'video-container';
+    let video = document.createElement('video');
+    video.autoplay = true;
+    video.playsInline = true;
+    video.muted = muted;
+    video.srcObject = user.video
+    container.appendChild(video);
+    document.getElementById('screen').appendChild(container);
+    arrangeVideoContainers();
+    console.log('video');
+    return video;
+}
+
 function getVideoElement(videoId) {
     let video = document.getElementById(videoId);
     return video ? video : createVideoElement(videoId, true);
@@ -268,4 +287,21 @@ function disableAudioVideoControls() {
     document.getElementById('mic').style.display = 'none';
     document.getElementById('camera').style.display = 'none';    
     document.getElementById('share_screen').style.display = 'none';
+}
+
+function updateUsersList(users) {
+    function createDiv() {
+        const div = document.createElement('div');
+        div.classList.add('dummy-profile-pic');
+        div.innerHTML = "<img src=\"https://st3.depositphotos.com/6672868/13701/v/600/depositphotos_137014128-stock-illustration-user-profile-icon.jpg?admitad_uid=95081cce92cdf6561eb656cf40000062&utm_source=admitad&utm_medium=cpa&utm_campaign=442763&tagtag_uid=95081cce92cdf6561eb656cf40000062\">"
+        return div;
+    }
+
+    const container = document.getElementById("pic-container");
+    container.innerHTML = '';
+
+    for (let i = 0; i < (users.length > 3 ? 3 : users.length); i++) {
+        const d = createDiv();
+        container.appendChild(d);
+    }
 }
