@@ -73,6 +73,13 @@
                     <img id="mic" data-status="on" class="control-button-image" src="images/mic-on.png" alt="mic"
                         onclick="onMicButtonClick()" />
                     <img id="spark" class="control-button-image" src="images/spark-logo.png" alt="logo" />
+                    <script>
+                        const queryString = window.location.search;
+                        const urlParams = new URLSearchParams(queryString);
+                        if (urlParams.get("hide_spark_logo")) {
+                            document.getElementById("spark").remove();
+                        }
+                    </script>
                     <img id="share_screen" data-status="off" class="control-button-image" src="images/screen-off.png"
                         alt="share screen" onclick="onShareScreen()" />
                     <img id="raise_hand" data-status="on" class="control-button-image" src="images/hand.png"
