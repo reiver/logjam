@@ -1,3 +1,4 @@
+/** Your class description */
 class SparkRTC {
     started = false;
     myPeerConnectionConfig = {
