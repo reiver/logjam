@@ -25,8 +25,9 @@ function clearScreen() {
 }
 
 /**
- * Description
+ * 
  * Function to create instance of SparkRTC based of user's role
+ * 
  * @returns SparkRTC object.
  */
 function createSparkRTC() {

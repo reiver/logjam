@@ -1,4 +1,8 @@
-/** Your class description */
+/** Your class description 
+ * 
+ * SparkRTC class is main class to setUP RTC client
+ * 
+*/
 class SparkRTC {
     started = false;
     myPeerConnectionConfig = {
@@ -31,6 +35,13 @@ class SparkRTC {
     sendMessageInterval = 1; //send message to child after every 1 ms
 
 
+    /**
+     * Function to handle Peer Connection Offer, received from Other Peer
+     * 
+     * and Return Peer Connection Answer to Other Peer
+     * 
+     * @param {*} msg 
+     */
     handleVideoOfferMsg = async (msg) => {
         this.log(`[handleVideoOfferMsg] ${msg.name}`);
         const broadcasterPeerConnection = this.createOrGetPeerConnection(msg.name);
@@ -47,6 +58,15 @@ class SparkRTC {
         );
         this.log(`[handleVideoOfferMsg] send video-answer to ${msg.name} from ${this.myUsername}`);
     };
+
+    /**
+     * A socket handler to receive, message on webSocket,
+     * 
+     * It parses message and based on message Type make decisions
+     * 
+     * @param {*} event 
+     * @returns 
+     */
     handleMessage = async (event) => {
         this.log(`[handleMessage] ${event.data}`);
         let msg;
@@ -192,17 +212,36 @@ class SparkRTC {
                 break;
         }
     };
+
+    /**
+     * Function to get Broadcaster UserID from Array of PeerConnections
+     * 
+     * @returns UserID
+     */
     broadcasterUserId = () => {
         for (const userId in this.myPeerConnectionArray) {
             if (!this.myPeerConnectionArray[userId].isAdience) return userId;
         }
         return null;
     };
+
+    /**
+     * Ping function to, request Tree
+     */
     ping = () => {
         this.socket.send(JSON.stringify({
             type: this.treeCallback ? "tree" : "ping",
         }));
     };
+
+    /**
+     * Function to setup Signaling WebSocket with backend
+     * 
+     * @param {*} url 
+     * @param {*} myName 
+     * @param {*} roomName 
+     * @returns 
+     */
     setupSignalingSocket = (url, myName, roomName) => {
         this.log(`[setupSignalingSocket] url='${url}' myName='${myName}' roomName='${roomName}'`);
         return new Promise((resolve, reject) => {
@@ -248,6 +287,12 @@ class SparkRTC {
 
         })
     };
+
+    /**
+     * Function to initiate Screen Share track
+     * 
+     * @returns 
+     */
     startShareScreen = async () => {
         this.log(`[handleMessage] startShareScreen`);
         try {
@@ -272,6 +317,13 @@ class SparkRTC {
             alert('Unable to get access to screenshare.');
         }
     };
+
+    /**
+     * Function to initiate Video Broadcasting
+     * 
+     * @param {*} data 
+     * @returns 
+     */
     startBroadcasting = async (data = 'broadcast') => {
         this.log(`[startBroadcasting] ${data}`);
         try {
@@ -302,6 +354,13 @@ class SparkRTC {
             alert('Unable to get access to your webcam nor microphone.');
         }
     };
+
+    /**
+     * Function to intiate Listening to / Receiving of
+     * 
+     * Video broadcast from broadcaster
+     * 
+     */
     startReadingBroadcast = async () => {
         this.log(`[startReadingBroadcast]`);
         this.updateTheStatus(`Request Audience Role`);
@@ -313,12 +372,25 @@ class SparkRTC {
         );
         this.log(`[startReadingBroadcast] send role audience`);
     };
+
+    /**
+     * Function to request to broadcast video
+     * 
+     * and Immediately starts broadcasting
+     * 
+     * @returns initiate Broadcasting
+     */
     raiseHand = () => {
         if (this.startedRaiseHand) return;
         this.startedRaiseHand = true;
         return this.startBroadcasting('alt-broadcast');
     };
 
+    /**
+     * Function to handle Data Channel Status
+     * 
+     * And send messages via Data Channel
+     */
     onDataChannelOpened(dc,target,pc){
 
             console.log("DataChannel opened:", dc);
@@ -349,6 +421,13 @@ class SparkRTC {
     }
 
 
+    /**
+     * Function to restart the Negotiation and finding a new Parent
+     * 
+     * @param {*} peerConnection 
+     * @param {*} target 
+     * @returns 
+     */
     restartEverything(peerConnection,target){
             this.remoteStreamNotified = false;
             // console.log('[peerConnection.oniceconnectionstatechange] DC event', event);
@@ -403,6 +482,12 @@ class SparkRTC {
         
     }
 
+    /**
+     * Function to check Parent's status
+     * 
+     * whether its connected or disconnected
+     * 
+     */
     checkParentDisconnection(pc,target){
          // Check for disconnection of Parent
          let id = setInterval(()=> {
@@ -439,6 +524,16 @@ class SparkRTC {
         }, this.parentDisconnectionTimeOut);
     }
 
+    /**
+     * Function to create new Peer connection
+     * 
+     * And Data Channel with each peer connection
+     * 
+     * @param {*} target 
+     * @param {*} theStream 
+     * @param {*} isAdience 
+     * @returns 
+     */
     newPeerConnectionInstance = (target, theStream, isAdience = false) => {
         this.log(`[newPeerConnectionInstance] target='${target}' theStream='${theStream}' isAdience='${isAdience}'`);
         const peerConnection = new RTCPeerConnection(this.myPeerConnectionConfig);
@@ -635,6 +730,16 @@ class SparkRTC {
 
         return peerConnection;
     };
+
+    /**
+     * Helper fucntion to iniiate select 
+     * 
+     * Whether to create a new peer connection with [peerName] Or to Get the existing one with [peerName]
+     * 
+     * @param {*} audienceName 
+     * @param {*} isAdience 
+     * @returns 
+     */
     createOrGetPeerConnection = (audienceName, isAdience = false) => {
         this.log(`[createOrGetPeerConnection] audienceName = ${audienceName}, isAdience = ${isAdience}`);
         if (this.myPeerConnectionArray[audienceName]) return this.myPeerConnectionArray[audienceName];
@@ -644,6 +749,10 @@ class SparkRTC {
 
         return this.myPeerConnectionArray[audienceName];
     };
+
+    /**
+     * Function to add new Audiance as Current Node's Childs
+     */
     connectToAudience = (audienceName) => {
         this.updateStatus(`Connecting to ${audienceName}`);
         this.log(`[handleMessage] connectToAudience ${audienceName}`);
@@ -665,6 +774,15 @@ class SparkRTC {
             });
         }
     };
+
+    /**
+     * Function to spread the local stream to Target Audiance peers.
+     * 
+     * It peer connection exists it send to it, if not it creat a new one and send stream to it
+     * 
+     * @param {*} target 
+     * @param {*} stream 
+     */
     sendStreamTo = (target, stream) => {
         this.log(`[handleMessage] sendStreamTo ${target}`);
         const peerConnection = this.createOrGetPeerConnection(target, false);
@@ -672,6 +790,17 @@ class SparkRTC {
             peerConnection.addTrack(track, stream);
         });
     };
+
+    /**
+     * Function to initiate the client depending on its role
+     * 
+     * If role is broadcaster start Broadcasting
+     * 
+     * otherwise start listening to Broadcast
+     * 
+     * @param {*} turn 
+     * @returns 
+     */
     start = async (turn = true) => {
         if (!turn) {
             this.myPeerConnectionConfig.iceServers = iceServers.filter((i) => i.url.indexOf('turn') < 0);
@@ -691,18 +820,37 @@ class SparkRTC {
         this.updateTheStatus(`Start as audience`);
         return this.startReadingBroadcast();
     };
+
+    /**
+     * Function to enable / disable Video track
+     * 
+     * @param {*} enabled 
+     */
     disableVideo = (enabled = false) => {
         this.localStream.getTracks().forEach((track) => {
             if (track.kind === 'video')
                 track.enabled = enabled;
         });
     };
+
+    /**
+     * Function to enable / disable Audio track
+     * 
+     * @param {*} enabled 
+     */
     disableAudio = (enabled = false) => {
         this.localStream.getTracks().forEach((track) => {
             if (track.kind === 'audio')
                 track.enabled = enabled;
         });
     };
+
+    /**
+     * Function to WAIT for 1 second
+     * 
+     * @param {*} mil 
+     * @returns 
+     */
     wait = async (mil = 1000) => {
         return new Promise((res) => {
             setTimeout(() => {
@@ -710,6 +858,11 @@ class SparkRTC {
             }, mil);
         });
     };
+    /**
+     * Function to get Broadcaster status from backend
+     * 
+     * @returns 
+     */
     getBroadcasterStatus = async () => {
         const max = 5;
         const reconnect = true;
@@ -733,6 +886,12 @@ class SparkRTC {
         });
 
     };
+
+    /**
+     * Function to set the Peer Connection Constraints
+     * 
+     * depending upon presence Audio and Video Devices
+     */
     getSupportedConstraints = async () => {
         const res = await navigator.mediaDevices.enumerateDevices();
         if (!res.find((r) => r.kind === 'audioinput')) {
@@ -743,6 +902,10 @@ class SparkRTC {
         }
         if (this.constraintResults) this.constraintResults(this.constraints);
     };
+
+    /**
+     * Function to update the Status of current Client
+     */
     updateTheStatus = (status) => {
         if (this.updateStatus) {
             try {
@@ -750,6 +913,12 @@ class SparkRTC {
             } catch { }
         }
     };
+
+    /**
+     * Function to lower hand and take request(to broadcast) back, if sharing already stop sharing
+     * 
+     * @returns 
+     */
     lowerHand = async () => {
         console.log('[lowerHand] start');
         if (!this.localStream) return;
@@ -781,12 +950,23 @@ class SparkRTC {
         this.localStream = null;
         this.startedRaiseHand = false;
     };
+
+    /**
+     * Function to broadcast local stream to all peer audiance
+     */
     spreadLocalStream = () => {
         for (const target in this.myPeerConnectionArray) {
             if (this.myPeerConnectionArray[target].isAdience)
                 this.sendStreamTo(target, this.localStream);
         }
     };
+    
+    /**
+     * Construcor Function for Class SparkRTC
+     * 
+     * @param {*} role 
+     * @param {*} options 
+     */
     constructor(role, options = {}) {
         this.role = role;
         this.localStreamChangeCallback = options.localStreamChangeCallback;
