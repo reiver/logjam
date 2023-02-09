@@ -3,7 +3,7 @@
 
 ### Code Documentation 
 
-In this file I will be explainign the code of **logjam**, I will try to use simple language explain the usage and code working and why it's writen the way its written.
+In this file I will be explaining the code of **logjam**, I will try to use simple language and explain the usage, working & why code is writen the way its written.
 
 ---
 
