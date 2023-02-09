@@ -606,12 +606,6 @@ class SparkRTC {
             this.sendStreamTo(target, this.localStream);
         }
     };
-    setMetadata = (metadata) => {
-        this.socket.send(JSON.stringify({
-            type: 'metadata-set',
-            data: JSON.stringify(metadata)
-        }));
-    };
     constructor(role, options = {}) {
         this.role = role;
         this.localStreamChangeCallback = options.localStreamChangeCallback;
