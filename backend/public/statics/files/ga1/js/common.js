@@ -83,7 +83,7 @@ function createSparkRTC() {
                 console.log('User List is updated', { users });
 
                 clearVideos();
-                updateUsersThumbnail(users);
+                updateUsersList(users);
 
                 for (const user of users) {
                     console.log(user);
@@ -94,6 +94,7 @@ function createSparkRTC() {
             },
         });
     } else {
+        
         document.getElementById('share_screen').style.display = 'none';
         document.getElementById('mic').style.display = 'none';
         document.getElementById('camera').style.display = 'none';
@@ -149,7 +150,7 @@ function createSparkRTC() {
                 console.log('User List is updated', { users });
 
                 // clearVideos();
-                updateUsersThumbnail(users);
+                updateUsersList(users);
 
                 for (const user of users) {
                     console.log(user);

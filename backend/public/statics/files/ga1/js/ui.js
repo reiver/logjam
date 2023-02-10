@@ -160,15 +160,9 @@ async function onShareScreen() {
 
 function setMyName() {
     try {
-        const n = localStorage.getItem('logjam_myName');
-        const { name, email } = (() => {
-            try {
-                return JSON.parse(n);
-            } catch (e) {
-                return { name: '', email: '' }
-            }
-        })()
+        const name = localStorage.getItem('logjam_myName');
         myName = name;
+        console.log(myName);
         document.getElementById('inputName').value = myName;
         document.getElementById('inputEmail').value = email;
     } catch (e) {
@@ -186,14 +180,10 @@ function setMyName() {
 
 
 async function handleClick(turn = true) {
-    let newName = JSON.stringify({
-        name: document.getElementById("inputName").value,
-        email: document.getElementById('inputEmail').value
-    });
-    myName = newName;
-    if (newName) {
-        localStorage.setItem('logjam_myName', myName);
-    }
+    const name = document.getElementById('inputName').value;
+
+    myName = name;
+
     document.getElementById("page").style.visibility = "visible";
     document.getElementById("getName").style.display = "none";
 
@@ -301,8 +291,19 @@ function disableAudioVideoControls() {
     document.getElementById('share_screen').style.display = 'none';
 }
 
+const defaultProfilePicture = "https://st3.depositphotos.com/6672868/13701/v/600/depositphotos_137014128-stock-illustration-user-profile-icon.jpg?admitad_uid=95081cce92cdf6561eb656cf40000062&utm_source=admitad&utm_medium=cpa&utm_campaign=442763&tagtag_uid=95081cce92cdf6561eb656cf40000062"
+
 function generateGravatar(email) {
     return `https://www.gravatar.com/avatar/${md5(email.trim().toLowerCase())}`;
+}
+
+function getProfilePicture(email) {
+    return !email ? defaultProfilePicture : generateGravatar(email);
+}
+
+function updateUsersList(users) {
+    updateUsersThumbnail(users);
+    setSidebar(users);
 }
 
 function updateUsersThumbnail(users) {
@@ -310,8 +311,7 @@ function updateUsersThumbnail(users) {
     function createDiv({ email }) {
         const div = document.createElement('div');
         div.classList.add('dummy-profile-pic');
-        const defaultProfilePicture = "https://st3.depositphotos.com/6672868/13701/v/600/depositphotos_137014128-stock-illustration-user-profile-icon.jpg?admitad_uid=95081cce92cdf6561eb656cf40000062&utm_source=admitad&utm_medium=cpa&utm_campaign=442763&tagtag_uid=95081cce92cdf6561eb656cf40000062"
-        div.innerHTML = `<img src="${!email ? defaultProfilePicture : generateGravatar(email)}" alt="Profile picture">`
+        div.innerHTML = `<img src="${getProfilePicture(email)}" alt="Profile picture">`
         return div;
     }
 
@@ -320,26 +320,27 @@ function updateUsersThumbnail(users) {
 
 
     for (const { name } of users.slice(0, 3)) {
-        console.log(name);
-        let { name: userName, email } = (() => {
-            try {
-                return JSON.parse(name);
-            } catch (e) {
-                return { name, email: null }
-            }
-        })()
-        const d = createDiv({ name: userName, email });
+        const d = createDiv({ name });
         container.appendChild(d);
     }
 
 }
 
-function setSidebar() {
-    function createDiv() {
+function setSidebar(users) {
+    function createDiv({ email }) {
         const div = document.createElement('div');
         div.classList.add('user');
         
         const image = document.createElement('img');
-        image.src = ''
+        image.src = getProfilePicture(email);
+
+        return div;
+    }
+
+    const container = document.getElementById('sidebar');
+    
+    for (const { name } of users) {
+        const d = createDiv({ name })
+        container.appendChild(d);
     }
 }
