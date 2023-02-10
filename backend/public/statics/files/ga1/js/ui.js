@@ -14,6 +14,7 @@ const DCColor = 'invert(13%) sepia(99%) saturate(4967%) hue-rotate(350deg) brigh
 let graph;
 let sparkRTC;
 let myName;
+let myEmail;
 let myRole;
 let shareScreenStream;
 let roomName;
@@ -161,8 +162,9 @@ async function onShareScreen() {
 function setMyName() {
     try {
         const name = localStorage.getItem('logjam_myName');
+        const email = localStorage.getItem('logjam_myEmail');
         myName = name;
-        console.log(myName);
+        myEmail = email;
         document.getElementById('inputName').value = myName;
         document.getElementById('inputEmail').value = email;
     } catch (e) {
@@ -181,11 +183,20 @@ function setMyName() {
 
 async function handleClick(turn = true) {
     const name = document.getElementById('inputName').value;
+    const email = document.getElementById('inputEmail').value;
 
     myName = name;
+    myEmail = email;
 
     document.getElementById("page").style.visibility = "visible";
     document.getElementById("getName").style.display = "none";
+
+    try {
+        localStorage.setItem('logjam_myName', myName);
+        localStorage.setItem('logjam_myEmail', myEmail);
+    } catch (e) {
+        console.log(e);
+    }
 
     await start(turn);
 
