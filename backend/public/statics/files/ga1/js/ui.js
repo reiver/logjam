@@ -178,8 +178,8 @@ function setMyName() {
 
 async function handleClick(turn = true) {
     let newName = document.getElementById("inputName").value;
+    console.log('Handling click');
     if (newName) {
-        myName = newName;
         localStorage.setItem('logjam_myName', myName);
     }
     document.getElementById("page").style.visibility = "visible";
@@ -289,8 +289,8 @@ function disableAudioVideoControls() {
     document.getElementById('share_screen').style.display = 'none';
 }
 
-function generateGravatar() {
-
+function generateGravatar(email) {
+    return `https://www.gravatar.com/avatar/${md5(email.trim().toLowerCase())}`;
 }
 
 function updateUsersThumbnail(users) {
@@ -299,7 +299,7 @@ function updateUsersThumbnail(users) {
         const div = document.createElement('div');
         div.classList.add('dummy-profile-pic');
         const defaultProfilePicture = "https://st3.depositphotos.com/6672868/13701/v/600/depositphotos_137014128-stock-illustration-user-profile-icon.jpg?admitad_uid=95081cce92cdf6561eb656cf40000062&utm_source=admitad&utm_medium=cpa&utm_campaign=442763&tagtag_uid=95081cce92cdf6561eb656cf40000062"
-        div.innerHTML = `<img src="${email ? defaultProfilePicture : generateGravatar(email)}" alt="Profile picture">`
+        div.innerHTML = `<img src="${!email ? defaultProfilePicture : generateGravatar(email)}" alt="Profile picture">`
         return div;
     }
 
@@ -308,6 +308,7 @@ function updateUsersThumbnail(users) {
 
 
     for (const { name } of users.slice(0, 3)) {
+        console.log(name);
         let { name: userName, email } = (() => {
             try {
                 return JSON.parse(name);
