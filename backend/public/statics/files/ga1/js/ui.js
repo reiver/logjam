@@ -327,12 +327,25 @@ function updateUsersThumbnail(users) {
 }
 
 function setSidebar(users) {
-    function createDiv({ email }) {
+    function createDiv({ email, name }) {
         const div = document.createElement('div');
         div.classList.add('user');
+
+        const pfp = document.createElement('div');
+        pfp.classList.add('pfp');
         
         const image = document.createElement('img');
         image.src = getProfilePicture(email);
+        image.setAttribute('alt', 'Profile picture');
+
+        pfp.appendChild(image);
+
+        div.appendChild(pfp);
+        
+        const nameTag = document.createElement('div')
+        nameTag.innerText = name;
+
+        div.appendChild(pfp);
 
         return div;
     }
