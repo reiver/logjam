@@ -27,9 +27,10 @@
                 <br />
                 <h2 id="modal-title">Welcome to Group Video!</h2>
                 <form class="form">
-                    <label for="inputName">Name: </label>
+                    <label for="inputName">Name<span style="display: inline-block; position: relative; top: -2px; color: red">*</span>: </label>
                     <input id="inputName" type="text" value="" placeholder="enter a nickname" />
-                    <input id="inputEmail" type="email" value="" placeholder="enter email" />
+                    <label for="inputEmail">Email: </label>
+                    <input id="inputEmail" type="email" value="" placeholder="enter your email (optional)" />
                     <button type="button" onclick="handleClick()">Enter</button>
                     <!-- <button type="button" style="background-color: #c98303" onclick="handleClick(false)">Enter Without TURN</button> -->
                 </form>

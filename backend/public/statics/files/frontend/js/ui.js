@@ -159,8 +159,11 @@ function setMyName() {
 
 async function handleClick(turn = true) {
     let newName = document.getElementById("inputName").value;
+    let newEmail = document.getElementById('inputEmail').value;
+
+    myName = JSON.stringify({ name: newName, email: newEmail || null  });
+
     if (newName) {
-        myName = newName;
         localStorage.setItem('logjam_myName', myName);
     }
     document.getElementById("page").style.visibility = "visible";
