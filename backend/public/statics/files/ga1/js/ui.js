@@ -160,8 +160,17 @@ async function onShareScreen() {
 
 function setMyName() {
     try {
-        myName = localStorage.getItem('logjam_myName');
+        const n = localStorage.getItem('logjam_myName');
+        const { name, email } = (() => {
+            try {
+                return JSON.parse(n);
+            } catch (e) {
+                return { name: '', email: '' }
+            }
+        })()
+        myName = name;
         document.getElementById('inputName').value = myName;
+        document.getElementById('inputEmail').value = email;
     } catch (e) {
         console.log(e);
     }
@@ -177,8 +186,11 @@ function setMyName() {
 
 
 async function handleClick(turn = true) {
-    let newName = document.getElementById("inputName").value;
-    console.log('Handling click');
+    let newName = JSON.stringify({
+        name: document.getElementById("inputName").value,
+        email: document.getElementById('inputEmail').value
+    });
+    myName = newName;
     if (newName) {
         localStorage.setItem('logjam_myName', myName);
     }
