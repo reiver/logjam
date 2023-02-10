@@ -289,21 +289,44 @@ function disableAudioVideoControls() {
     document.getElementById('share_screen').style.display = 'none';
 }
 
-function updateUsersList(users) {
-    function createDiv() {
+function generateGravatar() {
+
+}
+
+function updateUsersThumbnail(users) {
+
+    function createDiv({ email }) {
         const div = document.createElement('div');
         div.classList.add('dummy-profile-pic');
-        div.innerHTML = "<img src=\"https://st3.depositphotos.com/6672868/13701/v/600/depositphotos_137014128-stock-illustration-user-profile-icon.jpg?admitad_uid=95081cce92cdf6561eb656cf40000062&utm_source=admitad&utm_medium=cpa&utm_campaign=442763&tagtag_uid=95081cce92cdf6561eb656cf40000062\">"
+        const defaultProfilePicture = "https://st3.depositphotos.com/6672868/13701/v/600/depositphotos_137014128-stock-illustration-user-profile-icon.jpg?admitad_uid=95081cce92cdf6561eb656cf40000062&utm_source=admitad&utm_medium=cpa&utm_campaign=442763&tagtag_uid=95081cce92cdf6561eb656cf40000062"
+        div.innerHTML = `<img src="${email ? defaultProfilePicture : generateGravatar(email)}" alt="Profile picture">`
         return div;
     }
 
     const container = document.getElementById("pic-container");
     container.innerHTML = `<div style="position: absolute; top: 5px; right: -15px; width: 500px; text-align: right; margin-right: 110px; text-shadow: 0px 3px 7px #000000;">${users.length}</div>`;
 
-    for (let i = 0; i < (users.length > 3 ? 3 : users.length); i++) {
-        const d = createDiv();
+
+    for (const { name } of users.slice(0, 3)) {
+        let { name: userName, email } = (() => {
+            try {
+                return JSON.parse(name);
+            } catch (e) {
+                return { name, email: null }
+            }
+        })()
+        const d = createDiv({ name: userName, email });
         container.appendChild(d);
     }
 
+}
 
+function setSidebar() {
+    function createDiv() {
+        const div = document.createElement('div');
+        div.classList.add('user');
+        
+        const image = document.createElement('img');
+        image.src = ''
+    }
 }

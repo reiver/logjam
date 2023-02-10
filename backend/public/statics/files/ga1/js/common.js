@@ -83,7 +83,7 @@ function createSparkRTC() {
                 console.log('User List is updated', { users });
 
                 clearVideos();
-                updateUsersList(users);
+                updateUsersThumbnail(users);
 
                 for (const user of users) {
                     console.log(user);
@@ -149,7 +149,7 @@ function createSparkRTC() {
                 console.log('User List is updated', { users });
 
                 // clearVideos();
-                updateUsersList(users);
+                updateUsersThumbnail(users);
 
                 for (const user of users) {
                     console.log(user);
