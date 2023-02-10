@@ -22,6 +22,35 @@ function createSparkRTC() {
     if (myRole === 'broadcast') {
         document.getElementById('raise_hand').style.display = 'none';
         disableAudioVideoControls();
+
+        const picContainer = document.getElementById('pic-container');
+        const sidebar = document.getElementById('sidebar');
+
+        const hide = (element) => {
+            element.classList.add('hidden');
+        };
+
+        const unhide = (element) => {
+            element.classList.remove('hidden');
+        }
+        
+        const isElementHidden = (element) => {
+            return element.classList.contains('hidden');
+        }
+
+        const toggleUsersList = () => {
+            if (isElementHidden(picContainer)) {
+                unhide(picContainer);
+                hide(sidebar);
+            } else {
+                hide(picContainer);
+                unhide(sidebar);
+            }
+        }
+
+        picContainer.addEventListener('click', toggleUsersList)
+        sidebar.addEventListener('click', toggleUsersList)
+
         return new SparkRTC('broadcast', {
             localStreamChangeCallback: (stream) => {
                 // getVideoElement('localVideo').srcObject = stream;
