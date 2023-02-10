@@ -298,7 +298,7 @@ function updateUsersList(users) {
     }
 
     const container = document.getElementById("pic-container");
-    container.innerHTML = `<div style="position: absolute; top: 5px; right: -10px; width: 500px; text-align: right; margin-right: 110px">${users.length}</div>`;
+    container.innerHTML = `<div style="position: absolute; top: 5px; right: -15px; width: 500px; text-align: right; margin-right: 110px; text-shadow: 0px 3px 7px #000000;">${users.length}</div>`;
 
     for (let i = 0; i < (users.length > 3 ? 3 : users.length); i++) {
         const d = createDiv();
