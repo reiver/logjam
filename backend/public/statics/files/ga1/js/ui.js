@@ -100,7 +100,6 @@ function createUserVideo(user, muted = false) {
     container.appendChild(video);
     document.getElementById('screen').appendChild(container);
     arrangeVideoContainers();
-    console.log('video');
     return video;
 }
 
@@ -233,7 +232,7 @@ function getDebug() {
 }
 
 function setupSignalingSocket() {
-    return sparkRTC.setupSignalingSocket(getWsUrl(), myName, roomName);
+    return sparkRTC.setupSignalingSocket(getWsUrl(), JSON.stringify({ name: myName, email: myEmail }), roomName);
 }
 
 
@@ -263,7 +262,6 @@ function onLoad() {
 
 async function onRaiseHand() {
     const img = document.getElementById("raise_hand");
-    console.log(img.dataset.status);
     if (img.dataset.status === 'on') {
         if (sparkRTC.localStream) {
             // if (confirm(`Do you want to stop streaming?`)) {
@@ -331,7 +329,15 @@ function updateUsersThumbnail(users) {
 
 
     for (const { name } of users.slice(0, 3)) {
-        const d = createDiv({ name });
+        const { email } = (() => {
+            try {
+                return JSON.parse(name);
+            } catch (e) {
+                console.error(e)
+                return { name }
+            }
+        })()
+        const d = createDiv({ email: email ?? null });
         container.appendChild(d);
     }
 
@@ -354,9 +360,10 @@ function setSidebar(users) {
         div.appendChild(pfp);
         
         const nameTag = document.createElement('div')
+        nameTag.classList.add('name');
         nameTag.innerText = name;
 
-        div.appendChild(pfp);
+        div.appendChild(nameTag);
 
         return div;
     }
@@ -364,7 +371,16 @@ function setSidebar(users) {
     const container = document.getElementById('sidebar');
     
     for (const { name } of users) {
-        const d = createDiv({ name })
+        const { name: userName, email } = (() => {
+            try {
+                console.log(JSON.parse(name));
+                return JSON.parse(name);
+            } catch (e) {
+                console.error(e);
+                return { name }
+            }
+        })()
+        const d = createDiv({ name: userName, email })
         container.appendChild(d);
     }
 }

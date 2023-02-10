@@ -86,7 +86,6 @@ function createSparkRTC() {
                 updateUsersList(users);
 
                 for (const user of users) {
-                    console.log(user);
                     if (user.video) {
                         createUserVideo(user, localStream.id === user.video.id);
                     }
