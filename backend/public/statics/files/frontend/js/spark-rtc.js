@@ -398,13 +398,8 @@ class SparkRTC {
             let intervalId = setInterval(() => {
 
                 if (dc.readyState === "open") {
-                    // console.log("DataChannel is open and ready to send and receive data. target: ",target);
-
-                  //  console.log(`Data in sending queue: ${dc.bufferedAmount} bytes`);
-
                     dc.send(`Hello from ${this.myName}`);
                   
-        
                 } else if (dc.readyState === "connecting") {
                     console.log("DataChannel is in the process of connecting.");
                 } else if (dc.readyState === "closing") {
@@ -502,17 +497,9 @@ class SparkRTC {
 
                         this.parentDC = true;
 
+                        //restart negotiation again
                         this.restartEverything(pc,target);
 
-                        //start proc
-                        // try{
-                        //     console.log("starting neew proc");
-                        //     this.startProcedure?.();
-                        // }catch(e){
-                        //     console.log("error while starting proc: ",e);
-                        // }
-                            
-                    
                         clearInterval(id); //if disconnected leave the loop
                     }
                     pc.alive = false; 
@@ -557,8 +544,6 @@ class SparkRTC {
                 //check if message came from Only My Parent
                 if(!peerConnection.isAdience){
                     peerConnection.alive = true;
-
-                    //console.log("Received message from Parent:", e.data, " , I am: ",this.myName);
                 }
             }
 
