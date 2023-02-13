@@ -182,9 +182,7 @@ class SparkRTC {
                 console.log('broadcaster dc', msg.type);
                 this.broadcasterDC = true;
                 const broadcasterId = this.broadcasterUserId();
-                // if (broadcasterId) {
-                //     this.myPeerConnectionArray[broadcasterId].close();
-                // }
+               
                 for (const u in this.myPeerConnectionArray) {
                     this.myPeerConnectionArray[u].close();
                 }
@@ -193,15 +191,7 @@ class SparkRTC {
                 try {
                     if (this.remoteStreamDCCallback) this.remoteStreamDCCallback('no-stream');
                 } catch { }
-                // this.parentDC = true;
-                // if (this.startedRaiseHand) {
-                //     this.lowerHand();
-                // }
-                // if (this.role === 'broadcast') return;
-                // setTimeout(() => {
-                //     console.log('Reconnecting ...');
-                //     this.startProcedure();    
-                // }, 1000);
+              
                 break;
             case 'event-parent-dc':
                 console.log('parentDC', msg.type);
@@ -425,7 +415,6 @@ class SparkRTC {
      */
     restartEverything(peerConnection,target){
             this.remoteStreamNotified = false;
-            // console.log('[peerConnection.oniceconnectionstatechange] DC event', event);
             if (peerConnection.getRemoteStreams().length === 0) return;
             const trackIds = peerConnection.getReceivers().map((receiver) => receiver.track.id);
             trackIds.forEach((trackId) => {
@@ -491,8 +480,7 @@ class SparkRTC {
                 if(pc.alive!=undefined){
                     console.log("parent alive: ",pc.alive, "state: ",pc.connectionState);
 
-                    if (!pc.alive /*&& pc.connectionState!= "connected"*/) { //not connected and not alive
-                        alert("Parent disconnected");
+                    if (!pc.alive) { //not connected and not alive
                         console.log("Parent disconnected");
 
                         this.parentDC = true;
@@ -606,7 +594,6 @@ class SparkRTC {
             } catch (e) {
                 console.log(e);
                 this.log(`[newPeerConnectionInstance] failed ${e}`);
-                // alert('onnegotiationneeded failed:', e);
             }
         };
 
@@ -616,9 +603,7 @@ class SparkRTC {
             this.broadcasterDC = false;
             this.log(`[newPeerConnectionInstance] ontrack ${JSON.stringify(event.streams)}`);
             const stream = event.streams[0];
-            // if (this.localStream && this.localStream.id === stream.id) return;
-            // if (this.newTrackCallback && !this.newTrackCallback(stream)) return;
-            // if (this.remoteStreams.indexOf(stream) !== -1) return;
+            
             if (this.remoteStreams.length === 0) {
                 this.parentStreamId = stream.id;
             }
@@ -628,7 +613,7 @@ class SparkRTC {
                 this.remoteStreamNotified = false;
                 const theEventStream = event.currentTarget;
                 const trackIds = theEventStream.getTracks().map((t) => t.id);
-                // const trackIds = peerConnection.getReceivers().map((receiver) => receiver.track.id);
+
                 trackIds.forEach((trackId) => {
                     for (const userId in this.myPeerConnectionArray) {
                         if (userId === target) continue;
@@ -683,7 +668,7 @@ class SparkRTC {
             this.targetStreams[target] = stream.id;
 
             for (const userId in this.myPeerConnectionArray) {
-                // if (userId === target) continue;
+
                 const apeerConnection = this.myPeerConnectionArray[userId];
                 this.updateStatus(`check Sending the stream [${stream.id}] tracks to ${userId} ${apeerConnection.isAdience.toString()}`);
                 if (!apeerConnection.isAdience) continue;
@@ -707,10 +692,6 @@ class SparkRTC {
 
         peerConnection.oniceconnectionstatechange = (event) => {
             this.log(`[newPeerConnectionInstance] oniceconnectionstatechange peerConnection.iceConnectionState = ${peerConnection.iceConnectionState} event = ${JSON.stringify(event)}`);
-            
-            // if (peerConnection.iceConnectionState == 'disconnected') {
-            //     this.restartEverything(peerConnection,target);
-            // }
         };
 
         return peerConnection;

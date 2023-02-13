@@ -12,7 +12,6 @@ const MIC_ON = "images/mic-on.png";
 const MIC_OFF = "images/mic-off.png";
 const SCREEN_ON = "images/screen-on.png";
 const SCREEN_OFF = "images/screen-off.png";
-// const SPARK_LOGO = "images/spark-logo.png";
 const RAISE_HAND_ON = "images/hand.png";
 const RAISE_HAND_OFF = "images/hand-off.png";
 const CHARACTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -319,7 +318,6 @@ async function start(turn = true) {
  * @returns {any}
  */
 function onLoad() {
-    // registerNetworkEvent();
     myRole = getMyRole();
     roomName = getRoomName();
     sparkRTC = createSparkRTC();
@@ -330,8 +328,6 @@ function onLoad() {
     setMyName();
     graph = new Graph();
     window.onresize = handleResize;
-    //console.log("DATA: ",DATA);
-    //graph.draw(DATA);
 
     arrangeVideoContainers();
 }
@@ -348,18 +344,11 @@ async function onRaiseHand() {
     console.log(img.dataset.status);
     if (img.dataset.status === 'on') {
         if (sparkRTC.localStream) {
-            // if (confirm(`Do you want to stop streaming?`)) {
-            //     console.log('stopping...');
-            //     removeVideoElement('localVideo-' + sparkRTC.localStream.id);
-            //     disableAudioVideoControls();
-            //     sparkRTC.lowerHand();
-            // }
+        
             return;
         }
         const stream = await sparkRTC.raiseHand();
-        // const tagId = 'localVideo-' + stream.id;
-        // const video = createVideoElement(tagId, true);
-        // video.srcObject = stream;
+       
         document.getElementById('mic').style.display = '';
         document.getElementById('camera').style.display = '';
     }
