@@ -501,5 +501,52 @@ This function returns the user id of the broadcaster by iterating through the `m
 
 ---
   
+## `ping` Function
 
-  
+### Signature
+`ping(): void`
+
+### Parameters
+None
+
+### Return Value
+None
+
+### Description
+The `ping` function is an arrow function that sends a message over a socket connection using the `socket.send()` method. The message is a JSON string that contains a `type` property whose value is either `"tree"` or `"ping"`, depending on whether the `treeCallback` property is truthy or falsy. 
+
+If `treeCallback` is truthy, the `type` property value will be `"tree"`, and if it is falsy, the `type` property value will be `"ping"`. The `send()` method sends the message to the server through the socket connection.
+
+This function is useful for testing the connection status of the socket and can be used to keep the connection alive by sending periodic pings to the server.
+
+---
+
+## `setupSignalingSocket` Function
+
+### Signature
+`setupSignalingSocket(url: string, myName: string, roomName: string): Promise<WebSocket>`
+
+### Parameters
+- `url`: A `string` value representing the URL to connect the WebSocket.
+- `myName`: A `string` value representing the name of the client.
+- `roomName`: A `string` value representing the name of the room the client wants to join.
+
+### Return Value
+The function returns a `Promise` that resolves to a `WebSocket` object.
+
+### Description
+The `setupSignalingSocket` function is an arrow function that takes in three parameters - `url`, `myName`, and `roomName`. It returns a `Promise` that resolves to a `WebSocket` object. 
+
+The function first logs the input parameters to the console. If a `pingInterval` property exists, it is cleared. Then, if `myName` and `roomName` parameters are provided, they are assigned to the `myName` and `roomName` properties of the function. The function then creates a new `WebSocket` object using the specified `url` and `roomName`.
+
+The function sets up event handlers for the `onmessage`, `onopen`, `onclose`, and `onerror` events of the `WebSocket` object. 
+
+When the `onopen` event is triggered, the function sends a `"start"` message to the server, containing the `myName` parameter in its `data` property, using the `send()` method. It also sets up a `pingInterval` that calls the `ping` function every 5 seconds to keep the connection alive. Finally, it resolves the `Promise` with the `WebSocket` object.
+
+When the `onclose` event is triggered, the function sets various properties to their default values and calls the `signalingDisconnectedCallback` and `startProcedure` callbacks if they exist.
+
+When the `onerror` event is triggered, the function logs the error message to the console, rejects the `Promise`, and displays an alert to the user.
+
+This function is useful for setting up a `WebSocket` connection to a signaling server, which can then be used to exchange information between clients in a WebRTC session.
+
+---
