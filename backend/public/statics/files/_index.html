@@ -126,7 +126,6 @@
       };
 
       function createPeerConnection(targetUsername, veiw = "audience") {
-        console.log("_index: createPeerConnection");
         if (myPeerConnections[targetUsername]) {
           // console.log("Already Connected");
           return myPeerConnections[targetUsername];
@@ -268,7 +267,6 @@
           // console.log("Already Connected");
           return true;
         }
-        console.log("_index: targetusername1: ",targetUsername)
         let myPeerConnection = createPeerConnection(targetUsername);
 
         // console.log("localStream", localStream);
@@ -333,7 +331,6 @@
             let targetUsername = msg.name;
             targetName = msg.username;
             var desc = new RTCSessionDescription(msg.sdp);
-            console.log("_index: targetusername2: ",targetUsername)
             let myPeerConnection = createPeerConnection(targetUsername, true);
             try {
               await myPeerConnection.setRemoteDescription(desc);

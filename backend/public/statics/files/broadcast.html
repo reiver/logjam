@@ -353,7 +353,6 @@
     };
 
     function createPeerConnection(targetUsername, view = "audience") {
-      console.log("broadcast: createPeerConnection");
       if (view === true) {
         console.log('createPeerConnection[alt]', targetUsername);
         if (myAltPeerConnections[targetUsername]) {
@@ -603,7 +602,6 @@
         // console.log("Already Connected");
         return true;
       }
-      console.log("broadcast: createPeerConnection1");
       let myPeerConnection = createPeerConnection(targetUsername);
 
       // console.log("localStream", localStream);
@@ -692,7 +690,6 @@
           targetName = msg.username;
           var desc = new RTCSessionDescription(msg.sdp);
       
-          console.log("broadcast: createPeerConnection2");
           let myPeerConnection = createPeerConnection(targetUsername, true);
 
           await myPeerConnection.setRemoteDescription(desc);
@@ -726,7 +723,6 @@
           let targetUsername = msg.data;
 
       
-          console.log("broadcast: createPeerConnection3");
           let myPeerConnection = createPeerConnection(targetUsername, true);
           // console.log("ICE Canadidate Recieved!");
           altIceCandidates.push(new RTCIceCandidate(msg.candidate));
@@ -747,7 +743,6 @@
           var desc = new RTCSessionDescription(msg.sdp);
           let targetUsername = msg.target;
 
-          console.log("broadcast: createPeerConnection4");
           let myPeerConnection = createPeerConnection(targetUsername, true);
           myPeerConnection.setRemoteDescription(desc).catch((e) => {
             console.log("Error", e);
