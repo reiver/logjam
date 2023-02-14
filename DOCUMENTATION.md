@@ -589,4 +589,260 @@ This JSON object indicates to the server that the client is requesting the audie
 
 ---
 
+## `raiseHand` Function
 
+### Signature
+`raiseHand(): void | MediaStream`
+
+### Return Value
+The function returns `void` if `startedRaiseHand` is true, otherwise, it returns a `MediaStream` by calling the `startBroadcasting` function with `'alt-broadcast'` as the `data` parameter.
+
+### Description
+The `raiseHand` function checks if the `startedRaiseHand` flag is set to `true`. If it is, the function returns `void` and exits. Otherwise, it sets `startedRaiseHand` to `true` and calls the `startBroadcasting` function with `'alt-broadcast'` as the `data` parameter. The `startBroadcasting` function is expected to return a `MediaStream` object which is then returned by the `raiseHand` function.
+
+It should be noted that the `startBroadcasting` function needs to be defined for the `raiseHand` function to work as intended.
+
+---
+
+## `onDataChannelOpened` Function
+
+### Signature
+`onDataChannelOpened(dc: RTCDataChannel, target: string, pc: RTCPeerConnection): void`
+
+### Parameters
+- `dc`: An `RTCDataChannel` object representing the data channel that has been opened.
+- `target`: A `string` value representing the target of the data channel.
+- `pc`: An `RTCPeerConnection` object representing the peer connection used to open the data channel.
+
+### Description
+The `onDataChannelOpened` function is called when a data channel is opened between two peers. The function takes in three parameters, `dc`, `target`, and `pc`. The `dc` parameter represents the data channel that has been opened, `target` represents the target of the data channel, and `pc` represents the peer connection used to open the data channel.
+
+The function uses a `setInterval` loop to check the `readyState` of the data channel. If the `readyState` is `open`, the function sends a message through the data channel using the `dc.send` method. If the `readyState` is `connecting`, `closing`, or `closed`, the function logs the corresponding message to the console. The loop continues until the `readyState` is `closed`, at which point the loop is exited using the `clearInterval` method.
+
+---
+
+## `restartEverything` Function
+
+### Signature
+`restartEverything(peerConnection: RTCPeerConnection, target: string): void`
+
+### Parameters
+- `peerConnection`: An `RTCPeerConnection` instance representing the connection with the remote peer.
+- `target`: A `string` value representing the ID of the target peer.
+
+### Return Value
+None
+
+### Description
+The `restartEverything` function is used to restart the peer connection when a disconnection is detected. The function takes in two parameters, `peerConnection` which represents the connection with the remote peer and `target` which represents the ID of the target peer. 
+
+The function first sets the `remoteStreamNotified` flag to `false`. If the length of the remote streams array is zero, the function immediately returns.
+
+The function then gets the IDs of all the tracks associated with the remote stream and iterates through them. For each track ID, it checks all the peer connections in the `myPeerConnectionArray` object, except the target peer connection. If a peer connection is an audience peer connection, it removes the sender associated with the track ID.
+
+After that, the function removes all the remote streams from the `remoteStreams` array.
+
+If the `parentStreamId` is set and it is included in the remote streams array, the function updates the status with a message that the parent stream is disconnected. It then calls the `remoteStreamDCCallback` for each remote stream. The `parentStreamId` is then set to undefined, and the `remoteStreams` array is reset to an empty array.
+
+The function then tries to call the `remoteStreamDCCallback` function for the first remote stream of the `peerConnection` object.
+
+Finally, if the `parentDC` or `startedRaiseHand` flag is set, the `startProcedure` function is called.
+
+---
+
+## `checkParentDisconnection` Function
+
+### Signature
+`checkParentDisconnection(pc: RTCPeerConnection, target: string): void`
+
+### Parameters
+- `pc`: An instance of `RTCPeerConnection` representing the peer connection to check for disconnection of the parent.
+- `target`: A `string` value representing the ID of the target to which the connection belongs.
+
+### Return Value
+None
+
+### Description
+The `checkParentDisconnection` function checks for the disconnection of the parent. It takes in two parameters, `pc` and `target`. The `pc` parameter is an instance of `RTCPeerConnection` representing the peer connection to check for disconnection of the parent. The `target` parameter is a `string` value representing the ID of the target to which the connection belongs.
+
+The function creates an interval that checks if the `pc` parameter is not an audience connection and if the connection is not alive. If the connection is not alive, the function sets the `parentDC` property of the class to `true`. The `restartEverything` function is then called with the `pc` and `target` parameters as arguments. The `setInterval` is then cleared.
+
+It should be noted that the `parentDisconnectionTimeOut` property of the class is used to specify the interval timeout value.
+
+---
+
+## `newPeerConnectionInstance` Function
+
+### Signature
+`newPeerConnectionInstance(target: String, theStream, isAdience = false: Boolean): RTCPeerConnection`
+
+### Return Value
+The function returns a new `RTCPeerConnection` instance.
+
+### Description
+This function `newPeerConnectionInstance()` creates a new `RTCPeerConnection` instance by providing its configuration object `myPeerConnectionConfig` (previously defined as the default configuration object with the required settings), along with the target, the stream to be transmitted, and a boolean `isAdience` which is false by default.
+
+- First, the function initializes some variables including `intervalId`, `peerConnection`, and ``dataChannel``. 
+- The newly created `RTCPeerConnection` object then has the property `isAdience` set to the value of the `isAdience` parameter provided by the function call. 
+- The property `alive` is also set to `true`.
+
+A data channel is created for the connection and is named "chat" using the `createDataChannel()` method. 
+- An `onopen` event handler is then added to `dataChannel` that will invoke the `onDataChannelOpened()` method passing in `dataChannel`, `target`, and `peerConnection` as arguments.
+- In addition to the data channel, an `ondatachannel` event handler is added to `peerConnection` to handle data received on the connection. 
+- When a data message is received, the function checks whether it was sent by the parent connection, and if so, sets `peerConnection.alive` to `true`. 
+- The function then calls `checkParentDisconnection()` with `peerConnection` and `target` as arguments to handle disconnections.
+
+Next, `onerror`, `onbufferedamountlow`, and `onclose` event handlers are added to `receive`, which is the receiving end of the data channel, to handle errors, low buffer thresholds, and the closing of the data channel.
+
+`peerConnection` is then set up with several other event handlers, including `onconnectionstatechange`, `onicecandidate`, `onnegotiationneeded`, and `ontrack`.
+
+- `onconnectionstatechange` is a general handler that logs the current connection state.
+- `onicecandidate` sends a JSON string to the server, containing information about the ice candidate which is received from the server.
+- `onnegotiationneeded` is responsible for preparing the video offer and sending it to the server.
+- `ontrack` is the handler that is invoked whenever a new track is added to `peerConnection`. The handler receives an `event` object which includes a `stream` array that includes details about the stream received from the connection. This handler first checks whether the `localStream` has been added previously to the stream, and whether the `newTrackCallback` is already defined for this stream. If the `remoteStreamCallback` function has been defined, it will be invoked, passing the `stream` object as an argument. 
+- The `remoteStreams` array will be updated with the new `stream` object. 
+
+
+Finally, the function sends a message to the server to notify it that the stream has been received.
+
+---
+
+## `createOrGetPeerConnection` Function
+
+### Signature
+`createOrGetPeerConnection(audienceName: string, isAudience?: boolean): RTCPeerConnection`
+
+### Parameters
+- `audienceName`: A `string` value representing the name of the audience for the peer connection.
+- `isAudience`: An optional `boolean` value representing whether the connection is for an audience or not. Defaults to `false`.
+
+### Return Value
+The function returns an `RTCPeerConnection` object representing the peer connection for the specified `audienceName`.
+
+### Description
+The `createOrGetPeerConnection` function takes in two parameters, `audienceName` and `isAudience`, representing the name of the audience and whether the connection is for an audience or not. 
+
+- If a peer connection with the same `audienceName` already exists in `myPeerConnectionArray`, the function returns it.
+- Otherwise, it calls the `newPeerConnectionInstance` function to create a new peer connection and stores it in `myPeerConnectionArray` with `audienceName` as the key. 
+- Finally, the function returns the newly created peer connection object.
+
+It should be noted that the `newPeerConnectionInstance` function needs to be defined in order for `createOrGetPeerConnection` to work as intended.
+
+---
+
+## `connectToAudience` Function
+
+### Signature
+`connectToAudience(audienceName: string): void`
+
+### Parameters
+- `audienceName`: A `string` value representing the name of the audience to connect to.
+
+### Return Value
+None
+
+### Description
+The `connectToAudience` function takes in a single `audienceName` parameter, which is used to specify the name of the audience to connect to. The function first updates the status to indicate that it is connecting to the specified audience. If there is no local stream and no remote streams available, the function returns without doing anything.
+
+If there is no existing peer connection to the specified audience, the function creates a new peer connection instance using the `newPeerConnectionInstance` function and adds it to the `myPeerConnectionArray` object using the `audienceName` as the key. If a local stream or remote streams are available, the function adds the appropriate tracks to the peer connection instance using the `addTrack` method.
+
+It should be noted that the `newPeerConnectionInstance` function must be defined and that the `myPeerConnectionArray` object must be accessible in order for the `connectToAudience` function to work as intended. 
+
+---
+
+## `sendStreamTo` Function
+
+### Signature
+`sendStreamTo(target: string, stream: MediaStream): void`
+
+### Parameters
+- `target`: A `string` representing the target audience name.
+- `stream`: A `MediaStream` object representing the stream to be sent.
+
+### Return Value
+None
+
+### Description
+The `sendStreamTo` function takes in two parameters: `target` and `stream`. The `target` parameter is a `string` representing the target audience name, while the `stream` parameter is a `MediaStream` object representing the stream to be sent. 
+
+The function first calls the `createOrGetPeerConnection` method to get or create a new `RTCPeerConnection` object associated with the specified target audience. If a new `RTCPeerConnection` object is created, it is assigned to the `peerConnection` constant. The `stream` tracks are then added to the `peerConnection` using the `addTrack` method.
+
+If the `createOrGetPeerConnection` method returns an existing `RTCPeerConnection` object associated with the specified target audience, the `addTrack` method is called on the existing `RTCPeerConnection` object instead.
+
+---
+
+## `start` Function
+
+### Signature
+`async start(turn: boolean): Promise<void>`
+
+### Parameters
+- `turn`: A `boolean` value specifying whether to use a TURN server for the peer connections or not.
+
+### Return Value
+The function returns a `Promise` that resolves to `void`.
+
+### Description
+The `start` function is an asynchronous function that takes in a single `turn` parameter to specify whether to use a TURN server for the peer connections or not. If `turn` is `false`, the `myPeerConnectionConfig` is updated to remove the TURN servers from the list of `iceServers`. The function then proceeds to start the appropriate process based on the `role` and `constraints` of the instance. If the instance is in `broadcast` role, the function starts the broadcasting process, else it starts reading the broadcast. 
+
+If there are no `audio` or `video` constraints specified, the `raise hand` element is removed from the HTML. The function updates the status with the current process at each step of the way. The function returns a promise that resolves to `void`. 
+
+---
+
+## `disableVideo` Function
+
+### Signature
+`disableVideo(enabled: boolean): void`
+
+### Parameters
+- `enabled`: A `boolean` value representing whether the video should be enabled or disabled.
+
+### Return Value
+None
+
+### Description
+The `disableVideo` function takes in a single `enabled` parameter, which is used to enable or disable the video tracks. It does so by using a `forEach` loop to iterate through all tracks of the `localStream` and check whether the kind of the track is 'video'. If it is, the `enabled` parameter is used to set the value of the `enabled` property of the track. If `enabled` is `true`, the track is enabled, and if `enabled` is `false`, the track is disabled. 
+
+This function can be used to enable or disable the video tracks of a `localStream`. 
+
+---
+
+## `disableAudio` Function
+
+### Signature
+`disableAudio(enabled: boolean): void`
+
+### Parameters
+- `enabled`: A `boolean` value representing the desired state of the audio track. If `true`, the audio track is enabled. If `false`, the audio track is disabled.
+
+### Return Value
+None
+
+### Description
+The `disableAudio` function takes in a single `enabled` parameter, which is used to enable or disable the audio track. 
+
+- The function uses the `getTracks` method to get all the tracks in the `localStream`. 
+- It then iterates through each track and checks if the track kind is `audio`. 
+- If it is `audio`, then the `enabled` value is set to the `track.enabled` property. 
+- If `enabled` is `true`, then the audio track is enabled. If `enabled` is `false`, then the audio track is disabled. 
+
+The function does not return any value.
+
+---
+
+## `wait` Function
+
+### Signature
+`wait(mil: number): Promise<void>`
+
+### Parameters
+- `mil`: A `number` value representing the amount of time to wait in milliseconds.
+
+### Return Value
+- The function returns a `Promise` object that resolves to `void` after the specified amount of time has passed.
+
+### Description
+The `wait` function takes in a single `mil` parameter, which is used to determine the amount of time to wait before resolving the `Promise`. The function creates a new `Promise` object that waits for the specified amount of time using `setTimeout` and then resolves the `Promise`. This function can be used to pause the execution of a program for a certain amount of time.
+
+
+---
