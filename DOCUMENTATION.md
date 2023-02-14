@@ -550,3 +550,43 @@ When the `onerror` event is triggered, the function logs the error message to th
 This function is useful for setting up a `WebSocket` connection to a signaling server, which can then be used to exchange information between clients in a WebRTC session.
 
 ---
+
+## `startBroadcasting` Function
+
+### Signature
+`startBroadcasting(data: string): Promise<MediaStream | undefined>`
+
+### Parameters
+- `data`: A `string` value representing the role of the user.
+
+### Return Value
+The function returns a `Promise` that resolves with a `MediaStream` object representing the user's local media stream.
+
+### Description
+The `startBroadcasting` function takes in a single optional `data` parameter, which is used to determine the role of the user. If the user's `localStream` is not already set, the function attempts to retrieve the local stream using the `getUserMedia` method from the `navigator.mediaDevices` API. If successful, the `localStream` is stored in the `this.localStream` property and added to the `this.remoteStreams` array. The function then sends a message to the signaling server with the `data` and type `role`. Finally, the function returns a Promise that resolves with the `localStream`.
+
+If an error occurs while attempting to retrieve the local stream, the function updates the status with an error message and displays an alert message. The function also logs the error message to the console and returns `undefined`.
+
+---
+
+## `startReadingBroadcast` Function
+
+### Signature
+`startReadingBroadcast(): void`
+
+### Parameters
+None
+
+### Return Value
+None
+
+### Description
+The `startReadingBroadcast` function sends a request to the server to start the broadcasting role for the client as an audience member. 
+- It first updates the status to indicate that it is requesting the audience role. 
+- Then, it sends a JSON object to the server using the `socket.send` method with the `type` property set to "role" and the `data` property set to "audience". 
+
+This JSON object indicates to the server that the client is requesting the audience role. Finally, the function logs the success of the message sending operation to the console using the `log` method.
+
+---
+
+
