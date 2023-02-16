@@ -301,10 +301,10 @@ function disableAudioVideoControls() {
 }
 
 const defaultProfilePicture =
-	"https://st3.depositphotos.com/6672868/13701/v/600/depositphotos_137014128-stock-illustration-user-profile-icon.jpg?admitad_uid=95081cce92cdf6561eb656cf40000062&utm_source=admitad&utm_medium=cpa&utm_campaign=442763&tagtag_uid=95081cce92cdf6561eb656cf40000062";
+	`${window.location.href}/files/ga1/images/default-profile-pic.jpg`;
 
 function generateGravatar(email) {
-	return `https://www.gravatar.com/avatar/${md5(email.trim().toLowerCase())}`;
+	return `https://www.gravatar.com/avatar/${md5(email.trim().toLowerCase())}?d=${encodeURIComponent(defaultProfilePicture)}`;
 }
 
 function getProfilePicture(email) {
