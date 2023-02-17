@@ -11,6 +11,7 @@ class SparkRTC {
     myName = 'NoName';
     roomName = 'SparkRTC';
     myUsername = 'NoUsername';
+    /**@type { {[userId: string]: RTCPeerConnection} }*/
     myPeerConnectionArray = {};
     iceCandidates = [];
     pingInterval;
@@ -547,8 +548,11 @@ class SparkRTC {
                 });
                 const allStreams = peerConnection.getRemoteStreams();
                 console.log({ allStreams });
-                for (let i = 0; i < allStreams.length; i++)
-                    this.remoteStreams.splice(this.remoteStreams.indexOf(allStreams[i]), 1);
+                for (let i = 0; i < allStreams.length; i++){
+                    while(this.remoteStreams.indexOf(allStreams[i]) >= 0){
+                        this.remoteStreams.splice(this.remoteStreams.indexOf(allStreams[i]), 1);
+                    }
+                }
 
                 if (this.parentStreamId && allStreams.map((s) => s.id).includes(this.parentStreamId)) {
                     this.updateTheStatus(`Parent stream is disconnected`);
