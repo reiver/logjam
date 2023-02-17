@@ -271,21 +271,29 @@ body {
     align-items: center;
     gap: 1em;
     justify-content: center;
+
 }
 
-.form label {
+.form div {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    grid-gap: 10px;
+}
+
+.form div label {
     padding: 10px;
     height: 2.5em;
+    text-align: right;
 }
 
-.form input {
+.form div input {
     vertical-align: middle;
     margin-right: .2em;
     padding: 10px;
     background-color: #fff;
     border: 1px solid #ddd;
     border-radius: .2em;
-    height: 2.5em;
+    height: 2.5em;    
 }
 
 .form button {
