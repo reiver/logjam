@@ -300,11 +300,12 @@ function disableAudioVideoControls() {
 	document.getElementById("share_screen").style.display = "none";
 }
 
-const defaultProfilePicture =
-	`${window.location.href}/files/ga1/images/default-profile-pic.jpg`;
+const defaultProfilePicture = `${window.location.origin}/files/ga1/images/default-profile-pic.jpg`;
 
 function generateGravatar(email) {
-	return `https://www.gravatar.com/avatar/${md5(email.trim().toLowerCase())}?d=${encodeURIComponent(defaultProfilePicture)}`;
+	return `https://www.gravatar.com/avatar/${md5(
+		email.trim().toLowerCase()
+	)}?d=${encodeURIComponent(defaultProfilePicture)}`;
 }
 
 function getProfilePicture(email) {
