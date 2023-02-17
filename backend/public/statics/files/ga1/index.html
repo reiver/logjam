@@ -29,12 +29,13 @@
                 <h2 id="modal-title">Welcome to Group Video!</h2>
                 <form class="form">
                     <div id="inputFields">
-                        <label for="inputName">Name:<span style="display: inline-block; position: relative; top: -2px; color: red">*</span>
-                        </label>
-                        <input id="inputName" type="text" value="" placeholder="enter a nickname" />
+                        <label for="inputName">Name:<span style="display: inline-block; position: relative; top: -2px; color: red">*</span></label>
+                        <input id="inputName" type="text" value="" placeholder="enter a nickname"/>
                         <label id="emailLabel" for="inputEmail">Email: </label>
                         <input id="inputEmail" type="email" value="" placeholder="enter your email (optional)" />
                     </div>
+
+                    <label for="nameError" id="nameError">Enter Atleast 3 charachter long name</label>
 
                     <button type="button" onclick="handleClick()">Enter</button>
                     <!-- <button type="button" style="background-color: #c98303" onclick="handleClick(false)">Enter Without TURN</button> -->

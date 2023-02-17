@@ -185,25 +185,39 @@ function setMyName() {
     }
 }
 
+
 async function handleClick(turn = true) {
     const name = document.getElementById("inputName").value;
     const email = document.getElementById("inputEmail").value;
+    const error = document.getElementById("nameError");
 
-    myName = name;
-    myEmail = email;
+    //verify name input field
+    if(name.trim() === '' || name === undefined){
+        error.style.display = "block";
 
-    document.getElementById("page").style.visibility = "visible";
-    document.getElementById("getName").style.display = "none";
+    }else if(name.trim().length<3){
+        error.style.display = "block";
 
-    try {
-        localStorage.setItem("logjam_myName", myName);
-        localStorage.setItem("logjam_myEmail", myEmail);
-    } catch (e) {
-        console.log(e);
     }
+    else{
+        error.style.display = "none";
 
-    await start(turn);
-
+        myName = name;
+        myEmail = email;
+    
+        document.getElementById("page").style.visibility = "visible";
+        document.getElementById("getName").style.display = "none";
+    
+        try {
+            localStorage.setItem("logjam_myName", myName);
+            localStorage.setItem("logjam_myEmail", myEmail);
+        } catch (e) {
+            console.log(e);
+        }
+    
+        await start(turn);
+    }
+        
     return false;
 }
 
