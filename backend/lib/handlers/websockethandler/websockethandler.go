@@ -50,7 +50,7 @@ func (receiver httpHandler) emitUserEvent(roomName string) error {
 		return err
 	}
 
-	msg := message.MessageContract {
+	msg := message.MessageContract{
 		Type: "user-event",
 		Data: string(usersJsonString),
 	}
@@ -300,6 +300,8 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 		log.Alert("Set Meta Data ", metaData)
 		if metaDataJsonError == nil {
 			roommapssrv.RoomMaps.SetMetData(roomName, metaData)
+			metaData_ := Map.MetaData
+			_ = metaData_
 			response.Type = "metadata-set"
 			response.Data = theMessage.Data
 			responseJSON, err := json.Marshal(response)
@@ -454,7 +456,7 @@ func (receiver httpHandler) broadcastMessage(roomName string, messageType int, m
 	}
 }
 
-func (receiver httpHandler) deleteNode(conn *websocket.Conn, roomName string, messageType int) {
+func (receiver httpHandler) deleteNode(conn *websocket.Conn, roomName string, messageType int) (socketId int64) {
 	log := receiver.Logger.Begin()
 	defer log.End()
 	Map, found := roommapssrv.RoomMaps.Get(roomName)
@@ -463,6 +465,7 @@ func (receiver httpHandler) deleteNode(conn *websocket.Conn, roomName string, me
 		return
 	}
 	socket := Map.Room.Get(conn).(*binarytreesrv.MySocket)
+	socketId = int64(socket.ID)
 	var response message.MessageContract
 	response.Type = "event-broadcaster-disconnected"
 	response.Data = strconv.FormatInt(int64(socket.ID), 10)
@@ -491,6 +494,7 @@ func (receiver httpHandler) deleteNode(conn *websocket.Conn, roomName string, me
 	}
 	Map.Room.Delete(conn)
 	receiver.emitUserEvent(roomName)
+	return
 }
 
 func (receiver httpHandler) reader(conn *websocket.Conn, userAgent string, roomName string) {
@@ -509,9 +513,36 @@ func (receiver httpHandler) reader(conn *websocket.Conn, userAgent string, roomN
 			_, closedError := err.(*websocket.CloseError)
 			_, handshakeError := err.(*websocket.HandshakeError)
 			if closedError || handshakeError {
-				receiver.deleteNode(conn, roomName, messageType)
+				socketId := receiver.deleteNode(conn, roomName, messageType)
 				{
-					err := roommapssrv.RoomMaps.Set(roomName, Map.Room)
+					Map, _ = roommapssrv.RoomMaps.Get(roomName)
+					metaData := Map.MetaData
+					if raiseHandsStr, exists := metaData["raiseHands"]; exists {
+						var usernameList []string
+						err = json.Unmarshal([]byte(raiseHandsStr), &usernameList)
+						if err != nil {
+							log.Errorf("could not read room metaData: %s", err)
+						} else {
+							if len(usernameList) > 0 {
+								i := indexOf(usernameList, strconv.FormatInt(socketId, 10))
+								if i >= 0 {
+									usernameList = append(usernameList[:i], usernameList[i+1:]...)
+									if len(usernameList) == 0 {
+										delete(metaData, "raiseHands")
+										roommapssrv.RoomMaps.SetMetData(roomName, metaData)
+									} else {
+										jsonBytes, err := json.Marshal(usernameList)
+										if err != nil {
+											log.Errorf("%s", err)
+										}
+										metaData["raiseHands"] = string(jsonBytes)
+										roommapssrv.RoomMaps.SetMetData(roomName, metaData)
+									}
+								}
+							}
+						}
+					}
+					err = roommapssrv.RoomMaps.Set(roomName, Map.Room)
 					if err != nil {
 						log.Errorf("could not set room in map: %s", err)
 					}
@@ -522,6 +553,15 @@ func (receiver httpHandler) reader(conn *websocket.Conn, userAgent string, roomN
 
 		receiver.parseMessage(Map.Room.Get(conn).(*binarytreesrv.MySocket), p, messageType, userAgent, roomName)
 	}
+}
+
+func indexOf(array []string, element string) int {
+	for i, v := range array {
+		if v == element {
+			return i
+		}
+	}
+	return -1
 }
 
 func (receiver httpHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
