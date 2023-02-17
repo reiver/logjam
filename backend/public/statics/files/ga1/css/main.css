@@ -286,6 +286,10 @@ body {
     text-align: right;
 }
 
+#emailLabel {
+    padding-right: 17px;
+}
+
 .form div input {
     vertical-align: middle;
     margin-right: .2em;
