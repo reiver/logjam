@@ -32,7 +32,7 @@ class SparkRTC {
     broadcasterDC = true;
 
     parentDisconnectionTimeOut = 2000; //2 second timeout to check parent is alive or not
-    sendMessageInterval = 1; //send message to child after every 1 ms
+    sendMessageInterval = 10; //send message to child after every 10 ms
 
 
     /**
@@ -40,7 +40,7 @@ class SparkRTC {
      *
      * and Return Peer Connection Answer to Other Peer
      *
-     * @param {*} msg
+     * @param {{name: string, sdp: RTCSessionDescriptionInit }} msg
      */
     handleVideoOfferMsg = async (msg) => {
         this.log(`[handleVideoOfferMsg] ${msg.name}`);
@@ -69,6 +69,7 @@ class SparkRTC {
      */
     handleMessage = async (event) => {
         this.log(`[handleMessage] ${event.data}`);
+
         let msg;
         try {
             msg = JSON.parse(event.data);
@@ -101,7 +102,7 @@ class SparkRTC {
                 audiencePeerConnection = this.createOrGetPeerConnection(msg.data);
                 this.iceCandidates.push(new RTCIceCandidate(msg.candidate));
                 if (audiencePeerConnection && audiencePeerConnection.remoteDescription) {
-                    audiencePeerConnection.addIceCandidate(this.iceCandidates.pop());
+                    await audiencePeerConnection.addIceCandidate(this.iceCandidates.pop());
                 }
                 break;
             case 'role':
@@ -121,7 +122,9 @@ class SparkRTC {
                     if (this.remoteStreamDCCallback) {
                         try {
                             this.remoteStreamDCCallback('no-stream');
-                        } catch (e) { console.log(e) }
+                        } catch (e) {
+                            console.log(e)
+                        }
                     }
                 }
                 break;
@@ -153,7 +156,8 @@ class SparkRTC {
                                 const result = this.raiseHandConfirmation(`${msg.name} wants to broadcast, do you approve?`)
                                 console.log(`[handleMessage] alt-broadcast result`, result);
                                 if (result !== true) return;
-                            } catch {}
+                            } catch {
+                            }
                         }
                         this.socket.send(
                             JSON.stringify({
@@ -190,7 +194,8 @@ class SparkRTC {
                 this.remoteStreams = [];
                 try {
                     if (this.remoteStreamDCCallback) this.remoteStreamDCCallback('no-stream');
-                } catch { }
+                } catch {
+                }
 
                 break;
             case 'event-parent-dc':
@@ -227,9 +232,9 @@ class SparkRTC {
     /**
      * Function to setup Signaling WebSocket with backend
      *
-     * @param {*} url
-     * @param {*} myName
-     * @param {*} roomName
+     * @param {String} url - baseurl
+     * @param {String} myName
+     * @param {String} roomName - room identifier
      * @returns
      */
     setupSignalingSocket = (url, myName, roomName) => {
@@ -311,7 +316,7 @@ class SparkRTC {
     /**
      * Function to initiate Video Broadcasting
      *
-     * @param {*} data
+     * @param {'broadcast' | 'alt-broadcast'} data
      * @returns
      */
     startBroadcasting = async (data = 'broadcast') => {
@@ -378,10 +383,12 @@ class SparkRTC {
 
     /**
      * Function to handle Data Channel Status
-     *
+     * @param {RTCDataChannel} dc
+     * @param {String} target
+     * @param {RTCPeerConnection} pc
      * And send messages via Data Channel
      */
-    onDataChannelOpened(dc,target,pc){
+    onDataChannelOpened(dc, target, pc) {
 
         console.log("DataChannel opened:", dc);
 
@@ -409,11 +416,11 @@ class SparkRTC {
     /**
      * Function to restart the Negotiation and finding a new Parent
      *
-     * @param {RTCPeerConnection} peerConnection
+     * @param {RTCPeerConnection} peerConnection - disconnected peer RTCPeerConnection Object
      * @param {String} target
      * @returns
      */
-    restartEverything(peerConnection,target){
+    restartEverything(peerConnection, target) {
         this.remoteStreamNotified = false;
         if (peerConnection.getRemoteStreams().length === 0) return;
         const trackIds = peerConnection.getReceivers().map((receiver) => receiver.track.id);
@@ -440,8 +447,8 @@ class SparkRTC {
         });
         const allStreams = peerConnection.getRemoteStreams();
         console.log({allStreams});
-        for (let i = 0; i < allStreams.length; i++){
-            while(this.remoteStreams.indexOf(allStreams[i]) >= 0){
+        for (let i = 0; i < allStreams.length; i++) {
+            while (this.remoteStreams.indexOf(allStreams[i]) >= 0) {
                 this.remoteStreams.splice(this.remoteStreams.indexOf(allStreams[i]), 1);
             }
         }
@@ -451,7 +458,8 @@ class SparkRTC {
                 this.remoteStreams.forEach((strm) => {
                     try {
                         this.remoteStreamDCCallback(strm);
-                    } catch {}
+                    } catch {
+                    }
                 });
             }
             this.parentStreamId = undefined;
@@ -460,7 +468,8 @@ class SparkRTC {
 
         try {
             if (this.remoteStreamDCCallback) this.remoteStreamDCCallback(peerConnection.getRemoteStreams()[0]);
-        } catch { }
+        } catch {
+        }
 
 
         if (this.parentDC || this.startedRaiseHand) this.startProcedure();
@@ -473,14 +482,16 @@ class SparkRTC {
      *
      * whether its connected or disconnected
      *
+     * @param {RTCPeerConnection & {alive?: boolean}} pc
+     * @param {String} target
      */
-    checkParentDisconnection(pc,target){
+    checkParentDisconnection(pc, target) {
         // Check for disconnection of Parent
-        let id = setInterval(()=> {
-            if(!pc.isAdience){
+        let id = setInterval(() => {
+            if (!pc.isAdience) {
 
-                if(pc.alive!=undefined){
-                    console.log("parent alive: ",pc.alive, "state: ",pc.connectionState);
+                if (pc.alive != undefined) {
+                    console.log("parent alive: ", pc.alive, "state: ", pc.connectionState);
 
                     if (!pc.alive) { //not connected and not alive
                         console.log("Parent disconnected");
@@ -488,13 +499,13 @@ class SparkRTC {
                         this.parentDC = true;
 
                         //restart negotiation again
-                        this.restartEverything(pc,target);
+                        this.restartEverything(pc, target);
 
                         clearInterval(id); //if disconnected leave the loop
                     }
                     pc.alive = false;
-                }else{
-                    console.log("Undefined: ",pc.alive);
+                } else {
+                    console.log("Undefined: ", pc.alive);
                 }
 
             }
@@ -506,18 +517,18 @@ class SparkRTC {
      *
      * And Data Channel with each peer connection
      *
-     * @param {*} target
-     * @param {*} theStream
-     * @param {*} isAdience
+     * @param {String} target
+     * @param {MediaStream} theStream
+     * @param {boolean} isAudience
      * @returns
      */
-    newPeerConnectionInstance = (target, theStream, isAdience = false) => {
-        this.log(`[newPeerConnectionInstance] target='${target}' theStream='${theStream}' isAdience='${isAdience}'`);
+    newPeerConnectionInstance = (target, theStream, isAudience = false) => {
+        this.log(`[newPeerConnectionInstance] target='${target}' theStream='${theStream}' isAudience='${isAudience}'`);
         /** @type {RTCPeerConnection & {_iceIsConnected?: boolean}} */
         const peerConnection = new RTCPeerConnection(this.myPeerConnectionConfig);
         let intervalId;
 
-        peerConnection.isAdience = isAdience;
+        peerConnection.isAdience = isAudience;
         peerConnection.alive = true;
 
         // Create DataChannel
@@ -525,31 +536,32 @@ class SparkRTC {
 
 
         // Handle open event for DataChannel
-        dataChannel.onopen = this.onDataChannelOpened(dataChannel,target,peerConnection);
+        dataChannel.onopen = (e) => {
+            this.onDataChannelOpened(dataChannel, target, peerConnection);
+        }
 
         //callback for datachannel
-        peerConnection.ondatachannel = event =>{
+        peerConnection.ondatachannel = event => {
             let receive = event.channel;
 
-            receive.onmessage = e =>{
+            receive.onmessage = e => {
                 //check if message came from Only My Parent
-                if(!peerConnection.isAdience){
+                if (!peerConnection.isAdience) {
                     peerConnection.alive = true;
                 }
             }
 
 
-            this.checkParentDisconnection(peerConnection,target);
-
+            this.checkParentDisconnection(peerConnection, target);
 
 
             //handle error event
-            receive.onerror = e=>{
+            receive.onerror = e => {
                 console.error("DataChannel error: ", e);
             }
 
             //handle beffer amount low event
-            receive.onbufferedamountlow = () =>{
+            receive.onbufferedamountlow = () => {
                 console.log("bufferedAmount dropped below threshold.");
             }
 
@@ -649,13 +661,15 @@ class SparkRTC {
                 if (this.remoteStreamDCCallback) {
                     try {
                         this.remoteStreamDCCallback(event.target);
-                    } catch {}
+                    } catch {
+                    }
                 }
             };
             try {
                 if (this.remoteStreamCallback)
                     this.remoteStreamCallback(stream);
-            } catch { }
+            } catch {
+            }
             this.remoteStreams.push(stream);
             if (!this.remoteStreamNotified) {
                 this.remoteStreamNotified = true;
@@ -681,7 +695,8 @@ class SparkRTC {
                 stream.getTracks().forEach((track) => {
                     try {
                         apeerConnection.addTrack(track, stream);
-                    } catch {}
+                    } catch {
+                    }
                 });
             }
 
@@ -689,8 +704,6 @@ class SparkRTC {
                 this.started = true;
             }
         };
-
-
 
 
         peerConnection.oniceconnectionstatechange = (event) => {
@@ -710,7 +723,7 @@ class SparkRTC {
                     console.log("restarting ice");
                     peerConnection.restartIce();
                 }, 0);
-                this.restartEverything(peerConnection ,target);
+                this.restartEverything(peerConnection, target);
             }
         };
 
@@ -728,22 +741,23 @@ class SparkRTC {
      *
      * Whether to create a new peer connection with [peerName] Or to Get the existing one with [peerName]
      *
-     * @param {*} audienceName
-     * @param {*} isAdience
+     * @param {String} audienceName
+     * @param {boolean} isAudience
      * @returns
      */
-    createOrGetPeerConnection = (audienceName, isAdience = false) => {
-        this.log(`[createOrGetPeerConnection] audienceName = ${audienceName}, isAdience = ${isAdience}`);
+    createOrGetPeerConnection = (audienceName, isAudience = false) => {
+        this.log(`[createOrGetPeerConnection] audienceName = ${audienceName}, isAudience = ${isAudience}`);
         if (this.myPeerConnectionArray[audienceName]) return this.myPeerConnectionArray[audienceName];
 
-        this.myPeerConnectionArray[audienceName] = this.newPeerConnectionInstance(audienceName, true, isAdience);
+        this.myPeerConnectionArray[audienceName] = this.newPeerConnectionInstance(audienceName, true, isAudience);
         this.log(`[createOrGetPeerConnection] generate newPeerConnectionInstance`);
 
         return this.myPeerConnectionArray[audienceName];
     };
 
     /**
-     * Function to add new Audiance as Current Node's Childs
+     * Function to add new Audience as Current Node's Children
+     * @param {String} audienceName
      */
     connectToAudience = (audienceName) => {
         this.updateStatus(`Connecting to ${audienceName}`);
@@ -761,7 +775,8 @@ class SparkRTC {
                 astream.getTracks().forEach((track) => {
                     try {
                         this.myPeerConnectionArray[audienceName].addTrack(track, astream);
-                    } catch {}
+                    } catch {
+                    }
                 });
             });
         }
@@ -772,8 +787,8 @@ class SparkRTC {
      *
      * It peer connection exists it send to it, if not it creat a new one and send stream to it
      *
-     * @param {*} target
-     * @param {*} stream
+     * @param {String} target
+     * @param {MediaStream} stream
      */
     sendStreamTo = (target, stream) => {
         this.log(`[handleMessage] sendStreamTo ${target}`);
@@ -790,7 +805,7 @@ class SparkRTC {
      *
      * otherwise start listening to Broadcast
      *
-     * @param {*} turn
+     * @param {boolean} turn
      * @returns
      */
     start = async (turn = true) => {
@@ -816,7 +831,7 @@ class SparkRTC {
     /**
      * Function to enable / disable Video track
      *
-     * @param {*} enabled
+     * @param {boolean} enabled
      */
     disableVideo = (enabled = false) => {
         this.localStream.getTracks().forEach((track) => {
@@ -828,7 +843,7 @@ class SparkRTC {
     /**
      * Function to enable / disable Audio track
      *
-     * @param {*} enabled
+     * @param {boolean} enabled
      */
     disableAudio = (enabled = false) => {
         this.localStream.getTracks().forEach((track) => {
@@ -840,7 +855,7 @@ class SparkRTC {
     /**
      * Function to WAIT for 1 second
      *
-     * @param {*} mil
+     * @param {number} mil
      * @returns
      */
     wait = async (mil = 1000) => {
@@ -902,7 +917,8 @@ class SparkRTC {
         if (this.updateStatus) {
             try {
                 this.updateStatus(status);
-            } catch { }
+            } catch {
+            }
         }
     };
 
@@ -971,7 +987,8 @@ class SparkRTC {
         });
         this.newTrackCallback = options.newTrackCallback;
         this.startProcedure = options.startProcedure;
-        this.log = options.log || ((log) => { });
+        this.log = options.log || ((log) => {
+        });
         this.constraintResults = options.constraintResults;
         this.log(`[constructor] ${this.role}`);
         this.updateStatus = options.updateStatus;
