@@ -281,6 +281,9 @@ async function onRaiseHand() {
         // video.srcObject = stream;
         document.getElementById("mic").style.display = "";
         document.getElementById("camera").style.display = "";
+
+        document.getElementById('raise_hand').remove();
+
     }
 }
 
