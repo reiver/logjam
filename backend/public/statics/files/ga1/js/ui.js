@@ -186,38 +186,52 @@ function setMyName() {
 }
 
 
+//write a function to validate email
+function validateEmail(email) {
+    var re = /\S+@\S+\.\S+/;
+    return re.test(email);
+}
+
+
 async function handleClick(turn = true) {
+
+    let emailError = "Please enter a valid email address";
+    let nameError = "Please enter your name";
+
     const name = document.getElementById("inputName").value;
     const email = document.getElementById("inputEmail").value;
-    const error = document.getElementById("nameError");
+    const error = document.getElementById("error");
 
-    //verify name input field
-    if(name.trim() === '' || name === undefined){
+
+    if(name.trim() == '') {
         error.style.display = "block";
+        error.textContent = nameError;   
+    }else{
+        //validate email
+        if(email.trim() != '' && !validateEmail(email.trim())){
+            error.style.display = "block";
+            error.textContent = emailError;
+        }else{
+            error.style.display = "none";
 
-    }else if(name.trim().length<3){
-        error.style.display = "block";
-
-    }
-    else{
-        error.style.display = "none";
-
-        myName = name;
-        myEmail = email;
-    
-        document.getElementById("page").style.visibility = "visible";
-        document.getElementById("getName").style.display = "none";
-    
-        try {
-            localStorage.setItem("logjam_myName", myName);
-            localStorage.setItem("logjam_myEmail", myEmail);
-        } catch (e) {
-            console.log(e);
-        }
-    
-        await start(turn);
-    }
+            myName = name;
+            myEmail = email;
         
+            document.getElementById("page").style.visibility = "visible";
+            document.getElementById("getName").style.display = "none";
+        
+            try {
+                localStorage.setItem("logjam_myName", myName);
+                localStorage.setItem("logjam_myEmail", myEmail);
+            } catch (e) {
+                console.log(e);
+            }
+        
+            await start(turn);
+        }
+    }
+     
+
     return false;
 }
 
