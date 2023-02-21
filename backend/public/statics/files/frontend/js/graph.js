@@ -63,24 +63,11 @@ class Graph {
         nodeEnter.append('circle')
             .attr('class', 'node')
             .attr('r', 1e-6)
-        // .style("fill", function (d) {
-        //     return d._children ? "lightsteelblue" : "#fff";
-        // });
+    
 
         // Add labels for the nodes
         nodeEnter.append('text')
             .attr("dy", "2.2em")
-            // .attr("dy", ".35em")
-            // .attr("x", function (d) {
-            //     return d.children || d._children ? -13 : 13;
-            // })
-            // .attr("text-anchor", function (d) {
-            //     return d.children || d._children ? "end" : "start";
-            // })
-            .attr("stroke", "black")
-            .style("fill", "white")
-            .style("background-color", "black")
-            .style("font-size","14px")
             .style("font-weight","bold")
             .text(function (d) {
                 console.log("name on graph: ",d.data.name)
@@ -99,7 +86,6 @@ class Graph {
 
         // Update the node attributes and style
         nodeUpdate.select('circle.node')
-            // .attr('r', 10)
             .attr('r', function (d) {
                 return d._children ? 14 : 10;
             })
