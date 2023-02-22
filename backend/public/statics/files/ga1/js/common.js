@@ -1,14 +1,14 @@
 function getWsUrl() {
-    const baseUrl = window.location.href.split("//")[1].split("/")[0];
+    const baseUrl = window.location.href.split('//')[1].split('/')[0];
     const protocol =
-        window.location.href.split("//")[0] === "http:" ? "ws" : "wss";
+        window.location.href.split('//')[0] === 'http:' ? 'ws' : 'wss';
     return `${protocol}://${baseUrl}/ws`;
 }
 
 function clearScreen() {
-    document.getElementById("raise_hand").style.display = "block";
-    document.getElementById("share_screen").style.display = "block";
-    let screen = document.getElementById("screen");
+    document.getElementById('raise_hand').style.display = 'block';
+    document.getElementById('share_screen').style.display = 'block';
+    let screen = document.getElementById('screen');
     if (!screen) return;
     while (screen.hasChildNodes()) {
         screen.removeChild(screen.firstChild);
@@ -21,19 +21,19 @@ function createSparkRTC() {
     clearScreen();
 
     const hide = (element) => {
-        element.classList.add("hidden");
+        element.classList.add('hidden');
     };
 
     const unhide = (element) => {
-        element.classList.remove("hidden");
+        element.classList.remove('hidden');
     };
 
     const isElementHidden = (element) => {
-        return element.classList.contains("hidden");
+        return element.classList.contains('hidden');
     };
 
-    const picContainer = document.getElementById("pic-container");
-    const sidebar = document.getElementById("sidebar");
+    const picContainer = document.getElementById('pic-container');
+    const sidebar = document.getElementById('sidebar');
 
     const toggleUsersList = () => {
         if (isElementHidden(picContainer)) {
@@ -45,14 +45,14 @@ function createSparkRTC() {
         }
     };
 
-    picContainer.addEventListener("click", toggleUsersList);
-    sidebar.addEventListener("click", toggleUsersList);
+    picContainer.addEventListener('click', toggleUsersList);
+    sidebar.addEventListener('click', toggleUsersList);
 
-    if (myRole === "broadcast") {
-        document.getElementById("raise_hand").style.display = "none";
+    if (myRole === 'broadcast') {
+        document.getElementById('raise_hand').style.display = 'none';
         disableAudioVideoControls();
 
-        return new SparkRTC("broadcast", {
+        return new SparkRTC('broadcast', {
             localStreamChangeCallback: (stream) => {
                 getVideoElement('localVideo').srcObject = stream;
                 localStream = stream;
@@ -102,12 +102,12 @@ function createSparkRTC() {
             },
             constraintResults: (constraints) => {
                 if (!constraints.audio) {
-                    document.getElementById("mic").remove();
+                    document.getElementById('mic').remove();
                 }
             },
             updateStatus: (status) => {
                 console.log(`[updateStatus] ${status}`);
-                document.getElementById("status").innerText = status;
+                document.getElementById('status').innerText = status;
             },
             userListUpdated: (users) => {
                 // console.log("User List is updated", { users });
@@ -123,49 +123,54 @@ function createSparkRTC() {
             },
         });
     } else {
-        document.getElementById("share_screen").style.display = "none";
-        document.getElementById("mic").style.display = "none";
-        document.getElementById("camera").style.display = "none";
-        document.getElementById("sidebar-wrapper").style.display = "none";
-        const img = document.getElementById("raise_hand");
-        return new SparkRTC("audience", {
+        document.getElementById('share_screen').style.display = 'none';
+        document.getElementById('mic').style.display = 'none';
+        document.getElementById('camera').style.display = 'none';
+        document.getElementById('sidebar-wrapper').style.display = 'none';
+        const img = document.getElementById('raise_hand');
+        return new SparkRTC('audience', {
             remoteStreamCallback: (stream) => {
-                const tagId = "remoteVideo-" + stream.id;
+                const tagId = 'remoteVideo-' + stream.id;
                 if (document.getElementById(tagId)) return;
                 const video = createVideoElement(tagId);
                 video.srcObject = stream;
                 video.play();
-                document.getElementById("dc-place-holder").remove();
-                img.dataset.status = "on";
+                document.getElementById('dc-place-holder').remove();
+                img.dataset.status = 'on';
                 img.src = RAISE_HAND_ON;
             },
             remoteStreamDCCallback: (stream) => {
                 console.log(`[remoteStreamDCCallback]`, stream);
-                if (stream !== "no-stream") {
-                    clearVideos();
+                if (stream !== 'no-stream') {
+                    let tagId = 'remoteVideo-' + stream.id;
+                    if (!document.getElementById(tagId)) {
+                        tagId = 'localVideo-' + stream.id;
+                        if (!document.getElementById(tagId)) return;
+                    }
+                    removeVideoElement(tagId);
                 }
-                if (sparkRTC.broadcasterDC || stream === "no-stream") {
+                if (sparkRTC.broadcasterDC || stream === 'no-stream') {
                     document.getElementById(
-                        "screen"
+                        'screen'
                     ).innerHTML = `<div id="dc-place-holder" style="display: block;">
                     <img style="width: 100%;" src="images/broken-link-mistake-error-disconnect-svgrepo-com.svg" />
                     <h1>Broadcaster is disconnected now, please stand by</h1>
                     </div>`;
-                    img.dataset.status = "off";
+                    img.dataset.status = 'off';
                     img.src = RAISE_HAND_OFF;
-                    document.getElementById("mic").style.display = "none";
-                    document.getElementById("mic").src = MIC_ON;
-                    document.getElementById("mic").dataset.status = "on";
-                    document.getElementById("camera").style.display = "none";
-                    document.getElementById("camera").src = CAMERA_ON;
-                    document.getElementById("camera").dataset.status = "on";
+                    document.getElementById('mic').style.display = 'none';
+                    document.getElementById('mic').src = MIC_ON;
+                    document.getElementById('mic').dataset.status = 'on';
+                    document.getElementById('camera').style.display = 'none';
+                    document.getElementById('camera').src = CAMERA_ON;
+                    document.getElementById('camera').dataset.status = 'on';
                 }
             },
             signalingDisconnectedCallback: () => {
                 clearScreen();
             },
             startProcedure: async () => {
-                console.log("startProcedure");
+                console.log('startProcedure');
                 sparkRTC.stopSignaling();
                 await handleClick();
             },
@@ -174,10 +179,10 @@ function createSparkRTC() {
             },
             updateStatus: (status) => {
                 console.log(`[updateStatus] ${status}`);
-                document.getElementById("status").innerText = status;
+                document.getElementById('status').innerText = status;
             },
             userListUpdated: (users) => {
-                console.log("User List is updated", { users });
+                console.log('User List is updated', { users });
 
                 // clearVideos();
                 updateUsersList(users);
@@ -198,7 +203,7 @@ function createSparkRTC() {
 function registerNetworkEvent() {
     if (!navigator?.connection) {
         return alert(
-            "The browser is not a standard one so we can not monitor network status."
+            'The browser is not a standard one so we can not monitor network status.'
         );
     }
     handleNetworkStatus();
@@ -208,7 +213,7 @@ function registerNetworkEvent() {
 function handleNetworkStatus(event) {
     const net = event?.currentTarget || navigator.connection;
     if (net.downlink <= 1) {
-        console.log("Network is slow.");
+        console.log('Network is slow.');
         return onNetworkIsSlow(net.downlink);
     }
     onNetworkIsNormal();
