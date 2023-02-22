@@ -160,7 +160,7 @@ function setMyName() {
 async function handleClick(turn = true) {
     let newName = document.getElementById("inputName").value;
 
-    myName = myName;
+    myName = newName;
 
     if (newName) {
         localStorage.setItem('logjam_myName', myName);
