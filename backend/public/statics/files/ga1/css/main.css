@@ -262,7 +262,13 @@ body {
     width: 90%;
 }
 
-
+#error {
+    display: none;
+    color: red;
+    font-weight: bold;
+    font-size: smaller;
+}
+  
 .form {
     position: relative;
     padding: 1em;
@@ -285,6 +291,7 @@ body {
     height: 2.5em;
     text-align: right;
 }
+
 
 #emailLabel {
     padding-right: 17px;
