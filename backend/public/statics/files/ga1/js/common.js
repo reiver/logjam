@@ -54,7 +54,7 @@ function createSparkRTC() {
 
         return new SparkRTC("broadcast", {
             localStreamChangeCallback: (stream) => {
-                // getVideoElement('localVideo').srcObject = stream;
+                getVideoElement('localVideo').srcObject = stream;
                 localStream = stream;
                 enableAudioVideoControls();
             },
