@@ -59,20 +59,20 @@ function createSparkRTC() {
                 enableAudioVideoControls();
             },
             remoteStreamCallback: (stream) => {
-                // const tagId = 'remoteVideo-' + stream.id;
-                // if (document.getElementById(tagId)) return;
-                // const video = createVideoElement(tagId);
-                // video.srcObject = stream;
-                // video.play();
+                const tagId = 'remoteVideo-' + stream.id;
+                if (document.getElementById(tagId)) return;
+                const video = createVideoElement(tagId);
+                video.srcObject = stream;
+                video.play();
             },
             remoteStreamDCCallback: (stream) => {
-                // let tagId = 'remoteVideo-' + stream.id;
-                // if (!document.getElementById(tagId)) {
-                //     tagId = 'localVideo-' + stream.id;
-                //     if (!document.getElementById(tagId)) return;
-                // }
-                // removeVideoElement(tagId);
-                clearVideos();
+                let tagId = 'remoteVideo-' + stream.id;
+                if (!document.getElementById(tagId)) {
+                    tagId = 'localVideo-' + stream.id;
+                    if (!document.getElementById(tagId)) return;
+                }
+                removeVideoElement(tagId);
+                // clearVideos();
             },
             signalingDisconnectedCallback: () => {
                 clearScreen();
@@ -110,16 +110,16 @@ function createSparkRTC() {
                 document.getElementById("status").innerText = status;
             },
             userListUpdated: (users) => {
-                console.log("User List is updated", { users });
+                // console.log("User List is updated", { users });
 
-                clearVideos();
-                updateUsersList(users);
+                // clearVideos();
+                // updateUsersList(users);
 
-                for (const user of users) {
-                    if (user.video) {
-                        createUserVideo(user, localStream.id === user.video.id);
-                    }
-                }
+                // for (const user of users) {
+                //     if (user.video) {
+                //         createUserVideo(user, localStream.id === user.video.id);
+                //     }
+                // }
             },
         });
     } else {
