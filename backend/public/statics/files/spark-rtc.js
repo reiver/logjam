@@ -205,6 +205,7 @@ class SparkRTC {
                 } catch {
                 }
 
+                this.localStream?.getTracks()?.forEach(track=>track.stop());
                 break;
             case 'event-parent-dc':
                 console.log('parentDC', msg.type);
