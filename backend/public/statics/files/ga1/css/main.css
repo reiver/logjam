@@ -148,10 +148,6 @@ body {
     cursor: pointer;
 }
 
-.control-button-image:hover {
-    filter: brightness(0) invert(1);
-}
-
 #sidebar-wrapper{
     top: 0;
     left: 0;
