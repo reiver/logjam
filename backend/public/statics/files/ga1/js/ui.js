@@ -336,7 +336,12 @@ function onLoad() {
 
 async function onRaiseHand() {
     const img = document.getElementById("raise_hand");
+
     if (img.dataset.status === "on") {
+
+        img.dataset.status = "off";
+        img.src = RAISE_HAND_OFF;
+
         if (sparkRTC.localStream) {
             // if (confirm(`Do you want to stop streaming?`)) {
             //     console.log('stopping...');
@@ -352,9 +357,6 @@ async function onRaiseHand() {
         // video.srcObject = stream;
         document.getElementById("mic").style.display = "";
         document.getElementById("camera").style.display = "";
-
-        document.getElementById('raise_hand').remove();
-
     }
 }
 
