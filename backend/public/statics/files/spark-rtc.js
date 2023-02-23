@@ -1,3 +1,8 @@
+/** Your class description
+ *
+ * SparkRTC class is main class to setUP RTC client
+ *
+ */
 class SparkRTC {
     started = false;
     myPeerConnectionConfig = {
@@ -23,8 +28,22 @@ class SparkRTC {
         audio: true,
         video: true,
     };
-    parentDC = false;
-    broadcasterDC = false;
+    parentDC = true;
+    broadcasterDC = true;
+
+    parentDisconnectionTimeOut = 2000; //2 second timeout to check parent is alive or not
+    sendMessageInterval = 10; //send message to child after every 10 ms
+    metaData = {};
+    userStreamData = {};
+    users = [];
+
+    /**
+     * Function to handle Peer Connection Offer, received from Other Peer
+     *
+     * and Return Peer Connection Answer to Other Peer
+     *
+     * @param {{name: string, sdp: RTCSessionDescriptionInit }} msg
+     */
     handleVideoOfferMsg = async (msg) => {
         this.log(`[handleVideoOfferMsg] ${msg.name}`);
         const broadcasterPeerConnection = this.createOrGetPeerConnection(msg.name);
@@ -41,8 +60,18 @@ class SparkRTC {
         );
         this.log(`[handleVideoOfferMsg] send video-answer to ${msg.name} from ${this.myUsername}`);
     };
+
+    /**
+     * A socket handler to receive, message on webSocket,
+     *
+     * It parses message and based on message Type make decisions
+     *
+     * @param {*} event
+     * @returns
+     */
     handleMessage = async (event) => {
         this.log(`[handleMessage] ${event.data}`);
+
         let msg;
         try {
             msg = JSON.parse(event.data);
@@ -75,7 +104,7 @@ class SparkRTC {
                 audiencePeerConnection = this.createOrGetPeerConnection(msg.data);
                 this.iceCandidates.push(new RTCIceCandidate(msg.candidate));
                 if (audiencePeerConnection && audiencePeerConnection.remoteDescription) {
-                    audiencePeerConnection.addIceCandidate(this.iceCandidates.pop());
+                    await audiencePeerConnection.addIceCandidate(this.iceCandidates.pop());
                 }
                 break;
             case 'role':
@@ -95,7 +124,9 @@ class SparkRTC {
                     if (this.remoteStreamDCCallback) {
                         try {
                             this.remoteStreamDCCallback('no-stream');
-                        } catch (e) { console.log(e) }
+                        } catch (e) {
+                            console.log(e)
+                        }
                     }
                 }
                 break;
@@ -127,7 +158,8 @@ class SparkRTC {
                                 const result = this.raiseHandConfirmation(`${msg.name} wants to broadcast, do you approve?`)
                                 console.log(`[handleMessage] alt-broadcast result`, result);
                                 if (result !== true) return;
-                            } catch {}
+                            } catch {
+                            }
                         }
                         this.socket.send(
                             JSON.stringify({
@@ -137,9 +169,15 @@ class SparkRTC {
                         );
                         this.raiseHands.push(msg.data);
                         this.log(`[handleMessage] ${msg.type} approving raised hand ${msg.data}`);
+                        this.getMetadata();
+                        setTimeout(() => {
+                            const metaData = this.metaData;
+                            metaData.raiseHands = JSON.stringify(this.raiseHands);
+                            this.setMetadata(metaData);
+                        }, 1000);
                     }
                 } else {
-                    this.spreadLocalStream();
+                    // this.spreadLocalStream();
                 }
                 break;
             case 'tree':
@@ -155,30 +193,95 @@ class SparkRTC {
             case 'event-broadcaster-disconnected':
                 console.log('broadcaster dc', msg.type);
                 this.broadcasterDC = true;
-                // this.parentDC = true;
-                // if (this.startedRaiseHand) {
-                //     this.lowerHand();
-                // }
-                // if (this.role === 'broadcast') return;
-                // setTimeout(() => {
-                //     console.log('Reconnecting ...');
-                //     this.startProcedure();    
-                // }, 1000);
+                const broadcasterId = this.broadcasterUserId();
+
+                for (const u in this.myPeerConnectionArray) {
+                    this.myPeerConnectionArray[u].close();
+                }
+                this.myPeerConnectionArray = {};
+                this.remoteStreams = [];
+                try {
+                    if (this.remoteStreamDCCallback) this.remoteStreamDCCallback('no-stream');
+                } catch {
+                }
+
                 break;
             case 'event-parent-dc':
                 console.log('parentDC', msg.type);
                 this.parentDC = true;
+                break;
+            case 'metadata-get':
+            case 'metadata-set':
+                this.log(`[handleMessage] ${msg.type}`);
+                this.metaData = JSON.parse(msg.data);
+                break;
+            case 'user-by-stream':
+                this.log(`[handleMessage] ${msg.type}`, msg.data);
+                const [userId, userName, streamId, userRole] = msg.Data.split(',');
+                this.userStreamData[streamId] = {
+                    userId,
+                    userName,
+                    userRole,
+                };
+                break;
+            case 'user-event':
+                this.log(`[handleMessage] ${msg.type}`, msg.data);
+                this.getMetadata();
+                setTimeout(() => {
+                    const users = JSON.parse(msg.data).map((u) => {
+                        const video = u.streamId !== '' ? this.streamById(u.streamId) : null;
+                        return {
+                            id: u.id,
+                            name: u.name,
+                            role: u.role,
+                            video,
+                        };
+                    });
+                    this.users = users;
+
+                    if (this.userListUpdated) {
+                        try {
+                            this.userListUpdated(users);
+                        } catch {
+                        }
+                    }
+                }, 1000);
                 break;
             default:
                 this.log(`[handleMessage] default ${JSON.stringify(msg)}`);
                 break;
         }
     };
+
+    /**
+     * Function to get Broadcaster UserID from Array of PeerConnections
+     *
+     * @returns UserID
+     */
+    broadcasterUserId = () => {
+        for (const userId in this.myPeerConnectionArray) {
+            if (!this.myPeerConnectionArray[userId].isAdience) return userId;
+        }
+        return null;
+    };
+
+    /**
+     * Ping function to, request Tree
+     */
     ping = () => {
         this.socket.send(JSON.stringify({
             type: this.treeCallback ? "tree" : "ping",
         }));
     };
+
+    /**
+     * Function to setup Signaling WebSocket with backend
+     *
+     * @param {String} url - baseurl
+     * @param {String} myName
+     * @param {String} roomName - room identifier
+     * @returns
+     */
     setupSignalingSocket = (url, myName, roomName) => {
         this.log(`[setupSignalingSocket] url='${url}' myName='${myName}' roomName='${roomName}'`);
         return new Promise((resolve, reject) => {
@@ -201,14 +304,14 @@ class SparkRTC {
                         data: myName,
                     })
                 );
-                this.pingInterval = setInterval(this.ping, 60000);
+                this.pingInterval = setInterval(this.ping, 5000);
                 this.log(`[setupSignalingSocket] socket onopen and sent start`);
                 resolve(socket);
             };
             socket.onclose = () => {
                 this.remoteStreamNotified = false;
                 this.myPeerConnectionArray = {};
-                if (this.signalingDisconnectedCallback) this.signalingDisconnectedCallback;
+                if (this.signalingDisconnectedCallback) this.signalingDisconnectedCallback();
                 this.log(`[setupSignalingSocket] socket onclose`);
                 this.started = false;
                 if (this.startProcedure) this.startProcedure();
@@ -224,6 +327,12 @@ class SparkRTC {
 
         })
     };
+
+    /**
+     * Function to initiate Screen Share track
+     *
+     * @returns
+     */
     startShareScreen = async () => {
         this.log(`[handleMessage] startShareScreen`);
         try {
@@ -248,6 +357,13 @@ class SparkRTC {
             alert('Unable to get access to screenshare.');
         }
     };
+
+    /**
+     * Function to initiate Video Broadcasting
+     *
+     * @param {'broadcast' | 'alt-broadcast'} data
+     * @returns
+     */
     startBroadcasting = async (data = 'broadcast') => {
         this.log(`[startBroadcasting] ${data}`);
         try {
@@ -267,6 +383,7 @@ class SparkRTC {
                 JSON.stringify({
                     type: "role",
                     data,
+                    streamId: this.localStream.id,
                 })
             );
             this.log(`[startBroadcasting] send role`);
@@ -275,9 +392,16 @@ class SparkRTC {
             this.updateTheStatus(`Error Start Broadcasting`);
             console.log(e);
             this.log(`[startBroadcasting] ${e}`);
-            alert('Unable to get access to your webcam and microphone.');
+            alert('Unable to get access to your webcam nor microphone.');
         }
     };
+
+    /**
+     * Function to intiate Listening to / Receiving of
+     *
+     * Video broadcast from broadcaster
+     *
+     */
     startReadingBroadcast = async () => {
         this.log(`[startReadingBroadcast]`);
         this.updateTheStatus(`Request Audience Role`);
@@ -289,19 +413,215 @@ class SparkRTC {
         );
         this.log(`[startReadingBroadcast] send role audience`);
     };
+
+    /**
+     * Function to request to broadcast video
+     *
+     * and Immediately starts broadcasting
+     *
+     * @returns initiate Broadcasting
+     */
     raiseHand = () => {
         if (this.startedRaiseHand) return;
         this.startedRaiseHand = true;
         return this.startBroadcasting('alt-broadcast');
     };
-    newPeerConnectionInstance = (target, theStream, isAdience = false) => {
-        this.log(`[newPeerConnectionInstance] target='${target}' theStream='${theStream}' isAdience='${isAdience}'`);
-        const peerConnection = new RTCPeerConnection(this.myPeerConnectionConfig);
-        peerConnection.isAdience = isAdience;
 
-        peerConnection.onconnectionstatechange = (ev) => {
-            // console.log(`[newPeerConnectionInstance] peerConnection.onconnectionstatechange `, ev);
+    /**
+     * Function to handle Data Channel Status
+     * @param {RTCDataChannel} dc
+     * @param {String} target
+     * @param {RTCPeerConnection} pc
+     * And send messages via Data Channel
+     */
+    onDataChannelOpened(dc, target, pc) {
+
+        console.log("DataChannel opened:", dc);
+
+        let intervalId = setInterval(() => {
+
+            if (dc.readyState === "open") {
+                dc.send(`Hello from ${this.myName}`);
+
+            } else if (dc.readyState === "connecting") {
+                console.log("DataChannel is in the process of connecting.");
+            } else if (dc.readyState === "closing") {
+                console.log("DataChannel is in the process of closing.");
+            } else if (dc.readyState === "closed") {
+                console.log("DataChannel is closed and no longer able to send or receive data.");
+
+                clearInterval(intervalId); //if closed leave the loop
+            }
+
+
+        }, this.sendMessageInterval);
+
+    }
+
+
+    /**
+     * Function to restart the Negotiation and finding a new Parent
+     *
+     * @param {RTCPeerConnection} peerConnection - disconnected peer RTCPeerConnection Object
+     * @param {String} target
+     * @returns
+     */
+    restartEverything(peerConnection, target) {
+        this.remoteStreamNotified = false;
+        if (peerConnection.getRemoteStreams().length === 0) return;
+        const trackIds = peerConnection.getReceivers().map((receiver) => receiver.track.id);
+        trackIds.forEach((trackId) => {
+            console.log('[peerConnection.oniceconnectionstatechange] DC trackId', trackId);
+            for (const userId in this.myPeerConnectionArray) {
+                if (userId === target) continue;
+                console.log('[peerConnection.oniceconnectionstatechange] DC userId', userId);
+                const apeerConnection = this.myPeerConnectionArray[userId];
+                if (!apeerConnection.isAdience) return;
+                const allSenders = apeerConnection.getSenders();
+                for (const sender of allSenders) {
+                    if (!sender.track) continue;
+                    if (sender.track.id === trackId) {
+                        console.log('[peerConnection.oniceconnectionstatechange] DC sender');
+                        try {
+                            apeerConnection.removeTrack(sender);
+                        } catch (e) {
+                            console.log(e);
+                        }
+                    }
+                }
+            }
+        });
+        const allStreams = peerConnection.getRemoteStreams();
+        console.log({allStreams});
+        for (let i = 0; i < allStreams.length; i++) {
+            while (this.remoteStreams.indexOf(allStreams[i]) >= 0) {
+                this.remoteStreams.splice(this.remoteStreams.indexOf(allStreams[i]), 1);
+            }
         }
+        if (this.parentStreamId && allStreams.map((s) => s.id).includes(this.parentStreamId)) {
+            this.updateTheStatus(`Parent stream is disconnected`);
+            if (this.remoteStreamDCCallback) {
+                this.remoteStreams.forEach((strm) => {
+                    try {
+                        this.remoteStreamDCCallback(strm);
+                    } catch {
+                    }
+                });
+            }
+            this.parentStreamId = undefined;
+            this.remoteStreams = [];
+        }
+
+        try {
+            if (this.remoteStreamDCCallback) this.remoteStreamDCCallback(peerConnection.getRemoteStreams()[0]);
+        } catch {
+        }
+
+
+        if (this.parentDC || this.startedRaiseHand) this.startProcedure();
+
+
+    }
+
+    /**
+     * Function to check Parent's status
+     *
+     * whether its connected or disconnected
+     *
+     * @param {RTCPeerConnection & {alive?: boolean}} pc
+     * @param {String} target
+     */
+    checkParentDisconnection(pc, target) {
+        // Check for disconnection of Parent
+        let id = setInterval(() => {
+            if (!pc.isAdience) {
+
+                if (pc.alive != undefined) {
+                    console.log("parent alive: ", pc.alive, "state: ", pc.connectionState);
+
+                    if (!pc.alive) { //not connected and not alive
+                        console.log("Parent disconnected");
+
+                        this.parentDC = true;
+
+                        //restart negotiation again
+                        this.restartEverything(pc, target);
+
+                        clearInterval(id); //if disconnected leave the loop
+                    }
+                    pc.alive = false;
+                } else {
+                    console.log("Undefined: ", pc.alive);
+                }
+
+            }
+        }, this.parentDisconnectionTimeOut);
+    }
+
+    /**
+     * Function to create new Peer connection
+     *
+     * And Data Channel with each peer connection
+     *
+     * @param {String} target
+     * @param {boolean} theStream
+     * @param {boolean} isAudience
+     * @returns
+     */
+    newPeerConnectionInstance = (target, theStream, isAudience = false) => {
+        this.log(`[newPeerConnectionInstance] target='${target}' theStream='${theStream}' isAudience='${isAudience}'`);
+        /** @type {RTCPeerConnection & {_iceIsConnected?: boolean}} */
+        const peerConnection = new RTCPeerConnection(this.myPeerConnectionConfig);
+        let intervalId;
+
+        peerConnection.isAdience = isAudience;
+        peerConnection.alive = true;
+
+        // Create DataChannel
+        const dataChannel = peerConnection.createDataChannel("chat");
+
+
+        // Handle open event for DataChannel
+        dataChannel.onopen = (e) => {
+            this.onDataChannelOpened(dataChannel, target, peerConnection);
+        }
+
+        //callback for datachannel
+        peerConnection.ondatachannel = event => {
+            let receive = event.channel;
+
+            receive.onmessage = e => {
+                //check if message came from Only My Parent
+                if (!peerConnection.isAdience) {
+                    peerConnection.alive = true;
+                }
+            }
+
+
+            this.checkParentDisconnection(peerConnection, target);
+
+
+            //handle error event
+            receive.onerror = e => {
+                console.error("DataChannel error: ", e);
+            }
+
+            //handle beffer amount low event
+            receive.onbufferedamountlow = () => {
+                console.log("bufferedAmount dropped below threshold.");
+            }
+
+            // Handle close event for DataChannel
+            receive.onclose = e => {
+                console.log("DataChannel closed:", e);
+            };
+        }
+
+
+        // Handle connectionstatechange event
+        peerConnection.onconnectionstatechange = event => {
+            console.log("Connection state:", peerConnection.connectionState);
+        };
 
         peerConnection.onicecandidate = (event) => {
             this.updateStatus(`Peer Connection ice candidate arrived for ${target}: [${event.candidate}]`);
@@ -335,7 +655,6 @@ class SparkRTC {
             } catch (e) {
                 console.log(e);
                 this.log(`[newPeerConnectionInstance] failed ${e}`);
-                // alert('onnegotiationneeded failed:', e);
             }
         };
 
@@ -345,9 +664,11 @@ class SparkRTC {
             this.broadcasterDC = false;
             this.log(`[newPeerConnectionInstance] ontrack ${JSON.stringify(event.streams)}`);
             const stream = event.streams[0];
-            if (this.localStream && this.localStream.id === stream.id) return;
-            if (this.newTrackCallback && !this.newTrackCallback(stream)) return;
-            if (this.remoteStreams.indexOf(stream) !== -1) return;
+            console.log('user-by-stream', stream.id);
+            this.socket.send(JSON.stringify({
+                type: 'user-by-stream',
+                data: stream.id,
+            }));
             if (this.remoteStreams.length === 0) {
                 this.parentStreamId = stream.id;
             }
@@ -356,7 +677,8 @@ class SparkRTC {
                 console.log('[stream.oninactive] event', event);
                 this.remoteStreamNotified = false;
                 const theEventStream = event.currentTarget;
-                const trackIds = peerConnection.getReceivers().map((receiver) => receiver.track.id);
+                const trackIds = theEventStream.getTracks().map((t) => t.id);
+
                 trackIds.forEach((trackId) => {
                     for (const userId in this.myPeerConnectionArray) {
                         if (userId === target) continue;
@@ -375,6 +697,7 @@ class SparkRTC {
                         }
                     }
                 });
+                console.log('indx', this.remoteStreams.indexOf(theEventStream));
                 this.remoteStreams.splice(this.remoteStreams.indexOf(theEventStream), 1);
                 if (this.parentStreamId && this.parentStreamId === theEventStream.id) {
                     if (this.remoteStreamDCCallback) {
@@ -383,17 +706,20 @@ class SparkRTC {
                         });
                     }
                     this.parentStreamId = undefined;
+                    this.parentDC = true;
                 }
                 if (this.remoteStreamDCCallback) {
                     try {
                         this.remoteStreamDCCallback(event.target);
-                    } catch {}
+                    } catch {
+                    }
                 }
             };
             try {
                 if (this.remoteStreamCallback)
                     this.remoteStreamCallback(stream);
-            } catch { }
+            } catch {
+            }
             this.remoteStreams.push(stream);
             if (!this.remoteStreamNotified) {
                 this.remoteStreamNotified = true;
@@ -409,12 +735,18 @@ class SparkRTC {
             this.targetStreams[target] = stream.id;
 
             for (const userId in this.myPeerConnectionArray) {
-                if (userId === target) continue;
-                const apeerConnection = this.myPeerConnectionArray[userId];
-                if (!apeerConnection.isAdience) return;
 
+                const apeerConnection = this.myPeerConnectionArray[userId];
+                this.updateStatus(`check Sending the stream [${stream.id}] tracks to ${userId} ${apeerConnection.isAdience.toString()}`);
+                if (!apeerConnection.isAdience) continue;
+
+                this.updateStatus(`Sending the stream [${stream.id}] tracks to ${userId}`);
+                this.connectToAudience
                 stream.getTracks().forEach((track) => {
-                    apeerConnection.addTrack(track, stream);
+                    try {
+                        apeerConnection.addTrack(track, stream);
+                    } catch {
+                    }
                 });
             }
 
@@ -423,72 +755,60 @@ class SparkRTC {
             }
         };
 
+
         peerConnection.oniceconnectionstatechange = (event) => {
             this.log(`[newPeerConnectionInstance] oniceconnectionstatechange peerConnection.iceConnectionState = ${peerConnection.iceConnectionState} event = ${JSON.stringify(event)}`);
-            if (peerConnection.iceConnectionState == 'disconnected') {
-                this.remoteStreamNotified = false;
-                console.log('[peerConnection.oniceconnectionstatechange] DC event', event);
-                if (peerConnection.getRemoteStreams().length === 0) return;
-                const trackIds = peerConnection.getReceivers().map((receiver) => receiver.track.id);
-                trackIds.forEach((trackId) => {
-                    console.log('[peerConnection.oniceconnectionstatechange] DC trackId', trackId);
-                    for (const userId in this.myPeerConnectionArray) {
-                        if (userId === target) continue;
-                        console.log('[peerConnection.oniceconnectionstatechange] DC userId', userId);
-                        const apeerConnection = this.myPeerConnectionArray[userId];
-                        if (!apeerConnection.isAdience) return;
-                        const allSenders = apeerConnection.getSenders();
-                        for (const sender of allSenders) {
-                            if (!sender.track) continue;
-                            if (sender.track.id === trackId) {
-                                console.log('[peerConnection.oniceconnectionstatechange] DC sender');
-                                try {
-                                    apeerConnection.removeTrack(sender);
-                                } catch (e) {
-                                    console.log(e);
-                                }
-                            }
-                        }
-                    }
-                });
-                const allStreams = peerConnection.getRemoteStreams();
-                console.log({allStreams});
-                for (let i = 0; i < allStreams.length; i++)
-                    this.remoteStreams.splice(this.remoteStreams.indexOf(allStreams[i]), 1);
-                
-                if (this.parentStreamId && allStreams.map((s) => s.id).includes(this.parentStreamId)) {
-                    this.updateTheStatus(`Parent stream is disconnected`);
-                    if (this.remoteStreamDCCallback) {
-                        this.remoteStreams.forEach((strm) => {
-                            try {
-                                this.remoteStreamDCCallback(strm);
-                            } catch {}
-                        });
-                    }
-                    this.parentStreamId = undefined;
-                    this.remoteStreams = [];
+            console.log(`new ice connection state => ${peerConnection.iceConnectionState}`);
+            switch (peerConnection.iceConnectionState) {
+                case "connected": {
+                    peerConnection._iceIsConnected = true;
+                    break;
                 }
-                if (this.startedRaiseHand) this.lowerHand();
-                // if (this.role !== 'broadcast') this.getBroadcasterStatus();
-                try {
-                    if (this.remoteStreamDCCallback) this.remoteStreamDCCallback(peerConnection.getRemoteStreams()[0]);
-                } catch { }
-                if (this.parentDC) this.startProcedure();
-
+                default:
+                    peerConnection._iceIsConnected = false;
+                    break;
+            }
+            if (peerConnection.iceConnectionState === 'disconnected' || peerConnection.iceConnectionState === 'failed' || peerConnection.iceConnectionState === 'closed') {
+                setTimeout(() => {
+                    console.log("restarting ice");
+                    peerConnection.restartIce();
+                }, 0);
+                this.restartEverything(peerConnection, target);
             }
         };
 
+        setTimeout(() => {
+            if (!peerConnection._iceIsConnected) {
+                peerConnection.restartIce();
+            }
+        }, 4000);
+
         return peerConnection;
     };
-    createOrGetPeerConnection = (audienceName, isAdience = false) => {
-        this.log(`[createOrGetPeerConnection] audienceName = ${audienceName}, isAdience = ${isAdience}`);
+
+    /**
+     * Helper fucntion to iniiate select
+     *
+     * Whether to create a new peer connection with [peerName] Or to Get the existing one with [peerName]
+     *
+     * @param {String} audienceName
+     * @param {boolean} isAudience
+     * @returns
+     */
+    createOrGetPeerConnection = (audienceName, isAudience = false) => {
+        this.log(`[createOrGetPeerConnection] audienceName = ${audienceName}, isAudience = ${isAudience}`);
         if (this.myPeerConnectionArray[audienceName]) return this.myPeerConnectionArray[audienceName];
 
-        this.myPeerConnectionArray[audienceName] = this.newPeerConnectionInstance(audienceName, true, isAdience);
+        this.myPeerConnectionArray[audienceName] = this.newPeerConnectionInstance(audienceName, true, isAudience);
         this.log(`[createOrGetPeerConnection] generate newPeerConnectionInstance`);
 
         return this.myPeerConnectionArray[audienceName];
     };
+
+    /**
+     * Function to add new Audience as Current Node's Children
+     * @param {String} audienceName
+     */
     connectToAudience = (audienceName) => {
         this.updateStatus(`Connecting to ${audienceName}`);
         this.log(`[handleMessage] connectToAudience ${audienceName}`);
@@ -503,11 +823,23 @@ class SparkRTC {
             this.updateStatus(`publishing stream/s to ${audienceName}`);
             this.remoteStreams.forEach((astream) => {
                 astream.getTracks().forEach((track) => {
-                    this.myPeerConnectionArray[audienceName].addTrack(track, astream);
+                    try {
+                        this.myPeerConnectionArray[audienceName].addTrack(track, astream);
+                    } catch {
+                    }
                 });
             });
         }
     };
+
+    /**
+     * Function to spread the local stream to Target Audiance peers.
+     *
+     * It peer connection exists it send to it, if not it creat a new one and send stream to it
+     *
+     * @param {String} target
+     * @param {MediaStream} stream
+     */
     sendStreamTo = (target, stream) => {
         this.log(`[handleMessage] sendStreamTo ${target}`);
         const peerConnection = this.createOrGetPeerConnection(target, false);
@@ -515,6 +847,17 @@ class SparkRTC {
             peerConnection.addTrack(track, stream);
         });
     };
+
+    /**
+     * Function to initiate the client depending on its role
+     *
+     * If role is broadcaster start Broadcasting
+     *
+     * otherwise start listening to Broadcast
+     *
+     * @param {boolean} turn
+     * @returns
+     */
     start = async (turn = true) => {
         if (!turn) {
             this.myPeerConnectionConfig.iceServers = iceServers.filter((i) => i.url.indexOf('turn') < 0);
@@ -534,18 +877,37 @@ class SparkRTC {
         this.updateTheStatus(`Start as audience`);
         return this.startReadingBroadcast();
     };
+
+    /**
+     * Function to enable / disable Video track
+     *
+     * @param {boolean} enabled
+     */
     disableVideo = (enabled = false) => {
         this.localStream.getTracks().forEach((track) => {
             if (track.kind === 'video')
                 track.enabled = enabled;
         });
     };
+
+    /**
+     * Function to enable / disable Audio track
+     *
+     * @param {boolean} enabled
+     */
     disableAudio = (enabled = false) => {
         this.localStream.getTracks().forEach((track) => {
             if (track.kind === 'audio')
                 track.enabled = enabled;
         });
     };
+
+    /**
+     * Function to WAIT for 1 second
+     *
+     * @param {number} mil
+     * @returns
+     */
     wait = async (mil = 1000) => {
         return new Promise((res) => {
             setTimeout(() => {
@@ -553,6 +915,11 @@ class SparkRTC {
             }, mil);
         });
     };
+    /**
+     * Function to get Broadcaster status from backend
+     *
+     * @returns
+     */
     getBroadcasterStatus = async () => {
         const max = 5;
         const reconnect = true;
@@ -576,6 +943,12 @@ class SparkRTC {
         });
 
     };
+
+    /**
+     * Function to set the Peer Connection Constraints
+     *
+     * depending upon presence Audio and Video Devices
+     */
     getSupportedConstraints = async () => {
         const res = await navigator.mediaDevices.enumerateDevices();
         if (!res.find((r) => r.kind === 'audioinput')) {
@@ -586,13 +959,24 @@ class SparkRTC {
         }
         if (this.constraintResults) this.constraintResults(this.constraints);
     };
+
+    /**
+     * Function to update the Status of current Client
+     */
     updateTheStatus = (status) => {
         if (this.updateStatus) {
             try {
                 this.updateStatus(status);
-            } catch { }
+            } catch {
+            }
         }
     };
+
+    /**
+     * Function to lower hand and take request(to broadcast) back, if sharing already stop sharing
+     *
+     * @returns
+     */
     lowerHand = async () => {
         console.log('[lowerHand] start');
         if (!this.localStream) return;
@@ -624,12 +1008,59 @@ class SparkRTC {
         this.localStream = null;
         this.startedRaiseHand = false;
     };
+
+    /**
+     * Function to broadcast local stream to all peer audiance
+     */
     spreadLocalStream = () => {
         for (const target in this.myPeerConnectionArray) {
             if (this.myPeerConnectionArray[target].isAdience)
                 this.sendStreamTo(target, this.localStream);
         }
     };
+    getStreamDetails = (streamId) => {
+        if (this.localStream && this.localStream.id === streamId) {
+            return {
+                userId: this.myUsername,
+                userName: this.myName,
+                userRole: this.role,
+            };
+        }
+
+        if (this.userStreamData[streamId]) {
+            return this.userStreamData[streamId];
+        }
+
+        return null;
+    };
+    setMetadata = (metadata) => {
+        this.socket.send(JSON.stringify({
+            type: 'metadata-set',
+            data: JSON.stringify(metadata)
+        }));
+    };
+    getMetadata = () => {
+        this.socket.send(JSON.stringify({
+            type: 'metadata-get',
+        }));
+    };
+    streamById = (streamId) => {
+        return this.remoteStreams.find((s) => s.id === streamId);
+    };
+    stopSignaling = () => {
+        if (this.pingInterval) {
+            clearInterval(this.pingInterval);
+            this.pingInterval = null;
+        }
+        this.socket.onclose = () => {};
+        this.socket.close();
+    };
+    /**
+     * Construcor Function for Class SparkRTC
+     *
+     * @param {*} role
+     * @param {*} options
+     */
     constructor(role, options = {}) {
         this.role = role;
         this.localStreamChangeCallback = options.localStreamChangeCallback;
@@ -642,9 +1073,11 @@ class SparkRTC {
         });
         this.newTrackCallback = options.newTrackCallback;
         this.startProcedure = options.startProcedure;
-        this.log = options.log || ((log) => { });
+        this.log = options.log || ((log) => {
+        });
         this.constraintResults = options.constraintResults;
         this.log(`[constructor] ${this.role}`);
         this.updateStatus = options.updateStatus;
+        this.userListUpdated = options.userListUpdated;
     }
 }

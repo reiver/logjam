@@ -320,6 +320,8 @@
     };
 
     function createPeerConnection(targetUsername, view = "audience") {
+      console.log("index: createPeerConnection");
+
       if (view === 'alt') {
         const tmpPeerConnection = new RTCPeerConnection(myPeerConnectionConfig);
         tmpPeerConnection.onicecandidate = function (event) {
@@ -521,6 +523,7 @@
     }
     function connectUser(targetUsername, type = 'default') {
       if (type === 'alt') {
+        console.log("index: createPeerConnection1");
         broadcasterPeerConnection = createPeerConnection(targetUsername, type);
 
         if (sendStream) {
@@ -536,6 +539,7 @@
         // console.log("Already Connected");
         return true;
       }
+      console.log("index: createPeerConnection2");
       let myPeerConnection = createPeerConnection(targetUsername);
 
       /*
@@ -611,6 +615,8 @@
           let targetUsername = msg.name;
           targetName = msg.username;
           var desc = new RTCSessionDescription(msg.sdp);
+        
+          console.log("index: createPeerConnection3");
           let myPeerConnection = createPeerConnection(targetUsername);
           // await myPeerConnection.setLocalDescription({type: "rollback"});
           await myPeerConnection.setRemoteDescription(desc);
@@ -631,6 +637,8 @@
           let targetUsername = msg.name;
           targetName = msg.username;
           var desc = new RTCSessionDescription(msg.sdp);
+        
+          console.log("index: createPeerConnection4");
           let myPeerConnection = createPeerConnection(targetUsername, true);
           // await myPeerConnection.setLocalDescription({type: "rollback"});
           await myPeerConnection.setRemoteDescription(desc);

@@ -28,13 +28,9 @@ class Graph {
         let svg = d3.select(this.svgElement).select('g');
         // Assigns the x and y position for the nodes
 
-        console.log("source node name: ",source.data.name);
-
         // Compute the new tree layout.
         let nodes = this.treeData.descendants(),
             links = this.treeData.descendants().slice(1);
-
-        console.log("nodes: ",nodes);
 
         // Normalize for fixed-depth.
         nodes.forEach(function (d) {
@@ -46,10 +42,8 @@ class Graph {
         // Update the nodes...
         let node = svg.selectAll('g.node')
             .data(nodes, function (d) {
-                console.log("node id: ",d.id);
                 return d.id || (d.id = ++i);
             });
-            console.log("node >=: ",node);
 
         // Enter any new modes at the parent's previous position.
         let nodeEnter = node.enter().append('g')
@@ -63,14 +57,22 @@ class Graph {
         nodeEnter.append('circle')
             .attr('class', 'node')
             .attr('r', 1e-6)
-    
+        // .style("fill", function (d) {
+        //     return d._children ? "lightsteelblue" : "#fff";
+        // });
 
         // Add labels for the nodes
         nodeEnter.append('text')
             .attr("dy", "2.2em")
-            .style("font-weight","bold")
+            // .attr("dy", ".35em")
+            // .attr("x", function (d) {
+            //     return d.children || d._children ? -13 : 13;
+            // })
+            // .attr("text-anchor", function (d) {
+            //     return d.children || d._children ? "end" : "start";
+            // })
+            .attr("stroke", "white")
             .text(function (d) {
-                console.log("name on graph: ",d.data.name)
                 return d.data.name;
             });
 
@@ -86,6 +88,7 @@ class Graph {
 
         // Update the node attributes and style
         nodeUpdate.select('circle.node')
+            // .attr('r', 10)
             .attr('r', function (d) {
                 return d._children ? 14 : 10;
             })
@@ -169,7 +172,6 @@ class Graph {
                 d.children = d._children;
                 d._children = null;
             }
-            
             self.update(d);
         }
     }
@@ -179,11 +181,8 @@ class Graph {
 
         // Assigns parent, children, height, depth
         this.root = d3.hierarchy(data, function (d) {
-            console.log("chilern: ",d);
             return d.children;
         });
-        console.log("root: ",this.root);
-        
         this.root.x0 = this.height / 2;
         this.root.y0 = 0;
 
