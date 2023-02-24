@@ -242,6 +242,8 @@ async function onRaiseHand() {
             // }
             return;
         }
+        img.dataset.status = "off";
+        img.src = RAISE_HAND_OFF;
         const stream = await sparkRTC.raiseHand();
         // const tagId = 'localVideo-' + stream.id;
         // const video = createVideoElement(tagId, true);
