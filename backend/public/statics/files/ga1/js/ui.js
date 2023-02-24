@@ -14,6 +14,9 @@ const verySlowColor =
 const DCColor =
     "invert(13%) sepia(99%) saturate(4967%) hue-rotate(350deg) brightness(92%) contrast(96%)";
 
+const emailError = "Please enter a valid email address";
+const nameError = "Please enter your name";
+
 let graph;
 let sparkRTC;
 let myName;
@@ -188,15 +191,55 @@ function setMyName() {
 
 //write a function to validate email
 function validateEmail(email) {
-    var re = /\S+@\S+\.\S+/;
-    return re.test(email);
+    
+    const emailRegex = /^[a-zA-Z0-9]+([._-][a-zA-Z0-9]+)*@[a-zA-Z0-9]+([_-][a-zA-Z0-9]+)*(\.[a-zA-Z]{2,})+$/;
+
+    return emailRegex.test(email);
+}
+
+async function handleEmailInput(){
+    const inputEmail = document.getElementById('inputEmail');
+    console.log("input: " ,inputEmail);
+
+    inputEmail.addEventListener('input', function() {
+        console.log('Input field value changed:', inputEmail.value);
+      
+        let error = document.getElementById("error");
+
+        if(inputEmail.value.trim()!='' && validateEmail(inputEmail.value)) {
+            error.style.display = "none";
+        }
+        else{
+            error.style.display = "block";
+            error.textContent = emailError;
+        }
+
+        if(inputEmail.value.trim() === '') {
+            error.style.display = "none";
+        }
+      });
+}
+
+async function handleNameInput(){
+    const inputName = document.getElementById('inputName');
+    console.log("input: " ,inputName);
+
+    inputName.addEventListener('input', function() {
+        console.log('Input field value changed:', inputName.value);
+      
+        let error = document.getElementById("error");
+
+        if(inputName.value.trim() != '') {
+              error.style.display = "none";
+         }else{
+            error.style.display = "block";
+            error.textContent = nameError;
+         }
+      });
 }
 
 
 async function handleClick(turn = true) {
-
-    let emailError = "Please enter a valid email address";
-    let nameError = "Please enter your name";
 
     const name = document.getElementById("inputName").value;
     const email = document.getElementById("inputEmail").value;
@@ -293,7 +336,12 @@ function onLoad() {
 
 async function onRaiseHand() {
     const img = document.getElementById("raise_hand");
+
     if (img.dataset.status === "on") {
+
+        img.dataset.status = "off";
+        img.src = RAISE_HAND_OFF;
+
         if (sparkRTC.localStream) {
             // if (confirm(`Do you want to stop streaming?`)) {
             //     console.log('stopping...');
@@ -309,9 +357,6 @@ async function onRaiseHand() {
         // video.srcObject = stream;
         document.getElementById("mic").style.display = "";
         document.getElementById("camera").style.display = "";
-
-        document.getElementById('raise_hand').remove();
-
     }
 }
 
