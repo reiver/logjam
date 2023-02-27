@@ -54,7 +54,11 @@ function createSparkRTC() {
 
         return new SparkRTC('broadcast', {
             localStreamChangeCallback: (stream) => {
-                getVideoElement('localVideo').srcObject = stream;
+                const localVideo = getVideoElement('localVideo');
+                localVideo.srcObject = stream;
+
+                localVideo.style.objectFit = 'contain';
+                
                 localStream = stream;
                 enableAudioVideoControls();
             },
@@ -64,6 +68,9 @@ function createSparkRTC() {
                 const video = createVideoElement(tagId);
                 video.srcObject = stream;
                 video.play();
+
+                video.style.objectFit = 'contain';
+
             },
             remoteStreamDCCallback: (stream) => {
                 let tagId = 'remoteVideo-' + stream.id;
@@ -135,6 +142,9 @@ function createSparkRTC() {
                 const video = createVideoElement(tagId);
                 video.srcObject = stream;
                 video.play();
+
+                video.style.objectFit = 'contain';
+   
                 document.getElementById('dc-place-holder').remove();
                 img.dataset.status = 'on';
                 img.src = RAISE_HAND_ON;
