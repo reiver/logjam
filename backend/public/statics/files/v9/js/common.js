@@ -33,6 +33,8 @@ function createSparkRTC() {
                 video.play();
             },
             remoteStreamDCCallback: (stream) => {
+                console.log(`[remoteStreamDCCallback] broadcast`, stream);
+
                 let tagId = 'remoteVideo-' + stream.id;
                 if (!document.getElementById(tagId)) {
                     tagId = 'localVideo-' + stream.id;
@@ -94,16 +96,26 @@ function createSparkRTC() {
                 img.src = RAISE_HAND_ON;
             },
             remoteStreamDCCallback: (stream) => {
-                console.log(`[remoteStreamDCCallback]`, stream);
+                console.log(`[remoteStreamDCCallback] audienece`, stream);
                 if (stream !== 'no-stream') {
+
+                    console.log("remoteStreamDCCallback", stream);
+
                     let tagId = 'remoteVideo-' + stream.id;
+                    console.log("tagID_1", tagId);
+
                     if (!document.getElementById(tagId)) {
                         tagId = 'localVideo-' + stream.id;
                         if (!document.getElementById(tagId)) return;
                     }
+
+                    console.log("tagID_2", tagId);
+
                     removeVideoElement(tagId);
                 }
                 if (sparkRTC.broadcasterDC || stream === 'no-stream') {
+                    console.log("broaadDC: ",sparkRTC.broadcasterDC);
+                    
                     document.getElementById('screen').innerHTML = `<div id="dc-place-holder" style="display: block;">
                     <img style="width: 100%;" src="images/broken-link-mistake-error-disconnect-svgrepo-com.svg" />
                     <h1>Broadcaster is disconnected now, please stand by</h1>

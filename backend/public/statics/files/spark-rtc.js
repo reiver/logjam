@@ -30,7 +30,8 @@ class SparkRTC {
     };
     parentDC = true;
     broadcasterDC = true;
-
+    shareStream=null;
+    shareStreamID=null;
     parentDisconnectionTimeOut = 2000; //2 second timeout to check parent is alive or not
     sendMessageInterval = 10; //send message to child after every 10 ms
     metaData = {};
@@ -328,6 +329,47 @@ class SparkRTC {
         })
     };
 
+
+    stopShareScreen = async (stream) =>{
+        console.log("stream: ",stream);
+        if(stream){
+            console.log("stoping screen share..");
+  
+             for (const userId in this.myPeerConnectionArray) {
+                const apeerConnection = this.myPeerConnectionArray[userId];
+
+                console.log("Before check ...");
+
+                if (!apeerConnection.isAdience) return false;
+
+                console.log("connection is with Audience..");
+
+                stream.getTracks().forEach((track) => {
+
+                    console.log("finding sender to remove..");
+
+                    const sender = apeerConnection.getSenders().find(sender => sender.track && sender.track.id === track.id);
+                    
+                    if (sender) {
+                        console.log("Sender exists now removing tracks");
+                        apeerConnection.removeTrack(sender);
+                        return true;
+                    }else{
+                        console.log("No sender exists");
+                        return false;
+                    }
+
+                });
+            }
+            
+        }else{
+            console.log("no stream to stop screen share..");
+            return false;
+        }
+  
+        return false;
+    }
+
     /**
      * Function to initiate Screen Share track
      *
@@ -336,21 +378,26 @@ class SparkRTC {
     startShareScreen = async () => {
         this.log(`[handleMessage] startShareScreen`);
         try {
-            const shareStream = await navigator.mediaDevices
+            this.shareStream = await navigator.mediaDevices
                 .getDisplayMedia({
                     audio: true,
                     video: true,
                 });
-            this.remoteStreams.push(shareStream);
+                
+
+            console.log("ShareStream: ",this.shareStream);
+
+            this.remoteStreams.push(this.shareStream);
             for (const userId in this.myPeerConnectionArray) {
                 const apeerConnection = this.myPeerConnectionArray[userId];
                 if (!apeerConnection.isAdience) return;
 
-                shareStream.getTracks().forEach((track) => {
-                    apeerConnection.addTrack(track, shareStream);
+                this.shareStream.getTracks().forEach((track) => {
+                    console.log("Track: ",track.id);
+                    apeerConnection.addTrack(track, this.shareStream);
                 });
             }
-            return shareStream;
+            return this.shareStream;
         } catch (e) {
             console.log(e);
             this.log(`[handleMessage] startShareScreen error ${e}`);
@@ -374,6 +421,8 @@ class SparkRTC {
                     throw new Error('No media device available');
                 }
                 this.localStream = await navigator.mediaDevices.getUserMedia(this.constraints);
+                console.log("localStream: ",this.localStream);
+                this.localStream.isActive = true;
                 this.updateTheStatus(`Local stream loaded`);
                 this.log(`[startBroadcasting] local stream loaded`);
                 this.remoteStreams.push(this.localStream);
@@ -442,7 +491,6 @@ class SparkRTC {
 
             if (dc.readyState === "open") {
                 dc.send(`Hello from ${this.myName}`);
-
             } else if (dc.readyState === "connecting") {
                 console.log("DataChannel is in the process of connecting.");
             } else if (dc.readyState === "closing") {
@@ -504,7 +552,8 @@ class SparkRTC {
                 this.remoteStreams.forEach((strm) => {
                     try {
                         this.remoteStreamDCCallback(strm);
-                    } catch {
+                    } catch(e) {
+                        console.log(e);
                     }
                 });
             }
@@ -558,6 +607,18 @@ class SparkRTC {
         }, this.parentDisconnectionTimeOut);
     }
 
+
+    checkStream(stream){
+
+        console.log("Stream id: ",stream.id);
+        if(stream.getTracks().length === 0){
+            console.log("Stream length is 0");
+        }else{
+            console.log("Stream length is : ",stream.getTracks());
+        }
+       
+    }
+
     /**
      * Function to create new Peer connection
      *
@@ -573,6 +634,7 @@ class SparkRTC {
         /** @type {RTCPeerConnection & {_iceIsConnected?: boolean}} */
         const peerConnection = new RTCPeerConnection(this.myPeerConnectionConfig);
         let intervalId;
+        let someid="";
 
         peerConnection.isAdience = isAudience;
         peerConnection.alive = true;
@@ -595,6 +657,8 @@ class SparkRTC {
                 if (!peerConnection.isAdience) {
                     peerConnection.alive = true;
                 }
+
+                
             }
 
 
@@ -663,6 +727,9 @@ class SparkRTC {
             this.parentDC = false;
             this.broadcasterDC = false;
             this.log(`[newPeerConnectionInstance] ontrack ${JSON.stringify(event.streams)}`);
+            
+            console.log("event: ",event);
+            
             const stream = event.streams[0];
             console.log('user-by-stream', stream.id);
             this.socket.send(JSON.stringify({
@@ -672,18 +739,63 @@ class SparkRTC {
             if (this.remoteStreams.length === 0) {
                 this.parentStreamId = stream.id;
             }
+
+
+        
             stream.oninactive = (event) => {
+                
+                // console.log("inactive stream: ",stream.getTracks());
+
+                const removeStream = (pc, stream) => {
+
+                    // console.log("Senders: ",pc.getSenders());
+
+                    pc.getSenders().forEach(sender => {
+                        if(sender.track){
+                            const track = sender.track;
+                            // console.log("track: ",track);
+
+                            if (track.kind === 'video' && track.muted === true) {
+                                pc.removeTrack(sender);
+                            }
+                        }
+                        
+                    });
+
+                };
+
+
+                for(const userid in this.myPeerConnectionArray){
+                    if(this.myPeerConnectionArray[userid].isAdience){
+                        // console.log("Removing Stream from Audinece..");
+                        removeStream(this.myPeerConnectionArray[userid], stream);
+                    }
+                }
+
+                
+                  
+                
+        
                 this.log(`[newPeerConnectionInstance] stream.oninactive ${JSON.stringify(event)}`);
                 console.log('[stream.oninactive] event', event);
                 this.remoteStreamNotified = false;
                 const theEventStream = event.currentTarget;
                 const trackIds = theEventStream.getTracks().map((t) => t.id);
 
+                if(stream){
+                    console.log("Stream: ",stream);
+                }else{
+                    console.log("No STREAM");
+                }
+                console.log("TrackIDS: ",trackIds);
+
                 trackIds.forEach((trackId) => {
                     for (const userId in this.myPeerConnectionArray) {
                         if (userId === target) continue;
                         const apeerConnection = this.myPeerConnectionArray[userId];
+                    
                         if (!apeerConnection.isAdience) return;
+                
                         const allSenders = apeerConnection.getSenders();
                         for (const sender of allSenders) {
                             if (!sender.track) continue;
@@ -695,13 +807,14 @@ class SparkRTC {
                                 }
                             }
                         }
-                    }
+                    }                  
                 });
                 console.log('indx', this.remoteStreams.indexOf(theEventStream));
                 this.remoteStreams.splice(this.remoteStreams.indexOf(theEventStream), 1);
                 if (this.parentStreamId && this.parentStreamId === theEventStream.id) {
                     if (this.remoteStreamDCCallback) {
                         this.remoteStreams.forEach((strm) => {
+                            console.log("GOING ...");
                             this.remoteStreamDCCallback(strm);
                         });
                     }
@@ -710,14 +823,21 @@ class SparkRTC {
                 }
                 if (this.remoteStreamDCCallback) {
                     try {
+                        console.log("GOING ...2 ");
+
                         this.remoteStreamDCCallback(event.target);
                     } catch {
                     }
                 }
             };
+
             try {
-                if (this.remoteStreamCallback)
+                if (this.remoteStreamCallback){
+                    console.log("GOING ...3");
+                    console.log("Streamid: ",stream.id);
                     this.remoteStreamCallback(stream);
+
+                }
             } catch {
             }
             this.remoteStreams.push(stream);
@@ -762,6 +882,7 @@ class SparkRTC {
             switch (peerConnection.iceConnectionState) {
                 case "connected": {
                     peerConnection._iceIsConnected = true;
+
                     break;
                 }
                 default:

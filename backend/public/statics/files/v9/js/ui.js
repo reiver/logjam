@@ -121,22 +121,52 @@ async function onShareScreen() {
     const img = document.getElementById("share_screen");
     if (!shareScreenStream) {
         shareScreenStream = await sparkRTC.startShareScreen();
+
         if (shareScreenStream) {
             img.dataset.status = 'on';
             img.src = SCREEN_ON;
             const localScreen = getVideoElement('localScreen');
             localScreen.srcObject = shareScreenStream;
+
+            //callback to detect Stop Share
+            shareScreenStream.getTracks()[0].onended = async function () {
+                console.log("stopScreen Share");
+            
+                const img = document.getElementById("share_screen");
+                
+                img.dataset.status = 'off';
+                img.src = SCREEN_OFF;
+                shareScreenStream.getTracks().forEach(track => track.stop());
+
+                let res = await sparkRTC.stopShareScreen(shareScreenStream);
+                if(res){
+                    console.log("track removed");
+                }
+
+                shareScreenStream = null;
+                const localScreen = getVideoElement('localScreen');
+                localScreen.srcObject = null;
+                removeVideoElement('localScreen');
+
+            };
+
         }
+
+    
     } else {
         img.dataset.status = 'off';
         img.src = SCREEN_OFF;
         shareScreenStream.getTracks().forEach(track => track.stop());
+        sparkRTC.stopShareScreen(shareScreenStream);
+
         shareScreenStream = null;
         const localScreen = getVideoElement('localScreen');
         localScreen.srcObject = null;
         removeVideoElement('localScreen');
+
     }
 }
+
 
 
 function setMyName() {
