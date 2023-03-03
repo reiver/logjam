@@ -722,6 +722,7 @@ class SparkRTC {
         
             stream.oninactive = (event) => {
                 
+                //func to remove RTP Sender
                 const removeStream = (pc) => {
 
                     pc.getSenders().forEach(sender => {
@@ -738,6 +739,7 @@ class SparkRTC {
                 };
 
 
+                //Loop through peer connection array and find audinece PC
                 for(const userid in this.myPeerConnectionArray){
                     if(this.myPeerConnectionArray[userid].isAdience){
                         removeStream(this.myPeerConnectionArray[userid]);
