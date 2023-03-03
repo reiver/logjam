@@ -331,42 +331,23 @@ class SparkRTC {
 
 
     stopShareScreen = async (stream) =>{
-        console.log("stream: ",stream);
         if(stream){
-            console.log("stoping screen share..");
-  
              for (const userId in this.myPeerConnectionArray) {
                 const apeerConnection = this.myPeerConnectionArray[userId];
-
-                console.log("Before check ...");
-
                 if (!apeerConnection.isAdience) return false;
 
-                console.log("connection is with Audience..");
-
                 stream.getTracks().forEach((track) => {
-
-                    console.log("finding sender to remove..");
 
                     const sender = apeerConnection.getSenders().find(sender => sender.track && sender.track.id === track.id);
                     
                     if (sender) {
-                        console.log("Sender exists now removing tracks");
                         apeerConnection.removeTrack(sender);
                         return true;
-                    }else{
-                        console.log("No sender exists");
-                        return false;
                     }
-
                 });
-            }
-            
-        }else{
-            console.log("no stream to stop screen share..");
-            return false;
+            }    
         }
-  
+
         return false;
     }
 
@@ -385,15 +366,12 @@ class SparkRTC {
                 });
                 
 
-            console.log("ShareStream: ",this.shareStream);
-
             this.remoteStreams.push(this.shareStream);
             for (const userId in this.myPeerConnectionArray) {
                 const apeerConnection = this.myPeerConnectionArray[userId];
                 if (!apeerConnection.isAdience) return;
 
                 this.shareStream.getTracks().forEach((track) => {
-                    console.log("Track: ",track.id);
                     apeerConnection.addTrack(track, this.shareStream);
                 });
             }
@@ -744,17 +722,12 @@ class SparkRTC {
         
             stream.oninactive = (event) => {
                 
-                // console.log("inactive stream: ",stream.getTracks());
-
-                const removeStream = (pc, stream) => {
-
-                    // console.log("Senders: ",pc.getSenders());
+                const removeStream = (pc) => {
 
                     pc.getSenders().forEach(sender => {
-                        if(sender.track){
-                            const track = sender.track;
-                            // console.log("track: ",track);
+                        const track = sender.track;
 
+                        if(track){
                             if (track.kind === 'video' && track.muted === true) {
                                 pc.removeTrack(sender);
                             }
@@ -767,8 +740,7 @@ class SparkRTC {
 
                 for(const userid in this.myPeerConnectionArray){
                     if(this.myPeerConnectionArray[userid].isAdience){
-                        // console.log("Removing Stream from Audinece..");
-                        removeStream(this.myPeerConnectionArray[userid], stream);
+                        removeStream(this.myPeerConnectionArray[userid]);
                     }
                 }
 

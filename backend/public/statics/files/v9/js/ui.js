@@ -130,7 +130,6 @@ async function onShareScreen() {
 
             //callback to detect Stop Share
             shareScreenStream.getTracks()[0].onended = async function () {
-                console.log("stopScreen Share");
             
                 const img = document.getElementById("share_screen");
                 
@@ -138,11 +137,8 @@ async function onShareScreen() {
                 img.src = SCREEN_OFF;
                 shareScreenStream.getTracks().forEach(track => track.stop());
 
-                let res = await sparkRTC.stopShareScreen(shareScreenStream);
-                if(res){
-                    console.log("track removed");
-                }
-
+                sparkRTC.stopShareScreen(shareScreenStream);
+                
                 shareScreenStream = null;
                 const localScreen = getVideoElement('localScreen');
                 localScreen.srcObject = null;
