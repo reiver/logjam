@@ -146,6 +146,7 @@ async function onShareScreen() {
 
             };
 
+            localScreen.style.objectFit = 'contain';
         }
 
     

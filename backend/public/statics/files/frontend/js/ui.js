@@ -230,11 +230,6 @@ function setMyName() {
  * @returns {any}
  */
 async function handleClick(turn = true) {
-    let newName = document.getElementById("inputName").value;
-    if (newName) {
-        myName = newName;
-        localStorage.setItem('logjam_myName', myName);
-    }
     document.getElementById("page").style.visibility = "visible";
     document.getElementById("getName").style.display = "none";
 
@@ -253,6 +248,11 @@ function handleResize() {
 
 }
 
+function getMyName(){
+    const queryString = window.location.search;
+    const urlParams = new URLSearchParams(queryString);
+    return urlParams.get('name');
+}
 
 /**
  * 
@@ -320,12 +320,18 @@ async function start(turn = true) {
 function onLoad() {
     myRole = getMyRole();
     roomName = getRoomName();
+    myName = getMyName();
+    if(myName === '' || !myName){
+        myName = makeId(10);
+    }
+
+    console.log("my name is: ",myName);
+    
     sparkRTC = createSparkRTC();
     if (!getDebug()) {
         document.getElementById('logs').style.display = 'none';
     }
 
-    setMyName();
     graph = new Graph();
     window.onresize = handleResize;
 
