@@ -182,6 +182,7 @@ function createSparkRTC() {
             startProcedure: async () => {
                 console.log('startProcedure');
                 sparkRTC.stopSignaling();
+                clearScreen();
                 await handleClick();
             },
             log: (log) => {

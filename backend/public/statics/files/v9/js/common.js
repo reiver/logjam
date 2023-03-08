@@ -122,6 +122,7 @@ function createSparkRTC() {
                 clearScreen();
             },
             startProcedure: async () => {
+                await clearScreen();
                 await handleClick();
             },
             log: (log) => {
