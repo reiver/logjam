@@ -868,7 +868,6 @@ class SparkRTC {
                     console.log("restarting ice");
                     peerConnection.restartIce();
                 }, 0);
-                this.restartEverything(peerConnection, target);
             }
         };
 
