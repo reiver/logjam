@@ -333,6 +333,27 @@ class SparkRTC {
         })
     };
 
+    stopShareScreen = async (stream) =>{
+        if(stream){
+             for (const userId in this.myPeerConnectionArray) {
+                const apeerConnection = this.myPeerConnectionArray[userId];
+                if (!apeerConnection.isAdience) return false;
+
+                stream.getTracks().forEach((track) => {
+
+                    const sender = apeerConnection.getSenders().find(sender => sender.track && sender.track.id === track.id);
+                    
+                    if (sender) {
+                        apeerConnection.removeTrack(sender);
+                        return true;
+                    }
+                });
+            }    
+        }
+
+        return false;
+    }
+
     /**
      * Function to initiate Screen Share track
      *
@@ -683,6 +704,29 @@ class SparkRTC {
                 this.log(`[newPeerConnectionInstance] stream.oninactive ${JSON.stringify(event)}`);
                 console.log('[stream.oninactive] event', event, event.currentTarget.getTracks(), event.target.getTracks());
                 this.remoteStreamNotified = false;
+
+
+                //func to remove RTP Sender
+                const removeStream = (pc) => {
+                    pc.getSenders().forEach(sender => {
+                        const track = sender.track;
+                        if(track){
+                            if (track.kind === 'video' && track.muted === true) {
+                                pc.removeTrack(sender);
+                            }
+                        } 
+                    });
+                };
+
+
+                //Loop through peer connection array and find audinece PC
+                for(const userid in this.myPeerConnectionArray){
+                    if(this.myPeerConnectionArray[userid].isAdience){
+                        removeStream(this.myPeerConnectionArray[userid]);
+                    }
+                }
+
+
                 const theEventStream = event.currentTarget;
                 const trackIds = theEventStream.getTracks().map((t) => t.id);
 

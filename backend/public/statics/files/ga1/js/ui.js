@@ -156,12 +156,32 @@ async function onShareScreen() {
             const localScreen = getVideoElement("localScreen");
             localScreen.srcObject = shareScreenStream;
 
+            //callback to detect Stop Share
+            shareScreenStream.getTracks()[0].onended = async function () {
+            
+                const img = document.getElementById("share_screen");
+                
+                img.dataset.status = 'off';
+                img.src = SCREEN_OFF;
+                shareScreenStream.getTracks().forEach(track => track.stop());
+
+                sparkRTC.stopShareScreen(shareScreenStream);
+                
+                shareScreenStream = null;
+                const localScreen = getVideoElement('localScreen');
+                localScreen.srcObject = null;
+                removeVideoElement('localScreen');
+
+            };
+
             localScreen.style.objectFit = 'contain';
         }
     } else {
         img.dataset.status = "off";
         img.src = SCREEN_OFF;
         shareScreenStream.getTracks().forEach((track) => track.stop());
+        sparkRTC.stopShareScreen(shareScreenStream);
+
         shareScreenStream = null;
         const localScreen = getVideoElement("localScreen");
         localScreen.srcObject = null;
