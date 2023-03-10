@@ -207,7 +207,9 @@ class SparkRTC {
                     if (this.remoteStreamDCCallback) this.remoteStreamDCCallback('no-stream');
                 } catch {
                 }
-
+                this.localStream?.getTracks()?.forEach(track=>track.stop());
+                this.localStream = null;
+                this.startedRaiseHand = false;
                 break;
             case 'event-parent-dc':
                 console.log('parentDC', msg.type);

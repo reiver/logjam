@@ -92,7 +92,7 @@ function createSparkRTC() {
                 const video = createVideoElement(tagId);
                 video.srcObject = stream;
                 video.play();
-                document.getElementById('dc-place-holder').remove();
+                document.getElementById('dc-place-holder')?.remove();
                 img.dataset.status = 'on';
                 img.src = RAISE_HAND_ON;
             },
