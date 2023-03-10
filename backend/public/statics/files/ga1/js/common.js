@@ -58,7 +58,7 @@ function createSparkRTC() {
                 localVideo.srcObject = stream;
 
                 localVideo.style.objectFit = 'contain';
-                
+
                 localStream = stream;
                 enableAudioVideoControls();
             },
@@ -144,8 +144,8 @@ function createSparkRTC() {
                 video.play();
 
                 video.style.objectFit = 'contain';
-   
-                document.getElementById('dc-place-holder').remove();
+
+                document.getElementById('dc-place-holder')?.remove();
                 img.dataset.status = 'on';
                 img.src = RAISE_HAND_ON;
             },
@@ -193,7 +193,7 @@ function createSparkRTC() {
                 document.getElementById('status').innerText = status;
             },
             userListUpdated: (users) => {
-                console.log('User List is updated', { users });
+                console.log('User List is updated', {users});
 
                 // clearVideos();
                 updateUsersList(users);
