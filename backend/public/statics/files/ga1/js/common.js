@@ -148,6 +148,9 @@ function createSparkRTC() {
                 document.getElementById('dc-place-holder')?.remove();
                 img.dataset.status = 'on';
                 img.src = RAISE_HAND_ON;
+
+                document.getElementById('share_screen').style.display = 'none';
+
             },
             remoteStreamDCCallback: (stream) => {
                 console.log(`[remoteStreamDCCallback]`, stream);
