@@ -37,6 +37,9 @@ class SparkRTC {
     userStreamData = {};
     users = [];
 
+    /**@type {{[trackId:string]: string}}*/
+    trackToStreamMap = {};
+
     /**
      * Function to handle Peer Connection Offer, received from Other Peer
      *
@@ -204,7 +207,9 @@ class SparkRTC {
                     if (this.remoteStreamDCCallback) this.remoteStreamDCCallback('no-stream');
                 } catch {
                 }
-
+                this.localStream?.getTracks()?.forEach(track=>track.stop());
+                this.localStream = null;
+                this.startedRaiseHand = false;
                 break;
             case 'event-parent-dc':
                 console.log('parentDC', msg.type);
@@ -518,9 +523,11 @@ class SparkRTC {
         }
 
 
-        if (this.parentDC || this.startedRaiseHand) this.startProcedure();
-
-
+        if (this.parentDC || this.startedRaiseHand) {
+            setTimeout(() => {
+                this.startProcedure();
+            }, 4000);
+        }
     }
 
     /**
@@ -576,7 +583,7 @@ class SparkRTC {
 
         peerConnection.isAdience = isAudience;
         peerConnection.alive = true;
-
+/*
         // Create DataChannel
         const dataChannel = peerConnection.createDataChannel("chat");
 
@@ -616,7 +623,7 @@ class SparkRTC {
                 console.log("DataChannel closed:", e);
             };
         }
-
+*/
 
         // Handle connectionstatechange event
         peerConnection.onconnectionstatechange = event => {
@@ -674,31 +681,33 @@ class SparkRTC {
             }
             stream.oninactive = (event) => {
                 this.log(`[newPeerConnectionInstance] stream.oninactive ${JSON.stringify(event)}`);
-                console.log('[stream.oninactive] event', event);
+                console.log('[stream.oninactive] event', event, event.currentTarget.getTracks(), event.target.getTracks());
                 this.remoteStreamNotified = false;
                 const theEventStream = event.currentTarget;
                 const trackIds = theEventStream.getTracks().map((t) => t.id);
 
-                trackIds.forEach((trackId) => {
-                    for (const userId in this.myPeerConnectionArray) {
-                        if (userId === target) continue;
-                        const apeerConnection = this.myPeerConnectionArray[userId];
-                        if (!apeerConnection.isAdience) return;
-                        const allSenders = apeerConnection.getSenders();
-                        for (const sender of allSenders) {
-                            if (!sender.track) continue;
-                            if (sender.track.id === trackId) {
-                                try {
-                                    apeerConnection.removeTrack(sender);
-                                } catch (e) {
-                                    console.log(e);
-                                }
+                for (const userId in this.myPeerConnectionArray) {
+                    const apeerConnection = this.myPeerConnectionArray[userId];
+                    if (!apeerConnection.isAdience) continue;
+                    const allSenders = apeerConnection.getSenders();
+                    for (const sender of allSenders) {
+                        if (!sender.track) continue;
+                        console.log("the streamId", this.trackToStreamMap[sender.track.id]);
+                        if (this.trackToStreamMap[sender.track.id] === theEventStream.id) {
+                            try {
+                                apeerConnection.removeTrack(sender);
+                                // delete this.trackToStreamMap[sender.track.id];
+                            } catch (e) {
+                                console.log(e);
                             }
                         }
                     }
-                });
+                }
+
                 console.log('indx', this.remoteStreams.indexOf(theEventStream));
-                this.remoteStreams.splice(this.remoteStreams.indexOf(theEventStream), 1);
+                while (this.remoteStreams.indexOf(theEventStream) >= 0) {
+                    this.remoteStreams.splice(this.remoteStreams.indexOf(theEventStream), 1);
+                }
                 if (this.parentStreamId && this.parentStreamId === theEventStream.id) {
                     if (this.remoteStreamDCCallback) {
                         this.remoteStreams.forEach((strm) => {
@@ -721,6 +730,9 @@ class SparkRTC {
             } catch {
             }
             this.remoteStreams.push(stream);
+            stream.getTracks().forEach((t) => {
+                this.trackToStreamMap[t.id] = stream.id;
+            })
             if (!this.remoteStreamNotified) {
                 this.remoteStreamNotified = true;
                 this.log(`[newPeerConnectionInstance] A7`);
@@ -741,9 +753,9 @@ class SparkRTC {
                 if (!apeerConnection.isAdience) continue;
 
                 this.updateStatus(`Sending the stream [${stream.id}] tracks to ${userId}`);
-                this.connectToAudience
                 stream.getTracks().forEach((track) => {
                     try {
+                        track.streamId = stream.id;
                         apeerConnection.addTrack(track, stream);
                     } catch {
                     }
@@ -769,10 +781,11 @@ class SparkRTC {
                     break;
             }
             if (peerConnection.iceConnectionState === 'disconnected' || peerConnection.iceConnectionState === 'failed' || peerConnection.iceConnectionState === 'closed') {
-                setTimeout(() => {
-                    console.log("restarting ice");
-                    peerConnection.restartIce();
-                }, 0);
+                if (!this.parentDC)
+                    setTimeout(() => {
+                        console.log("restarting ice");
+                        peerConnection.restartIce();
+                    }, 0);
                 this.restartEverything(peerConnection, target);
             }
         };
@@ -1052,9 +1065,11 @@ class SparkRTC {
             clearInterval(this.pingInterval);
             this.pingInterval = null;
         }
-        this.socket.onclose = () => {};
+        this.socket.onclose = () => {
+        };
         this.socket.close();
     };
+
     /**
      * Construcor Function for Class SparkRTC
      *

@@ -50,7 +50,7 @@ func (receiver httpHandler) emitUserEvent(roomName string) error {
 		return err
 	}
 
-	msg := message.MessageContract {
+	msg := message.MessageContract{
 		Type: "user-event",
 		Data: string(usersJsonString),
 	}
@@ -258,17 +258,19 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 		receiver.emitUserEvent(roomName)
 		return
 	case "stream":
-		Map.Room.ToggleCanConnect(socket.Socket)
-		{
-			err = roommapssrv.RoomMaps.Set(roomName, Map.Room)
-			if err != nil {
-				log.Errorf("could not set room in map: %s", err)
-				return
+		if !socket.CanConnect() {
+			Map.Room.ToggleCanConnect(socket.Socket)
+			{
+				err = roommapssrv.RoomMaps.Set(roomName, Map.Room)
+				if err != nil {
+					log.Errorf("could not set room in map: %s", err)
+					return
+				}
 			}
-		}
 
-		msg := "Audiance " + socket.Name + " is receiving stream!"
-		fmt.Fprintln(f, msg)
+			msg := "Audiance " + socket.Name + " is receiving stream!"
+			fmt.Fprintln(f, msg)
+		}
 	case "turn_status":
 		msg := "Turn usage status of " + socket.Name + " is " + theMessage.Data
 		socket.SetIsTurn(theMessage.Data == "on")
