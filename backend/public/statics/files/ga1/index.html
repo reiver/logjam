@@ -105,7 +105,12 @@
                         alt="raise hand" onclick="onRaiseHand()" />
                     <script>
                         if (noRaiseHand) {
-                            document.getElementById("raise_hand").style.display = 'none';
+                            document.getElementById("raise_hand").style.position = 'absolute';
+                            document.getElementById("raise_hand").style.left = '-1000px';
+                            document.getElementById("raise_hand").style.top = '-1000px';
+                            document.getElementById("raise_hand").style.width = '0px';
+                            document.getElementById("raise_hand").style.height = '0px';
+                            document.getElementById("raise_hand").style.opacity = '0';
                         }
                     </script>
                     <img id="net" class="control-button-image" style="display: none;" src="images/network.svg"
