@@ -48,12 +48,16 @@
         const params = new URLSearchParams(document.location.search);
         const title = params.get("modal_title");
         const hideLogo = params.get("hide_logo");
+        const noRaiseHand = params.get("no_raise_hand");
         if (title) {
             const header = document.getElementById('modal-title');
             header.innerText = title;
         }
         if (hideLogo) {
             document.getElementById("logo").remove();
+        }
+        if (noRaiseHand) {
+            document.getElementById("raise_hand").remove();
         }
     </script>
 
@@ -102,6 +106,11 @@
                         alt="share screen" onclick="onShareScreen()" />
                     <img id="raise_hand" data-status="on" class="control-button-image" src="images/hand.png"
                         alt="raise hand" onclick="onRaiseHand()" />
+                    <script>
+                        if (noRaiseHand) {
+                            document.getElementById("raise_hand").remove();
+                        }
+                    </script>
                     <img id="net" class="control-button-image" style="display: none;" src="images/network.svg"
                         alt="net stat" title="Network Status" />
                 </div>
