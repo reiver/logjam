@@ -49,9 +49,7 @@ function createSparkRTC() {
     sidebar.addEventListener('click', toggleUsersList);
 
     if (myRole === 'broadcast') {
-        try {
-            document.getElementById('raise_hand').style.display = 'none';
-        } catch {}
+        document.getElementById('raise_hand').style.display = 'none';
         disableAudioVideoControls();
 
         return new SparkRTC('broadcast', {
