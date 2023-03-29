@@ -6,8 +6,6 @@ function getWsUrl() {
 }
 
 function clearScreen() {
-    document.getElementById('raise_hand').style.display = 'block';
-    document.getElementById('share_screen').style.display = 'block';
     let screen = document.getElementById('screen');
     if (!screen) return;
     while (screen.hasChildNodes()) {
@@ -130,9 +128,8 @@ function createSparkRTC() {
             },
         });
     } else {
-        document.getElementById('share_screen').style.display = 'none';
-        document.getElementById('mic').style.display = 'none';
-        document.getElementById('camera').style.display = 'none';
+        disableAudioVideoControls();
+
         document.getElementById('sidebar-wrapper').style.display = 'none';
         const img = document.getElementById('raise_hand');
         return new SparkRTC('audience', {
@@ -148,7 +145,7 @@ function createSparkRTC() {
                 document.getElementById('dc-place-holder')?.remove();
                 img.dataset.status = 'on';
                 img.src = RAISE_HAND_ON;
-                document.getElementById('share_screen').style.display = 'none';
+                // document.getElementById('share_screen').style.display = 'none';
             },
             remoteStreamDCCallback: (stream) => {
                 console.log(`[remoteStreamDCCallback]`, stream);
