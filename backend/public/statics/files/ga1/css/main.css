@@ -145,6 +145,7 @@ body {
     /*height: 10%;*/
     max-width: 80px;
     min-width: 60px;
+    cursor: pointer;
 }
 
 #sidebar-wrapper{
@@ -312,6 +313,21 @@ body {
     height: 2.5em;
 }
 
+#camera:hover {
+    filter: brightness(0) invert(1);
+}
+
+#mic:hover {
+    filter: brightness(0) invert(1);
+}
+
+#share_screen:hover {
+    filter: brightness(0) invert(1);
+}
+
+#raise_hand:hover {
+    filter: brightness(0) invert(1);
+}
 .form button:hover {
     background-color: royalblue;
 }
