@@ -144,15 +144,8 @@ function createSparkRTC() {
 
                 document.getElementById('dc-place-holder')?.remove();
 
-                console.log("length of local storage", localStorage.length);
-                for(let i = 0; i < localStorage.length; i++){
-                    console.log("Key is", localStorage.key(i));
-                    console.log("Value is", localStorage.getItem(localStorage.key(i)));
-                }
-
-
+        
                 const res = localStorage.getItem("handraised");
-                console.log("Value of res is", res);
 
                 if(res == 'true'){
                     console.log("Status is true");
