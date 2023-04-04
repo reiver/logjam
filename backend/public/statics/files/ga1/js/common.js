@@ -143,8 +143,28 @@ function createSparkRTC() {
                 video.style.objectFit = 'contain';
 
                 document.getElementById('dc-place-holder')?.remove();
-                img.dataset.status = 'on';
-                img.src = RAISE_HAND_ON;
+
+                console.log("length of local storage", localStorage.length);
+                for(let i = 0; i < localStorage.length; i++){
+                    console.log("Key is", localStorage.key(i));
+                    console.log("Value is", localStorage.getItem(localStorage.key(i)));
+                }
+
+
+                const res = localStorage.getItem("handraised");
+                console.log("Value of res is", res);
+
+                if(res == 'true'){
+                    console.log("Status is true");
+                    img.dataset.status = 'off';
+                    img.src = RAISE_HAND_OFF;
+                }else{
+                    console.log("Status is false");
+
+                    img.dataset.status = 'on';
+                    img.src = RAISE_HAND_ON;
+                }
+
             },
             remoteStreamDCCallback: (stream) => {
                 console.log(`[remoteStreamDCCallback]`, stream);
