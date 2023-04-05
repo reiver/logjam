@@ -25,6 +25,7 @@ let myRole;
 let shareScreenStream;
 let roomName;
 
+
 function makeId(length) {
     let result = "";
     for (let i = 0; i < length; i++) {
@@ -340,6 +341,10 @@ async function start(turn = true) {
 }
 
 function onLoad() {
+
+    //setting hand raised status to access in other files
+    localStorage.setItem("handraised", false);
+
     // registerNetworkEvent();
     myRole = getMyRole();
     roomName = getRoomName();
@@ -354,12 +359,17 @@ function onLoad() {
     graph.draw(DATA);
 
     arrangeVideoContainers();
+
+    
 }
 
 async function onRaiseHand() {
     const img = document.getElementById("raise_hand");
 
     if (img.dataset.status === "on") {
+
+        localStorage.setItem("handraised", true);
+        console.log("Setting status to True");
 
         img.dataset.status = "off";
         img.src = RAISE_HAND_OFF;
