@@ -527,7 +527,7 @@ class SparkRTC {
         if (this.parentDC || this.startedRaiseHand) {
             setTimeout(() => {
                 this.startProcedure();
-            }, 4000);
+            }, 1000);
         }
     }
 
@@ -706,7 +706,7 @@ class SparkRTC {
                         console.log("the streamId", this.trackToStreamMap[sender.track.id]);
                         if (this.trackToStreamMap[sender.track.id] === theEventStream.id) {
                             try {
-                                console.log("track removed: ",sender.track.id,)
+                                console.log("track removed: ", sender.track.id,)
                                 apeerConnection.removeTrack(sender);
                                 // delete this.trackToStreamMap[sender.track.id];
                             } catch (e) {
@@ -888,6 +888,13 @@ class SparkRTC {
     start = async (turn = true) => {
         if (!turn) {
             this.myPeerConnectionConfig.iceServers = iceServers.filter((i) => i.url.indexOf('turn') < 0);
+        }
+        if (this.startedRaiseHand) {
+            console.log("its true, calling it")
+            setTimeout(() => {
+                this.startedRaiseHand = false;
+                this.raiseHand();
+            }, 2000);
         }
         this.updateTheStatus(`Starting`);
         this.log(`[start] ${this.role}`);

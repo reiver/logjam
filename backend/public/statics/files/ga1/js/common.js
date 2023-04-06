@@ -76,7 +76,7 @@ function createSparkRTC() {
                 document.getElementById('status').innerText = status;
             },
             userListUpdated: (users) => {
-                console.log('User List is updated', { users });
+                console.log('User List is updated', {users});
             },
         });
     } else {
@@ -128,18 +128,18 @@ function createSparkRTC() {
                 console.log('startProcedure');
                 sparkRTC.stopSignaling();
                 clearScreen();
-                let idList=[];
+                let idList = [];
                 for (const id in sparkRTC.myPeerConnectionArray) {
                     const peerConn = sparkRTC.myPeerConnectionArray[id];
                     await peerConn.close();
                     idList.push(id)
                 }
-                idList.forEach((id)=>delete sparkRTC.myPeerConnectionArray[id])
+                idList.forEach((id) => delete sparkRTC.myPeerConnectionArray[id])
                 sparkRTC.remoteStreams = [];
                 sparkRTC.localStream?.getTracks()?.forEach(track => track.stop());
                 sparkRTC.localStream = null;
-                if(sparkRTC.startedRaiseHand){
-                    sparkRTC.startedRaiseHand = false;
+                if (sparkRTC.startedRaiseHand) {
+                    // sparkRTC.startedRaiseHand = false;
                     img.dataset.status = 'off';
                     img.src = RAISE_HAND_OFF;
                     document.getElementById('mic').style.display = 'none';
@@ -159,7 +159,7 @@ function createSparkRTC() {
                 document.getElementById('status').innerText = status;
             },
             userListUpdated: (users) => {
-                console.log('User List is updated', { users });
+                console.log('User List is updated', {users});
             },
         });
 
