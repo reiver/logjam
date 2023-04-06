@@ -145,7 +145,6 @@ body {
     /*height: 10%;*/
     max-width: 80px;
     min-width: 60px;
-    cursor: pointer;
 }
 
 #sidebar-wrapper{
@@ -314,18 +313,22 @@ body {
 }
 
 #camera:hover {
+    cursor: pointer;
     filter: brightness(0) invert(1);
 }
 
 #mic:hover {
+    cursor: pointer;
     filter: brightness(0) invert(1);
 }
 
 #share_screen:hover {
+    cursor: pointer;
     filter: brightness(0) invert(1);
 }
 
 #raise_hand:hover {
+    cursor: pointer;
     filter: brightness(0) invert(1);
 }
 .form button:hover {

@@ -367,15 +367,21 @@ class SparkRTC {
                     audio: true,
                     video: true,
                 });
+
             this.remoteStreams.push(shareStream);
             for (const userId in this.myPeerConnectionArray) {
+
                 const apeerConnection = this.myPeerConnectionArray[userId];
-                if (!apeerConnection.isAdience) return;
+                // if (!apeerConnection.isAdience) {
+                //     console.log("[abc] returning");
+                //     return;
+                // }
 
                 shareStream.getTracks().forEach((track) => {
                     apeerConnection.addTrack(track, shareStream);
                 });
             }
+            
             return shareStream;
         } catch (e) {
             console.log(e);
