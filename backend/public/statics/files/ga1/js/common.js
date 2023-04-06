@@ -1,3 +1,7 @@
+// import { handRaisedKey } from "./ui.js";  //importing same key from ui.js
+
+
+
 function getWsUrl() {
     const baseUrl = window.location.href.split('//')[1].split('/')[0];
     const protocol =
@@ -143,9 +147,8 @@ function createSparkRTC() {
                 video.style.objectFit = 'contain';
 
                 document.getElementById('dc-place-holder')?.remove();
-
         
-                const res = localStorage.getItem("handraised");
+                const res = localStorage.getItem(handRaisedKey);
 
                 if(res == 'true'){
                     console.log("Status is true");
@@ -170,6 +173,10 @@ function createSparkRTC() {
                     removeVideoElement(tagId);
                 }
                 if (sparkRTC.broadcasterDC || stream === 'no-stream') {
+
+                    //reset value for handRaisedKey
+                    localStorage.setItem(handRaisedKey, false);
+
                     document.getElementById(
                         'screen'
                     ).innerHTML = `<div id="dc-place-holder" style="display: block;">

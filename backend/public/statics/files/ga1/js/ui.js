@@ -25,6 +25,8 @@ let myRole;
 let shareScreenStream;
 let roomName;
 
+const timestamp  = new Date().getTime(); // Get the current timestamp
+const handRaisedKey = 'handraised'+timestamp; //key to save handRaise status of each of the Audience
 
 function makeId(length) {
     let result = "";
@@ -343,7 +345,7 @@ async function start(turn = true) {
 function onLoad() {
 
     //setting hand raised status to access in other files
-    localStorage.setItem("handraised", false);
+    localStorage.setItem(handRaisedKey, false);
 
     // registerNetworkEvent();
     myRole = getMyRole();
@@ -368,7 +370,7 @@ async function onRaiseHand() {
 
     if (img.dataset.status === "on") {
 
-        localStorage.setItem("handraised", true);
+        localStorage.setItem(handRaisedKey, true);
         console.log("Setting status to True");
 
         img.dataset.status = "off";
