@@ -1,7 +1,3 @@
-// import { handRaisedKey } from "./ui.js";  //importing same key from ui.js
-
-
-
 function getWsUrl() {
     const baseUrl = window.location.href.split('//')[1].split('/')[0];
     const protocol =
