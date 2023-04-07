@@ -93,7 +93,11 @@ function createSparkRTC() {
             remoteStreamCallback: (stream) => {
                 const tagId = 'remoteVideo-' + stream.id;
                 if (document.getElementById(tagId)) return;
-                const video = createVideoElement(tagId);
+                let shouldMute=false;
+                if (stream.id === sparkRTC?.localStream?.id) {
+                    shouldMute = true;
+                }
+                const video = createVideoElement(tagId,shouldMute);
                 video.srcObject = stream;
                 video.play();
 
@@ -146,7 +150,7 @@ function createSparkRTC() {
                 sparkRTC.localStream?.getTracks()?.forEach(track => track.stop());
                 sparkRTC.localStream = null;
                 if(sparkRTC.startedRaiseHand){
-                    sparkRTC.startedRaiseHand = false;
+                    //sparkRTC.startedRaiseHand = false;
                     img.dataset.status = 'off';
                     img.src = RAISE_HAND_OFF;
                     document.getElementById('mic').style.display = 'none';

@@ -89,7 +89,11 @@ function createSparkRTC() {
             remoteStreamCallback: (stream) => {
                 const tagId = 'remoteVideo-' + stream.id;
                 if (document.getElementById(tagId)) return;
-                const video = createVideoElement(tagId);
+                let shouldMute=false;
+                if (stream.id === sparkRTC?.localStream?.id) {
+                    shouldMute = true;
+                }
+                const video = createVideoElement(tagId,shouldMute);
                 video.srcObject = stream;
                 video.play();
                 document.getElementById('dc-place-holder')?.remove();
