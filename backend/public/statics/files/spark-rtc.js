@@ -40,6 +40,10 @@ class SparkRTC {
 
     /**@type {{[trackId:string]: string}}*/
     trackToStreamMap = {};
+    /**@type {"Enabled" | "Disabled"}*/
+    lastVideoState = "Enabled"
+    /**@type {"Enabled" | "Disabled"}*/
+    lastAudioState = "Enabled"
 
     /**
      * Function to handle Peer Connection Offer, received from Other Peer
@@ -871,6 +875,18 @@ class SparkRTC {
         this.log(`[handleMessage] sendStreamTo ${target}`);
         const peerConnection = this.createOrGetPeerConnection(target, false);
         stream.getTracks().forEach((track) => {
+            if (this.lastVideoState === "Disabled") {
+                this.disableVideo();
+                let img = document.getElementById("camera");
+                img.dataset.status = 'off';
+                img.src = CAMERA_OFF;
+            }
+            if (this.lastAudioState === "Disabled") {
+                this.disableAudio();
+                let img = document.getElementById("mic");
+                img.dataset.status = 'off';
+                img.src = MIC_OFF;
+            }
             peerConnection.addTrack(track, stream);
         });
     };
@@ -894,6 +910,8 @@ class SparkRTC {
             setTimeout(() => {
                 this.startedRaiseHand = false;
                 this.raiseHand();
+                document.getElementById('camera').style.display = '';
+                document.getElementById('mic').style.display = '';
             }, 2000);
         }
         this.updateTheStatus(`Starting`);
@@ -918,6 +936,7 @@ class SparkRTC {
      * @param {boolean} enabled
      */
     disableVideo = (enabled = false) => {
+        this.lastVideoState = enabled === true ? "Enabled" : "Disabled";
         this.localStream.getTracks().forEach((track) => {
             if (track.kind === 'video')
                 track.enabled = enabled;
@@ -930,6 +949,7 @@ class SparkRTC {
      * @param {boolean} enabled
      */
     disableAudio = (enabled = false) => {
+        this.lastAudioState = enabled === true ? "Enabled" : "Disabled";
         this.localStream.getTracks().forEach((track) => {
             if (track.kind === 'audio')
                 track.enabled = enabled;
