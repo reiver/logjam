@@ -9,6 +9,7 @@
     <link rel="icon" type="image/png" href="images/spark-logo.png">
     <script src="https://d3js.org/d3.v4.min.js"></script>
     <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
+    <script src="js/md5.js"></script>
     <script src="../config.js"></script>
     <script src="../spark-rtc.js"></script>
     <script src="js/ui.js"></script>
@@ -27,8 +28,15 @@
                 <br />
                 <h2 id="modal-title">Welcome to Group Video!</h2>
                 <form class="form">
-                    <label for="inputName">Name: </label>
-                    <input id="inputName" type="text" value="" placeholder="enter a nickname" />
+                    <div id="inputFields">
+                        <label for="inputName">Name:<span style="display: inline-block; position: relative; top: -2px; color: red">*</span></label>
+                        <input id="inputName" type="text" value="" placeholder="enter a nickname" onfocus="handleNameInput()"/>
+                        <label id="emailLabel" for="inputEmail">Email: </label>
+                        <input id="inputEmail" type="email" value="" placeholder="enter your email (optional)" onfocus="handleEmailInput()" />
+                    </div>
+
+                    <label for="error" id="error">Please enter your name</label>
+
                     <button type="button" onclick="handleClick()">Enter</button>
                     <!-- <button type="button" style="background-color: #c98303" onclick="handleClick(false)">Enter Without TURN</button> -->
                 </form>
@@ -40,6 +48,7 @@
         const params = new URLSearchParams(document.location.search);
         const title = params.get("modal_title");
         const hideLogo = params.get("hide_logo");
+        const noRaiseHand = params.get("no_raise_hand");
         if (title) {
             const header = document.getElementById('modal-title');
             header.innerText = title;
@@ -53,6 +62,7 @@
     <div id="page">
         <div id="status" style="position: fixed;color: black;z-index: 1;padding: 20px;background: #b9aaaa4a;display:none;"></div>
         <!--video containers-->
+
         <div id="screen">
         </div>
         <div id="logs" style="background: black;color: white;margin: 10px;padding: 5px;">
@@ -72,10 +82,37 @@
                     <img id="mic" data-status="on" class="control-button-image" src="images/mic-on.png" alt="mic"
                         onclick="onMicButtonClick()" />
                     <img id="spark" class="control-button-image" src="images/spark-logo.png" alt="logo" />
+                    <script>
+                        const queryString = window.location.search;
+                        const urlParams = new URLSearchParams(queryString);
+
+                        let replaceLogo = urlParams.get("replace_logo");
+
+                        if (replaceLogo) {
+                            try {
+                                replaceLogo = decodeURIComponent(replaceLogo);
+                                document.getElementById("spark").src = replaceLogo;
+                            } catch (e) {
+                                console.error(e);
+                            }
+                        } else if (urlParams.get("hide_logo")) {
+                            document.getElementById("spark").remove();
+                        }
+                    </script>
                     <img id="share_screen" data-status="off" class="control-button-image" src="images/screen-off.png"
-                        alt="share screen" onclick="onShareScreen()" />
+                        alt="share screen" onclick="onShareScreen()" style="display: none;" />
                     <img id="raise_hand" data-status="on" class="control-button-image" src="images/hand.png"
                         alt="raise hand" onclick="onRaiseHand()" />
+                    <script>
+                        if (noRaiseHand) {
+                            document.getElementById("raise_hand").style.position = 'absolute';
+                            document.getElementById("raise_hand").style.left = '-1000px';
+                            document.getElementById("raise_hand").style.top = '-1000px';
+                            document.getElementById("raise_hand").style.width = '0px';
+                            document.getElementById("raise_hand").style.height = '0px';
+                            document.getElementById("raise_hand").style.opacity = '0';
+                        }
+                    </script>
                     <img id="net" class="control-button-image" style="display: none;" src="images/network.svg"
                         alt="net stat" title="Network Status" />
                 </div>
@@ -91,7 +128,15 @@
                 </div>
             </div>
         </div>
+
+        
     </div>
+
+    <div id="pic-container" class="pic-container-container">
+        <div id="pic-container" class="pic-container"></div>
+    </div>
+
+    <div id="sidebar" class="sidebar hidden"></div>
 
 </body>
 
