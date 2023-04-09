@@ -689,7 +689,6 @@
           let targetUsername = msg.name;
           targetName = msg.username;
           var desc = new RTCSessionDescription(msg.sdp);
-      
           let myPeerConnection = createPeerConnection(targetUsername, true);
 
           await myPeerConnection.setRemoteDescription(desc);
@@ -721,8 +720,6 @@
           }
         } else if (msg.type == "alt-new-ice-candidate") {
           let targetUsername = msg.data;
-
-      
           let myPeerConnection = createPeerConnection(targetUsername, true);
           // console.log("ICE Canadidate Recieved!");
           altIceCandidates.push(new RTCIceCandidate(msg.candidate));
@@ -742,7 +739,6 @@
         } else if (msg.type == "alt-video-answer") {
           var desc = new RTCSessionDescription(msg.sdp);
           let targetUsername = msg.target;
-
           let myPeerConnection = createPeerConnection(targetUsername, true);
           myPeerConnection.setRemoteDescription(desc).catch((e) => {
             console.log("Error", e);

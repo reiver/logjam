@@ -126,8 +126,6 @@ async function onShareScreen() {
             img.src = SCREEN_ON;
             const localScreen = getVideoElement('localScreen');
             localScreen.srcObject = shareScreenStream;
-
-            localScreen.style.objectFit = 'contain';
         }
     } else {
         img.dataset.status = 'off';

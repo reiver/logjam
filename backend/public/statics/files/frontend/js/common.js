@@ -1,7 +1,3 @@
-/**
- * Function to get Web Socket URL from client URL
- * @returns websocket URL
- */
 function getWsUrl() {
     const baseUrl = window.location.href.split("//")[1].split("/")[0];
     const protocol = window.location.href.split("//")[0] === "http:" ? "ws" : "wss";
@@ -9,11 +5,6 @@ function getWsUrl() {
 }
 
 
-/**
- * Description
- * Function to clear the screen by removing certain elements
- * @returns nothing
- */
 function clearScreen() {
     document.getElementById('raise_hand').style.display = 'block';
     document.getElementById('share_screen').style.display = 'block';
@@ -24,12 +15,6 @@ function clearScreen() {
     }
 }
 
-/**
- * 
- * Function to create instance of SparkRTC based of user's role
- * 
- * @returns SparkRTC object.
- */
 function createSparkRTC() {
     clearScreen();
     if (myRole === 'broadcast') {
@@ -72,7 +57,10 @@ function createSparkRTC() {
             raiseHandConfirmation: (msg) => {
                 console.log(`[raiseHandConfirmation] msg`, msg);
                 return true;
-    
+                // if (confirm(msg)) {
+                //     return true;
+                // }
+                // return false;
             },
             startProcedure: async () => {
                 await handleClick();
@@ -150,11 +138,6 @@ function createSparkRTC() {
     }
 }
 
-/**
- * Description
- * Function to register Network status callback
- * @returns nothing.
- */
 function registerNetworkEvent() {
     if (!navigator?.connection) {
         return alert('The browser is not a standard one so we can not monitor network status.');
@@ -163,11 +146,6 @@ function registerNetworkEvent() {
     navigator.connection.onchange = handleNetworkStatus;
 }
 
-/**
- * Function to check network status in realtime
- * @param {any} event
- * @returns {any} Calls Netwrok slow or Normal function
- */
 function handleNetworkStatus(event) {
     const net = event?.currentTarget || navigator.connection;
     if (net.downlink <= 1) {
