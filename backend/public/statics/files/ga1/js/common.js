@@ -115,7 +115,16 @@ function createSparkRTC() {
                 document.getElementById('status').innerText = status;
             },
             userListUpdated: (users) => {
+                // console.log("User List is updated", { users });
+
+                // clearVideos();
                 updateUsersList(users);
+
+                // for (const user of users) {
+                //     if (user.video) {
+                //         createUserVideo(user, localStream.id === user.video.id);
+                //     }
+                // }
             },
         });
     } else {
@@ -127,14 +136,9 @@ function createSparkRTC() {
             remoteStreamCallback: (stream) => {
                 const tagId = 'remoteVideo-' + stream.id;
                 if (document.getElementById(tagId)) return;
-                let shouldMute=false;
-                if (stream.id === sparkRTC?.localStream?.id) {
-                    shouldMute = true;
-                }
-                const video = createVideoElement(tagId,shouldMute);
+                const video = createVideoElement(tagId);
                 video.srcObject = stream;
                 video.play();
-
 
                 video.style.objectFit = 'contain';
 
@@ -192,27 +196,6 @@ function createSparkRTC() {
                 console.log('startProcedure');
                 sparkRTC.stopSignaling();
                 clearScreen();
-                let idList = [];
-                for (const id in sparkRTC.myPeerConnectionArray) {
-                    const peerConn = sparkRTC.myPeerConnectionArray[id];
-                    await peerConn.close();
-                    idList.push(id)
-                }
-                idList.forEach((id) => delete sparkRTC.myPeerConnectionArray[id])
-                sparkRTC.remoteStreams = [];
-                sparkRTC.localStream?.getTracks()?.forEach(track => track.stop());
-                sparkRTC.localStream = null;
-                if (sparkRTC.startedRaiseHand) {
-                    // sparkRTC.startedRaiseHand = false;
-                    img.dataset.status = 'off';
-                    img.src = RAISE_HAND_OFF;
-                    document.getElementById('mic').style.display = 'none';
-                    document.getElementById('mic').src = MIC_ON;
-                    document.getElementById('mic').dataset.status = 'on';
-                    document.getElementById('camera').style.display = 'none';
-                    document.getElementById('camera').src = CAMERA_ON;
-                    document.getElementById('camera').dataset.status = 'on';
-                }
                 await handleClick();
             },
             log: (log) => {
@@ -224,7 +207,18 @@ function createSparkRTC() {
             },
             userListUpdated: (users) => {
                 console.log('User List is updated', {users});
+
+                // clearVideos();
                 updateUsersList(users);
+
+                // for (const user of users) {
+                //     console.log(user);
+
+                //     if (user.video) {
+                //         console.log(user);
+                //         createUserVideo(user, localStream.id === user.video.id);
+                //     }
+                // }
             },
         });
     }

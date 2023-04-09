@@ -1,17 +1,10 @@
-/**
- *  This file is main JS file to intract with index.html file
- * 
- *  It contains fucntions to respond when user intratct with UI elements.
- * 
- *  It contains fucntions to initate the Broadcaster or Audiance
- */
-
 const CAMERA_ON = "images/cam-on.png";
 const CAMERA_OFF = "images/cam-off.png";
 const MIC_ON = "images/mic-on.png";
 const MIC_OFF = "images/mic-off.png";
 const SCREEN_ON = "images/screen-on.png";
 const SCREEN_OFF = "images/screen-off.png";
+// const SPARK_LOGO = "images/spark-logo.png";
 const RAISE_HAND_ON = "images/hand.png";
 const RAISE_HAND_OFF = "images/hand-off.png";
 const CHARACTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -25,12 +18,6 @@ let myRole;
 let shareScreenStream;
 let roomName;
 
-/**
- * Description
- * Function to generate Random UUID of any length
- * @param {any} length any number
- * @returns {any}
- */
 function makeId(length) {
     let result = '';
     for (let i = 0; i < length; i++) {
@@ -40,11 +27,6 @@ function makeId(length) {
 }
 
 
-/** 
- * Function to arrange multiple video containers on screen
- * by adjusting their height accordingly 
- * 
- */
 function arrangeVideoContainers() {
     const videoContainers = document.getElementById('screen')
         .getElementsByClassName('video-container');
@@ -61,12 +43,6 @@ function arrangeVideoContainers() {
 }
 
 
-/**
- * Description
- * Function to perfom take appropriate actions upon camera button click,
- * Enable or Disable Local Video Track
- * @returns {any}
- */
 function onCameraButtonClick() {
     const img = document.getElementById("camera");
     if (img.dataset.status === 'on') {
@@ -81,12 +57,6 @@ function onCameraButtonClick() {
 }
 
 
-/**
- * Description
- * Funnction to take certain actions on mic button click,
- * Mute or Unmute the Mic
- * @returns {any}
- */
 function onMicButtonClick() {
     const img = document.getElementById("mic");
     if (img.dataset.status === 'on') {
@@ -100,10 +70,6 @@ function onMicButtonClick() {
     }
 }
 
-/** Function to create new Vido element
- * 
- * To display, Video stream (local or remote)
-*/
 function createVideoElement(videoId, muted = false) {
     let container = document.createElement('div');
     container.className = 'video-container';
@@ -118,22 +84,11 @@ function createVideoElement(videoId, muted = false) {
     return video;
 }
 
-/**
- * Function to get ref to Video element on Screen
- * @param {any} videoId
- * @returns {any}
- */
 function getVideoElement(videoId) {
     let video = document.getElementById(videoId);
     return video ? video : createVideoElement(videoId, true);
 }
 
-/**
- * Description
- * Function to remove the video element from the screen by using it's ID
- * @param {any} videoId
- * @returns {any}
- */
 function removeVideoElement(videoId) {
     let video = document.getElementById(videoId);
     if (!video) return;
@@ -143,12 +98,6 @@ function removeVideoElement(videoId) {
     arrangeVideoContainers();
 }
 
-/**
- * Description
- * Function to display Slow network status
- * @param {any} downlink
- * @returns {any} Nothing
- */
 function onNetworkIsSlow(downlink) {
     let msg = '';
     if (downlink > 0) {
@@ -164,19 +113,10 @@ function onNetworkIsSlow(downlink) {
     document.getElementById('net').style.display = '';
 }
 
-/**
- * Description Function to display normal network status
- * @returns {any}
- */
 function onNetworkIsNormal() {
     document.getElementById('net').style.display = 'none';
 }
 
-/**
- * Description
- * Function to start or stop screen share and update UI accordingly
- * @returns {any}
- */
 async function onShareScreen() {
     const img = document.getElementById("share_screen");
     if (!shareScreenStream) {
@@ -199,11 +139,6 @@ async function onShareScreen() {
 }
 
 
-/**
- * Description
- * Function to save current user name to local storage, if not name provided generate random name
- * @returns {any}
- */
 function setMyName() {
     try {
         myName = localStorage.getItem('logjam_myName');
@@ -222,14 +157,14 @@ function setMyName() {
 }
 
 
-/**
- * 
- * Function to handle Click on Enter Button on Mian Page
- * 
- * @param {any} turn=true
- * @returns {any}
- */
 async function handleClick(turn = true) {
+    let newName = document.getElementById("inputName").value;
+
+    myName = newName;
+
+    if (newName) {
+        localStorage.setItem('logjam_myName', myName);
+    }
     document.getElementById("page").style.visibility = "visible";
     document.getElementById("getName").style.display = "none";
 
@@ -248,125 +183,77 @@ function handleResize() {
 
 }
 
-function getMyName(){
-    const queryString = window.location.search;
-    const urlParams = new URLSearchParams(queryString);
-    return urlParams.get('name');
-}
 
-/**
- * 
- * Function to get User role from URL
- * 
- * @returns {any}
- */
 function getMyRole() {
     const queryString = window.location.search;
     const urlParams = new URLSearchParams(queryString);
     return urlParams.get('role') === 'broadcast' ? "broadcast" : "audience";
 }
 
-/**
- * 
- * Function to get Room name from URL
- * @returns {any}
- */
 function getRoomName() {
     const queryString = window.location.search;
     const urlParams = new URLSearchParams(queryString);
     return urlParams.get('room');
 }
 
-/**
- * 
- * Function to get debug status from URL
- * @returns {any}
- */
 function getDebug() {
     const queryString = window.location.search;
     const urlParams = new URLSearchParams(queryString);
     return Boolean(urlParams.get('debug'));
 }
 
-/**
- * 
- * Function to setUp Signaling socket
- * @returns {any}
- */
 function setupSignalingSocket() {
     return sparkRTC.setupSignalingSocket(getWsUrl(), myName, roomName);
 }
 
 
-/**
- * 
- * Function to setup signaling socket and start broadcasting or 
- * start listening to broadcast if role is Audiance.
- * @param {any} turn=true
- * @returns {any}
- */
 async function start(turn = true) {
     await setupSignalingSocket();
     return sparkRTC.start(turn);
 }
 
 
-/**
- *
- * The very first fucntion to call when page Loads
- * 
- * @returns {any}
- */
 function onLoad() {
+    // registerNetworkEvent();
     myRole = getMyRole();
     roomName = getRoomName();
-    myName = getMyName();
-    if(myName === '' || !myName){
-        myName = makeId(10);
-    }
-
-    console.log("my name is: ",myName);
-    
     sparkRTC = createSparkRTC();
     if (!getDebug()) {
         document.getElementById('logs').style.display = 'none';
     }
 
+    setMyName();
     graph = new Graph();
     window.onresize = handleResize;
+    //console.log("DATA: ",DATA);
+    //graph.draw(DATA);
 
     arrangeVideoContainers();
 }
 
 
-/**
- * 
- * Function to handle click on handRaise button
- * 
- * @returns {any}
- */
 async function onRaiseHand() {
     const img = document.getElementById("raise_hand");
     console.log(img.dataset.status);
     if (img.dataset.status === 'on') {
         if (sparkRTC.localStream) {
-        
+            // if (confirm(`Do you want to stop streaming?`)) {
+            //     console.log('stopping...');
+            //     removeVideoElement('localVideo-' + sparkRTC.localStream.id);
+            //     disableAudioVideoControls();
+            //     sparkRTC.lowerHand();
+            // }
             return;
         }
         const stream = await sparkRTC.raiseHand();
-       
+        // const tagId = 'localVideo-' + stream.id;
+        // const video = createVideoElement(tagId, true);
+        // video.srcObject = stream;
         document.getElementById('mic').style.display = '';
         document.getElementById('camera').style.display = '';
     }
 }
 
-/**
- * 
- * Function to add log to LOGS list
- * 
- * @param {any} log it could be any string as a log
- * @returns {any}
- */
 function addLog(log) {
     const logs = document.getElementById('logs');
     const p = document.createElement('p');
@@ -374,24 +261,12 @@ function addLog(log) {
     logs.appendChild(p);
 }
 
-/**
- * 
- * Function to display Audio Video Controls on Screen
- * 
- * @returns {any}
- */
 function enableAudioVideoControls() {
     document.getElementById('mic').style.display = '';
     document.getElementById('camera').style.display = '';
     document.getElementById('share_screen').style.display = '';
 }
 
-/**
- * 
- * Function to hide Audio Video controls
- * 
- * @returns {any}
- */
 function disableAudioVideoControls() {
     document.getElementById('mic').style.display = 'none';
     document.getElementById('camera').style.display = 'none';    

@@ -86,7 +86,6 @@
       }
 
       function createPeerConnection(targetUsername, override = false) {
-        console.log("room: createPeerConnection");
         console.log('createPeerConnection', targetUsername, override);
         if (!targetUsername) {
             return null;
@@ -245,17 +244,12 @@
                 const users = msg.data.split(',').filter(u => u !== myName);
                 console.log({ users });
                 for (const targetUsername of users) {
-        
-                  console.log("room: createPeerConnection1");
-
                     createPeerConnection(targetUsername);
                     await sleep(1000);
                 }
                 break;
               case "video-offer":
                 targetUsername = msg.name;
-        console.log("room: createPeerConnection2");
-
                 myPeerConnection = createPeerConnection(targetUsername);
                 desc = new RTCSessionDescription(msg.sdp);
                 console.log('video-offer', targetUsername);
@@ -288,8 +282,6 @@
               case "new-ice-candidate":
                 // console.log("ICE Canadidate Recieved!", msg);
                 targetUsername = msg.name;
-        console.log("room: createPeerConnection3");
-
                 myPeerConnection = createPeerConnection(targetUsername);
                 iceCandidates.push(new RTCIceCandidate(msg.candidate));
                 // console.log(iceCandidates);
@@ -303,9 +295,6 @@
                 break;
               case "video-answer":
                 targetUsername = msg.name;
-        
-                console.log("room: createPeerConnection4");
-
                 myPeerConnection = createPeerConnection(targetUsername);
                 console.log('video-answer', targetUsername);
                 desc = new RTCSessionDescription(msg.sdp);

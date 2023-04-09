@@ -9,10 +9,8 @@
 }
 
 .node text {
-    font: 16px sans-serif;
-    fill: rgb(0, 0, 0);
-    color: black;
-    background-color: black;
+    font: 12px sans-serif;
+    fill: white;
 }
 
 .link {
