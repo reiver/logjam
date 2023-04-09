@@ -22,7 +22,11 @@ function createSparkRTC() {
         disableAudioVideoControls();
         return new SparkRTC('broadcast', {
             localStreamChangeCallback: (stream) => {
-                getVideoElement('localVideo').srcObject = stream;
+                const localVideo = getVideoElement('localVideo');
+                localVideo.srcObject = stream;
+
+                localVideo.style.objectFit = 'contain';
+
                 enableAudioVideoControls();
             },
             remoteStreamCallback: (stream) => {
@@ -31,6 +35,9 @@ function createSparkRTC() {
                 const video = createVideoElement(tagId);
                 video.srcObject = stream;
                 video.play();
+
+                video.style.objectFit = 'contain';
+            
             },
             remoteStreamDCCallback: (stream) => {
                 let tagId = 'remoteVideo-' + stream.id;
@@ -86,9 +93,16 @@ function createSparkRTC() {
             remoteStreamCallback: (stream) => {
                 const tagId = 'remoteVideo-' + stream.id;
                 if (document.getElementById(tagId)) return;
-                const video = createVideoElement(tagId);
+                let shouldMute=false;
+                if (stream.id === sparkRTC?.localStream?.id) {
+                    shouldMute = true;
+                }
+                const video = createVideoElement(tagId,shouldMute);
                 video.srcObject = stream;
                 video.play();
+
+                video.style.objectFit = 'contain';
+
                 document.getElementById('dc-place-holder').remove();
                 img.dataset.status = 'on';
                 img.src = RAISE_HAND_ON;
@@ -122,7 +136,30 @@ function createSparkRTC() {
                 clearScreen();
             },
             startProcedure: async () => {
-                await clearScreen();
+                console.log('startProcedure');
+                sparkRTC.stopSignaling();
+                clearScreen();
+                let idList=[];
+                for (const id in sparkRTC.myPeerConnectionArray) {
+                    const peerConn = sparkRTC.myPeerConnectionArray[id];
+                    await peerConn.close();
+                    idList.push(id)
+                }
+                idList.forEach((id)=>delete sparkRTC.myPeerConnectionArray[id])
+                sparkRTC.remoteStreams = [];
+                sparkRTC.localStream?.getTracks()?.forEach(track => track.stop());
+                sparkRTC.localStream = null;
+                if(sparkRTC.startedRaiseHand){
+                    //sparkRTC.startedRaiseHand = false;
+                    img.dataset.status = 'off';
+                    img.src = RAISE_HAND_OFF;
+                    document.getElementById('mic').style.display = 'none';
+                    document.getElementById('mic').src = MIC_ON;
+                    document.getElementById('mic').dataset.status = 'on';
+                    document.getElementById('camera').style.display = 'none';
+                    document.getElementById('camera').src = CAMERA_ON;
+                    document.getElementById('camera').dataset.status = 'on';
+                }
                 await handleClick();
             },
             log: (log) => {

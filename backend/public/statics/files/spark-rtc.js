@@ -16,6 +16,7 @@ class SparkRTC {
     myName = 'NoName';
     roomName = 'SparkRTC';
     myUsername = 'NoUsername';
+    /**@type {{[key:string]:RTCPeerConnection}}*/
     myPeerConnectionArray = {};
     iceCandidates = [];
     pingInterval;
@@ -39,6 +40,10 @@ class SparkRTC {
 
     /**@type {{[trackId:string]: string}}*/
     trackToStreamMap = {};
+    /**@type {"Enabled" | "Disabled"}*/
+    lastVideoState = "Enabled"
+    /**@type {"Enabled" | "Disabled"}*/
+    lastAudioState = "Enabled"
 
     /**
      * Function to handle Peer Connection Offer, received from Other Peer
@@ -207,7 +212,7 @@ class SparkRTC {
                     if (this.remoteStreamDCCallback) this.remoteStreamDCCallback('no-stream');
                 } catch {
                 }
-                this.localStream?.getTracks()?.forEach(track=>track.stop());
+                this.localStream?.getTracks()?.forEach(track => track.stop());
                 this.localStream = null;
                 this.startedRaiseHand = false;
                 break;
@@ -367,21 +372,15 @@ class SparkRTC {
                     audio: true,
                     video: true,
                 });
-
             this.remoteStreams.push(shareStream);
             for (const userId in this.myPeerConnectionArray) {
-
                 const apeerConnection = this.myPeerConnectionArray[userId];
-                // if (!apeerConnection.isAdience) {
-                //     console.log("[abc] returning");
-                //     return;
-                // }
+                if (!apeerConnection.isAdience) return;
 
                 shareStream.getTracks().forEach((track) => {
                     apeerConnection.addTrack(track, shareStream);
                 });
             }
-            
             return shareStream;
         } catch (e) {
             console.log(e);
@@ -508,7 +507,7 @@ class SparkRTC {
                 if (userId === target) continue;
                 console.log('[peerConnection.oniceconnectionstatechange] DC userId', userId);
                 const apeerConnection = this.myPeerConnectionArray[userId];
-                if (!apeerConnection.isAdience) return;
+                // if (!apeerConnection.isAdience) return;
                 const allSenders = apeerConnection.getSenders();
                 for (const sender of allSenders) {
                     if (!sender.track) continue;
@@ -553,7 +552,7 @@ class SparkRTC {
         if (this.parentDC || this.startedRaiseHand) {
             setTimeout(() => {
                 this.startProcedure();
-            }, 4000);
+            }, 1000);
         }
     }
 
@@ -598,7 +597,7 @@ class SparkRTC {
      * And Data Channel with each peer connection
      *
      * @param {String} target
-     * @param {boolean} theStream
+     * @param {Array<MediaStream>} theStream
      * @param {boolean} isAudience
      * @returns
      */
@@ -706,6 +705,16 @@ class SparkRTC {
             if (this.remoteStreams.length === 0) {
                 this.parentStreamId = stream.id;
             }
+            let ended = false;
+            stream.getTracks().forEach((t) => {
+                if (t.readyState === "ended") {
+                    ended = true;
+                }
+            })
+            if (ended) {
+                console.log("stream tracks was ended", stream.id)
+                return
+            }
             stream.oninactive = (event) => {
                 this.log(`[newPeerConnectionInstance] stream.oninactive ${JSON.stringify(event)}`);
                 console.log('[stream.oninactive] event', event, event.currentTarget.getTracks(), event.target.getTracks());
@@ -745,6 +754,7 @@ class SparkRTC {
                         console.log("the streamId", this.trackToStreamMap[sender.track.id]);
                         if (this.trackToStreamMap[sender.track.id] === theEventStream.id) {
                             try {
+                                console.log("track removed: ", sender.track.id,)
                                 apeerConnection.removeTrack(sender);
                                 // delete this.trackToStreamMap[sender.track.id];
                             } catch (e) {
@@ -907,6 +917,19 @@ class SparkRTC {
         this.log(`[handleMessage] sendStreamTo ${target}`);
         const peerConnection = this.createOrGetPeerConnection(target, false);
         stream.getTracks().forEach((track) => {
+            if (this.lastVideoState === "Disabled") {
+                this.disableVideo();
+                let img = document.getElementById("camera");
+                img.dataset.status = 'off';
+                img.src = CAMERA_OFF;
+            }
+            if (this.lastAudioState === "Disabled") {
+                this.disableAudio();
+                let img = document.getElementById("mic");
+                img.dataset.status = 'off';
+                img.src = MIC_OFF;
+            }
+
             peerConnection.addTrack(track, stream);
         });
     };
@@ -924,6 +947,15 @@ class SparkRTC {
     start = async (turn = true) => {
         if (!turn) {
             this.myPeerConnectionConfig.iceServers = iceServers.filter((i) => i.url.indexOf('turn') < 0);
+        }
+        if (this.startedRaiseHand) {
+            console.log("its true, calling it")
+            setTimeout(() => {
+                this.startedRaiseHand = false;
+                this.raiseHand();
+                document.getElementById('camera').style.display = '';
+                document.getElementById('mic').style.display = '';
+            }, 2000);
         }
         this.updateTheStatus(`Starting`);
         this.log(`[start] ${this.role}`);
@@ -947,6 +979,7 @@ class SparkRTC {
      * @param {boolean} enabled
      */
     disableVideo = (enabled = false) => {
+        this.lastVideoState = enabled === true ? "Enabled" : "Disabled";
         this.localStream.getTracks().forEach((track) => {
             if (track.kind === 'video')
                 track.enabled = enabled;
@@ -959,6 +992,7 @@ class SparkRTC {
      * @param {boolean} enabled
      */
     disableAudio = (enabled = false) => {
+        this.lastAudioState = enabled === true ? "Enabled" : "Disabled";
         this.localStream.getTracks().forEach((track) => {
             if (track.kind === 'audio')
                 track.enabled = enabled;
