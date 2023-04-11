@@ -28,11 +28,22 @@ let roomName;
 const timestamp  = new Date().getTime(); // Get the current timestamp
 const handRaisedKey = 'handraised'+timestamp; //key to save handRaise status of each of the Audience
 
-// Get the parent window object
-var parentWindow = window.parent;
+var localStorage = window.localStorage;
 
-// Access the local storage object from the parent window
-var localStorage = parentWindow.localStorage;
+if (window.self !== window.top) {
+    console.log('This window is inside an iframe');
+
+    // Get the parent window object
+    var parentWindow = window.parent;
+
+    // Access the local storage object from the parent window
+    localStorage = parentWindow.localStorage;
+
+  } 
+  else {
+    console.log('This window is not inside an iframe');
+}
+  
 
 function makeId(length) {
     let result = "";
