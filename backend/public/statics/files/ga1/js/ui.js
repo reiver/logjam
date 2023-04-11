@@ -28,9 +28,6 @@ let roomName;
 const timestamp  = new Date().getTime(); // Get the current timestamp
 const handRaisedKey = 'handraised'+timestamp; //key to save handRaise status of each of the Audience
 
-var parentWindow = window.parent;
-var localStorage = parentWindow.localStorage;
-
 function makeId(length) {
     let result = "";
     for (let i = 0; i < length; i++) {
