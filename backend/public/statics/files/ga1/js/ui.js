@@ -28,7 +28,7 @@ let roomName;
 const timestamp  = new Date().getTime(); // Get the current timestamp
 const handRaisedKey = 'handraised'+timestamp; //key to save handRaise status of each of the Audience
 
-var localStorage = window.localStorage;
+var localStorage;
 
 if (window.self !== window.top) {
     console.log('This window is inside an iframe');
@@ -41,6 +41,8 @@ if (window.self !== window.top) {
 
   } 
   else {
+    localStorage = window.localStorage;
+    
     console.log('This window is not inside an iframe');
 }
   
