@@ -144,19 +144,21 @@ function createSparkRTC() {
 
                 document.getElementById('dc-place-holder')?.remove();
         
-                const res = localStorage.getItem(handRaisedKey);
+                if(useLocalStorage===true){
+                    const res = localStorage.getItem(handRaisedKey);
 
-                if(res == 'true'){
-                    console.log("Status is true");
-                    img.dataset.status = 'off';
-                    img.src = RAISE_HAND_OFF;
-                }else{
-                    console.log("Status is false");
-
-                    img.dataset.status = 'on';
-                    img.src = RAISE_HAND_ON;
+                    if(res == 'true'){
+                        console.log("Status is true");
+                        img.dataset.status = 'off';
+                        img.src = RAISE_HAND_OFF;
+                    }else{
+                        console.log("Status is false");
+    
+                        img.dataset.status = 'on';
+                        img.src = RAISE_HAND_ON;
+                    }
                 }
-
+            
             },
             remoteStreamDCCallback: (stream) => {
                 console.log(`[remoteStreamDCCallback]`, stream);
@@ -170,8 +172,11 @@ function createSparkRTC() {
                 }
                 if (sparkRTC.broadcasterDC || stream === 'no-stream') {
 
-                    //reset value for handRaisedKey
-                    localStorage.setItem(handRaisedKey, false);
+                    if(useLocalStorage===true){
+                        //reset value for handRaisedKey
+                        localStorage.setItem(handRaisedKey, false);
+                    }
+                    
 
                     document.getElementById(
                         'screen'
