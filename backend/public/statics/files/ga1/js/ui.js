@@ -27,6 +27,7 @@ let roomName;
 
 const timestamp  = new Date().getTime(); // Get the current timestamp
 const handRaisedKey = 'handraised'+timestamp; //key to save handRaise status of each of the Audience
+var handRaised = false;
 
 function makeId(length) {
     let result = "";
@@ -344,9 +345,6 @@ async function start(turn = true) {
 
 function onLoad() {
 
-    //setting hand raised status to access in other files
-    localStorage.setItem(handRaisedKey, false);
-
     // registerNetworkEvent();
     myRole = getMyRole();
     roomName = getRoomName();
@@ -370,9 +368,8 @@ async function onRaiseHand() {
 
     if (img.dataset.status === "on") {
 
-        localStorage.setItem(handRaisedKey, true);
-        console.log("Setting status to True");
-
+        handRaised = true;
+        
         img.dataset.status = "off";
         img.src = RAISE_HAND_OFF;
 
