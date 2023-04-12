@@ -29,19 +29,20 @@ const timestamp  = new Date().getTime(); // Get the current timestamp
 const handRaisedKey = 'handraised'+timestamp; //key to save handRaise status of each of the Audience
 
 var localStorage;
-var useLocalStorage = true;
 
 if (window.self !== window.top) {
     console.log('This window is inside an iframe');
 
-    useLocalStorage = false;
+    // Get the parent window object
+    var parentWindow = window.parent;
+
+    // Access the local storage object from the parent window
+    localStorage = parentWindow.localStorage;
 
   } 
   else {
-    useLocalStorage = true;
-
     localStorage = window.localStorage;
-
+    
     console.log('This window is not inside an iframe');
 }
   
@@ -212,28 +213,23 @@ async function onShareScreen() {
 
 function setMyName() {
     try {
-        if(useLocalStorage===true){
-            const name = localStorage.getItem("logjam_myName");
-            const email = localStorage.getItem("logjam_myEmail");
-            myName = name;
-            myEmail = email;
-        }
+        const name = localStorage.getItem("logjam_myName");
+        const email = localStorage.getItem("logjam_myEmail");
+        myName = name;
+        myEmail = email;
         document.getElementById("inputName").value = myName;
         document.getElementById("inputEmail").value = email;
     } catch (e) {
         console.log(e);
     }
-    if(useLocalStorage===true){
-        if (myName === "" || !myName) {
-            myName = makeId(20);
-            try {
-                localStorage.setItem("logjam_myName", myName);
-            } catch (e) {
-                console.log(e);
-            }
+    if (myName === "" || !myName) {
+        myName = makeId(20);
+        try {
+            localStorage.setItem("logjam_myName", myName);
+        } catch (e) {
+            console.log(e);
         }
     }
-   
 }
 
 
@@ -311,15 +307,12 @@ async function handleClick(turn = true) {
             document.getElementById("page").style.visibility = "visible";
             document.getElementById("getName").style.display = "none";
         
-            if(useLocalStorage===true){
-                try {
-                    localStorage.setItem("logjam_myName", myName);
-                    localStorage.setItem("logjam_myEmail", myEmail);
-                } catch (e) {
-                    console.log(e);
-                }
+            try {
+                localStorage.setItem("logjam_myName", myName);
+                localStorage.setItem("logjam_myEmail", myEmail);
+            } catch (e) {
+                console.log(e);
             }
-            
         
             await start(turn);
         }
@@ -370,11 +363,8 @@ async function start(turn = true) {
 
 function onLoad() {
 
-    if(useLocalStorage===true){
-        //setting hand raised status to access in other files
-        localStorage.setItem(handRaisedKey, false);
-    }
-    
+    //setting hand raised status to access in other files
+    localStorage.setItem(handRaisedKey, false);
 
     // registerNetworkEvent();
     myRole = getMyRole();
@@ -399,11 +389,8 @@ async function onRaiseHand() {
 
     if (img.dataset.status === "on") {
 
-        if(useLocalStorage===true){
-            localStorage.setItem(handRaisedKey, true);
-            console.log("Setting status to True");
-
-        }
+        localStorage.setItem(handRaisedKey, true);
+        console.log("Setting status to True");
 
         img.dataset.status = "off";
         img.src = RAISE_HAND_OFF;
