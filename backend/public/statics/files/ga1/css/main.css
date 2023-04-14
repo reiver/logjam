@@ -145,11 +145,6 @@ body {
     /*height: 10%;*/
     max-width: 80px;
     min-width: 60px;
-    cursor: pointer;
-}
-
-.control-button-image:hover {
-    filter: brightness(0) invert(1);
 }
 
 #sidebar-wrapper{
@@ -262,7 +257,13 @@ body {
     width: 90%;
 }
 
-
+#error {
+    display: none;
+    color: red;
+    font-weight: bold;
+    font-size: smaller;
+}
+  
 .form {
     position: relative;
     padding: 1em;
@@ -271,21 +272,34 @@ body {
     align-items: center;
     gap: 1em;
     justify-content: center;
+
 }
 
-.form label {
+.form div {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    grid-gap: 10px;
+}
+
+.form div label {
     padding: 10px;
     height: 2.5em;
+    text-align: right;
 }
 
-.form input {
+
+#emailLabel {
+    padding-right: 17px;
+}
+
+.form div input {
     vertical-align: middle;
     margin-right: .2em;
     padding: 10px;
     background-color: #fff;
     border: 1px solid #ddd;
     border-radius: .2em;
-    height: 2.5em;
+    height: 2.5em;    
 }
 
 .form button {
@@ -298,6 +312,25 @@ body {
     height: 2.5em;
 }
 
+#camera:hover {
+    cursor: pointer;
+    filter: brightness(0) invert(1);
+}
+
+#mic:hover {
+    cursor: pointer;
+    filter: brightness(0) invert(1);
+}
+
+#share_screen:hover {
+    cursor: pointer;
+    filter: brightness(0) invert(1);
+}
+
+#raise_hand:hover {
+    cursor: pointer;
+    filter: brightness(0) invert(1);
+}
 .form button:hover {
     background-color: royalblue;
 }
@@ -325,4 +358,83 @@ body {
 
 .button:hover {
     background-color: royalblue;
+}
+
+.pic-container-container {
+    position: absolute;
+    right: 10px;
+    top: 10px;
+    width: 80px;
+}
+
+.pic-container {
+    position: relative;
+}
+
+.hidden {
+    display: none;
+}
+
+.dummy-profile-pic {
+    width: 32px;
+    position: absolute;
+    padding: 3px;
+  /*   background: #aabbff; */
+    background: white;
+    border-radius: 50px;
+    box-shadow: 0px 3px 6px 0px rgba(0,0,0,0.1);
+}
+
+.dummy-profile-pic:nth-child(2) {
+    left: 0px;
+    z-index: 1000;
+}
+
+.dummy-profile-pic:nth-child(3) {
+    left: 10px;
+    z-index: 999;
+}
+
+.dummy-profile-pic:nth-child(4) {
+    left: 20px;
+    z-index: 998;
+    box-shadow: 0px 3px 6px 0px rgba(0,0,0,0.25);
+}
+
+.dummy-profile-pic img {
+    width: 100%;
+    display: block;
+    border-radius: 50px;
+}
+
+.sidebar {
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 200px;
+    background: rgba(0, 0, 0, 0.5);
+    
+    color: white;
+}
+  
+.sidebar .user {
+    display: flex;
+    padding: 10px;
+}
+  
+.sidebar .user .pfp {
+    width: 32px;
+    height: 32px;
+    margin-right: 15px;
+}
+  
+.sidebar .user .pfp img {
+    width: 100%;
+    display: block;
+    border-radius: 50px;
+}
+  
+.sidebar .user .name {
+    padding-top: 7px;
 }
