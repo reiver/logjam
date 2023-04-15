@@ -354,9 +354,12 @@ function onLoad() {
     }
 
     setMyName();
-    graph = new Graph();
-    window.onresize = handleResize;
-    graph.draw(DATA);
+
+    //show Tree only for broadcaster
+    if (myRole === "broadcast") {
+        graph = new Graph();
+        window.onresize = handleResize;
+    }
 
     arrangeVideoContainers();
 
