@@ -155,18 +155,45 @@ class SparkRTC {
                 break;
             case 'alt-broadcast-approve':
                 this.log(`[handleMessage] alt-broadcast-approve ${msg}`);
-                this.sendStreamTo(msg.data, this.localStream);
+                if(msg.maxLimitReached){
+                    this.localStream?.getTracks()?.forEach(track => track.stop());
+                    this.localStream = null;
+                    this.startedRaiseHand = false;
+                    document.getElementById('camera').style.display = 'none';
+                    document.getElementById('mic').style.display = 'none';
+                    const raiseHndImg = document.getElementById("raise_hand");
+                    localStorage.setItem(handRaisedKey, false);
+
+                    raiseHndImg.dataset.status = "on";
+                    raiseHndImg.src = RAISE_HAND_ON;
+
+                }else{
+                    this.sendStreamTo(msg.data, this.localStream);
+                }
                 break;
             case 'alt-broadcast':
                 this.log(`[handleMessage] ${msg.type}`);
                 if (this.role === 'broadcast') {
+                    if(this.raiseHands.length >= 2){
+                        console.log("[alt-broadcast] not allowing, max limit reached")
+                        this.socket.send(
+                            JSON.stringify({
+                                type: "alt-broadcast-approve",
+                                target: msg.data,
+                                maxLimitReached: true,
+                            })
+                        );
+                        return;
+                    }
                     if (this.raiseHands.indexOf(msg.data) === -1) {
                         if (this.raiseHandConfirmation) {
                             try {
                                 const result = this.raiseHandConfirmation(`${msg.name} wants to broadcast, do you approve?`)
                                 console.log(`[handleMessage] alt-broadcast result`, result);
                                 if (result !== true) return;
-                            } catch {
+                            } catch(e) {
+                                console.error(e);
+                                return
                             }
                         }
                         this.socket.send(
@@ -175,6 +202,7 @@ class SparkRTC {
                                 target: msg.data,
                             })
                         );
+
                         this.raiseHands.push(msg.data);
                         this.log(`[handleMessage] ${msg.type} approving raised hand ${msg.data}`);
                         this.getMetadata();
@@ -224,6 +252,9 @@ class SparkRTC {
             case 'metadata-set':
                 this.log(`[handleMessage] ${msg.type}`);
                 this.metaData = JSON.parse(msg.data);
+                if(this.metaData.raiseHands){
+                    //this.raiseHands=JSON.parse(this.metaData.raiseHands);
+                }
                 break;
             case 'user-by-stream':
                 this.log(`[handleMessage] ${msg.type}`, msg.data);
@@ -841,6 +872,9 @@ class SparkRTC {
                     break;
             }
             if (peerConnection.iceConnectionState === 'disconnected' || peerConnection.iceConnectionState === 'failed' || peerConnection.iceConnectionState === 'closed') {
+                if(this.raiseHands.includes(target)){
+                    this.raiseHands.splice(this.raiseHands.indexOf(target),1);
+                }
                 if (!this.parentDC)
                     setTimeout(() => {
                         console.log("restarting ice");
