@@ -1,6 +1,7 @@
 package binarytreesrv
 
 import (
+	"errors"
 	"strconv"
 	"sync"
 	"time"
@@ -13,8 +14,35 @@ var (
 	Map = binarytree.Default
 )
 
+type WSMessage struct {
+	Type    int
+	Message []byte
+}
+
+type WSWriter struct {
+	wsConn  *websocket.Conn
+	WriteCH *chan WSMessage
+}
+
+func (w *WSWriter) Close() {
+	close(*w.WriteCH)
+	w.WriteCH = nil
+}
+
+func (w *WSWriter) WriteMessage(msgType int, data []byte) error {
+	if w == nil || w.WriteCH == nil {
+		return errors.New("ws writeChannel is closed, can't write")
+	}
+	*w.WriteCH <- WSMessage{
+		Type:    msgType,
+		Message: data,
+	}
+	return nil
+}
+
 type MySocket struct {
 	mutex            sync.Mutex
+	Writer           *WSWriter
 	Socket           *websocket.Conn
 	ID               uint64
 	IsBroadcaster    bool
@@ -125,13 +153,32 @@ func (receiver *MySocket) SetMetaData(metaData map[string]string) {
 
 func fillFunction(node interface{}, socketIndex uint64) binarytree.SingleNode {
 	conn := node.(*websocket.Conn)
+	writeCH := make(chan WSMessage, 256) // queue limit is 256
 	result := MySocket{
-		Socket:           conn,
+		Socket: conn,
+		Writer: &WSWriter{
+			wsConn:  conn,
+			WriteCH: &writeCH,
+		},
 		ID:               socketIndex,
 		Name:             "Socket " + strconv.FormatUint(socketIndex, 10),
 		IsTURN:           true,
 		ConnectedSockets: make(map[*websocket.Conn]MySocket),
 	}
+	go func(w *WSWriter) {
+		hadError := false
+		for data := range *w.WriteCH {
+			err := w.wsConn.WriteMessage(data.Type, data.Message)
+			if err != nil {
+				//fmt.Println(err)
+				hadError = true
+				break
+			}
+		}
+		if hadError {
+			w.Close()
+		}
+	}(result.Writer)
 	return &result
 }
 
