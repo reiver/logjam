@@ -331,6 +331,12 @@ body {
     cursor: pointer;
     filter: brightness(0) invert(1);
 }
+
+#reconnect:hover {
+    cursor: pointer;
+    filter: brightness(0) invert(1);
+}
+
 .form button:hover {
     background-color: royalblue;
 }
