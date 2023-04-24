@@ -499,7 +499,7 @@ class SparkRTC {
      */
     restartEverything(peerConnection, target) {
         this.remoteStreamNotified = false;
-        if (peerConnection.getRemoteStreams().length === 0) return;
+        //if (peerConnection.getRemoteStreams().length === 0) return;
         const trackIds = peerConnection.getReceivers().map((receiver) => receiver.track.id);
         trackIds.forEach((trackId) => {
             console.log('[peerConnection.oniceconnectionstatechange] DC trackId', trackId);
@@ -549,7 +549,7 @@ class SparkRTC {
         }
 
 
-        if (this.parentDC || this.startedRaiseHand) {
+        if ((this.parentDC || this.startedRaiseHand) && this.role!=="broadcast") {
             setTimeout(() => {
                 this.startProcedure();
             }, 1000);
