@@ -363,7 +363,28 @@ function onLoad() {
 
     arrangeVideoContainers();
 
-    
+}
+
+
+async function onRaiseHandRejected(){
+    handRaised = false;
+
+    const img = document.getElementById("raise_hand");
+
+    img.dataset.status = "on";
+    img.src = RAISE_HAND_ON;
+
+    document.getElementById("mic").style.display = "none";
+    document.getElementById("camera").style.display = "none";
+
+    sparkRTC.localStream.getTracks().forEach(function(track) {
+        track.stop();
+    });
+
+    sparkRTC.localStream = null;
+
+    sparkRTC.onRaiseHandRejected();
+
 }
 
 async function onRaiseHand() {

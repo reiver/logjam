@@ -93,11 +93,12 @@ function createSparkRTC() {
             },
             raiseHandConfirmation: (msg) => {
                 console.log(`[raiseHandConfirmation] msg`, msg);
-                return true;
-                // if (confirm(msg)) {
-                //     return true;
-                // }
-                // return false;
+
+                window.focus(); //to make tab Active
+                if (confirm(msg)) {
+                    return true;
+                }
+                return false;
             },
             startProcedure: async () => {
                 await handleClick();
@@ -240,6 +241,13 @@ function createSparkRTC() {
                 //         createUserVideo(user, localStream.id === user.video.id);
                 //     }
                 // }
+            },
+            altBroadcastApprove: (res) => {
+                console.log("altBroadcastApprove: ",res);
+                if(res == false){
+                    //request rejected by admin
+                    onRaiseHandRejected()
+                }
             },
         });
     }

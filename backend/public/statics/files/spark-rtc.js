@@ -155,26 +155,40 @@ class SparkRTC {
                 break;
             case 'alt-broadcast-approve':
                 this.log(`[handleMessage] alt-broadcast-approve ${msg}`);
-                this.sendStreamTo(msg.data, this.localStream);
+                console.log('alt-broadcast-approve', msg);
+
+                if(msg.result == true){
+                    this.sendStreamTo(msg.data, this.localStream);
+                }else{
+                    if(this.altBroadcastApprove){
+                        this.altBroadcastApprove(msg.result);
+                    }
+                }
+
                 break;
             case 'alt-broadcast':
                 this.log(`[handleMessage] ${msg.type}`);
                 if (this.role === 'broadcast') {
                     if (this.raiseHands.indexOf(msg.data) === -1) {
+                        var result = false;
                         if (this.raiseHandConfirmation) {
                             try {
-                                const result = this.raiseHandConfirmation(`${msg.name} wants to broadcast, do you approve?`)
-                                console.log(`[handleMessage] alt-broadcast result`, result);
-                                if (result !== true) return;
+                                result = this.raiseHandConfirmation(`${msg.name} wants to broadcast, do you approve?`)
                             } catch {
                             }
                         }
+
                         this.socket.send(
                             JSON.stringify({
                                 type: "alt-broadcast-approve",
                                 target: msg.data,
+                                result,
                             })
                         );
+
+
+                        if(result !== true) return;
+
                         this.raiseHands.push(msg.data);
                         this.log(`[handleMessage] ${msg.type} approving raised hand ${msg.data}`);
                         this.getMetadata();
@@ -463,6 +477,11 @@ class SparkRTC {
         this.startedRaiseHand = true;
         return this.startBroadcasting('alt-broadcast');
     };
+
+    
+    onRaiseHandRejected = () =>{
+        this.startedRaiseHand = false;
+    }
 
     /**
      * Function to handle Data Channel Status
@@ -1174,6 +1193,7 @@ class SparkRTC {
         this.raiseHandConfirmation = options.raiseHandConfirmation || ((msg) => {
             return window.confirm(msg);
         });
+        this.altBroadcastApprove = options.altBroadcastApprove;
         this.newTrackCallback = options.newTrackCallback;
         this.startProcedure = options.startProcedure;
         this.log = options.log || ((log) => {
