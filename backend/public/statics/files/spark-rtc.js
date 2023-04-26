@@ -1191,6 +1191,7 @@ class SparkRTC {
         this.signalingDisconnectedCallback = options.signalingDisconnectedCallback;
         this.treeCallback = options.treeCallback;
         this.raiseHandConfirmation = options.raiseHandConfirmation || ((msg) => {
+            window.focus();
             return window.confirm(msg);
         });
         this.altBroadcastApprove = options.altBroadcastApprove;
