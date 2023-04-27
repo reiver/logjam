@@ -25,8 +25,6 @@ let myRole;
 let shareScreenStream;
 let roomName;
 
-const timestamp  = new Date().getTime(); // Get the current timestamp
-const handRaisedKey = 'handraised'+timestamp; //key to save handRaise status of each of the Audience
 var handRaised = false;
 
 function makeId(length) {
@@ -392,6 +390,7 @@ async function onRaiseHand() {
 
     if (img.dataset.status === "on") {
 
+        console.log("Setting status to TRUE");
         handRaised = true;
         
         img.dataset.status = "off";
@@ -406,6 +405,8 @@ async function onRaiseHand() {
             // }
             return;
         }
+
+        
         const stream = await sparkRTC.raiseHand();
         // const tagId = 'localVideo-' + stream.id;
         // const video = createVideoElement(tagId, true);

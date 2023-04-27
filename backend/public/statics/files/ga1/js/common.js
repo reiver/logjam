@@ -13,6 +13,30 @@ function clearScreen() {
     }
 }
 
+function confirmRaiseHand(msg) {
+    return new Promise(function(resolve, reject) {
+      Swal.fire({
+        title: "Are you sure?",
+        html: msg,
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Yes, Allow!",
+        cancelButtonText: "No, Reject!",
+        reverseButtons: true
+      }).then(function(result) {
+        if (result.isConfirmed) {
+          // User clicked the confirm button
+          resolve(true);
+        } else {
+          // User clicked the cancel button or closed the dialog
+          resolve(false);
+        }
+      });
+    });
+  }
+  
+
+
 let localStream = null;
 
 function createSparkRTC() {
@@ -91,14 +115,11 @@ function createSparkRTC() {
                     console.error(e);
                 }
             },
-            raiseHandConfirmation: (msg) => {
+            raiseHandConfirmation: async (msg) => {
                 console.log(`[raiseHandConfirmation] msg`, msg);
-
-                window.focus(); //to make tab Active
-                if (confirm(msg)) {
-                    return true;
-                }
-                return false;
+                const res = await confirmRaiseHand(msg);
+                console.log("confirmRaiseHand Res: ",res);
+                return res;
             },
             startProcedure: async () => {
                 await handleClick();

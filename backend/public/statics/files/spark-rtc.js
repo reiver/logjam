@@ -164,16 +164,17 @@ class SparkRTC {
                     document.getElementById('camera').style.display = 'none';
                     document.getElementById('mic').style.display = 'none';
                     const raiseHndImg = document.getElementById("raise_hand");
-                    localStorage.setItem(handRaisedKey, false);
-
+                    handRaised = false;
                     raiseHndImg.dataset.status = "on";
                     raiseHndImg.src = RAISE_HAND_ON;
 
-                }else if(msg.result == true){
-                    this.sendStreamTo(msg.data, this.localStream);
                 }else{
-                    if(this.altBroadcastApprove){
-                        this.altBroadcastApprove(msg.result);
+                    if(msg.result == true){
+                        this.sendStreamTo(msg.data, this.localStream);
+                    }else{
+                        if(this.altBroadcastApprove){
+                            this.altBroadcastApprove(msg.result);
+                        }
                     }
                 }
                 break;
@@ -195,7 +196,12 @@ class SparkRTC {
                         var result = false;
                         if (this.raiseHandConfirmation) {
                             try {
-                                const result = this.raiseHandConfirmation(`${msg.name} wants to broadcast, do you approve?`)
+
+                                const data = JSON.parse(msg.name);
+                                const name = data.name;
+                                console.log(name);
+
+                                result = await this.raiseHandConfirmation(`<b>${name}</b> wants to broadcast, do you approve?`)
                                 console.log(`[handleMessage] alt-broadcast result`, result);
                                 // if (result !== true) return;
                             } catch(e) {
@@ -1222,10 +1228,11 @@ class SparkRTC {
         this.remoteStreamDCCallback = options.remoteStreamDCCallback;
         this.signalingDisconnectedCallback = options.signalingDisconnectedCallback;
         this.treeCallback = options.treeCallback;
-        this.raiseHandConfirmation = options.raiseHandConfirmation || ((msg) => {
-            window.focus();
-            return window.confirm(msg);
-        });
+        this.raiseHandConfirmation = options.raiseHandConfirmation;
+        //  || ((msg) => {
+        //     window.focus();
+        //     return window.confirm(msg);
+        // });
         this.altBroadcastApprove = options.altBroadcastApprove;
         this.newTrackCallback = options.newTrackCallback;
         this.startProcedure = options.startProcedure;
