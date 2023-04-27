@@ -199,11 +199,9 @@ class SparkRTC {
 
                                 const data = JSON.parse(msg.name);
                                 const name = data.name;
-                                console.log(name);
 
                                 result = await this.raiseHandConfirmation(`<b>${name}</b> wants to broadcast, do you approve?`)
                                 console.log(`[handleMessage] alt-broadcast result`, result);
-                                // if (result !== true) return;
                             } catch(e) {
                                 console.error(e);
                                 return
@@ -1229,10 +1227,6 @@ class SparkRTC {
         this.signalingDisconnectedCallback = options.signalingDisconnectedCallback;
         this.treeCallback = options.treeCallback;
         this.raiseHandConfirmation = options.raiseHandConfirmation;
-        //  || ((msg) => {
-        //     window.focus();
-        //     return window.confirm(msg);
-        // });
         this.altBroadcastApprove = options.altBroadcastApprove;
         this.newTrackCallback = options.newTrackCallback;
         this.startProcedure = options.startProcedure;

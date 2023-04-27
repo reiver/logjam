@@ -116,9 +116,7 @@ function createSparkRTC() {
                 }
             },
             raiseHandConfirmation: async (msg) => {
-                console.log(`[raiseHandConfirmation] msg`, msg);
                 const res = await confirmRaiseHand(msg);
-                console.log("confirmRaiseHand Res: ",res);
                 return res;
             },
             startProcedure: async () => {

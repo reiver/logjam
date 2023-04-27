@@ -390,7 +390,6 @@ async function onRaiseHand() {
 
     if (img.dataset.status === "on") {
 
-        console.log("Setting status to TRUE");
         handRaised = true;
         
         img.dataset.status = "off";
