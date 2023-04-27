@@ -21,7 +21,7 @@ type WSMessage struct {
 
 type WSWriter struct {
 	wsConn  *websocket.Conn
-	WriteCH *chan WSMessage
+	WriteCH *chan interface{}
 }
 
 func (w *WSWriter) Close() {
@@ -37,6 +37,14 @@ func (w *WSWriter) WriteMessage(msgType int, data []byte) error {
 		Type:    msgType,
 		Message: data,
 	}
+	return nil
+}
+
+func (w *WSWriter) WriteJSON(data interface{}) error {
+	if w == nil || w.WriteCH == nil {
+		return errors.New("ws writeChannel is closed, can't write")
+	}
+	*w.WriteCH <- data
 	return nil
 }
 
@@ -153,7 +161,7 @@ func (receiver *MySocket) SetMetaData(metaData map[string]string) {
 
 func fillFunction(node interface{}, socketIndex uint64) binarytree.SingleNode {
 	conn := node.(*websocket.Conn)
-	writeCH := make(chan WSMessage, 256) // queue limit is 256
+	writeCH := make(chan interface{}, 256) // queue limit is 256
 	result := MySocket{
 		Socket: conn,
 		Writer: &WSWriter{
@@ -168,11 +176,19 @@ func fillFunction(node interface{}, socketIndex uint64) binarytree.SingleNode {
 	go func(w *WSWriter) {
 		hadError := false
 		for data := range *w.WriteCH {
-			err := w.wsConn.WriteMessage(data.Type, data.Message)
-			if err != nil {
-				//fmt.Println(err)
-				hadError = true
-				break
+			if wsMsg, isItWSMessage := data.(WSMessage); isItWSMessage {
+				err := w.wsConn.WriteMessage(wsMsg.Type, wsMsg.Message)
+				if err != nil {
+					//fmt.Println(err)
+					hadError = true
+					break
+				}
+			} else {
+				err := w.wsConn.WriteJSON(data)
+				if err != nil {
+					hadError = true
+					break
+				}
 			}
 		}
 		if hadError {
