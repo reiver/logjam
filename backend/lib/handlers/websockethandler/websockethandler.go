@@ -515,11 +515,9 @@ func (receiver httpHandler) reader(conn *websocket.Conn, userAgent string, roomN
 			if closedError || handshakeError {
 				socketId := receiver.deleteNode(conn, roomName, messageType)
 				{
-					Map, _ = roommapssrv.RoomMaps.Get(roomName)
-					metaData := Map.MetaData
-					if raiseHandsStr, exists := metaData["raiseHands"]; exists {
+					if raiseHandsStr, _ := roommapssrv.RoomMaps.GetFromMetaData(roomName, "raiseHands"); raiseHandsStr != nil {
 						var usernameList []string
-						err = json.Unmarshal([]byte(raiseHandsStr), &usernameList)
+						err = json.Unmarshal([]byte(*raiseHandsStr), &usernameList)
 						if err != nil {
 							log.Errorf("could not read room metaData: %s", err)
 						} else {
@@ -528,23 +526,17 @@ func (receiver httpHandler) reader(conn *websocket.Conn, userAgent string, roomN
 								if i >= 0 {
 									usernameList = append(usernameList[:i], usernameList[i+1:]...)
 									if len(usernameList) == 0 {
-										delete(metaData, "raiseHands")
-										roommapssrv.RoomMaps.SetMetData(roomName, metaData)
+										roommapssrv.RoomMaps.DelFromMetaData(roomName, "raiseHands")
 									} else {
 										jsonBytes, err := json.Marshal(usernameList)
 										if err != nil {
 											log.Errorf("%s", err)
 										}
-										metaData["raiseHands"] = string(jsonBytes)
-										roommapssrv.RoomMaps.SetMetData(roomName, metaData)
+										roommapssrv.RoomMaps.SetToMetaData(roomName, "raiseHands", string(jsonBytes))
 									}
 								}
 							}
 						}
-					}
-					err = roommapssrv.RoomMaps.Set(roomName, Map.Room)
-					if err != nil {
-						log.Errorf("could not set room in map: %s", err)
 					}
 				}
 			}

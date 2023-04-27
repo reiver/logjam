@@ -7,21 +7,20 @@ import (
 	"sync"
 )
 
-
 type RoomType struct {
 	Room     *binarytree.Tree
 	MetaData map[string]string
 }
 
 type Type struct {
-	mutex sync.Mutex
+	mutex    sync.Mutex
 	roomMaps map[string]*RoomType
 }
 
 type User struct {
-	Id uint64 `json:"id"`
-	Name string `json:"name"`
-	Role string `json:"role"`
+	Id       uint64 `json:"id"`
+	Name     string `json:"name"`
+	Role     string `json:"role"`
 	StreamId string `json:"streamId"`
 }
 
@@ -70,6 +69,72 @@ func (receiver *Type) Set(roomName string, mapptr *binarytree.Tree) error {
 		Room:     mapptr,
 		MetaData: metaData,
 	}
+	return nil
+}
+
+func (receiver *Type) GetFromMetaData(roomName string, key string) (*string, error) {
+	if nil == receiver {
+		return nil, errNilReceiver
+	}
+
+	receiver.mutex.Lock()
+	defer receiver.mutex.Unlock()
+
+	if receiver.roomMaps == nil {
+		return nil, nil
+	}
+
+	room, exists := receiver.roomMaps[roomName]
+	if !exists {
+		return nil, errRoomNotFound
+	}
+
+	if metaValue, exists := room.MetaData[key]; exists {
+		return &metaValue, nil
+	}
+
+	return nil, nil
+}
+
+func (receiver *Type) SetToMetaData(roomName string, key, value string) error {
+	if nil == receiver {
+		return errNilReceiver
+	}
+
+	receiver.mutex.Lock()
+	defer receiver.mutex.Unlock()
+
+	if nil == receiver.roomMaps {
+		receiver.roomMaps = make(map[string]*RoomType)
+	}
+
+	room, ok := receiver.roomMaps[roomName]
+	if !ok {
+		return errRoomNotFound
+	}
+	room.MetaData[key] = value
+	receiver.roomMaps[roomName] = room
+	return nil
+}
+
+func (receiver *Type) DelFromMetaData(roomName string, key string) error {
+	if nil == receiver {
+		return errNilReceiver
+	}
+
+	receiver.mutex.Lock()
+	defer receiver.mutex.Unlock()
+
+	if nil == receiver.roomMaps {
+		receiver.roomMaps = make(map[string]*RoomType)
+	}
+
+	room, ok := receiver.roomMaps[roomName]
+	if !ok {
+		return errRoomNotFound
+	}
+	delete(room.MetaData, key)
+	receiver.roomMaps[roomName] = room
 	return nil
 }
 
@@ -147,11 +212,11 @@ func (receiver *Type) GetUsers(roomName string) ([]User, error) {
 		if node.(*binarytreesrv.MySocket).IsBroadcaster {
 			role = "broadcaster"
 		}
-		user := User {
-			Id: node.(*binarytreesrv.MySocket).ID,
-			Name: node.(*binarytreesrv.MySocket).Name,
+		user := User{
+			Id:       node.(*binarytreesrv.MySocket).ID,
+			Name:     node.(*binarytreesrv.MySocket).Name,
 			StreamId: nodeStreamId,
-			Role: role,
+			Role:     role,
 		}
 
 		output = append(output, user)
