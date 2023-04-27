@@ -199,8 +199,16 @@ class SparkRTC {
 
                                 const data = JSON.parse(msg.name);
                                 const name = data.name;
+                                const email = data.email;
+                                var message;
 
-                                result = await this.raiseHandConfirmation(`<b>${name}</b> wants to broadcast, do you approve?`)
+                                if(email.length === 0){
+                                    message = `<b>${name}</b> wants to broadcast, do you approve?`
+                                }else{
+                                    message = `<b>${name} / ${email}</b> wants to broadcast, do you approve?`
+                                }
+
+                                result = await this.raiseHandConfirmation(message);
                                 console.log(`[handleMessage] alt-broadcast result`, result);
                             } catch(e) {
                                 console.error(e);
