@@ -13,6 +13,17 @@ function clearScreen() {
     }
 }
 
+function newRequestPopUp(msg){
+    Swal.fire({
+        title: "Max Broadcasting Audienece Limit is Reached",
+        html: msg,
+        icon: "warning",
+        showCancelButton: false,
+        confirmButtonText: "No, Reject!",
+        reverseButtons: true
+      });
+}
+
 function confirmRaiseHand(msg) {
     return new Promise(function(resolve, reject) {
       Swal.fire({
@@ -35,6 +46,14 @@ function confirmRaiseHand(msg) {
     });
   }
   
+function messagePopUp(msg){
+    Swal.fire({
+        text: msg,
+        showCancelButton: false,
+        confirmButtonText: "Okay",
+        reverseButtons: true
+      });
+}
 
 
 let localStream = null;
@@ -115,7 +134,12 @@ function createSparkRTC() {
                     console.error(e);
                 }
             },
-            raiseHandConfirmation: async (msg) => {
+            raiseHandConfirmation: async (msg,limitReached) => {
+                if(limitReached){
+                    newRequestPopUp(msg);
+                    return false;
+                }
+
                 const res = await confirmRaiseHand(msg);
                 return res;
             },
@@ -265,8 +289,14 @@ function createSparkRTC() {
                 console.log("altBroadcastApprove: ",res);
                 if(res == false){
                     //request rejected by admin
-                    onRaiseHandRejected()
+                    onRaiseHandRejected();
+                }else{
+                    onRiaseHandApproved();
                 }
+            },
+
+            maxLimitReached: (msg) =>{
+                messagePopUp(msg);
             },
         });
     }

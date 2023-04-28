@@ -170,33 +170,44 @@ class SparkRTC {
 
                     //zaid
                     //todo: pop a ui component up about why user can't raise hand
+
+                    if(this.maxLimitReached){
+                        this.maxLimitReached("Max limit of 2 Broadcasting Audiences is Reached");
+                    }
+                    
                 }else{
                     if(msg.result == true){
                         this.sendStreamTo(msg.data, this.localStream);
-                    }else{
-                        if(this.altBroadcastApprove){
-                            this.altBroadcastApprove(msg.result);
-                        }
+                    }
+
+                    if(this.altBroadcastApprove){
+                        this.altBroadcastApprove(msg.result);
                     }
                 }
                 break;
             case 'alt-broadcast':
                 this.log(`[handleMessage] ${msg.type}`);
                 if (this.role === 'broadcast') {
-                    if(this.raiseHands.length >= 2){
-                        console.log("[alt-broadcast] not allowing, max limit reached")
-                        this.socket.send(
-                            JSON.stringify({
-                                type: "alt-broadcast-approve",
-                                target: msg.data,
-                                maxLimitReached: true,
-                            })
-                        );
 
-                        //zaid
-                        //todo: pop a dialog up about someone was asking for raise hand permission but maximum limit is reached
-                        return;
+                    var limitReached = false;
+                    if(this.raiseHands.length >= 2){
+                        limitReached = true;
                     }
+
+                    // if(this.raiseHands.length >= 2){
+                    //     console.log("[alt-broadcast] not allowing, max limit reached")
+                    //     this.socket.send(
+                    //         JSON.stringify({
+                    //             type: "alt-broadcast-approve",
+                    //             target: msg.data,
+                    //             maxLimitReached: true,
+                    //         })
+                    //     );
+
+                    //     //zaid
+                    //     //todo: pop a dialog up about someone was asking for raise hand permission but maximum limit is reached
+                    //     return;
+                    // }
                     if (this.raiseHands.indexOf(msg.data) === -1) {
                         var result = false;
                         if (this.raiseHandConfirmation) {
@@ -213,7 +224,7 @@ class SparkRTC {
                                     message = `<b>${name} / ${email}</b> wants to broadcast, do you approve?`
                                 }
 
-                                result = await this.raiseHandConfirmation(message);
+                                result = await this.raiseHandConfirmation(message,limitReached);
                                 console.log(`[handleMessage] alt-broadcast result`, result);
                             } catch(e) {
                                 console.error(e);
@@ -226,10 +237,10 @@ class SparkRTC {
                                 type: "alt-broadcast-approve",
                                 target: msg.data,
                                 result,
+                                maxLimitReached: limitReached,
                             })
                         );
-
-
+                        
                         if(result !== true) return;
 
                         this.raiseHands.push(msg.data);
@@ -1253,5 +1264,6 @@ class SparkRTC {
         this.log(`[constructor] ${this.role}`);
         this.updateStatus = options.updateStatus;
         this.userListUpdated = options.userListUpdated;
+        this.maxLimitReached = options.maxLimitReached;
     }
 }

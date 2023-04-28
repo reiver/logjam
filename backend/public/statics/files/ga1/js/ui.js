@@ -363,6 +363,11 @@ function onLoad() {
 
 }
 
+async function onRiaseHandApproved(){
+    document.getElementById("mic").style.display = "";
+    document.getElementById("camera").style.display = "";
+    handRaised = true;
+}
 
 async function onRaiseHandRejected(){
     handRaised = false;
@@ -410,8 +415,7 @@ async function onRaiseHand() {
         // const tagId = 'localVideo-' + stream.id;
         // const video = createVideoElement(tagId, true);
         // video.srcObject = stream;
-        document.getElementById("mic").style.display = "";
-        document.getElementById("camera").style.display = "";
+        
     }
 }
 
