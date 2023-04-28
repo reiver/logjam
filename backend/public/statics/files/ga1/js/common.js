@@ -288,6 +288,7 @@ function createSparkRTC() {
             altBroadcastApprove: (res) => {
                 console.log("altBroadcastApprove: ",res);
                 if(res == false){
+                    messagePopUp("Request to Broadcast is Rejected by Admin");
                     //request rejected by admin
                     onRaiseHandRejected();
                 }else{
