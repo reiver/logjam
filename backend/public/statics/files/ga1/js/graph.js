@@ -64,16 +64,18 @@ class Graph {
         // Add labels for the nodes
         nodeEnter.append('text')
             .attr("dy", "2.2em")
-            // .attr("dy", ".35em")
-            // .attr("x", function (d) {
-            //     return d.children || d._children ? -13 : 13;
-            // })
-            // .attr("text-anchor", function (d) {
-            //     return d.children || d._children ? "end" : "start";
-            // })
-            .attr("stroke", "white")
+            .style("font-weight","bold")
             .text(function (d) {
-                return d.data.name;
+                var data = d.data.name;
+
+                if(data.includes("[TURN]")){
+                    data = d.data.name.replace("[TURN]","");
+                }else if(data.includes("[STUN]")){
+                    data = d.data.name.replace("[STUN]","");
+                }
+                
+                data = JSON.parse(data);
+                return data.name;
             });
 
         // UPDATE
