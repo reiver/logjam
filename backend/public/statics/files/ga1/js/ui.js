@@ -358,6 +358,7 @@ function onLoad() {
     //show Tree only for broadcaster
     if (myRole === "broadcast") {
         graph = new Graph();
+        graph.setup();
         window.onresize = handleResize;
     }
 

@@ -177,7 +177,8 @@ class Graph {
     }
 
     draw(data) {
-        this.setup()
+
+        this.clear()
 
         // Assigns parent, children, height, depth
         this.root = d3.hierarchy(data, function (d) {
@@ -189,5 +190,15 @@ class Graph {
         this.treeData = d3.tree().size([this.height, this.width])(this.root);
         this.update(this.root);
     }
+
+    clear() {
+        // Select all nodes and links and remove them
+        d3.select(this.svgElement)
+          .selectAll('.node, .link')
+          .remove();
+    
+        // Reset the tree data and call the update function
+        this.treeData = null;
+      }
 }
 
