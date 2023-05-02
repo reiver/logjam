@@ -86,8 +86,19 @@ function createSparkRTC() {
         }
     };
 
+    // const toggleUsersList = () => {
+    //     if (isElementHidden(sidebar)) {
+    //         // unhide(picContainer);
+    //         unhide(sidebar);
+    //     } else {
+    //         // hide(picContainer);
+    //         hide(sidebar);
+    //     }
+    // };
+
     picContainer.addEventListener('click', toggleUsersList);
-    sidebar.addEventListener('click', toggleUsersList);
+    // sidebar.addEventListener('click', toggleUsersList);
+    
 
     if (myRole === 'broadcast') {
         document.getElementById('raise_hand').style.display = 'none';

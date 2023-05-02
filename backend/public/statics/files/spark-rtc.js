@@ -89,6 +89,8 @@ class SparkRTC {
         msg.data = (msg.Data && !msg.data) ? msg.Data : msg.data;
         msg.type = (msg.Type && !msg.type) ? msg.Type : msg.type;
 
+        // console.log("Message Received: ",msg);
+
         let audiencePeerConnection;
         switch (msg.type) {
             case 'video-offer':
@@ -116,6 +118,7 @@ class SparkRTC {
                 }
                 break;
             case 'role':
+                console.log("[handleMessage] role: ",msg)
                 this.log(`[handleMessage] ${msg.type}`);
                 if (this.role === 'broadcast') {
                     if (msg.data === "no:broadcast") {
@@ -328,6 +331,11 @@ class SparkRTC {
                     }
                 }, 1000);
                 break;
+
+            case 'disable-audience':
+                console.log("disable-audience:",msg);
+                break;
+                
             default:
                 this.log(`[handleMessage] default ${JSON.stringify(msg)}`);
                 break;
@@ -354,6 +362,16 @@ class SparkRTC {
             type: this.treeCallback ? "tree" : "ping",
         }));
     };
+
+    disableAudienceBroadcast = (target) =>{
+        console.log("disableAudienceBroadcast");
+        this.socket.send(
+                JSON.stringify({
+                type: "disable-audience",
+                target: target,
+            })
+        );
+    }
 
     /**
      * Function to setup Signaling WebSocket with backend

@@ -483,35 +483,81 @@ function updateUsersThumbnail(users) {
     }
 }
 
+function trimString(str, maxLength) {
+    if (str.length > maxLength) {
+      str = str.substring(0, maxLength);
+    }
+    return str;
+}
+
+function getBroadcasterIcon(){
+    return `${window.location.origin}/files/ga1/images/spark-logo.png`;
+}
+
 function setSidebar(users) {
-    function createDiv({ email, name }) {
+    function createDiv({ email, name },role,video, id) {
         const div = document.createElement("div");
         div.classList.add("user");
 
         const pfp = document.createElement("div");
         pfp.classList.add("pfp");
 
-        const image = document.createElement("img");
-        image.src = getProfilePicture(email);
-        image.setAttribute("alt", "Profile picture");
+        if(sparkRTC.role === "broadcast"){
 
-        pfp.appendChild(image);
+            if(role != "broadcaster"){
+                if(video !== null){
+                    console.log("broadcasting audience..");
+    
+                    const image = document.createElement("img");
+                    image.src = getBroadcasterIcon();
+                    image.setAttribute("alt", "Broadcast Icon");
+                    image.setAttribute("id", "broadcast-icon");
+    
+                    image.addEventListener('click', function(){
+                        console.log("stoping broadcasting of Audience");
+                        sparkRTC.disableAudienceBroadcast(id.toString());
+                    });
+    
+                    pfp.appendChild(image);
+    
+                }else{
+                    console.log("Not broadcasting audience..");
+    
+                    const image = document.createElement("img");
+                    image.src = getProfilePicture(email);
+                    image.setAttribute("alt", "Profile picture");
+                    pfp.appendChild(image);
+                }
+            }else{
+                console.log("Not audience..");
+    
+                const image = document.createElement("img");
+                image.src = getProfilePicture(email);
+                image.setAttribute("alt", "Profile picture");
+                pfp.appendChild(image);
+            }
+        }else{
+            const image = document.createElement("img");
+            image.src = getProfilePicture(email);
+            image.setAttribute("alt", "Profile picture");
+            pfp.appendChild(image);
+        }
 
         div.appendChild(pfp);
 
         const nameTag = document.createElement("div");
         nameTag.classList.add("name");
+        name = trimString(name,14);
         nameTag.innerText = name;
-
         div.appendChild(nameTag);
-
         return div;
     }
 
     const container = document.getElementById("sidebar");
     container.innerHTML = "";
 
-    for (const { name } of users) {
+    for (const { name, role, video, id } of users) {
+
         const { name: userName, email } = (() => {
             try {
                 console.log(JSON.parse(name));
@@ -521,7 +567,7 @@ function setSidebar(users) {
                 return { name };
             }
         })();
-        const d = createDiv({ name: userName, email });
+        const d = createDiv({ name: userName, email },role,video, id);
         container.appendChild(d);
     }
 }
