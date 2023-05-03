@@ -182,7 +182,8 @@ function createSparkRTC() {
                 // }
             },
         });
-    } else {
+    } 
+    else {
         disableAudioVideoControls();
 
         document.getElementById('sidebar-wrapper').style.display = 'none';
@@ -306,9 +307,12 @@ function createSparkRTC() {
                     onRiaseHandApproved();
                 }
             },
-
             maxLimitReached: (msg) =>{
                 messagePopUp(msg);
+            },
+            disableBroadcasting: () =>{
+                messagePopUp("Admin Stopped Your Broadcast");
+                onRaiseHandRejected();
             },
         });
     }

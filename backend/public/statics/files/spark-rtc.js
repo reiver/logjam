@@ -16,6 +16,7 @@ class SparkRTC {
     myName = 'NoName';
     roomName = 'SparkRTC';
     myUsername = 'NoUsername';
+    lastBroadcasterId = '';
     /**@type {{[key:string]:RTCPeerConnection}}*/
     myPeerConnectionArray = {};
     iceCandidates = [];
@@ -180,6 +181,7 @@ class SparkRTC {
                     
                 }else{
                     if(msg.result == true){
+                        this.lastBroadcasterId = msg.data;
                         this.sendStreamTo(msg.data, this.localStream);
                     }
 
@@ -190,6 +192,7 @@ class SparkRTC {
                 break;
             case 'alt-broadcast':
                 this.log(`[handleMessage] ${msg.type}`);
+                console.log("alt-broadcast",msg);
                 if (this.role === 'broadcast') {
 
                     var limitReached = false;
@@ -211,6 +214,8 @@ class SparkRTC {
                     //     //todo: pop a dialog up about someone was asking for raise hand permission but maximum limit is reached
                     //     return;
                     // }
+                    console.log("My ID: ",this.myUsername);
+
                     if (this.raiseHands.indexOf(msg.data) === -1) {
                         var result = false;
                         if (this.raiseHandConfirmation) {
@@ -254,8 +259,11 @@ class SparkRTC {
                             metaData.raiseHands = JSON.stringify(this.raiseHands);
                             this.setMetadata(metaData);
                         }, 1000);
+                    }else{
+                        console.log("else of this.raiseHands");
                     }
                 } else {
+                    console.log("else of role check");
                     // this.spreadLocalStream();
                 }
                 break;
@@ -334,6 +342,10 @@ class SparkRTC {
 
             case 'disable-audience':
                 console.log("disable-audience:",msg);
+                
+                if(this.disableBroadcasting){
+                    this.disableBroadcasting();
+                }
                 break;
                 
             default:
@@ -364,7 +376,23 @@ class SparkRTC {
     };
 
     disableAudienceBroadcast = (target) =>{
-        console.log("disableAudienceBroadcast");
+        console.log("disableAudienceBroadcast: ",target);
+
+
+        //find media stream id of that Target
+        for(const id in this.myPeerConnectionArray){
+            if(this.myPeerConnectionArray[id].isAdience){
+
+                if(id.toString() === target.toString()){
+                    var pc = this.myPeerConnectionArray[id];
+                    console.log(pc);
+            
+                }
+            }
+            
+        }
+        
+
         this.socket.send(
                 JSON.stringify({
                 type: "disable-audience",
@@ -491,6 +519,8 @@ class SparkRTC {
      * @returns
      */
     startBroadcasting = async (data = 'broadcast') => {
+        console.log("startBroadcasting");
+
         this.log(`[startBroadcasting] ${data}`);
         try {
             if (!this.localStream) {
@@ -548,14 +578,34 @@ class SparkRTC {
      * @returns initiate Broadcasting
      */
     raiseHand = () => {
+        console.log("rasieHand");
         if (this.startedRaiseHand) return;
         this.startedRaiseHand = true;
+        console.log("rasieHand 2");
+
         return this.startBroadcasting('alt-broadcast');
     };
 
     
     onRaiseHandRejected = () =>{
         this.startedRaiseHand = false;
+
+        const pc =  this.myPeerConnectionArray[this.lastBroadcasterId];
+        if(pc !==null){
+            this.localStream.getTracks().forEach(track =>{
+                pc.getSenders().forEach(sender => {
+                    if(track.id === sender?.track?.id){
+                        pc.removeTrack(sender);
+                    } 
+                });
+            });
+
+            this.localStream.getTracks().forEach(function(track) {
+                track.stop();
+            });
+            this.localStream = null;
+        }
+       
     }
 
     /**
@@ -1283,5 +1333,6 @@ class SparkRTC {
         this.updateStatus = options.updateStatus;
         this.userListUpdated = options.userListUpdated;
         this.maxLimitReached = options.maxLimitReached;
+        this.disableBroadcasting = options.disableBroadcasting;
     }
 }

@@ -80,6 +80,7 @@ function onMicButtonClick() {
 }
 
 function createVideoElement(videoId, muted = false) {
+    console.log("createVideoElement: ",videoId);
     let container = document.createElement("div");
     container.className = "video-container";
     let video = document.createElement("video");
@@ -117,10 +118,13 @@ function getVideoElement(videoId) {
 }
 
 function removeVideoElement(videoId) {
+    console.log("removeVideoElement");
     let video = document.getElementById(videoId);
     if (!video) return;
+    console.log("Video:",video);
     let videoContainer = video.parentNode;
     if (!videoContainer) return;
+    console.log("VideoContainer:",videoContainer);
     document.getElementById("screen").removeChild(videoContainer);
     arrangeVideoContainers();
 }
@@ -378,14 +382,7 @@ async function onRaiseHandRejected(){
     img.dataset.status = "on";
     img.src = RAISE_HAND_ON;
 
-    document.getElementById("mic").style.display = "none";
-    document.getElementById("camera").style.display = "none";
-
-    sparkRTC.localStream.getTracks().forEach(function(track) {
-        track.stop();
-    });
-
-    sparkRTC.localStream = null;
+    disableAudioVideoControls();
 
     sparkRTC.onRaiseHandRejected();
 
@@ -397,26 +394,17 @@ async function onRaiseHand() {
     if (img.dataset.status === "on") {
 
         handRaised = true;
-        
         img.dataset.status = "off";
         img.src = RAISE_HAND_OFF;
 
         if (sparkRTC.localStream) {
-            // if (confirm(`Do you want to stop streaming?`)) {
-            //     console.log('stopping...');
-            //     removeVideoElement('localVideo-' + sparkRTC.localStream.id);
-            //     disableAudioVideoControls();
-            //     sparkRTC.lowerHand();
-            // }
             return;
         }
 
-        
-        const stream = await sparkRTC.raiseHand();
-        // const tagId = 'localVideo-' + stream.id;
-        // const video = createVideoElement(tagId, true);
-        // video.srcObject = stream;
-        
+        const stream = await sparkRTC.raiseHand();        
+    }else{
+        //to stop raise hand
+        onRaiseHandRejected();
     }
 }
 
@@ -556,7 +544,11 @@ function setSidebar(users) {
     const container = document.getElementById("sidebar");
     container.innerHTML = "";
 
+    console.log("Users: ",users);
+
     for (const { name, role, video, id } of users) {
+
+        console.log("Video: ",video);
 
         const { name: userName, email } = (() => {
             try {
@@ -567,6 +559,7 @@ function setSidebar(users) {
                 return { name };
             }
         })();
+
         const d = createDiv({ name: userName, email },role,video, id);
         container.appendChild(d);
     }
