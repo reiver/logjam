@@ -938,6 +938,12 @@ class SparkRTC {
         });
     };
 
+
+    //function to reconnect upon user request
+    onReconnect(){
+        this.startProcedure();
+    }
+
     /**
      * Function to initiate the client depending on its role
      *

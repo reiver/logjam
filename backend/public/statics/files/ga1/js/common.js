@@ -132,6 +132,8 @@ function createSparkRTC() {
 
         document.getElementById('sidebar-wrapper').style.display = 'none';
         const img = document.getElementById('raise_hand');
+        document.getElementById('reconnect').style.display = "";
+
         return new SparkRTC('audience', {
             remoteStreamCallback: (stream) => {
                 const tagId = 'remoteVideo-' + stream.id;

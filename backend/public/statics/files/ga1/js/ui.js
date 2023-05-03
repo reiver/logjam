@@ -68,6 +68,11 @@ function onCameraButtonClick() {
     }
 }
 
+//reconnect upon user request
+function onReconnect(){
+    sparkRTC.onReconnect();
+}
+
 function onMicButtonClick() {
     const img = document.getElementById("mic");
     if (img.dataset.status === "on") {
