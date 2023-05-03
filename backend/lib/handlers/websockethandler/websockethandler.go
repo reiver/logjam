@@ -230,7 +230,7 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 					fmt.Fprintln(f, msg)
 
 					if err == nil {
-						targetSocketNode, e := binarytreesrv.InsertChild(socket.Socket, *Map.Room)
+						targetSocketNode, e := binarytreesrv.InsertChild(socket.Socket, Map.Room)
 						if e != nil {
 							socket.Writer.WriteMessage(messageType, []byte("{\"type\":\"error\",\"data\":\"Insert Child Error : "+e.Error()+" \"}"))
 							return

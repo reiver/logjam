@@ -203,7 +203,7 @@ func GetMap() binarytree.Tree {
 	return Map
 }
 
-func InsertChild(socket *websocket.Conn, aMap binarytree.Tree) (binarytree.SingleNode, error) {
+func InsertChild(socket *websocket.Conn, aMap *binarytree.Tree) (binarytree.SingleNode, error) {
 	tryCount := 0
 	var result binarytree.SingleNode
 	var err error
