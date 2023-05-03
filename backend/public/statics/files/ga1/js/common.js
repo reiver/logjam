@@ -13,6 +13,49 @@ function clearScreen() {
     }
 }
 
+function newRequestPopUp(msg){
+    Swal.fire({
+        title: "Max Broadcasting Audienece Limit is Reached",
+        html: msg,
+        icon: "warning",
+        showCancelButton: false,
+        confirmButtonText: "No, Reject!",
+        reverseButtons: true
+      });
+}
+
+function confirmRaiseHand(msg) {
+    return new Promise(function(resolve, reject) {
+      Swal.fire({
+        title: "Are you sure?",
+        html: msg,
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Yes, Allow!",
+        cancelButtonText: "No, Reject!",
+        reverseButtons: true
+      }).then(function(result) {
+        if (result.isConfirmed) {
+          // User clicked the confirm button
+          resolve(true);
+        } else {
+          // User clicked the cancel button or closed the dialog
+          resolve(false);
+        }
+      });
+    });
+  }
+  
+function messagePopUp(msg){
+    Swal.fire({
+        text: msg,
+        showCancelButton: false,
+        confirmButtonText: "Okay",
+        reverseButtons: true
+      });
+}
+
+
 let localStream = null;
 
 function createSparkRTC() {
@@ -91,13 +134,14 @@ function createSparkRTC() {
                     console.error(e);
                 }
             },
-            raiseHandConfirmation: (msg) => {
-                console.log(`[raiseHandConfirmation] msg`, msg);
-                return true;
-                // if (confirm(msg)) {
-                //     return true;
-                // }
-                // return false;
+            raiseHandConfirmation: async (msg,limitReached) => {
+                if(limitReached){
+                    newRequestPopUp(msg);
+                    return false;
+                }
+
+                const res = await confirmRaiseHand(msg);
+                return res;
             },
             startProcedure: async () => {
                 await handleClick();
@@ -242,6 +286,20 @@ function createSparkRTC() {
                 //         createUserVideo(user, localStream.id === user.video.id);
                 //     }
                 // }
+            },
+            altBroadcastApprove: (res) => {
+                console.log("altBroadcastApprove: ",res);
+                if(res == false){
+                    messagePopUp("Request to Broadcast is Rejected by Admin");
+                    //request rejected by admin
+                    onRaiseHandRejected();
+                }else{
+                    onRiaseHandApproved();
+                }
+            },
+
+            maxLimitReached: (msg) =>{
+                messagePopUp(msg);
             },
         });
     }

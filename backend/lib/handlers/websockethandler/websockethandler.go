@@ -302,8 +302,6 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 		log.Alert("Set Meta Data ", metaData)
 		if metaDataJsonError == nil {
 			roommapssrv.RoomMaps.SetMetData(roomName, metaData)
-			metaData_ := Map.MetaData
-			_ = metaData_
 			response.Type = "metadata-set"
 			response.Data = theMessage.Data
 			responseJSON, err := json.Marshal(response)

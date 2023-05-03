@@ -25,8 +25,6 @@ let myRole;
 let shareScreenStream;
 let roomName;
 
-const timestamp  = new Date().getTime(); // Get the current timestamp
-const handRaisedKey = 'handraised'+timestamp; //key to save handRaise status of each of the Audience
 var handRaised = false;
 
 function makeId(length) {
@@ -369,7 +367,33 @@ function onLoad() {
 
     arrangeVideoContainers();
 
-    
+}
+
+async function onRiaseHandApproved(){
+    document.getElementById("mic").style.display = "";
+    document.getElementById("camera").style.display = "";
+    handRaised = true;
+}
+
+async function onRaiseHandRejected(){
+    handRaised = false;
+
+    const img = document.getElementById("raise_hand");
+
+    img.dataset.status = "on";
+    img.src = RAISE_HAND_ON;
+
+    document.getElementById("mic").style.display = "none";
+    document.getElementById("camera").style.display = "none";
+
+    sparkRTC.localStream.getTracks().forEach(function(track) {
+        track.stop();
+    });
+
+    sparkRTC.localStream = null;
+
+    sparkRTC.onRaiseHandRejected();
+
 }
 
 async function onRaiseHand() {
@@ -391,12 +415,13 @@ async function onRaiseHand() {
             // }
             return;
         }
+
+        
         const stream = await sparkRTC.raiseHand();
         // const tagId = 'localVideo-' + stream.id;
         // const video = createVideoElement(tagId, true);
         // video.srcObject = stream;
-        document.getElementById("mic").style.display = "";
-        document.getElementById("camera").style.display = "";
+        
     }
 }
 
