@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beta Testing</title>
+    <link rel="stylesheet" href="main.css">
+  </head>
+  <body>
+    <div class="container">
+      <div class="card">
+
+        <div class="logo-container">
+            <img src="logo.svg" alt="App Logo" class="logo">
+            <span class="logo-text">GreatApe</span>
+        </div>
+        
+        <h1 class="title">Beta Testing!</h1>
+        <p class="subtext">Please submit your email address, and you might be<br>able to test GreatApe's Beta version:</p>
+        <form>
+          <input type="email" id="email" name="email" placeholder="Email address" required>
+          <p id="email-error"></p>
+
+          <div class="instructions">
+            <p class="instructions-subtext">Review the latest features</p>
+            <p class="instructions-subtext">Give early feedback</p>
+          </div>
+          <button id = "submit-btn" type="submit" class="submit-btn">Submit</button>
+        </form>
+      </div>
+    </div>
+
+    <script src="main.js"></script>
+  </body>
+</html>

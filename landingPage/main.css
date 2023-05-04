@@ -1,0 +1,153 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+  
+  body {
+    background-color: #f2f2f2;
+    font-family: Arial, sans-serif;
+  }
+  
+  .container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+  }
+  
+  .card {
+    background-color: #ffffff;
+    border-radius: 20px;
+    box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.1);
+    padding: 50px;
+    align-items: center;
+  }
+
+  .logo-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .logo-text {
+    font-size: 24px;
+    margin-left: 8px;
+    font-weight: 800;
+  }
+  
+  .logo {
+    height: 40px;
+    width: 40px;
+  }
+  
+  .title {
+    margin-top: 48px;
+    font-size: 32px;
+    font-weight: 600;
+  }
+  
+  .subtext {
+    margin-top: 24px;
+    font-size: 16px;
+    color: #666666;
+  }
+
+  .instructions-subtext {
+    margin-top: 10px;
+    font-size: 16px;
+    color: #a8a8a8;
+  }
+  
+  form {
+    margin-top: 30px;
+  }
+  
+  input[type="email"] {
+    width: 100%;
+    padding: 10px;
+    border-radius: 5px;
+    border-color: #a8a8a8;
+    height: 42px;
+  }
+
+  input::placeholder {
+    color: #a8a8a8;
+  }
+    
+  .instructions {
+    margin-top: 24px;
+    margin-bottom: 36px;
+  }
+    
+  .instructions-subtext::before {
+    content: "\2022"; /* Unicode character for bullet point */
+    margin-right: 6px;
+    margin-left: 6px;
+  }
+  
+
+  .submit-btn {
+    display: block;
+    width: 100%;
+    padding: 10px;
+    border-radius: 5px;
+    border: none;
+    background-color: #FFCC00;
+    color: #000000;
+    font-size: 16px;
+    font-weight: 600;
+    height: 42px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  
+  .submit-btn:hover {
+    background-color: #FFCC00;
+  }
+  
+  @media screen and (max-width: 480px) {
+    .card {
+      padding: 20px;
+      border-radius: 10px;
+    }
+  
+    .logo-text {
+        margin-left: 4px;
+      }
+  
+    .title {
+      font-size: 24px;
+      margin-top: 48px;
+    }
+  
+    .subtext {
+      margin-top: 12px;
+      font-size: 14px;
+      line-height: 1.2;
+      white-space: pre-line;
+    }
+  
+    input[type="email"] {
+      margin-top: 5px;
+      font-size: 14px;
+      height: 40px;
+    }
+
+    .instructions-subtext {
+        margin-top: 5px;
+        font-size: 14px;
+        color: #a8a8a8;
+    }
+  
+    label {
+      font-size: 14px;
+    }
+  
+    .submit-btn {
+      font-size: 14px;
+      padding: 8px;
+      height: 40px;
+    }
+  }
+  
