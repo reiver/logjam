@@ -311,8 +311,11 @@ function createSparkRTC() {
                 messagePopUp(msg);
             },
             disableBroadcasting: () =>{
-                messagePopUp("Admin Stopped Your Broadcast");
-                onRaiseHandRejected();
+                if(handRaised){
+                    messagePopUp("Admin Stopped Your Broadcast");
+                    onRaiseHandRejected();
+                }
+               
             },
         });
     }

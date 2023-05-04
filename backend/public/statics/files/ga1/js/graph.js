@@ -68,14 +68,23 @@ class Graph {
             .text(function (d) {
                 var data = d.data.name;
 
-                if(data.includes("[TURN]")){
-                    data = d.data.name.replace("[TURN]","");
-                }else if(data.includes("[STUN]")){
-                    data = d.data.name.replace("[STUN]","");
+                if(data){
+                    if(data.includes("[TURN]")){
+                        data = d.data.name.replace("[TURN]","");
+                    }else if(data.includes("[STUN]")){
+                        data = d.data.name.replace("[STUN]","");
+                    }
+                    
+                    try{
+                        data = JSON.parse(data);
+                        return data.name;
+                    }catch(exception){
+                        console.log(exception);
+                    }
+                    
                 }
-                
-                data = JSON.parse(data);
-                return data.name;
+
+               return "";
             });
 
         // UPDATE

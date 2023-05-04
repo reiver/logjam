@@ -591,21 +591,27 @@ class SparkRTC {
         this.startedRaiseHand = false;
 
         const pc =  this.myPeerConnectionArray[this.lastBroadcasterId];
-        if(pc !==null){
+        if(this.localStream){
+            
             this.localStream.getTracks().forEach(track =>{
-                pc.getSenders().forEach(sender => {
-                    if(track.id === sender?.track?.id){
-                        pc.removeTrack(sender);
-                    } 
-                });
+                if(pc && pc.getSenders){
+                    pc.getSenders().forEach(sender => {
+                        if(track.id === sender?.track?.id){
+                            pc.removeTrack(sender);
+                        } 
+                    });
+                }
             });
 
             this.localStream.getTracks().forEach(function(track) {
                 track.stop();
             });
+            
             this.localStream = null;
+
         }
        
+
     }
 
     /**

@@ -17,6 +17,9 @@ const DCColor =
 const emailError = "Please enter a valid email address";
 const nameError = "Please enter your name";
 
+const AudienceBroadcastIcon = document.createElement("img"); //image element for profile image
+var clickHandeler; //a handler to save ref to click event func.
+
 let graph;
 let sparkRTC;
 let myName;
@@ -478,8 +481,26 @@ function trimString(str, maxLength) {
     return str;
 }
 
-function getBroadcasterIcon(){
-    return `${window.location.origin}/files/ga1/images/spark-logo.png`;
+function handleMouseOver(){ //mouse on the image
+    AudienceBroadcastIcon.src = CAMERA_OFF;
+}
+
+function handleMouseOut(){ //mouse out of the image
+    AudienceBroadcastIcon.src = CAMERA_ON;
+}
+
+function handleAudienceBroadcastIconClick(id){
+    console.log("stoping broadcasting of Audience");
+
+    // Remove the event listeners
+    AudienceBroadcastIcon.removeEventListener("mouseover", handleMouseOver);
+    AudienceBroadcastIcon.removeEventListener("mouseout", handleMouseOut);
+    AudienceBroadcastIcon.removeEventListener('click', clickHandeler);
+
+    sparkRTC.disableAudienceBroadcast(id.toString());
+
+    AudienceBroadcastIcon.src = defaultProfilePicture;
+    AudienceBroadcastIcon.classList.remove("hover-effect");
 }
 
 function setSidebar(users) {
@@ -496,17 +517,35 @@ function setSidebar(users) {
                 if(video !== null){
                     console.log("broadcasting audience..");
     
-                    const image = document.createElement("img");
-                    image.src = getBroadcasterIcon();
-                    image.setAttribute("alt", "Broadcast Icon");
-                    image.setAttribute("id", "broadcast-icon");
-    
-                    image.addEventListener('click', function(){
-                        console.log("stoping broadcasting of Audience");
-                        sparkRTC.disableAudienceBroadcast(id.toString());
-                    });
-    
-                    pfp.appendChild(image);
+                    AudienceBroadcastIcon.src = CAMERA_ON;
+                    AudienceBroadcastIcon.setAttribute("alt", "Broadcast Icon");
+
+                    // Add a class to the img element
+                    AudienceBroadcastIcon.classList.add("hover-effect");
+
+                    // Define the CSS styles for the hover effect
+                    const style = document.createElement("style");
+                    style.innerHTML = `
+                    .hover-effect:hover {
+                        opacity: 0.8;
+                        cursor: pointer;
+                    }
+                    `;
+
+                    // Add the style element to the document's head
+                    document.head.appendChild(style);
+
+                    // Add mouseover and mouseout event listeners 
+                    AudienceBroadcastIcon.addEventListener("mouseover", handleMouseOver);
+                    AudienceBroadcastIcon.addEventListener("mouseout", handleMouseOut);
+
+                    //Add click listener
+                    clickHandeler = ()=> handleAudienceBroadcastIconClick(id); //need to save reference beacsue it's anonymous function
+
+                    AudienceBroadcastIcon.addEventListener('click', clickHandeler);
+
+                    
+                    pfp.appendChild(AudienceBroadcastIcon);
     
                 }else{
                     console.log("Not broadcasting audience..");
