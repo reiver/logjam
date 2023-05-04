@@ -17,9 +17,6 @@ const DCColor =
 const emailError = "Please enter a valid email address";
 const nameError = "Please enter your name";
 
-const AudienceBroadcastIcon = document.createElement("img"); //image element for profile image
-var clickHandeler; //a handler to save ref to click event func.
-
 let graph;
 let sparkRTC;
 let myName;
@@ -481,30 +478,30 @@ function trimString(str, maxLength) {
     return str;
 }
 
-function handleMouseOver(){ //mouse on the image
-    AudienceBroadcastIcon.src = CAMERA_OFF;
-}
+// function handleMouseOver(){ //mouse on the image
+    
+// }
 
-function handleMouseOut(){ //mouse out of the image
-    AudienceBroadcastIcon.src = CAMERA_ON;
-}
+// function handleMouseOut(){ //mouse out of the image
+//     AudienceBroadcastIcon.src = CAMERA_ON;
+// }
 
-function handleAudienceBroadcastIconClick(id){
-    console.log("stoping broadcasting of Audience");
+// function handleAudienceBroadcastIconClick(id){
+//     console.log("stoping broadcasting of Audience");
 
-    // Remove the event listeners
-    AudienceBroadcastIcon.removeEventListener("mouseover", handleMouseOver);
-    AudienceBroadcastIcon.removeEventListener("mouseout", handleMouseOut);
-    AudienceBroadcastIcon.removeEventListener('click', clickHandeler);
+//     // Remove the event listeners
+//     AudienceBroadcastIcon.removeEventListener("mouseover", handleMouseOver);
+//     AudienceBroadcastIcon.removeEventListener("mouseout", handleMouseOut);
+//     AudienceBroadcastIcon.removeEventListener('click', clickHandeler);
 
-    sparkRTC.disableAudienceBroadcast(id.toString());
+//     sparkRTC.disableAudienceBroadcast(id.toString());
 
-    AudienceBroadcastIcon.src = defaultProfilePicture;
-    AudienceBroadcastIcon.classList.remove("hover-effect");
-}
+//     AudienceBroadcastIcon.src = defaultProfilePicture;
+//     AudienceBroadcastIcon.classList.remove("hover-effect");
+// }
 
 function setSidebar(users) {
-    function createDiv({ email, name },role,video, id) {
+    function createDiv({ email, name },role,video, userid) {
         const div = document.createElement("div");
         div.classList.add("user");
 
@@ -516,7 +513,9 @@ function setSidebar(users) {
             if(role != "broadcaster"){
                 if(video !== null){
                     console.log("broadcasting audience..");
-    
+
+                    const AudienceBroadcastIcon = document.createElement("img"); //image element for profile image
+
                     AudienceBroadcastIcon.src = CAMERA_ON;
                     AudienceBroadcastIcon.setAttribute("alt", "Broadcast Icon");
 
@@ -535,16 +534,35 @@ function setSidebar(users) {
                     // Add the style element to the document's head
                     document.head.appendChild(style);
 
+                    const handleMouseOver = ()=>{
+                        AudienceBroadcastIcon.src = CAMERA_OFF;
+                    }
+
+                    const handleMouseOut = ()=>{
+                        AudienceBroadcastIcon.src = CAMERA_ON;
+                    }
+
                     // Add mouseover and mouseout event listeners 
                     AudienceBroadcastIcon.addEventListener("mouseover", handleMouseOver);
                     AudienceBroadcastIcon.addEventListener("mouseout", handleMouseOut);
 
                     //Add click listener
-                    clickHandeler = ()=> handleAudienceBroadcastIconClick(id); //need to save reference beacsue it's anonymous function
+                    const clickHandeler = ()=> {
+                        console.log("stoping broadcasting of Audience");
+
+                        // Remove the event listeners
+                        AudienceBroadcastIcon.removeEventListener("mouseover", handleMouseOver);
+                        AudienceBroadcastIcon.removeEventListener("mouseout", handleMouseOut);
+                        AudienceBroadcastIcon.removeEventListener('click', clickHandeler);
+                    
+                        sparkRTC.disableAudienceBroadcast(userid.toString());
+                    
+                        AudienceBroadcastIcon.src = defaultProfilePicture;
+                        AudienceBroadcastIcon.classList.remove("hover-effect");  
+                    } 
 
                     AudienceBroadcastIcon.addEventListener('click', clickHandeler);
 
-                    
                     pfp.appendChild(AudienceBroadcastIcon);
     
                 }else{
