@@ -117,15 +117,6 @@ func (receiver *MySocket) All() map[interface{}]binarytree.SingleNode {
 	return output
 }
 
-func (receiver *MySocket) Nodes() []binarytree.SingleNode {
-	receiver.mutex.Lock()
-	defer receiver.mutex.Unlock()
-
-	var nodes []binarytree.SingleNode
-
-	return nodes
-}
-
 func (receiver *MySocket) GetConnectedSocketsList() []*MySocket {
 	list := []*MySocket{}
 	receiver.mutex.Lock()
