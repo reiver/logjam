@@ -1,6 +1,7 @@
 package roommaps
 
 import (
+	"encoding/json"
 	"github.com/mmcomp/go-binarytree"
 	binarytreesrv "github.com/sparkscience/logjam/backend/srv/binarytree"
 
@@ -157,6 +158,29 @@ func (receiver *Type) SetMetData(roomName string, metaData map[string]string) er
 	room.MetaData = metaData
 	receiver.roomMaps[roomName] = room
 	return nil
+}
+
+func (receiver *Type) GetMetaDataJson(roomName string) (*string, error) {
+	if nil == receiver {
+		return nil, errNilReceiver
+	}
+
+	receiver.mutex.Lock()
+	defer receiver.mutex.Unlock()
+
+	if nil == receiver.roomMaps {
+		receiver.roomMaps = make(map[string]*RoomType)
+	}
+	room, ok := receiver.roomMaps[roomName]
+	if !ok {
+		return nil, errRoomNotFound
+	}
+	bytes, err := json.Marshal(room.MetaData)
+	if err != nil {
+		return nil, err
+	}
+	jsonStr := string(bytes)
+	return &jsonStr, nil
 }
 
 func (receiver *Type) GetSocketByStreamId(roomName, streamId string) (binarytree.SingleNode, error) {

@@ -57,7 +57,7 @@ type MySocket struct {
 	Name             string
 	HasStream        bool
 	IsTURN           bool
-	ConnectedSockets map[*websocket.Conn]MySocket
+	ConnectedSockets map[*websocket.Conn]*MySocket
 	MetaData         map[string]string
 }
 
@@ -66,7 +66,7 @@ func (receiver *MySocket) Insert(node binarytree.SingleNode) {
 	defer receiver.mutex.Unlock()
 
 	socket := node.(*MySocket)
-	receiver.ConnectedSockets[socket.Socket] = *socket
+	receiver.ConnectedSockets[socket.Socket] = socket
 }
 
 func (receiver *MySocket) Delete(node interface{}) {
@@ -81,7 +81,7 @@ func (receiver *MySocket) Get(node interface{}) binarytree.SingleNode {
 	defer receiver.mutex.Unlock()
 
 	result := receiver.ConnectedSockets[node.(*websocket.Conn)]
-	return &result
+	return result
 }
 
 func (receiver *MySocket) Length() int {
@@ -112,9 +112,30 @@ func (receiver *MySocket) All() map[interface{}]binarytree.SingleNode {
 	var output map[interface{}]binarytree.SingleNode = make(map[interface{}]binarytree.SingleNode)
 	for indx := range receiver.ConnectedSockets {
 		result := receiver.ConnectedSockets[indx]
-		output[indx] = &result
+		output[indx] = result
 	}
 	return output
+}
+
+func (receiver *MySocket) Nodes() []binarytree.SingleNode {
+	receiver.mutex.Lock()
+	defer receiver.mutex.Unlock()
+
+	var nodes []binarytree.SingleNode
+
+	return nodes
+}
+
+func (receiver *MySocket) GetConnectedSocketsList() []*MySocket {
+	list := []*MySocket{}
+	receiver.mutex.Lock()
+	defer receiver.mutex.Unlock()
+
+	for _, sock := range receiver.ConnectedSockets {
+		list = append(list, sock)
+	}
+
+	return list
 }
 
 func (receiver *MySocket) ToggleHead() {
@@ -171,7 +192,7 @@ func fillFunction(node interface{}, socketIndex uint64) binarytree.SingleNode {
 		ID:               socketIndex,
 		Name:             "Socket " + strconv.FormatUint(socketIndex, 10),
 		IsTURN:           true,
-		ConnectedSockets: make(map[*websocket.Conn]MySocket),
+		ConnectedSockets: make(map[*websocket.Conn]*MySocket),
 	}
 	go func(w *WSWriter) {
 		hadError := false
@@ -222,7 +243,11 @@ type TreeGraphElement struct {
 	Children []TreeGraphElement `json:"children"`
 }
 
-func addSubSockets(socket MySocket, children *[]TreeGraphElement, aMap binarytree.Tree) {
+func addSubSockets(socket *MySocket, children *[]TreeGraphElement, aMap *binarytree.Tree, shouldLock bool) {
+	if shouldLock {
+		socket.mutex.Lock()
+		defer socket.mutex.Unlock()
+	}
 	for child := range socket.ConnectedSockets {
 		childSocket := aMap.Get(child).(*MySocket)
 		var turnState string = "no-TURN"
@@ -234,11 +259,11 @@ func addSubSockets(socket MySocket, children *[]TreeGraphElement, aMap binarytre
 			Parent:   "null",
 			Children: []TreeGraphElement{},
 		})
-		addSubSockets(*childSocket, &(*children)[len(*children)-1].Children, aMap)
+		addSubSockets(childSocket, &(*children)[len(*children)-1].Children, aMap, false)
 	}
 }
 
-func Tree(aMap binarytree.Tree) []TreeGraphElement {
+func Tree(aMap *binarytree.Tree) []TreeGraphElement {
 	treeData := []TreeGraphElement{}
 	broadcasterLevel := aMap.LevelNodes(1)
 	if len(broadcasterLevel) == 0 {
@@ -255,6 +280,6 @@ func Tree(aMap binarytree.Tree) []TreeGraphElement {
 		Parent:   "null",
 		Children: []TreeGraphElement{},
 	})
-	addSubSockets(*broadcaster, &treeData[0].Children, aMap)
+	addSubSockets(broadcaster, &treeData[0].Children, aMap, true)
 	return treeData
 }

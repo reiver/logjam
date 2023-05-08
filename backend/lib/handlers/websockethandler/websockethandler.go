@@ -281,7 +281,7 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 	case "ping":
 		socket.Writer.WriteJSON(message.MessageContract{Type: "pong", Data: "pong"})
 	case "tree":
-		treeData := binarytreesrv.Tree(*Map.Room)
+		treeData := binarytreesrv.Tree(Map.Room)
 		j, e := json.Marshal(treeData)
 		if e != nil {
 			return
@@ -313,11 +313,10 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 		return
 	case "metadata-get":
 		// log.Alert("metadata-get")
-		metaData := Map.MetaData
-		metaDataJson, metaDataJsonError := json.Marshal(metaData)
+		metaDataJson, metaDataJsonError := roommapssrv.RoomMaps.GetMetaDataJson(roomName)
 		if metaDataJsonError == nil {
 			response.Type = "metadata-get"
-			response.Data = string(metaDataJson)
+			response.Data = *metaDataJson
 			responseJSON, err := json.Marshal(response)
 			if err == nil {
 				// log.Alert(responseJSON)
@@ -402,7 +401,7 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 		if err != nil {
 			return
 		}
-		allSockets := Map.Room.All()
+		allSockets := Map.Room.Nodes()
 		var ok = false
 		var target *binarytreesrv.MySocket
 		for _, node := range allSockets {
@@ -488,8 +487,9 @@ func (receiver httpHandler) deleteNode(conn *websocket.Conn, roomName string, me
 			}
 		}
 	} else {
-		for _, s := range socket.ConnectedSockets {
-			s.Writer.WriteMessage(1, theMessageTxt)
+		connectedSocketsList := socket.GetConnectedSocketsList()
+		for _, sock := range connectedSocketsList {
+			sock.Writer.WriteMessage(1, theMessageTxt)
 		}
 	}
 	Map.Room.Delete(conn)
