@@ -3,10 +3,21 @@
     margin: 0;
     padding: 0;
   }
+
+  @font-face {
+    font-family: 'Inter';
+    src: url('fonts/Inter/Inter-VariableFont_slnt,wght.ttf') format('truetype');
+  }
+
+  @font-face {
+    font-family: 'Open Sans';
+    src: url('fonts/Open_Sans/OpenSans-VariableFont_wdth,wght.ttf') format('truetype');
+  }
+  
   
   body {
     background-color: #f2f2f2;
-    font-family: Arial, sans-serif;
+    font-family: 'Inter';
   }
   
   .container {
@@ -27,13 +38,14 @@
   .logo-container {
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: center; 
   }
   
   .logo-text {
     font-size: 24px;
     margin-left: 8px;
     font-weight: 800;
+    font-family: 'Open Sans';
   }
   
   .logo {
@@ -50,6 +62,7 @@
   .subtext {
     margin-top: 24px;
     font-size: 16px;
+    font-weight: 400;
     color: #666666;
   }
 
@@ -58,7 +71,7 @@
   }
 
   .instructions-subtext {
-    margin-top: 10px;
+    margin-top: 8px;
     font-size: 16px;
     color: #a8a8a8;
   }
@@ -74,12 +87,15 @@
     border-color: #a8a8a8;
     height: 42px;
     font-size: 16px;
+    font-weight: 400;
     color: #000000;
     background-color: white;
   }
 
   input::placeholder {
     color: #a8a8a8;
+    font-weight: 400;
+    font-size: 16px;
   }
     
 
@@ -120,6 +136,8 @@
   .instructions {
     margin-top: 24px;
     margin-bottom: 36px;
+    font-weight: 400;
+    font-size: 16px;
   }
     
   .instructions-subtext::before {
@@ -138,9 +156,10 @@
     background-color: #FFCC00;
     color: #000000;
     font-size: 16px;
-    font-weight: 600;
+    font-weight: 700;
     height: 42px;
     cursor: pointer;
+    font-family: 'Inter';
     transition: background-color 0.3s ease;
   }
   
@@ -150,17 +169,60 @@
   
   @media screen and (max-width: 480px) {
     .card {
-      padding: 20px;
+      padding: 22px;
       border-radius: 10px;
+      min-height: 100vh;
+
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+
+    }
+
+    .logo-container{
+      position:absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      margin-top: 32px;
     }
   
+    
     .logo-text {
-        margin-left: 4px;
-      }
+      margin-left: 4px;
+    }
+  
+    .inner-body {
+       display: flex;
+       flex-direction: column;
+       justify-content: center;
+    }
+
+
+    .submit-btn {
+      display: block;
+      width: 89%;
+      padding: 10px;
+      border-radius: 5px;
+      border: none;
+      background-color: #FFCC00;
+      color: #000000;
+      font-size: 16px;
+      font-weight: 700;
+      height: 42px;
+      cursor: pointer;
+      font-family: 'Inter';
+      transition: background-color 0.3s ease;
+      position: absolute;
+      bottom: 0;
+      margin: 20px;
+      margin-bottom: 32px;
+    }
   
     .title {
-      font-size: 24px;
-      margin-top: 48px;
+      font-size: 32px;
+      margin-top: 0px;
     }
   
     .input-icon {
@@ -173,36 +235,28 @@
     }
 
     .subtext {
-      margin-top: 12px;
-      font-size: 14px;
+      margin-top: 24px;
+      font-size: 16px;
       line-height: 1.2;
       white-space: pre-line;
     }
 
-    #subText br {
+    .subtext br {
       display: none; /* show <br> tag for larger screens */
     }
   
     input[type="email"] {
       margin-top: 5px;
-      font-size: 14px;
-      height: 40px;
+      font-size: 16px;
+      height: 42px;
     }
 
     .instructions-subtext {
-        margin-top: 5px;
-        font-size: 14px;
+        margin-top: 8px;
+        font-size: 16px;
         color: #a8a8a8;
     }
   
-    label {
-      font-size: 14px;
-    }
-  
-    .submit-btn {
-      font-size: 14px;
-      padding: 8px;
-      height: 40px;
-    }
+    
   }
   
