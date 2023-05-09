@@ -213,16 +213,7 @@ function createSparkRTC() {
                 document.getElementById('status').innerText = status;
             },
             userListUpdated: (users) => {
-                // console.log("User List is updated", { users });
-
-                // clearVideos();
                 updateUsersList(users);
-
-                // for (const user of users) {
-                //     if (user.video) {
-                //         createUserVideo(user, localStream.id === user.video.id);
-                //     }
-                // }
             },
         });
     } 
@@ -328,17 +319,8 @@ function createSparkRTC() {
             userListUpdated: (users) => {
                 console.log('User List is updated', {users});
 
-                // clearVideos();
                 updateUsersList(users);
 
-                // for (const user of users) {
-                //     console.log(user);
-
-                //     if (user.video) {
-                //         console.log(user);
-                //         createUserVideo(user, localStream.id === user.video.id);
-                //     }
-                // }
             },
             altBroadcastApprove: (res) => {
                 console.log("altBroadcastApprove: ",res);

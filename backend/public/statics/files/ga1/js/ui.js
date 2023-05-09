@@ -488,28 +488,6 @@ function trimString(str, maxLength) {
     return str;
 }
 
-// function handleMouseOver(){ //mouse on the image
-    
-// }
-
-// function handleMouseOut(){ //mouse out of the image
-//     AudienceBroadcastIcon.src = CAMERA_ON;
-// }
-
-// function handleAudienceBroadcastIconClick(id){
-//     console.log("stoping broadcasting of Audience");
-
-//     // Remove the event listeners
-//     AudienceBroadcastIcon.removeEventListener("mouseover", handleMouseOver);
-//     AudienceBroadcastIcon.removeEventListener("mouseout", handleMouseOut);
-//     AudienceBroadcastIcon.removeEventListener('click', clickHandeler);
-
-//     sparkRTC.disableAudienceBroadcast(id.toString());
-
-//     AudienceBroadcastIcon.src = defaultProfilePicture;
-//     AudienceBroadcastIcon.classList.remove("hover-effect");
-// }
-
 function setSidebar(users) {
     function createDiv({ email, name },role,video, userid) {
         const div = document.createElement("div");
