@@ -5,9 +5,15 @@ const subText = document.getElementById("subtext-message");
 const instructions = document.getElementById("instructions");
 const emailBox = document.getElementById("email");
 const emailIcon = document.querySelector('#email-icon');
+const emailLabel = document.getElementById("email-label");
 
 const errorText = "Wrong Email Address";
 const errorIcon = '<img src="AttentionCircle.svg" alt="Error icon">';
+
+//remove br
+if(window.innerWidth<480){
+  subText.innerHTML = subText.innerHTML.replace("<br>", " ");
+}
 
 
 emailInput.addEventListener('input', function() {
@@ -76,6 +82,8 @@ function displayError(display){
     emailIcon.innerHTML = errorIcon;
     emailIcon.classList.add('error');
     emailBox.style.borderColor = "#C00006";
+    emailLabel.style.display = "block";
+    emailLabel.classList.add('error');
   }else{
     //hide it
 
@@ -85,6 +93,10 @@ function displayError(display){
     emailIcon.innerHTML = '';
     emailIcon.classList.remove('error');
     emailBox.style.borderColor = "#a8a8a8";
+    emailLabel.style.display = "none";
+    emailLabel.classList.remove('error');
+
+
   }
 }
 

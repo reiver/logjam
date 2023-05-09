@@ -115,6 +115,20 @@
   .input-container {
     position: relative;
   }
+
+  .input-wrapper{
+    margin-top: 32px;
+  }
+
+  .input-container>label{
+    position:absolute;
+    top:-7px;
+    margin-left: 16px;
+    background-color:white;
+    color:#C00006;
+    font-size: 12px;
+    padding:0 2px;
+  }
   
   .input-icon {
     position: absolute;
@@ -126,7 +140,7 @@
   }
   
   .error-message {
-    color: red;
+    color:#C00006;
     font-size: 12px;
     margin-top: 5px;
     margin-left: 16px;
@@ -178,6 +192,10 @@
       justify-content: center;
       align-items: center;
 
+    }
+
+    .input-container>label{
+      top:-2px;
     }
 
     .logo-container{
@@ -241,10 +259,7 @@
       white-space: pre-line;
     }
 
-    .subtext br {
-      display: none; /* show <br> tag for larger screens */
-    }
-  
+
     input[type="email"] {
       margin-top: 5px;
       font-size: 16px;
