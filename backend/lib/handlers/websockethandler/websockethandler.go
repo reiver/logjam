@@ -380,6 +380,11 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 			}
 		}
 		return
+
+	case "get-latest-user-list":
+        receiver.emitUserEvent(roomName)
+        return
+        
 	case "broadcaster-status":
 		ok, _ := receiver.findBroadcaster(roomName)
 		data := "available"

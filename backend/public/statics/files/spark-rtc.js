@@ -200,20 +200,6 @@ class SparkRTC {
                         limitReached = true;
                     }
 
-                    // if(this.raiseHands.length >= 2){
-                    //     console.log("[alt-broadcast] not allowing, max limit reached")
-                    //     this.socket.send(
-                    //         JSON.stringify({
-                    //             type: "alt-broadcast-approve",
-                    //             target: msg.data,
-                    //             maxLimitReached: true,
-                    //         })
-                    //     );
-
-                    //     //zaid
-                    //     //todo: pop a dialog up about someone was asking for raise hand permission but maximum limit is reached
-                    //     return;
-                    // }
                     console.log("My ID: ",this.myUsername);
 
                     if (this.raiseHands.indexOf(msg.data) === -1) {
@@ -248,6 +234,7 @@ class SparkRTC {
                                 maxLimitReached: limitReached,
                             })
                         );
+
                         
                         if(result !== true) return;
 
@@ -378,7 +365,6 @@ class SparkRTC {
     disableAudienceBroadcast = (target) =>{
         console.log("disableAudienceBroadcast: ",target);
 
-
         //find media stream id of that Target
         for(const id in this.myPeerConnectionArray){
             if(this.myPeerConnectionArray[id].isAdience){
@@ -399,6 +385,8 @@ class SparkRTC {
                 target: target,
             })
         );
+
+        this.getLatestUserList();
     }
 
     /**
@@ -586,6 +574,13 @@ class SparkRTC {
         return this.startBroadcasting('alt-broadcast');
     };
 
+    getLatestUserList() {
+        this.socket.send(
+            JSON.stringify({
+                type: "get-latest-user-list"
+            })
+        ); 
+    }
     
     onRaiseHandRejected = () =>{
         this.startedRaiseHand = false;
@@ -611,6 +606,7 @@ class SparkRTC {
 
         }
        
+        this.getLatestUserList();
 
     }
 

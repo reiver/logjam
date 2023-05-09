@@ -13,6 +13,8 @@ function clearScreen() {
     }
 }
 
+
+
 function newRequestPopUp(msg){
     Swal.fire({
         title: "Max Broadcasting Audienece Limit is Reached",
@@ -22,6 +24,52 @@ function newRequestPopUp(msg){
         confirmButtonText: "No, Reject!",
         reverseButtons: true
       });
+}
+
+function confirmStopAudienceBroadcast(msg){
+    return new Promise(function(resolve, reject) {
+        Swal.fire({
+            title: "Stoping Broadcast!",
+            html: msg,
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonText: "Yes",
+            cancelButtonText: "No",
+            reverseButtons: true
+          }).then(function(result) {
+            if (result.isConfirmed) {
+              // User clicked the confirm button
+              resolve(true);
+            } else {
+              // User clicked the cancel button or closed the dialog
+              resolve(false);
+            }
+          });
+    });
+   
+}
+
+function confirmLowerHand(msg){
+    return new Promise(function(resolve, reject) {
+        Swal.fire({
+            title: "Stoping Broadcast!",
+            html: msg,
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonText: "Yes, Stop!",
+            cancelButtonText: "No, Continue!",
+            reverseButtons: true
+          }).then(function(result) {
+            if (result.isConfirmed) {
+              // User clicked the confirm button
+              resolve(true);
+            } else {
+              // User clicked the cancel button or closed the dialog
+              resolve(false);
+            }
+          });
+    });
+   
 }
 
 function confirmRaiseHand(msg) {
@@ -86,18 +134,9 @@ function createSparkRTC() {
         }
     };
 
-    // const toggleUsersList = () => {
-    //     if (isElementHidden(sidebar)) {
-    //         // unhide(picContainer);
-    //         unhide(sidebar);
-    //     } else {
-    //         // hide(picContainer);
-    //         hide(sidebar);
-    //     }
-    // };
 
     picContainer.addEventListener('click', toggleUsersList);
-    // sidebar.addEventListener('click', toggleUsersList);
+    sidebar.addEventListener('click', toggleUsersList);
     
 
     if (myRole === 'broadcast') {
@@ -123,6 +162,8 @@ function createSparkRTC() {
 
                 video.style.objectFit = 'contain';
 
+                getLatestUserList();
+
             },
             remoteStreamDCCallback: (stream) => {
                 let tagId = 'remoteVideo-' + stream.id;
@@ -131,6 +172,8 @@ function createSparkRTC() {
                     if (!document.getElementById(tagId)) return;
                 }
                 removeVideoElement(tagId);
+
+                getLatestUserList();
                 // clearVideos();
             },
             signalingDisconnectedCallback: () => {

@@ -403,8 +403,14 @@ async function onRaiseHand() {
 
         const stream = await sparkRTC.raiseHand();        
     }else{
-        //to stop raise hand
-        onRaiseHandRejected();
+        msg = `Are you sure, you want to stop broadcasting?`
+        res = await confirmLowerHand(msg);
+
+        if(res){
+            //to stop raise hand
+            onRaiseHandRejected();
+        }
+        
     }
 }
 
@@ -442,6 +448,10 @@ function getProfilePicture(email) {
 function updateUsersList(users) {
     updateUsersThumbnail(users);
     setSidebar(users);
+}
+
+function getLatestUserList(){
+    sparkRTC.getLatestUserList();
 }
 
 function updateUsersThumbnail(users) {
@@ -511,7 +521,7 @@ function setSidebar(users) {
         if(sparkRTC.role === "broadcast"){
 
             if(role != "broadcaster"){
-                if(video !== null){
+                if(video !== null && video !==undefined){
                     console.log("broadcasting audience..");
 
                     const AudienceBroadcastIcon = document.createElement("img"); //image element for profile image
@@ -547,18 +557,26 @@ function setSidebar(users) {
                     AudienceBroadcastIcon.addEventListener("mouseout", handleMouseOut);
 
                     //Add click listener
-                    const clickHandeler = ()=> {
-                        console.log("stoping broadcasting of Audience");
+                    const clickHandeler = async ()=> {
 
-                        // Remove the event listeners
-                        AudienceBroadcastIcon.removeEventListener("mouseover", handleMouseOver);
-                        AudienceBroadcastIcon.removeEventListener("mouseout", handleMouseOut);
-                        AudienceBroadcastIcon.removeEventListener('click', clickHandeler);
-                    
-                        sparkRTC.disableAudienceBroadcast(userid.toString());
-                    
-                        AudienceBroadcastIcon.src = defaultProfilePicture;
-                        AudienceBroadcastIcon.classList.remove("hover-effect");  
+                        //display alert to verify
+                        msg = `Are you sure, you want to stop <b>${name}</b>'s broadcast?`
+                        res = await confirmStopAudienceBroadcast(msg)
+                        if(res){
+                            console.log("stoping broadcasting of Audience");
+
+                            // Remove the event listeners
+                            AudienceBroadcastIcon.removeEventListener("mouseover", handleMouseOver);
+                            AudienceBroadcastIcon.removeEventListener("mouseout", handleMouseOut);
+                            AudienceBroadcastIcon.removeEventListener('click', clickHandeler);
+                        
+                            sparkRTC.disableAudienceBroadcast(userid.toString());
+                        
+                            AudienceBroadcastIcon.src = defaultProfilePicture;
+                            AudienceBroadcastIcon.classList.remove("hover-effect"); 
+                        }
+
+                        
                     } 
 
                     AudienceBroadcastIcon.addEventListener('click', clickHandeler);
