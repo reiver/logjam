@@ -403,14 +403,15 @@ async function onRaiseHand() {
 
         const stream = await sparkRTC.raiseHand();        
     }else{
-        msg = `Are you sure, you want to stop broadcasting?`
-        res = await confirmLowerHand(msg);
-
-        if(res){
-            //to stop raise hand
-            onRaiseHandRejected();
+        if(!sparkRTC.broadcasterDC){
+            msg = `Are you sure, you want to stop broadcasting?`
+            res = await confirmLowerHand(msg);
+    
+            if(res){
+                //to stop raise hand
+                onRaiseHandRejected();
+            }
         }
-        
     }
 }
 

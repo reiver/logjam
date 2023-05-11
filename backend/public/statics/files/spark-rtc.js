@@ -588,6 +588,12 @@ class SparkRTC {
         const pc =  this.myPeerConnectionArray[this.lastBroadcasterId];
         if(this.localStream){
             
+
+            //remove local stream from list of remote streams
+            while (this.remoteStreams.indexOf(this.localStream) >= 0) {
+                this.remoteStreams.splice(this.remoteStreams.indexOf(this.localStream), 1);
+            }
+
             this.localStream.getTracks().forEach(track =>{
                 if(pc && pc.getSenders){
                     pc.getSenders().forEach(sender => {
@@ -595,7 +601,7 @@ class SparkRTC {
                             pc.removeTrack(sender);
                         } 
                     });
-                }
+                }git 
             });
 
             this.localStream.getTracks().forEach(function(track) {
