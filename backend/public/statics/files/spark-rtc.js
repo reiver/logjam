@@ -601,7 +601,7 @@ class SparkRTC {
                             pc.removeTrack(sender);
                         } 
                     });
-                }git 
+                }
             });
 
             this.localStream.getTracks().forEach(function(track) {
