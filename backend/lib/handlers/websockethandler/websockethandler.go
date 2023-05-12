@@ -3,6 +3,7 @@ package websockethandler
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/mmcomp/go-binarytree"
 	"net/http"
 	"os"
 	"strconv"
@@ -14,7 +15,6 @@ import (
 	binarytreesrv "github.com/sparkscience/logjam/backend/srv/binarytree"
 	roommapssrv "github.com/sparkscience/logjam/backend/srv/roommaps"
 
-	"github.com/mmcomp/go-binarytree"
 	logger "github.com/mmcomp/go-log"
 )
 
@@ -449,7 +449,7 @@ func (receiver httpHandler) broadcastMessage(roomName string, messageType int, m
 		return
 	}
 
-	for _, s := range Map.Room.All() {
+	for _, s := range Map.Room.Nodes() {
 		s.(*binarytreesrv.MySocket).Writer.WriteMessage(messageType, messageTxt)
 		log.Inform("[broadcastMessage] socket ", s.(*binarytreesrv.MySocket).Name, " SENT ", messageTxt)
 	}
@@ -475,7 +475,7 @@ func (receiver httpHandler) deleteNode(conn *websocket.Conn, roomName string, me
 	theMessageTxt, _ := json.Marshal(response)
 	var chosenOne binarytree.SingleNode
 	if socket.IsBroadcaster {
-		for _, s := range Map.Room.All() {
+		for _, s := range Map.Room.Nodes() {
 			log.Inform("[deleteNode] checking socket ", s.(*binarytreesrv.MySocket).Name)
 			if chosenOne == nil {
 				chosenOne = s

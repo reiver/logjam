@@ -20,16 +20,21 @@ type WSMessage struct {
 }
 
 type WSWriter struct {
-	wsConn  *websocket.Conn
-	WriteCH *chan interface{}
+	writeLocker *sync.Mutex
+	wsConn      *websocket.Conn
+	WriteCH     *chan interface{}
 }
 
 func (w *WSWriter) Close() {
+	w.writeLocker.Lock()
+	defer w.writeLocker.Unlock()
 	close(*w.WriteCH)
 	w.WriteCH = nil
 }
 
 func (w *WSWriter) WriteMessage(msgType int, data []byte) error {
+	w.writeLocker.Lock()
+	defer w.writeLocker.Unlock()
 	if w == nil || w.WriteCH == nil {
 		return errors.New("ws writeChannel is closed, can't write")
 	}
@@ -41,6 +46,8 @@ func (w *WSWriter) WriteMessage(msgType int, data []byte) error {
 }
 
 func (w *WSWriter) WriteJSON(data interface{}) error {
+	w.writeLocker.Lock()
+	defer w.writeLocker.Unlock()
 	if w == nil || w.WriteCH == nil {
 		return errors.New("ws writeChannel is closed, can't write")
 	}
@@ -177,8 +184,9 @@ func fillFunction(node interface{}, socketIndex uint64) binarytree.SingleNode {
 	result := MySocket{
 		Socket: conn,
 		Writer: &WSWriter{
-			wsConn:  conn,
-			WriteCH: &writeCH,
+			wsConn:      conn,
+			WriteCH:     &writeCH,
+			writeLocker: &sync.Mutex{},
 		},
 		ID:               socketIndex,
 		Name:             "Socket " + strconv.FormatUint(socketIndex, 10),
@@ -191,7 +199,6 @@ func fillFunction(node interface{}, socketIndex uint64) binarytree.SingleNode {
 			if wsMsg, isItWSMessage := data.(WSMessage); isItWSMessage {
 				err := w.wsConn.WriteMessage(wsMsg.Type, wsMsg.Message)
 				if err != nil {
-					//fmt.Println(err)
 					hadError = true
 					break
 				}
