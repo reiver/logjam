@@ -398,12 +398,17 @@ async function onRaiseHand() {
         img.src = RAISE_HAND_OFF;
 
         if (sparkRTC.localStream) {
+            console.log("local stream exists");
             return;
         }
 
+        //display request sent dialog
+        messagePopUp("Your request to Broadcast is sent to Admin, please wait for Approval/Rejection.","Hand Raise Requested")
+
+
         const stream = await sparkRTC.raiseHand();        
     }else{
-        if(!sparkRTC.broadcasterDC){
+        if(!sparkRTC.broadcasterDC && sparkRTC.broadcastingApproved){
             msg = `Are you sure, you want to stop broadcasting?`
             res = await confirmLowerHand(msg);
     

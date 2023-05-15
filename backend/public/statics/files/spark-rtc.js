@@ -17,6 +17,7 @@ class SparkRTC {
     roomName = 'SparkRTC';
     myUsername = 'NoUsername';
     lastBroadcasterId = '';
+    broadcastingApproved = false;
     /**@type {{[key:string]:RTCPeerConnection}}*/
     myPeerConnectionArray = {};
     iceCandidates = [];
@@ -171,6 +172,7 @@ class SparkRTC {
                     handRaised = false;
                     raiseHndImg.dataset.status = "on";
                     raiseHndImg.src = RAISE_HAND_ON;
+                    this.broadcastingApproved = false;
 
                     //zaid
                     //todo: pop a ui component up about why user can't raise hand
@@ -180,9 +182,13 @@ class SparkRTC {
                     }
                     
                 }else{
+                    this.broadcastingApproved = true;
+
                     if(msg.result == true){
                         this.lastBroadcasterId = msg.data;
-                        this.sendStreamTo(msg.data, this.localStream);
+                        if(this.localStream){
+                            this.sendStreamTo(msg.data, this.localStream); 
+                        }
                     }
 
                     if(this.altBroadcastApprove){
@@ -584,6 +590,7 @@ class SparkRTC {
     
     onRaiseHandRejected = () =>{
         this.startedRaiseHand = false;
+        this.broadcastingApproved = false;
 
         const pc =  this.myPeerConnectionArray[this.lastBroadcasterId];
         if(this.localStream){

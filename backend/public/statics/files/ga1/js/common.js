@@ -49,6 +49,7 @@ function confirmStopAudienceBroadcast(msg){
    
 }
 
+
 function confirmLowerHand(msg){
     return new Promise(function(resolve, reject) {
         Swal.fire({
@@ -94,8 +95,9 @@ function confirmRaiseHand(msg) {
     });
   }
   
-function messagePopUp(msg){
+function messagePopUp(msg,title=""){
     Swal.fire({
+        title:title,
         text: msg,
         showCancelButton: false,
         confirmButtonText: "Okay",
@@ -325,7 +327,7 @@ function createSparkRTC() {
             altBroadcastApprove: (res) => {
                 console.log("altBroadcastApprove: ",res);
                 if(res == false){
-                    messagePopUp("Request to Broadcast is Rejected by Admin");
+                    messagePopUp("Request to Broadcast is Rejected by Admin","Request Rejected");
                     //request rejected by admin
                     onRaiseHandRejected();
                 }else{
@@ -337,7 +339,7 @@ function createSparkRTC() {
             },
             disableBroadcasting: () =>{
                 if(handRaised){
-                    messagePopUp("Admin Stopped Your Broadcast");
+                    messagePopUp("Admin Stopped Your Broadcast","Broadcast Stopped");
                     onRaiseHandRejected();
                 }
                
