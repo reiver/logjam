@@ -8,19 +8,24 @@ class Graph {
 
     svgElement= document.getElementById('svg');
 
+    
+
     setup() {
         this.width = window.innerWidth;
         this.height = window.innerHeight;
         d3.select(this.svgElement)
             .attr("width", this.width + 1000)
-            .attr("height", this.height - 20)
+            .attr("height", this.height + 200)
             .append("g")
             .attr("transform", function (_) {
                 return "translate(30, 0)";
             })
+
         // declares a tree layout and assigns the size
         this.treemap = d3.tree().size([this.height, this.width]);
+
     }
+
 
     update(source) {
         let self = this;
@@ -203,4 +208,3 @@ class Graph {
         this.treeData = null;
       }
 }
-
