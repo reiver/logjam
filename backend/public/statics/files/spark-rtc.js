@@ -451,12 +451,19 @@ class SparkRTC {
 
     stopShareScreen = async (stream) =>{
         if(stream){
+
+            //remove this stream from list of remote streams to avoid Blue empty container
+            while (this.remoteStreams.indexOf(stream) >= 0) {
+                console.log("remove from remote list")
+                this.remoteStreams.splice(this.remoteStreams.indexOf((stream)), 1);
+            }
+
              for (const userId in this.myPeerConnectionArray) {
                 const apeerConnection = this.myPeerConnectionArray[userId];
-                if (!apeerConnection.isAdience) return false;
 
                 stream.getTracks().forEach((track) => {
 
+                    console.log("StopScreenTrack: ",track);
                     const sender = apeerConnection.getSenders().find(sender => sender.track && sender.track.id === track.id);
                     
                     if (sender) {
@@ -485,13 +492,10 @@ class SparkRTC {
                 });
 
             this.remoteStreams.push(shareStream);
+
             for (const userId in this.myPeerConnectionArray) {
 
                 const apeerConnection = this.myPeerConnectionArray[userId];
-                // if (!apeerConnection.isAdience) {
-                //     console.log("[abc] returning");
-                //     return;
-                // }
 
                 shareStream.getTracks().forEach((track) => {
                     apeerConnection.addTrack(track, shareStream);
@@ -524,6 +528,7 @@ class SparkRTC {
                     throw new Error('No media device available');
                 }
                 this.localStream = await navigator.mediaDevices.getUserMedia(this.constraints);
+
                 this.updateTheStatus(`Local stream loaded`);
                 this.log(`[startBroadcasting] local stream loaded`);
                 this.remoteStreams.push(this.localStream);
@@ -885,28 +890,6 @@ class SparkRTC {
                 this.log(`[newPeerConnectionInstance] stream.oninactive ${JSON.stringify(event)}`);
                 console.log('[stream.oninactive] event', event, event.currentTarget.getTracks(), event.target.getTracks());
                 this.remoteStreamNotified = false;
-
-
-                //func to remove RTP Sender
-                const removeStream = (pc) => {
-                    pc.getSenders().forEach(sender => {
-                        const track = sender.track;
-                        if(track){
-                            if (track.kind === 'video' && track.muted === true) {
-                                pc.removeTrack(sender);
-                            }
-                        } 
-                    });
-                };
-
-
-                //Loop through peer connection array and find audinece PC
-                for(const userid in this.myPeerConnectionArray){
-                    if(this.myPeerConnectionArray[userid].isAdience){
-                        removeStream(this.myPeerConnectionArray[userid]);
-                    }
-                }
-
 
                 const theEventStream = event.currentTarget;
                 const trackIds = theEventStream.getTracks().map((t) => t.id);
