@@ -2,6 +2,7 @@ package roommaps
 
 import (
 	"encoding/json"
+
 	"github.com/mmcomp/go-binarytree"
 	binarytreesrv "github.com/sparkscience/logjam/backend/srv/binarytree"
 
@@ -236,14 +237,19 @@ func (receiver *Type) GetUsers(roomName string) ([]User, error) {
 		if node.(*binarytreesrv.MySocket).IsBroadcaster {
 			role = "broadcaster"
 		}
-		user := User{
-			Id:       node.(*binarytreesrv.MySocket).ID,
-			Name:     node.(*binarytreesrv.MySocket).Name,
-			StreamId: nodeStreamId,
-			Role:     role,
-		}
 
-		output = append(output, user)
+		if node.(*binarytreesrv.MySocket).Socket == nil {
+			receiver.roomMaps[roomName].Room.Delete(node)
+		} else {
+			user := User{
+				Id:       node.(*binarytreesrv.MySocket).ID,
+				Name:     node.(*binarytreesrv.MySocket).Name,
+				StreamId: nodeStreamId,
+				Role:     role,
+			}
+
+			output = append(output, user)
+		}
 	}
 
 	return output, nil
