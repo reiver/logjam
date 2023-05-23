@@ -375,22 +375,22 @@ class SparkRTC {
         })
     };
 
-    stopShareScreen = async (stream) =>{
-        if(stream){
-             for (const userId in this.myPeerConnectionArray) {
+    stopShareScreen = async (stream) => {
+        if (stream) {
+            for (const userId in this.myPeerConnectionArray) {
                 const apeerConnection = this.myPeerConnectionArray[userId];
                 if (!apeerConnection.isAdience) return false;
 
                 stream.getTracks().forEach((track) => {
 
                     const sender = apeerConnection.getSenders().find(sender => sender.track && sender.track.id === track.id);
-                    
+
                     if (sender) {
                         apeerConnection.removeTrack(sender);
                         return true;
                     }
                 });
-            }    
+            }
         }
 
         return false;
@@ -537,7 +537,7 @@ class SparkRTC {
      */
     restartEverything(peerConnection, target,isAudience) {
         this.remoteStreamNotified = false;
-        if (peerConnection.getRemoteStreams().length === 0) return;
+        //if (peerConnection.getRemoteStreams().length === 0) return;
         const trackIds = peerConnection.getReceivers().map((receiver) => receiver.track.id);
         trackIds.forEach((trackId) => {
             console.log('[peerConnection.oniceconnectionstatechange] DC trackId', trackId);
@@ -616,7 +616,7 @@ class SparkRTC {
                         this.parentDC = true;
 
                         //restart negotiation again
-                        this.restartEverything(pc, target);
+                        this.restartEverything(pc, target,false);
 
                         clearInterval(id); //if disconnected leave the loop
                     }
@@ -763,18 +763,18 @@ class SparkRTC {
                 const removeStream = (pc) => {
                     pc.getSenders().forEach(sender => {
                         const track = sender.track;
-                        if(track){
+                        if (track) {
                             if (track.kind === 'video' && track.muted === true) {
                                 pc.removeTrack(sender);
                             }
-                        } 
+                        }
                     });
                 };
 
 
                 //Loop through peer connection array and find audinece PC
-                for(const userid in this.myPeerConnectionArray){
-                    if(this.myPeerConnectionArray[userid].isAdience){
+                for (const userid in this.myPeerConnectionArray) {
+                    if (this.myPeerConnectionArray[userid].isAdience) {
                         removeStream(this.myPeerConnectionArray[userid]);
                     }
                 }
