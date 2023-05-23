@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 
 	"github.com/mmcomp/go-binarytree"
+	"github.com/sparkscience/logjam/backend/lib/message"
 	binarytreesrv "github.com/sparkscience/logjam/backend/srv/binarytree"
 
 	"sync"
@@ -241,14 +242,25 @@ func (receiver *Type) GetUsers(roomName string) ([]User, error) {
 		if node.(*binarytreesrv.MySocket).Socket == nil {
 			receiver.roomMaps[roomName].Room.Delete(node)
 		} else {
-			user := User{
-				Id:       node.(*binarytreesrv.MySocket).ID,
-				Name:     node.(*binarytreesrv.MySocket).Name,
-				StreamId: nodeStreamId,
-				Role:     role,
+			message := message.MessageContract{
+				Type: "pong",
+				Data: "pong",
+			}
+			messageTxt, _ := json.Marshal(message)
+			err := node.(*binarytreesrv.MySocket).Writer.WriteMessage(1, messageTxt)
+			if err != nil {
+				// receiver.roomMaps[roomName].Room.Delete(node)
+			} else {
+				user := User{
+					Id:       node.(*binarytreesrv.MySocket).ID,
+					Name:     node.(*binarytreesrv.MySocket).Name,
+					StreamId: nodeStreamId,
+					Role:     role,
+				}
+
+				output = append(output, user)
 			}
 
-			output = append(output, user)
 		}
 	}
 
