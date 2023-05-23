@@ -252,6 +252,7 @@ class SparkRTC {
             case 'event-parent-dc':
                 console.log('parentDC', msg.type);
                 this.parentDC = true;
+                this.startProcedure();
                 break;
             case 'metadata-get':
             case 'metadata-set':
