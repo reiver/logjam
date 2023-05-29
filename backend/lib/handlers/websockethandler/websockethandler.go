@@ -396,6 +396,10 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 			return
 		}
 
+	case "get-latest-user-list":
+		receiver.emitUserEvent(roomName)
+		return
+		
 	default:
 		ID, err := strconv.ParseUint(theMessage.Target, 10, 64)
 		if err != nil {
