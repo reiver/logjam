@@ -91,6 +91,7 @@ export const leaveMeeting = () => {
     if (sparkRTC.value) {
         sparkRTC.value.leaveMeeting();
         meetingStatus.value = false;
+        streamers.value = [];
     }
 };
 
@@ -149,11 +150,14 @@ const Meeting = () => {
                     onStopStream(stream);
 
                     if (role === 'audience') {
-                        if (sparkRTC.value.broadcasterDC || stream === 'no-stream') {
+                        if (
+                            sparkRTC.value.broadcasterDC ||
+                            stream === 'no-stream'
+                        ) {
                             //broadcaster is disconnected
                             //TODO: need to update UI accordingly and reset the audience controls to Original one
-                            
-                            log(`broadcasterDC...`)
+
+                            log(`broadcasterDC...`);
                         }
                     }
                 },
@@ -169,29 +173,32 @@ const Meeting = () => {
                     });
                 },
                 onStart: async () => {
-                    log(`start negotiation`);
-
-                    if (role === 'audience') {
-                        sparkRTC.value.stopSignaling();
-                        let idList = [];
-                        for (const id in sparkRTC.value.myPeerConnectionArray) {
-                            const peerConn =
-                                sparkRTC.value.myPeerConnectionArray[id];
-                            await peerConn.close();
-                            idList.push(id);
+                    if (meetingStatus.value) {
+                        if (role === 'audience') {
+                            sparkRTC.value.stopSignaling();
+                            let idList = [];
+                            for (const id in sparkRTC.value
+                                .myPeerConnectionArray) {
+                                const peerConn =
+                                    sparkRTC.value.myPeerConnectionArray[id];
+                                await peerConn.close();
+                                idList.push(id);
+                            }
+                            idList.forEach(
+                                (id) =>
+                                    delete sparkRTC.value.myPeerConnectionArray[
+                                        id
+                                    ]
+                            );
+                            sparkRTC.value.remoteStreams = [];
+                            sparkRTC.value.localStream
+                                ?.getTracks()
+                                ?.forEach((track) => track.stop());
+                            sparkRTC.value.localStream = null;
                         }
-                        idList.forEach(
-                            (id) =>
-                                delete sparkRTC.value.myPeerConnectionArray[id]
-                        );
-                        sparkRTC.value.remoteStreams = [];
-                        sparkRTC.value.localStream
-                            ?.getTracks()
-                            ?.forEach((track) => track.stop());
-                        sparkRTC.value.localStream = null;
-                    }
 
-                    await startSocket(name, room, host);
+                        await startSocket(name, room, host);
+                    }
                 },
                 altBroadcastApprove: (isStreamming) => {
                     updateUser({ isStreamming });
@@ -245,14 +252,16 @@ const Meeting = () => {
                 updateStatus: (status) => {
                     log(status);
                 },
-                treeCallback: (tree) => { },
-                signalingDisconnectedCallback: () => { },
+                treeCallback: (tree) => {},
+                signalingDisconnectedCallback: () => {},
             });
 
             log(`Setup SparkRTC`);
             await startSocket(name, room, host);
         };
-        if (meetingStatus.value) setupSparkRTC();
+        if (meetingStatus.value) {
+            setupSparkRTC();
+        }
     }, [meetingStatus.value]);
 
     const rejoinMeeting = () => {
