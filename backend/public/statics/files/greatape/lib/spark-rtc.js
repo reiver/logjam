@@ -1450,6 +1450,72 @@ export class SparkRTC {
   }
 
   /**
+   * To leave the meeting
+   */
+  leaveMeeting = () => {
+    //check for local stream and stop tracks
+    if (this.localStream) {
+      this.localStream.getTracks().forEach(function (track) {
+        track.stop()
+      })
+      this.localStream = null
+    }
+
+    //close all the peer connections
+    if (this.myPeerConnectionArray && this.myPeerConnectionArray.length > 0) {
+      for (const u in this.myPeerConnectionArray) {
+        this.myPeerConnectionArray[u].close()
+      }
+    }
+
+    //close the websocket
+    if (this.socket) {
+      this.socket.close()
+    }
+
+    //release all the variables
+    this.resetVariables()
+
+  }
+
+  //Reset all the variables
+  resetVariables = () => {
+    this.started = false
+    this.myPeerConnectionConfig = {
+      iceServers,
+    }
+    this.role = ''
+    this.localStream = null
+    this.socketURL = ''
+    this.remoteStreamNotified = false
+    this.remoteStreams = []
+    this.socket = null
+    this.myName = 'NoName'
+    this.roomName = 'SparkRTC'
+    this.myUsername = 'NoUsername'
+    this.lastBroadcasterId = ''
+    this.broadcastingApproved = false
+    this.myPeerConnectionArray = {}
+    this.iceCandidates = []
+    this.pingInterval = null
+    this.raiseHands = []
+    this.startedRaiseHand = false
+    this.targetStreams = {}
+    this.parentStreamId = null
+    this.broadcasterStatus = ''
+    this.parentDC = true
+    this.broadcasterDC = true
+    this.userListCallback = null
+    this.remoteStreamsQueue = []
+    this.metaData = {}
+    this.userStreamData = {}
+    this.users = []
+    this.trackToStreamMap = {}
+    this.lastVideoState = 'Enabled'
+    this.lastAudioState = 'Enabled'
+  }
+
+  /**
    * Construcor Function for Class SparkRTC
    *
    * @param {*} role
