@@ -25,6 +25,7 @@ export const Controllers = () => {
             isMeetingMuted: !isMeetingMuted,
         });
     };
+
     const handleShareScreen = async () => {
         if (!sharingScreenStream) {
             const stream = await sparkRTC.value.startShareScreen();
@@ -59,6 +60,7 @@ export const Controllers = () => {
     const handleReload = () => {
         sparkRTC.value.startProcedure();
     };
+
     return html`<div class="flex gap-5 py-5">
         <${Tooltip} label=${isMeetingMuted ? 'Listen' : 'Deafen'}>
             <${IconButton}

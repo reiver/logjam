@@ -14,7 +14,7 @@ import { useEffect } from 'preact';
 
 export const sparkRTC = signal(null);
 export const meetingStatus = signal(true);
-
+export const broadcastIsInTheMeeting = signal(true);
 export const currentUser = signal({
     isHost: false,
     isMicrophoneOn: true,
@@ -138,6 +138,10 @@ const Meeting = () => {
                             stream,
                         },
                     };
+
+                    if (!sparkRTC.value.broadcasterDC && role === 'audience') {
+                        broadcastIsInTheMeeting.value = true;
+                    }
                 },
                 remoteStreamDCCallback: (stream) => {
                     sparkRTC.value.getLatestUserList();
@@ -149,9 +153,7 @@ const Meeting = () => {
                             sparkRTC.value.broadcasterDC ||
                             stream === 'no-stream'
                         ) {
-                            //broadcaster is disconnected
-                            //TODO: need to update UI accordingly and reset the audience controls to Original one
-
+                            broadcastIsInTheMeeting.value = false;
                             log(`broadcasterDC...`);
                         }
                     }
