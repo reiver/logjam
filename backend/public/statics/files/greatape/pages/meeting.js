@@ -147,6 +147,15 @@ const Meeting = () => {
                     sparkRTC.value.getLatestUserList();
 
                     onStopStream(stream);
+
+                    if (role === 'audience') {
+                        if (sparkRTC.value.broadcasterDC || stream === 'no-stream') {
+                            //broadcaster is disconnected
+                            //TODO: need to update UI accordingly and reset the audience controls to Original one
+                            
+                            log(`broadcasterDC...`)
+                        }
+                    }
                 },
                 onRaiseHand: (...props) => {
                     log(`[On Raise Hand Request] ${props}`);
@@ -236,8 +245,8 @@ const Meeting = () => {
                 updateStatus: (status) => {
                     log(status);
                 },
-                treeCallback: (tree) => {},
-                signalingDisconnectedCallback: () => {},
+                treeCallback: (tree) => { },
+                signalingDisconnectedCallback: () => { },
             });
 
             log(`Setup SparkRTC`);

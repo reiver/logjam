@@ -1212,12 +1212,12 @@ export class SparkRTC {
 
     const peerConnection = this.createOrGetPeerConnection(target, false)
     stream.getTracks().forEach((track) => {
-      // if (this.lastVideoState === 'Disabled') {
-      //   this.disableVideo()
-      // }
-      // if (this.lastAudioState === 'Disabled') {
-      //   this.disableAudio()
-      // }
+      if (this.lastVideoState === 'Disabled') {
+        this.disableVideo()
+      }
+      if (this.lastAudioState === 'Disabled') {
+        this.disableAudio()
+      }
       peerConnection.addTrack(track, stream)
     })
   }
@@ -1445,8 +1445,9 @@ export class SparkRTC {
       clearInterval(this.pingInterval)
       this.pingInterval = null
     }
-    this.socket.onclose = () => { }
-    this.socket.close()
+    if(this.socket){
+      this.socket.close()
+    }
   }
 
   /**
