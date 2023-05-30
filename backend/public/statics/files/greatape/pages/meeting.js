@@ -79,11 +79,6 @@ const log = (data) => {
 };
 
 const startSocket = async (name, room, host = null) => {
-    await sparkRTC.value.setupSignalingSocket(
-        getWsUrl(host),
-        JSON.stringify({ name, email: '' }),
-        room
-    );
     return sparkRTC.value.start();
 };
 
@@ -175,7 +170,6 @@ const Meeting = () => {
                 onStart: async () => {
                     if (meetingStatus.value) {
                         if (role === 'audience') {
-                            sparkRTC.value.stopSignaling();
                             let idList = [];
                             for (const id in sparkRTC.value
                                 .myPeerConnectionArray) {
@@ -257,6 +251,11 @@ const Meeting = () => {
             });
 
             log(`Setup SparkRTC`);
+            await sparkRTC.value.setupSignalingSocket(
+                getWsUrl(host),
+                JSON.stringify({ name, email: '' }),
+                room
+            );
             await startSocket(name, room, host);
         };
         if (meetingStatus.value) {
@@ -265,7 +264,7 @@ const Meeting = () => {
     }, [meetingStatus.value]);
 
     const rejoinMeeting = () => {
-        meetingStatus.value = true;
+        window.location.reload();
     };
 
     return html` <div
