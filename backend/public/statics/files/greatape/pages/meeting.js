@@ -92,6 +92,7 @@ export const leaveMeeting = () => {
         sparkRTC.value.leaveMeeting();
         meetingStatus.value = false;
         streamers.value = [];
+        sparkRTC = signal(null);
     }
 };
 
@@ -151,6 +152,8 @@ const Meeting = () => {
                 remoteStreamDCCallback: (stream) => {
                     sparkRTC.value.getLatestUserList();
 
+                    log(`remoteStreamDCCallback`, stream);
+                    
                     onStopStream(stream);
 
                     if (role === 'audience') {
@@ -177,26 +180,7 @@ const Meeting = () => {
                 onStart: async () => {
                     if (meetingStatus.value) {
                         if (role === 'audience') {
-                            let idList = [];
-                            for (const id in sparkRTC.value
-                                .myPeerConnectionArray) {
-                                const peerConn =
-                                    sparkRTC.value.myPeerConnectionArray[id];
-                                await peerConn.close();
-                                idList.push(id);
-                            }
-                            idList.forEach(
-                                (id) =>
-                                    delete sparkRTC.value.myPeerConnectionArray[
-                                        id
-                                    ]
-                            );
-                            sparkRTC.value.remoteStreams = [];
-                            sparkRTC.value.localStream
-                                ?.getTracks()
-                                ?.forEach((track) => track.stop());
-                            sparkRTC.value.localStream = null;
-                            sparkRTC.value.startedRaiseHand = false;
+                            sparkRTC.value.restart();
                         }
 
                         await start();
@@ -256,6 +240,14 @@ const Meeting = () => {
                 },
                 treeCallback: (tree) => {},
                 signalingDisconnectedCallback: () => {},
+                connectionStatus: (status) => {
+                    log(`Connection Status: `, status);
+                    if (role === 'audience') {
+                        if (status === 'failed') {
+                            window.location.reload();
+                        }
+                    }
+                },
             });
 
             log(`Setup SparkRTC`);

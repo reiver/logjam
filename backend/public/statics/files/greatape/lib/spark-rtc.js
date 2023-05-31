@@ -156,9 +156,15 @@ export class SparkRTC {
                     audiencePeerConnection &&
                     audiencePeerConnection.remoteDescription
                 ) {
-                    await audiencePeerConnection.addIceCandidate(
-                        this.iceCandidates.pop()
-                    );
+                    if (audiencePeerConnection) {
+                        try {
+                            await audiencePeerConnection.addIceCandidate(
+                                this.iceCandidates.pop()
+                            );
+                        } catch (e) {
+                            this.updateTheStatus(`iceCandidateError`, e);
+                        }
+                    }
                 }
                 break;
             case 'role':
@@ -575,7 +581,7 @@ export class SparkRTC {
                     }
                 });
             }
-            
+
             //remove shared screen stream from remotestreams list
             var index = this.remoteStreams.indexOf(stream); // Find the index of the element
             if (index > -1) {
@@ -949,6 +955,10 @@ export class SparkRTC {
             this.updateTheStatus(
                 `Connection state: ${peerConnection.connectionState}`
             );
+
+            if (this.connectionStatus) {
+                this.connectionStatus(peerConnection.connectionState);
+            }
         };
 
         peerConnection.onicecandidate = async (event) => {
@@ -1679,9 +1689,10 @@ export class SparkRTC {
     };
 
     /**
-     * To leave the meeting
+     * To restart again and connect to new parent
+     * we don't need to close the socket this time
      */
-    leaveMeeting = () => {
+    restart = () => {
         //check for local stream and stop tracks
         if (this.localStream) {
             this.localStream.getTracks().forEach(function (track) {
@@ -1704,27 +1715,70 @@ export class SparkRTC {
 
         idList.forEach((id) => delete sparkRTC.value.myPeerConnectionArray[id]);
 
-        //close the websocket
-        if (this.socket) {
-            this.socket.close();
+        //reset few variables
+        this.resetVariables(false);
+    };
+
+    /**
+     * To leave the meeting
+     */
+    leaveMeeting = () => {
+        //check for local stream and stop tracks
+        //stop all the sender tracks
+        if (this.localStream) {
+            for (const userId in this.myPeerConnectionArray) {
+                const apeerConnection = this.myPeerConnectionArray[userId];
+
+                this.localStream.getTracks().forEach((track) => {
+                    const sender = apeerConnection
+                        .getSenders()
+                        .find(
+                            (sender) =>
+                                sender.track && sender.track.id === track.id
+                        );
+
+                    if (sender) {
+                        apeerConnection.removeTrack(sender);
+                    }
+                });
+            }
+
+            this.localStream.getTracks().forEach(function (track) {
+                track.stop();
+            });
+
+            this.localStream = null;
         }
 
-        //release all the variables
-        this.resetVariables();
+        //close all the peer connections
+        let idList = [];
+        if (
+            this.myPeerConnectionArray &&
+            this.myPeerConnectionArray.length > 0
+        ) {
+            for (const u in this.myPeerConnectionArray) {
+                this.myPeerConnectionArray[u].close();
+                idList.push(u);
+            }
+        }
+
+        idList.forEach((id) => delete sparkRTC.value.myPeerConnectionArray[id]);
     };
 
     //Reset all the variables
-    resetVariables = () => {
+    resetVariables = (resetAll = false) => {
+        if (resetAll) {
+            this.socketURL = '';
+            this.socket = null;
+        }
         this.started = false;
         this.myPeerConnectionConfig = {
             iceServers,
         };
         this.role = '';
         this.localStream = null;
-        this.socketURL = '';
         this.remoteStreamNotified = false;
         this.remoteStreams = [];
-        this.socket = null;
         this.myName = 'NoName';
         this.roomName = 'SparkRTC';
         this.myUsername = 'NoUsername';
@@ -1773,5 +1827,6 @@ export class SparkRTC {
         this.userListUpdated = options.userListUpdated;
         this.maxLimitReached = options.maxLimitReached;
         this.disableBroadcasting = options.disableBroadcasting;
+        this.connectionStatus = options.connectionStatus;
     }
 }
