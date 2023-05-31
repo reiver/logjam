@@ -73,12 +73,17 @@ export const onStopShareScreen = (stream) => {
     streamers.value = streamersTmp;
 };
 
-const log = (data) => {
+const log = (tag, data) => {
     const date = new Date().toLocaleTimeString();
-    console.log('[', date, '] ', data);
+
+    if (data) {
+        console.log('[', date, '] ', tag, ' | ', data);
+    } else {
+        console.log('[', date, '] ', tag);
+    }
 };
 
-const startSocket = async (name, room, host = null) => {
+const start = async () => {
     return sparkRTC.value.start();
 };
 
@@ -123,8 +128,8 @@ const Meeting = () => {
                 remoteStreamCallback: (stream) => {
                     sparkRTC.value.getLatestUserList();
 
-                    log(`[Remote Stream Callback] ${stream}`);
-                    log(`NameCallback: ${stream.name}`);
+                    log(`remoteStreamCallback`, stream);
+                    log(`remoteStreamCallback-Name`, stream.name);
 
                     streamers.value = {
                         ...streamers.value,
@@ -191,9 +196,10 @@ const Meeting = () => {
                                 ?.getTracks()
                                 ?.forEach((track) => track.stop());
                             sparkRTC.value.localStream = null;
+                            sparkRTC.value.startedRaiseHand = false;
                         }
 
-                        await startSocket(name, room, host);
+                        await start();
                     }
                 },
                 altBroadcastApprove: (isStreamming) => {
@@ -245,8 +251,8 @@ const Meeting = () => {
                         updateUser({ hasCamera: false });
                     }
                 },
-                updateStatus: (status) => {
-                    log(status);
+                updateStatus: (tag, data) => {
+                    log(tag, data);
                 },
                 treeCallback: (tree) => {},
                 signalingDisconnectedCallback: () => {},
@@ -258,7 +264,7 @@ const Meeting = () => {
                 JSON.stringify({ name, email: '' }),
                 room
             );
-            await startSocket(name, room, host);
+            await start();
         };
         if (meetingStatus.value) {
             setupSparkRTC();
