@@ -82,7 +82,13 @@ const log = (tag, data) => {
         console.log('[', date, '] ', tag);
     }
 };
-
+const setupSignalingSocket = async (host, name, room) => {
+    await sparkRTC.value.setupSignalingSocket(
+        getWsUrl(host),
+        JSON.stringify({ name, email: '' }),
+        room
+    );
+};
 const start = async () => {
     return sparkRTC.value.start();
 };
@@ -92,7 +98,6 @@ export const leaveMeeting = () => {
         sparkRTC.value.leaveMeeting();
         meetingStatus.value = false;
         streamers.value = [];
-        sparkRTC = signal(null);
     }
 };
 
@@ -153,7 +158,7 @@ const Meeting = () => {
                     sparkRTC.value.getLatestUserList();
 
                     log(`remoteStreamDCCallback`, stream);
-                    
+
                     onStopStream(stream);
 
                     if (role === 'audience') {
@@ -177,12 +182,22 @@ const Meeting = () => {
                         );
                     });
                 },
-                onStart: async () => {
+                onStart: async (closeSocket = true) => {
                     if (meetingStatus.value) {
                         if (role === 'audience') {
-                            sparkRTC.value.restart();
+                            sparkRTC.value.restart(closeSocket);
                         }
 
+                        //if socket is closed, repoen again
+                        if (
+                            sparkRTC.value.socket &&
+                            (sparkRTC.value.socket.readyState ===
+                                WebSocket.CLOSED ||
+                                sparkRTC.value.socket.readyState ===
+                                    WebSocket.CLOSING)
+                        ) {
+                            await setupSignalingSocket(host, name, room);
+                        }
                         await start();
                     }
                 },
@@ -251,11 +266,8 @@ const Meeting = () => {
             });
 
             log(`Setup SparkRTC`);
-            await sparkRTC.value.setupSignalingSocket(
-                getWsUrl(host),
-                JSON.stringify({ name, email: '' }),
-                room
-            );
+
+            await setupSignalingSocket(host, name, room);
             await start();
         };
         if (meetingStatus.value) {

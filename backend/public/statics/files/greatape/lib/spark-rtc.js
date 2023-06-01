@@ -329,7 +329,7 @@ export class SparkRTC {
             case 'broadcasting':
                 if (this.role === 'broadcast') return;
                 this.updateTheStatus(`[handleMessage] ${msg.type}`);
-                this.startProcedure();
+                this.startProcedure(false);
                 break;
             case 'event-reconnect':
             case 'event-broadcaster-disconnected':
@@ -353,7 +353,7 @@ export class SparkRTC {
             case 'event-parent-dc':
                 this.updateTheStatus(`parentDC ${msg.type}`);
                 this.parentDC = true;
-                this.startProcedure();
+                this.startProcedure(false);
                 break;
             case 'metadata-get':
             case 'metadata-set':
@@ -512,7 +512,7 @@ export class SparkRTC {
                     this.signalingDisconnectedCallback();
                 this.updateTheStatus(`[setupSignalingSocket] socket onclose`);
                 this.started = false;
-                if (this.startProcedure) this.startProcedure();
+                if (this.startProcedure) this.startProcedure(false);
             };
             socket.onerror = (error) => {
                 this.updateTheStatus(`WebSocket error: ${error}`);
@@ -844,8 +844,9 @@ export class SparkRTC {
             (this.parentDC || this.startedRaiseHand || !isAudience) &&
             this.role !== 'broadcast'
         ) {
+            this.updateTheStatus(`Waiting to restart..`);
             setTimeout(() => {
-                this.startProcedure();
+                this.startProcedure(false);
             }, 1000);
         }
     }
@@ -1692,7 +1693,7 @@ export class SparkRTC {
      * To restart again and connect to new parent
      * we don't need to close the socket this time
      */
-    restart = () => {
+    restart = (closeSocket) => {
         //check for local stream and stop tracks
         if (this.localStream) {
             this.localStream.getTracks().forEach(function (track) {
@@ -1717,6 +1718,12 @@ export class SparkRTC {
 
         //reset few variables
         this.resetVariables(false);
+
+        //close the web socket
+        if (closeSocket && this.socket) {
+            this.socket.close();
+            this.socket = null;
+        }
     };
 
     /**
@@ -1747,6 +1754,12 @@ export class SparkRTC {
                 track.stop();
             });
 
+            //remove local stream from remotestreamslist
+            var index = this.remoteStreams.indexOf(this.localStream); // Find the index of the element
+            if (index > -1) {
+                this.remoteStreams.splice(index, 1); // Remove the element using splice
+            }
+
             this.localStream = null;
         }
 
@@ -1763,6 +1776,14 @@ export class SparkRTC {
         }
 
         idList.forEach((id) => delete sparkRTC.value.myPeerConnectionArray[id]);
+
+        if (this.role === 'broadcast') {
+            //close websocket
+            if (this.socket) {
+                this.socket.close();
+                this.socket = null;
+            }
+        }
     };
 
     //Reset all the variables

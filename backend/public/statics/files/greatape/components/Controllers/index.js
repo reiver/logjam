@@ -58,7 +58,7 @@ export const Controllers = () => {
             );
     };
     const handleReload = () => {
-        sparkRTC.value.startProcedure();
+        sparkRTC.value.startProcedure(false);
     };
 
     return html`<div class="flex gap-5 py-5">
