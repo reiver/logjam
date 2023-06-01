@@ -1,11 +1,11 @@
-import { html } from 'htm';
 import {
-    Icon,
     Container,
     Controllers,
+    Icon,
+    attendeesCount,
     toggleAttendees,
-    attendees,
 } from 'components';
+import { html } from 'htm';
 import { broadcastIsInTheMeeting } from '../../pages/meeting.js';
 
 export const BottomBar = () => {
@@ -33,17 +33,15 @@ export const BottomBar = () => {
             </div>
             <div class="col-span-3 text-right">
                 <div class="h-full flex items-center justify-end">
-                    ${attendees.value.length
+                    ${attendeesCount > 0
                         ? html`<div
                               onClick="${toggleAttendees}"
                               class="transition-all select-none cursor-pointer flex items-center gap-2 rounded-md hover:bg-gray-0 hover:bg-opacity-10 hover:dark:bg-gray-2 hover:dark:bg-opacity-20 py-1 px-3"
                           >
                               <${Icon} icon="Avatar" />
                               <span
-                                  >${attendees.value.length}${' '}
-                                  attendee${attendees.value.length > 1
-                                      ? 's'
-                                      : ''}</span
+                                  >${attendeesCount}${' '}
+                                  attendee${attendeesCount > 1 ? 's' : ''}</span
                               >
                           </div>`
                         : null}

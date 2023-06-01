@@ -234,6 +234,7 @@ export class SparkRTC {
                     this.broadcastingApproved = true;
 
                     if (msg.result == true) {
+                        await this.startBroadcasting('alt-broadcast');
                         this.lastBroadcasterId = msg.data;
                         if (this.localStream) {
                             this.sendStreamTo(msg.data, this.localStream);
@@ -692,10 +693,19 @@ export class SparkRTC {
      *
      * @returns initiate Broadcasting
      */
-    raiseHand = () => {
+    raiseHand = async () => {
         if (this.startedRaiseHand) return;
         this.startedRaiseHand = true;
-        return this.startBroadcasting('alt-broadcast');
+        // send a raise hand request with empty streamId
+        if (await this.checkSocketStatus())
+            this.socket.send(
+                JSON.stringify({
+                    type: 'role',
+                    data: 'alt-broadcast',
+                    streamId: '',
+                })
+            );
+        // return this.startBroadcasting('alt-broadcast');
     };
 
     async getLatestUserList() {

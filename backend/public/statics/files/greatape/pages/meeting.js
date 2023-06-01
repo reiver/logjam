@@ -1,16 +1,16 @@
-import { html } from 'htm';
-import {
-    TopBar,
-    BottomBar,
-    MeetingBody,
-    attendees,
-    streamers,
-    makeDialog,
-    Button,
-} from 'components';
-import { createSparkRTC, getWsUrl } from '../lib/common.js';
 import { signal } from '@preact/signals';
+import {
+    BottomBar,
+    Button,
+    MeetingBody,
+    TopBar,
+    attendees,
+    makeDialog,
+    streamers,
+} from 'components';
+import { html } from 'htm';
 import { useEffect } from 'preact';
+import { createSparkRTC, getWsUrl } from '../lib/common.js';
 
 export const sparkRTC = signal(null);
 export const meetingStatus = signal(true);
@@ -90,25 +90,20 @@ export const leaveMeeting = () => {
     }
 };
 
-export const onUserRaisedHand = (userId, raisedHand, raiseHandCallback) => {
-    attendees.value = [
-        ...attendees.value.map((attendee) => {
-            if (userId == attendee.userId)
-                return {
-                    ...attendee,
-                    raisedHand,
-                    raiseHandCallback,
-                };
-            return attendee;
-        }),
-    ];
+export const onUserRaisedHand = (userId, raisedHand, acceptRaiseHand) => {
+    attendees.value = {
+        ...attendees.value,
+        [userId]: {
+            ...attendees.value[userId],
+            raisedHand,
+            acceptRaiseHand,
+        },
+    };
+    console.log('LOWER HAND', userId, raisedHand);
 };
 
 export const getUserRaiseHandStatus = (userId) => {
-    return (
-        attendees.value.find((attendee) => attendee.userId == userId)
-            ?.raisedHand || false
-    );
+    return attendees.value[userId]?.raisedHand || false;
 };
 
 const Meeting = () => {
@@ -188,20 +183,7 @@ const Meeting = () => {
                     let raiseHandCallback = () => {};
                     const handler = new Promise((resolve, reject) => {
                         raiseHandCallback = resolve;
-                        makeDialog(
-                            'confirm',
-                            message,
-                            () => {
-                                resolve(true);
-                                onUserRaisedHand(user.userId, false);
-                            },
-                            () => {
-                                resolve(false);
-                                onUserRaisedHand(user.userId, false);
-                            }
-                        );
                     });
-
                     onUserRaisedHand(user.userId, true, raiseHandCallback);
 
                     return handler;
@@ -258,19 +240,31 @@ const Meeting = () => {
                 },
                 onUserListUpdate: (users) => {
                     log(`[On Users List Update], ${users}`);
-                    attendees.value = users.map(
-                        ({ name: userInfo, role, video, id: userId }) => {
-                            const { name, email } = JSON.parse(userInfo);
-                            return {
-                                name,
-                                isHost: role === 'broadcaster',
-                                avatar: '',
-                                raisedHand: getUserRaiseHandStatus(userId),
-                                hasCamera: !!video,
-                                userId,
-                            };
-                        }
-                    );
+                    const usersTmp = { ...attendees.value };
+                    for (const {
+                        name: userInfo,
+                        role,
+                        video,
+                        id: userId,
+                    } of users) {
+                        const { name, email } = JSON.parse(userInfo);
+                        console.log(
+                            'UPDATE USER',
+                            userId,
+                            getUserRaiseHandStatus(userId)
+                        );
+                        usersTmp[userId] = {
+                            ...(attendees.value[userId] || {}),
+                            name,
+                            email,
+                            isHost: role === 'broadcaster',
+                            avatar: '',
+                            raisedHand: getUserRaiseHandStatus(userId),
+                            hasCamera: !!video,
+                            userId,
+                        };
+                    }
+                    attendees.value = usersTmp;
                 },
                 constraintResults: (constraints) => {
                     if (!constraints.audio) {

@@ -1,10 +1,11 @@
 import { computed, signal } from '@preact/signals';
 import clsx from 'clsx';
-import { Icon } from 'components';
+import { Icon, makeDialog } from 'components';
 import { html } from 'htm';
-import { currentUser } from '../../pages/meeting.js';
+import { currentUser, onUserRaisedHand } from '../../pages/meeting.js';
 
-export const attendees = signal([
+export const attendees = signal(
+    {}
     // {
     //   name: 'Alex Suprun',
     //   isHost: true,
@@ -12,7 +13,11 @@ export const attendees = signal([
     //   raisedHand: false,
     //   hasCamera: true,
     // }
-]);
+);
+
+export const attendeesCount = computed(
+    () => Object.values(attendees.value).length
+);
 
 export const isAttendeesOpen = signal(false);
 export const toggleAttendees = () => {
@@ -25,6 +30,20 @@ export const attendeesWidth = computed(() => {
 });
 
 export const Participant = ({ participant }) => {
+    const handleRaiseHand = () => {
+        makeDialog(
+            'confirm',
+            `<strong>${participant.name}</strong> has raised their hand, do you want to add them to the stage?`,
+            () => {
+                participant.acceptRaiseHand(true);
+                onUserRaisedHand(participant.userId, false);
+            },
+            () => {
+                participant.acceptRaiseHand(false);
+                onUserRaisedHand(participant.userId, false);
+            }
+        );
+    };
     return html` <div
         class=${clsx(
             'flex w-full justify-between items-center rounded-md px-2 py-1',
@@ -64,6 +83,7 @@ export const Participant = ({ participant }) => {
                     width="25px"
                     height="25px"
                     class="dark:text-gray-0 text-gray-1"
+                    onClick=${participant.raisedHand ? handleRaiseHand : null}
                 />
             </div>
         `}
@@ -89,12 +109,12 @@ export const Attendees = () => {
             <div class="flex justify-center items-center w-full gap-2">
                 <${Icon} icon="Avatar" />
                 <span
-                    >Attendees List (${attendees.value.length}${' '}
-                    ${attendees.value.length > 1 ? 'people' : 'person'})</span
+                    >Attendees List (${attendeesCount}${' '}
+                    ${attendeesCount > 1 ? 'people' : 'person'})</span
                 >
             </div>
             <div class="flex flex-col gap-2 w-full mt-6">
-                ${attendees.value
+                ${Object.values(attendees.value)
                     .sort((attendee) => {
                         if (attendee.isHost) return -1;
                         else 0;
