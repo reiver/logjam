@@ -1,79 +1,137 @@
-import { html, render } from 'htm'
-import { Button } from 'components'
-import { signal } from '@preact/signals'
-import { v4 as uuidv4 } from 'uuid'
+import { signal } from '@preact/signals';
+import { clsx } from 'clsx';
+import { Button, Icon } from 'components';
+import { html } from 'htm';
+import { v4 as uuidv4 } from 'uuid';
 
-const dialogs = signal([])
+const dialogs = signal([]);
 
-export const ConfirmDialog = ({ onOk, onClose, message }) => {
-  return html`<div class="py-4 px-6 dark:bg-black bg-white rounded-md dark:text-[#fefefe] light:text-[#1a1a1]">
-    <div class="text-center" dangerouslySetInnerHTML=${{ __html: message }}></div>
-    <div class="flex justify-end mt-4 gap-2">
-      <${Button} variant="red" onClick=${onClose}>Deny<//>
-      <${Button} onClick=${onOk}>Accept<//>
-    </div>
-  </div>`
-}
+export const ConfirmDialog = ({
+    onOk,
+    onClose,
+    message: { message, title },
+    okText = 'Accept',
+    cancelText = 'Reject',
+    okButtonVariant = 'solid',
+    onReject = onClose,
+}) => {
+    return html` <div class="absolute top-0 left-0 w-full h-full">
+        <div
+            class="z-10 absolute w-full h-full bg-black bg-opacity-60"
+            onClick=${onClose}
+        />
+        <div
+            class="absolute z-20 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 dark:bg-gray-3 dark:text-gray-0 bg-white text-gray-2 rounded-lg w-full max-w-[400px] border dark:border-gray-1 border-gray-0"
+        >
+            <div class="flex justify-center items-center p-5 relative">
+                <span class="dark:text-white text-black text-bold-12"
+                    >${title}</span
+                >
+                <${Icon}
+                    icon="Close"
+                    class="absolute top-1/2 right-5 transform -translate-y-1/2 cursor-pointer"
+                    onClick=${onClose}
+                />
+            </div>
+            <hr class="dark:border-gray-2 border-gray-0" />
+            <div
+                class="text-left text-bold-12 py-8 p-5"
+                dangerouslySetInnerHTML=${{ __html: message }}
+            ></div>
+            <div class="flex justify-end gap-2 p-5 pt-0">
+                <${Button}
+                    size="lg"
+                    variant="outline"
+                    class="w-full flex-grow-1"
+                    onClick=${() => {
+                        onReject && onReject();
+                        onClose();
+                    }}
+                    >${cancelText}<//
+                >
+                <${Button}
+                    size="lg"
+                    variant="${okButtonVariant}"
+                    class="w-full flex-grow-1"
+                    onClick=${onOk}
+                    >${okText}<//
+                >
+            </div>
+        </div>
+    </div>`;
+};
 
-export const ErrorDialog = ({ onOk, onClose, message }) => {
-  return html`<div class="py-4 px-6 dark:bg-red-600 bg-red-300 rounded-md dark:text-[#fefefe] light:text-[#1a1a1]">
-    <div class="text-center" dangerouslySetInnerHTML=${{ __html: message }}></div>
-  </div>`
-}
-
-export const SuccessDialog = ({ onOk, onClose, message }) => {
-  return html`<div class="py-4 px-6 dark:bg-green-600 bg-green-300 rounded-md dark:text-[#fefefe] light:text-[#1a1a1]">
-    <div class="text-center" dangerouslySetInnerHTML=${{ __html: message }}></div>
-  </div>`
-}
-
-export const InfoDialog = ({ onOk, onClose, message }) => {
-  return html`<div class="py-4 px-6 dark:bg-black bg-white rounded-md dark:text-[#fefefe] light:text-[#1a1a1]">
-    <div class="text-center" dangerouslySetInnerHTML=${{ __html: message }}></div>
-  </div>`
-}
+export const InfoDialog = ({
+    onOk,
+    onClose,
+    message: { message, icon },
+    pointer,
+}) => {
+    return html`<div
+        class=${clsx(
+            'select-none py-4 px-6 dark:bg-white-f-9 dark:text-gray-3 bg-gray-3 text-white-f-9 flex justify-between items-center text-medium-12 min-w-[350px] rounded-md border dark:border-gray-1 border-gray-0',
+            {
+                'cursor-pointer': pointer,
+            }
+        )}
+        onClick=${onClose}
+    >
+        <div
+            class="text-left"
+            dangerouslySetInnerHTML=${{ __html: message }}
+        ></div>
+        <${Icon} icon=${icon} width="24" height="24" />
+    </div>`;
+};
 
 export const DialogPool = () => {
-  return html`<div class="absolute top-20 left-1/2 transform -translate-x-1/2 flex flex-col gap-3">
-    ${Object.values(dialogs.value).map((dialog) => {
-      if (dialog.type === 'confirm') return html`<${ConfirmDialog} ...${dialog} />`
-      if (dialog.type === 'success') return html`<${SuccessDialog} ...${dialog} />`
-      if (dialog.type === 'error') return html`<${ErrorDialog} ...${dialog} />`
-      if (dialog.type === 'info') return html`<${InfoDialog} ...${dialog} />`
-    })}
-  </div>`
-}
+    return html`<div
+            className="absolute right-4 md:right-10 bottom-24 flex flex-col justify-end gap-2"
+        >
+            ${Object.values(dialogs.value).map((dialog) => {
+                if (dialog.type === 'info')
+                    return html`<${InfoDialog} ...${dialog} />`;
+            })}
+        </div>
 
-export const makeDialog = (type, message, onOk, onClose) => {
-  const id = uuidv4()
-  const destroy = () => {
-    const dialogsTmp = { ...dialogs.value }
-    delete dialogsTmp[id]
-    dialogs.value = dialogsTmp
-  }
-  if (type !== 'confirm') {
-    setTimeout(destroy, 4000)
-  }
-  dialogs.value = {
-    ...dialogs.value,
-    [id]: {
-      id,
-      type,
-      message,
-      onOk: () => {
-        onOk()
-        destroy()
-      },
-      onClose: () => {
-        onClose()
-        destroy()
-      },
-    },
-  }
-}
+        ${Object.values(dialogs.value).map((dialog) => {
+            if (dialog.type === 'confirm')
+                return html`<${ConfirmDialog} ...${dialog} />`;
+        })}`;
+};
+
+export const makeDialog = (type, message, onOk, onClose, options = {}) => {
+    const id = uuidv4();
+    const destroy = () => {
+        const dialogsTmp = { ...dialogs.value };
+        delete dialogsTmp[id];
+        dialogs.value = dialogsTmp;
+    };
+    if (type !== 'confirm') {
+        setTimeout(destroy, 4000);
+    }
+    dialogs.value = {
+        ...dialogs.value,
+        [id]: {
+            id,
+            type,
+            message,
+            pointer: !!onClose,
+            onOk: () => {
+                onOk && onOk();
+                destroy();
+            },
+            onClose: () => {
+                onClose && onClose();
+                destroy();
+            },
+            ...options,
+        },
+    };
+};
 
 export const ToastProvider = () => {
-  return html`<div id="toast-provider">
-    <${DialogPool} />
-  </div>`
-}
+    return html`<div id="toast-provider">
+        <${DialogPool} />
+    </div>`;
+};

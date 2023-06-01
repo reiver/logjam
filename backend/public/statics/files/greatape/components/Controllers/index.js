@@ -1,11 +1,11 @@
-import { html } from 'htm';
 import { Icon, IconButton, makeDialog, Tooltip } from 'components';
+import { html } from 'htm';
 import {
     currentUser,
-    updateUser,
-    sparkRTC,
     onStartShareScreen,
     onStopShareScreen,
+    sparkRTC,
+    updateUser,
 } from '../../pages/meeting.js';
 
 export const Controllers = () => {
@@ -52,7 +52,10 @@ export const Controllers = () => {
     };
     const onRaiseHand = async () => {
         sparkRTC.value.raiseHand();
-        makeDialog('info', 'Raise hand request has been sent.');
+        makeDialog('info', {
+            message: 'Raise hand request has been sent.',
+            icon: 'Check',
+        });
     };
     const handleReload = () => {
         sparkRTC.value.startProcedure();

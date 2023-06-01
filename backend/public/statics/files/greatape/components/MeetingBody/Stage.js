@@ -1,15 +1,15 @@
-import { html } from 'htm';
 import { computed, signal } from '@preact/signals';
-import { attendeesWidth, Icon, IconButton } from 'components';
 import clsx from 'clsx';
+import { Icon, IconButton, attendeesWidth, makeDialog } from 'components';
+import { html } from 'htm';
 import { useEffect, useRef, useState } from 'preact';
+import { memo } from 'preact/compat';
+import { userInteractedWithDom } from '../../index.js';
 import {
+    broadcastIsInTheMeeting,
     currentUser,
     sparkRTC,
-    broadcastIsInTheMeeting,
 } from '../../pages/meeting.js';
-import { userInteractedWithDom } from '../../index.js';
-import { memo } from 'preact/compat';
 
 export const streamers = signal([]);
 export const streamersLength = computed(
@@ -19,9 +19,7 @@ export const streamersLength = computed(
 const topBarBottomBarHeight = 58 + 108;
 const windowWidth = signal(window.innerWidth);
 const windowHeight = signal(window.innerHeight);
-const stageWidth = computed(
-    () => windowWidth.value - (attendeesWidth + 20) - 130
-);
+const stageWidth = computed(() => windowWidth.value - attendeesWidth - 130);
 const itemsWidth = computed(() => {
     let width = Math.max(
         stageWidth.value / streamersLength.value,
@@ -105,7 +103,22 @@ export const Video = memo(({ stream, isMuted, isHostStream, name, userId }) => {
     }, [userInteractedWithDom.value, isMuted]);
 
     const handleRemoveStream = () => {
-        sparkRTC.value.disableAudienceBroadcast(String(userId));
+        makeDialog(
+            'confirm',
+            {
+                message: `Are you sure you want to kick "<strong>${name}</strong>" off the stage?`,
+                title: 'Kick Audience Off The Stage',
+            },
+            () => {
+                sparkRTC.value.disableAudienceBroadcast(String(userId));
+            },
+            () => {},
+            {
+                okText: 'Kick',
+                okButtonVariant: 'red',
+                cancelText: 'Let them stay!',
+            }
+        );
     };
     const handleOpenMenu = setMenuOpen.bind(null, !menuOpen);
 

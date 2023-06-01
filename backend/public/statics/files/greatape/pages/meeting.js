@@ -5,11 +5,13 @@ import {
     MeetingBody,
     TopBar,
     attendees,
+    attendeesBadge,
     makeDialog,
     streamers,
 } from 'components';
 import { html } from 'htm';
 import { useEffect } from 'preact';
+import { isAttendeesOpen } from '../components/Attendees/index.js';
 import { createSparkRTC, getWsUrl } from '../lib/common.js';
 
 export const sparkRTC = signal(null);
@@ -184,6 +186,21 @@ const Meeting = () => {
                     const handler = new Promise((resolve, reject) => {
                         raiseHandCallback = resolve;
                     });
+
+                    attendeesBadge.value = true;
+
+                    makeDialog(
+                        'info',
+                        {
+                            message: 'Someone has raised their hand!',
+                            icon: 'Clock',
+                        },
+                        null,
+                        () => {
+                            isAttendeesOpen.value = true;
+                            attendeesBadge.value = false;
+                        }
+                    );
                     onUserRaisedHand(user.userId, true, raiseHandCallback);
 
                     return handler;
@@ -219,24 +236,27 @@ const Meeting = () => {
                     updateUser({ isStreamming });
                     if (!isStreamming) {
                         sparkRTC.value.onRaiseHandRejected();
-                        makeDialog(
-                            'error',
-                            'Your raise hand request rejected!'
-                        );
+                        makeDialog('info', {
+                            message: 'Your raise hand request rejected!',
+                            icon: 'Close',
+                        });
                     } else {
-                        makeDialog(
-                            'success',
-                            'Your raise hand request Approved!'
-                        );
+                        makeDialog('info', {
+                            message: 'You’ve been added to the stage',
+                            icon: 'Check',
+                        });
                     }
                 },
                 disableBroadcasting: () => {
                     updateUser({ isStreamming: false });
-                    makeDialog('info', 'You just removed from broadcasting');
+                    makeDialog('info', {
+                        message: 'You just removed from stage',
+                        icon: 'Close',
+                    });
                     sparkRTC.value.onRaiseHandRejected();
                 },
                 maxLimitReached: (message) => {
-                    makeDialog('error', message);
+                    makeDialog('info', { message, icon: 'Close' });
                 },
                 onUserListUpdate: (users) => {
                     log(`[On Users List Update], ${users}`);
@@ -248,11 +268,6 @@ const Meeting = () => {
                         id: userId,
                     } of users) {
                         const { name, email } = JSON.parse(userInfo);
-                        console.log(
-                            'UPDATE USER',
-                            userId,
-                            getUserRaiseHandStatus(userId)
-                        );
                         usersTmp[userId] = {
                             ...(attendees.value[userId] || {}),
                             name,
