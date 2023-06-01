@@ -51,11 +51,8 @@ export const Controllers = () => {
         });
     };
     const onRaiseHand = async () => {
-        await sparkRTC.value
-            .raiseHand()
-            .then(() =>
-                makeDialog('info', 'Raise hand request has been sent.')
-            );
+        sparkRTC.value.raiseHand();
+        makeDialog('info', 'Raise hand request has been sent.');
     };
     const handleReload = () => {
         sparkRTC.value.startProcedure();

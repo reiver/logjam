@@ -90,6 +90,27 @@ export const leaveMeeting = () => {
     }
 };
 
+export const onUserRaisedHand = (userId, raisedHand, raiseHandCallback) => {
+    attendees.value = [
+        ...attendees.value.map((attendee) => {
+            if (userId == attendee.userId)
+                return {
+                    ...attendee,
+                    raisedHand,
+                    raiseHandCallback,
+                };
+            return attendee;
+        }),
+    ];
+};
+
+export const getUserRaiseHandStatus = (userId) => {
+    return (
+        attendees.value.find((attendee) => attendee.userId == userId)
+            ?.raisedHand || false
+    );
+};
+
 const Meeting = () => {
     useEffect(() => {
         const queryParams = new URLSearchParams(window.location.search);
@@ -106,6 +127,9 @@ const Meeting = () => {
         });
         const setupSparkRTC = async () => {
             sparkRTC.value = createSparkRTC(role, {
+                onUserInitialized: (userId) => {
+                    currentUser.userId = userId;
+                },
                 localStreamChangeCallback: (stream) => {
                     log('[Local Stream Callback]', stream);
                     streamers.value = {
@@ -158,16 +182,29 @@ const Meeting = () => {
                         }
                     }
                 },
-                onRaiseHand: (...props) => {
-                    log(`[On Raise Hand Request] ${props}`);
-                    return new Promise((resolve, reject) => {
+                onRaiseHand: (message, user, ...rest) => {
+                    log(`[On Raise Hand Request] ${message}`, user, rest);
+
+                    let raiseHandCallback = () => {};
+                    const handler = new Promise((resolve, reject) => {
+                        raiseHandCallback = resolve;
                         makeDialog(
                             'confirm',
-                            props[0],
-                            resolve.bind(null, true),
-                            resolve.bind(null, false)
+                            message,
+                            () => {
+                                resolve(true);
+                                onUserRaisedHand(user.userId, false);
+                            },
+                            () => {
+                                resolve(false);
+                                onUserRaisedHand(user.userId, false);
+                            }
                         );
                     });
+
+                    onUserRaisedHand(user.userId, true, raiseHandCallback);
+
+                    return handler;
                 },
                 onStart: async () => {
                     if (meetingStatus.value) {
@@ -222,14 +259,15 @@ const Meeting = () => {
                 onUserListUpdate: (users) => {
                     log(`[On Users List Update], ${users}`);
                     attendees.value = users.map(
-                        ({ name: userInfo, role, video }) => {
+                        ({ name: userInfo, role, video, id: userId }) => {
                             const { name, email } = JSON.parse(userInfo);
                             return {
                                 name,
                                 isHost: role === 'broadcaster',
                                 avatar: '',
-                                raisedHand: false,
+                                raisedHand: getUserRaiseHandStatus(userId),
                                 hasCamera: !!video,
+                                userId,
                             };
                         }
                     );
