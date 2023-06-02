@@ -843,12 +843,35 @@ export class SparkRTC {
         });
         const allStreams = peerConnection.getRemoteStreams();
         this.updateTheStatus(`All Remote streams of PC`, { allStreams });
+        this.updateTheStatus(
+            `All Remotestreams from List before`,
+            this.remoteStreams
+        );
+
         for (let i = 0; i < allStreams.length; i++) {
+            var id = allStreams[i].id;
             var index = this.remoteStreams.indexOf(allStreams[i]); // Find the index of the element
-            if (index > -1) {
-                this.remoteStreams.splice(index, 1); // Remove the element using splice
-            }
+
+            //remove all remote streams of peer connection using stream id, to avoid empty video container
+            this.remoteStreams.forEach((stream) => {
+                if (stream.id === id) {
+                    this.updateTheStatus(`ids matched`);
+
+                    let newArray = this.remoteStreams.filter(
+                        (str) => str !== stream
+                    );
+
+                    this.remoteStreams = newArray;
+                }
+            });
+
+            this.updateTheStatus(
+                `remoteStreamsLength: `,
+                this.remoteStreams.length
+            );
         }
+        this.updateTheStatus(`All Remotestreams from List`, this.remoteStreams);
+
         if (
             this.parentStreamId &&
             allStreams.map((s) => s.id).includes(this.parentStreamId)
@@ -1138,9 +1161,6 @@ export class SparkRTC {
                 var index = this.remoteStreams.indexOf(theEventStream);
                 if (index > -1) {
                     this.remoteStreams.splice(index, 1); // Remove the element using splice
-                    this.updateTheStatus(
-                        `removed inactive stream from remoteStreamslist`
-                    );
                 }
 
                 //print remote stream array
@@ -1447,6 +1467,7 @@ export class SparkRTC {
         if (this.remoteStreams.length > 0) {
             this.updateTheStatus(`publishing stream/s to ${audienceName}`);
             this.remoteStreams.forEach((astream) => {
+                this.updateTheStatus(`streamToPublish:`, astream);
                 astream.getTracks().forEach((track) => {
                     try {
                         this.myPeerConnectionArray[audienceName].addTrack(
