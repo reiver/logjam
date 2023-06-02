@@ -1799,12 +1799,10 @@ export class SparkRTC {
 
         idList.forEach((id) => delete sparkRTC.value.myPeerConnectionArray[id]);
 
-        if (this.role === 'broadcast') {
-            //close websocket
-            if (this.socket) {
-                this.socket.close();
-                this.socket = null;
-            }
+        //close websocket
+        if (this.socket) {
+            this.socket.close();
+            this.socket = null;
         }
     };
 
