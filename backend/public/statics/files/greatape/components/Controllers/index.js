@@ -4,6 +4,7 @@ import {
     currentUser,
     onStartShareScreen,
     onStopShareScreen,
+    raiseHandMaxLimitReached,
     sparkRTC,
     updateUser,
 } from '../../pages/meeting.js';
@@ -101,7 +102,9 @@ export const Controllers = () => {
                 <${Icon} icon="Share${sharingScreenStream ? 'Off' : ''}" />
             <//>
         <//>`}
-        ${((!isStreamming && ableToRaiseHand) ||
+        ${((!raiseHandMaxLimitReached.value &&
+            !isStreamming &&
+            ableToRaiseHand) ||
             (isStreamming && !isHost && ableToRaiseHand)) &&
         html`<${Tooltip} label=${isStreamming ? 'Lower Hand' : 'Raise Hand'}>
             <${IconButton}

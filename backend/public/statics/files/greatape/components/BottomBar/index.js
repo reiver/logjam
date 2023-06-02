@@ -2,8 +2,10 @@ import {
     Container,
     Controllers,
     Icon,
+    Tooltip,
     attendeesBadge,
     attendeesCount,
+    isAttendeesOpen,
     toggleAttendees,
 } from 'components';
 import { html } from 'htm';
@@ -35,23 +37,31 @@ export const BottomBar = () => {
             <div class="col-span-3 text-right">
                 <div class="h-full flex items-center justify-end">
                     ${attendeesCount > 0
-                        ? html`<div
-                              onClick="${toggleAttendees}"
-                              class="transition-all select-none cursor-pointer flex items-center gap-2 rounded-md hover:bg-gray-0 hover:bg-opacity-10 hover:dark:bg-gray-2 hover:dark:bg-opacity-20 py-1 px-3"
+                        ? html` <${Tooltip}
+                              label=${isAttendeesOpen.value
+                                  ? 'Hide Attendees'
+                                  : 'Show Attendees'}
                           >
-                              <div class="relative">
-                                  <${Icon} icon="Avatar" />
-
-                                  ${attendeesBadge.value &&
-                                  html`<span
-                                      class="absolute top-0 -right-1 w-2 h-2 rounded-full bg-red-distructive"
-                                  ></span>`}
-                              </div>
-                              <span
-                                  >${attendeesCount}${' '}
-                                  attendee${attendeesCount > 1 ? 's' : ''}</span
+                              <div
+                                  onClick="${toggleAttendees}"
+                                  class="transition-all select-none cursor-pointer flex items-center gap-2 rounded-md hover:bg-gray-0 hover:bg-opacity-10 hover:dark:bg-gray-2 hover:dark:bg-opacity-20 py-1 px-3"
                               >
-                          </div>`
+                                  <div class="relative">
+                                      <${Icon} icon="Avatar" />
+
+                                      ${attendeesBadge.value &&
+                                      html`<span
+                                          class="absolute top-0 -right-1 w-2 h-2 rounded-full bg-red-distructive"
+                                      ></span>`}
+                                  </div>
+                                  <span
+                                      >${attendeesCount}${' '}
+                                      attendee${attendeesCount > 1
+                                          ? 's'
+                                          : ''}</span
+                                  >
+                              </div>
+                          <//>`
                         : null}
                 </div>
             </div>

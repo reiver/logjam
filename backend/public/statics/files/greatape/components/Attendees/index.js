@@ -2,7 +2,11 @@ import { computed, signal } from '@preact/signals';
 import clsx from 'clsx';
 import { Icon, makeDialog } from 'components';
 import { html } from 'htm';
-import { currentUser, onUserRaisedHand } from '../../pages/meeting.js';
+import {
+    currentUser,
+    onUserRaisedHand,
+    raiseHandMaxLimitReached,
+} from '../../pages/meeting.js';
 
 export const attendees = signal(
     {}
@@ -53,6 +57,9 @@ export const Participant = ({ participant }) => {
             }
         );
     };
+
+    const raisedHand =
+        participant.raisedHand && !raiseHandMaxLimitReached.value;
     return html` <div
         class=${clsx(
             'flex w-full justify-between items-center rounded-md px-2 py-1',
@@ -84,15 +91,15 @@ export const Participant = ({ participant }) => {
                 >`}
             </div>
         </div>
-        ${(participant.raisedHand || participant.hasCamera) &&
+        ${(raisedHand || participant.hasCamera) &&
         html`
             <div>
                 <${Icon}
-                    icon=${participant.raisedHand ? 'Hand' : 'Camera'}
+                    icon=${raisedHand ? 'Hand' : 'Camera'}
                     width="25"
                     height="25px"
                     class="dark:text-gray-0 text-gray-1"
-                    onClick=${participant.raisedHand ? handleRaiseHand : null}
+                    onClick=${raisedHand ? handleRaiseHand : null}
                 />
             </div>
         `}
@@ -100,25 +107,9 @@ export const Participant = ({ participant }) => {
 };
 
 export const Attendees = () => {
-    console.log(
-        Object.values(attendees.value).sort((a, b) => {
-            let aScore = 0;
-            let bScore = 0;
-
-            if (a.isHost) aScore += 10;
-            if (a.hasCamera) aScore += 5;
-            if (a.raisedHand) aScore += 1;
-
-            if (b.isHost) bScore += 10;
-            if (b.hasCamera) bScore += 5;
-            if (b.raisedHand) bScore += 1;
-            console.log(bScore, aScore);
-            return bScore - aScore;
-        })
-    );
     return html` <div
         class="${clsx(
-            'h-full min-w-[350px] border rounded-lg p-2',
+            'h-full min-w-[350px] border rounded-lg p-2 pb-0',
             'bg-white-f border-gray-0 text-secondary-1-a',
             'dark:bg-gray-3 dark:border-0 dark:text-white-f-9',
             'absolute top-0',
@@ -131,7 +122,7 @@ export const Attendees = () => {
         )}"
         onClick=${() => (attendeesBadge.value = false)}
     >
-        <div class="flex flex-col py-2  gap-2">
+        <div class="flex flex-col pt-2 gap-2 max-h-full">
             <div class="flex justify-center items-center w-full gap-2">
                 <${Icon} icon="Avatar" />
                 <span
@@ -139,7 +130,7 @@ export const Attendees = () => {
                     ${attendeesCount > 1 ? 'people' : 'person'})</span
                 >
             </div>
-            <div class="flex flex-col gap-2 w-full mt-6">
+            <div class="flex flex-col gap-2 w-full mt-4 pt-2 overflow-auto">
                 ${Object.values(attendees.value)
                     .sort((a, b) => {
                         let aScore = 0;

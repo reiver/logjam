@@ -1,4 +1,4 @@
-import { signal } from '@preact/signals';
+import { computed, signal } from '@preact/signals';
 import {
     BottomBar,
     Button,
@@ -17,6 +17,13 @@ import { createSparkRTC, getWsUrl } from '../lib/common.js';
 export const sparkRTC = signal(null);
 export const meetingStatus = signal(true);
 export const broadcastIsInTheMeeting = signal(true);
+export const raisedHandsCount = signal(0);
+export const raiseHandMaxLimitReached = computed(() => {
+    return (
+        sparkRTC.value &&
+        raisedHandsCount.value === sparkRTC.value.maxRaisedHands
+    );
+});
 export const currentUser = signal({
     isHost: false,
     isMicrophoneOn: true,
@@ -281,8 +288,17 @@ const Meeting = () => {
                             raisedHand: getUserRaiseHandStatus(userId),
                             hasCamera: !!video,
                             userId,
+                            video,
                         };
                     }
+                    raisedHandsCount.value = Object.values(usersTmp).reduce(
+                        (prev, user) => {
+                            if (!user.isHost && user.video) return prev + 1;
+                            return prev;
+                        },
+                        0
+                    );
+
                     attendees.value = usersTmp;
                 },
                 constraintResults: (constraints) => {

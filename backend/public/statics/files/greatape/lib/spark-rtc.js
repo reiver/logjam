@@ -5,6 +5,7 @@
  */
 export class SparkRTC {
     started = false;
+    maxRaisedHands = 2;
     myPeerConnectionConfig = {
         iceServers,
     };
@@ -222,9 +223,6 @@ export class SparkRTC {
                     this.startedRaiseHand = false;
                     this.broadcastingApproved = false;
 
-                    //zaid
-                    //todo: pop a ui component up about why user can't raise hand
-
                     if (this.maxLimitReached) {
                         this.maxLimitReached(
                             'Max limit of 2 Broadcasting Audiences is Reached'
@@ -251,7 +249,7 @@ export class SparkRTC {
                 if (this.role === 'broadcast') {
                     var limitReached = false;
 
-                    if (this.raiseHands.length >= 2) {
+                    if (this.raiseHands.length >= this.maxRaisedHands) {
                         limitReached = true;
                     }
                     this.updateTheStatus(`My ID: ${this.myUsername}`);
