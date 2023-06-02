@@ -115,7 +115,10 @@ const Meeting = () => {
             isStreamming: role === 'broadcast',
             isHost: role === 'broadcast',
         });
+
         const setupSparkRTC = async () => {
+            log(`Setup SparkRTC`);
+
             sparkRTC.value = createSparkRTC(role, {
                 localStreamChangeCallback: (stream) => {
                     log('[Local Stream Callback]', stream);
@@ -185,7 +188,7 @@ const Meeting = () => {
                 onStart: async (closeSocket = true) => {
                     if (meetingStatus.value) {
                         if (role === 'audience') {
-                            sparkRTC.value.restart(closeSocket);
+                            await sparkRTC.value.restart(closeSocket);
                         }
 
                         //if socket is closed, repoen again
@@ -198,6 +201,8 @@ const Meeting = () => {
                         ) {
                             await setupSignalingSocket(host, name, room);
                         }
+                        
+                        //start sparkRTC
                         await start();
                     }
                 },
@@ -254,7 +259,6 @@ const Meeting = () => {
                     log(tag, data);
                 },
                 treeCallback: (tree) => {},
-                signalingDisconnectedCallback: () => {},
                 connectionStatus: (status) => {
                     log(`Connection Status: `, status);
                     if (role === 'audience') {
@@ -265,11 +269,13 @@ const Meeting = () => {
                 },
             });
 
-            log(`Setup SparkRTC`);
-
-            await setupSignalingSocket(host, name, room);
-            await start();
+            if (sparkRTC.value) {
+                //Init socket and start sparkRTC
+                await setupSignalingSocket(host, name, room);
+                await start();
+            }
         };
+
         if (meetingStatus.value) {
             setupSparkRTC();
         }

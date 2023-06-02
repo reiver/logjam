@@ -34,6 +34,7 @@ export class SparkRTC {
     };
     parentDC = true;
     broadcasterDC = true;
+    leftMeeting = false;
 
     userListCallback = null;
     remoteStreamsQueue = [];
@@ -534,21 +535,24 @@ export class SparkRTC {
                 resolve(socket);
             };
             socket.onclose = async () => {
+                this.updateTheStatus(
+                    `socket is closed in setupSignalingSocket`
+                );
                 this.remoteStreamNotified = false;
                 this.myPeerConnectionArray = {};
-                if (this.signalingDisconnectedCallback)
-                    this.signalingDisconnectedCallback();
-                this.updateTheStatus(`[setupSignalingSocket] socket onclose`);
                 this.started = false;
                 if (this.startProcedure) this.startProcedure(false);
             };
             socket.onerror = (error) => {
-                this.updateTheStatus(`WebSocket error: ${error}`);
+                this.updateTheStatus(
+                    `WebSocket error in setupSignalingSocket`,
+                    error
+                );
                 reject(error);
-                this.updateTheStatus(`[setupSignalingSocket] socket onerror`);
+                window.location.reload(); //reload before, alert because alert blocks the reload
                 alert('Can not connect to server');
-                window.location.reload();
             };
+
             this.socket = socket;
         });
     };
@@ -1067,6 +1071,22 @@ export class SparkRTC {
                 return;
             }
             stream.oninactive = (event) => {
+                //check meeting status and close socket
+                if (this.leftMeeting) {
+                    this.leftMeeting = false;
+                    //close websocket
+                    if (this.socket) {
+                        this.socket.onclose = () => {
+                            this.updateTheStatus(
+                                `socket is closed after leaveMeeting`
+                            );
+                        }; //empty on close callback
+                        this.socket.close();
+                        this.socket = null;
+                        return;
+                    }
+                }
+
                 this.updateTheStatus(`inactiveStream `, stream);
                 this.updateTheStatus(`currentTarget `, event.currentTarget);
 
@@ -1082,25 +1102,6 @@ export class SparkRTC {
                 this.updateTheStatus(`targetTracks`, event.target.getTracks());
 
                 this.remoteStreamNotified = false;
-
-                //func to remove RTP Sender
-                // const removeStream = (pc) => {
-                //   pc.getSenders().forEach((sender) => {
-                //     const track = sender.track
-                //     if (track) {
-                //       if (track.kind === 'video' && track.muted === true) {
-                //         pc.removeTrack(sender)
-                //       }
-                //     }
-                //   })
-                // }
-
-                // //Loop through peer connection array and find audinece PC
-                // for (const userid in this.myPeerConnectionArray) {
-                //   if (this.myPeerConnectionArray[userid].isAdience) {
-                //     removeStream(this.myPeerConnectionArray[userid])
-                //   }
-                // }
 
                 const theEventStream = event.currentTarget;
                 const trackIds = theEventStream.getTracks().map((t) => t.id);
@@ -1137,6 +1138,9 @@ export class SparkRTC {
                 var index = this.remoteStreams.indexOf(theEventStream);
                 if (index > -1) {
                     this.remoteStreams.splice(index, 1); // Remove the element using splice
+                    this.updateTheStatus(
+                        `removed inactive stream from remoteStreamslist`
+                    );
                 }
 
                 //print remote stream array
@@ -1743,8 +1747,13 @@ export class SparkRTC {
 
         //close the web socket
         if (closeSocket && this.socket) {
+            this.socket.onclose = () => {
+                this.updateTheStatus(`socket is closed in restart`);
+            }; //empty on close callback
             this.socket.close();
             this.socket = null;
+        } else {
+            this.updateTheStatus(`socket closing is not required on refresh`);
         }
     };
 
@@ -1799,11 +1808,9 @@ export class SparkRTC {
 
         idList.forEach((id) => delete sparkRTC.value.myPeerConnectionArray[id]);
 
-        //close websocket
-        if (this.socket) {
-            this.socket.close();
-            this.socket = null;
-        }
+        this.updateTheStatus(`left meeting`);
+
+        this.leftMeeting = true;
     };
 
     //Reset all the variables
@@ -1856,8 +1863,6 @@ export class SparkRTC {
         this.localStreamChangeCallback = options.localStreamChangeCallback;
         this.remoteStreamCallback = options.remoteStreamCallback;
         this.remoteStreamDCCallback = options.remoteStreamDCCallback;
-        this.signalingDisconnectedCallback =
-            options.signalingDisconnectedCallback;
         this.treeCallback = options.treeCallback;
         this.raiseHandConfirmation = options.raiseHandConfirmation;
         this.altBroadcastApprove = options.altBroadcastApprove;

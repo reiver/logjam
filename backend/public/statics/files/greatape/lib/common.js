@@ -32,7 +32,6 @@ export const createBroadcastSpartRTC = (role, props) => {
         raiseHandConfirmation: props.onRaiseHand,
         userListUpdated: props.onUserListUpdate,
         startProcedure: props.onStart,
-        signalingDisconnectedCallback: props.signalingDisconnectedCallback,
         treeCallback: props.treeCallback,
         constraintResults: props.constraintResults,
         updateStatus: props.updateStatus,
