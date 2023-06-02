@@ -22,6 +22,7 @@ export const currentUser = signal({
     isMicrophoneOn: true,
     isCameraOn: true,
     isMeetingMuted: false,
+    isRaisingHand: false,
     sharingScreenStream: null,
     ableToRaiseHand: true,
     hasMic: true,

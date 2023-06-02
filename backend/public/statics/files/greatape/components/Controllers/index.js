@@ -19,6 +19,7 @@ export const Controllers = () => {
         isCameraOn,
         isMicrophoneOn,
         isMeetingMuted,
+        isRaisingHand,
     } = currentUser.value;
     const toggleMuteMeeting = () => {
         updateUser({
@@ -51,11 +52,22 @@ export const Controllers = () => {
         });
     };
     const onRaiseHand = async () => {
-        sparkRTC.value.raiseHand();
-        makeDialog('info', {
-            message: 'Raise hand request has been sent.',
-            icon: 'Check',
-        });
+        if (isRaisingHand) {
+            updateUser({
+                isRaisingHand: false,
+                isStreamming: false,
+            });
+            sparkRTC.value.lowerHand();
+        } else {
+            updateUser({
+                isRaisingHand: true,
+            });
+            sparkRTC.value.raiseHand();
+            makeDialog('info', {
+                message: 'Raise hand request has been sent.',
+                icon: 'Check',
+            });
+        }
     };
     const handleReload = () => {
         sparkRTC.value.startProcedure();
@@ -91,10 +103,14 @@ export const Controllers = () => {
                 <${Icon} icon="Share${sharingScreenStream ? 'Off' : ''}" />
             <//>
         <//>`}
-        ${!isStreamming &&
-        ableToRaiseHand &&
-        html`<${Tooltip} label="Raise Hand">
-            <${IconButton} onClick=${onRaiseHand}> <${Icon} icon="Hand" /> <//
+        ${((!isStreamming && ableToRaiseHand) ||
+            (isStreamming && !isHost && ableToRaiseHand)) &&
+        html`<${Tooltip} label=${isStreamming ? 'Lower Hand' : 'Raise Hand'}>
+            <${IconButton}
+                onClick=${onRaiseHand}
+                variant=${isStreamming && 'danger'}
+            >
+                <${Icon} icon="Hand" /> <//
         ><//>`}
         ${hasCamera &&
         isStreamming &&
