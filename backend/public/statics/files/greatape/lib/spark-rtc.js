@@ -142,6 +142,27 @@ export class SparkRTC {
                         `setRemoteDescription failed with exception: ${e.message}`
                     );
                 }
+
+                //check ice candidates list
+                if (
+                    this.iceCandidates &&
+                    this.iceCandidates.length > 0 &&
+                    audiencePeerConnection &&
+                    audiencePeerConnection.remoteDescription
+                ) {
+                    try {
+                        while (this.iceCandidates.length) {
+                            await audiencePeerConnection.addIceCandidate(
+                                this.iceCandidates.pop()
+                            );
+                        }
+                    } catch (e) {
+                        this.updateTheStatus(
+                            `iceCandidateError-alt-video-answer`,
+                            e
+                        );
+                    }
+                }
                 break;
             case 'new-ice-candidate':
             case 'alt-new-ice-candidate':
@@ -151,19 +172,26 @@ export class SparkRTC {
                 audiencePeerConnection = this.createOrGetPeerConnection(
                     msg.data
                 );
-                this.iceCandidates.push(new RTCIceCandidate(msg.candidate));
+                if (msg.candidate) {
+                    this.iceCandidates.push(new RTCIceCandidate(msg.candidate));
+                }
                 if (
                     audiencePeerConnection &&
-                    audiencePeerConnection.remoteDescription
+                    audiencePeerConnection.remoteDescription &&
+                    this.iceCandidates &&
+                    this.iceCandidates.length > 0
                 ) {
-                    if (audiencePeerConnection) {
-                        try {
+                    try {
+                        while (this.iceCandidates.length) {
                             await audiencePeerConnection.addIceCandidate(
                                 this.iceCandidates.pop()
                             );
-                        } catch (e) {
-                            this.updateTheStatus(`iceCandidateError`, e);
                         }
+                    } catch (e) {
+                        this.updateTheStatus(
+                            `iceCandidateError-alt-new-ice-candidate`,
+                            e
+                        );
                     }
                 }
                 break;
@@ -964,10 +992,7 @@ export class SparkRTC {
 
         peerConnection.onicecandidate = async (event) => {
             this.updateTheStatus(
-                `Peer Connection ice candidate arrived for ${target}: [${event.candidate}]`
-            );
-            this.updateTheStatus(
-                `[newPeerConnectionInstance] onicecandidate event.candidate='${JSON.stringify(
+                `Peer Connection ice candidate arrived for ${target}: event.candidate='${JSON.stringify(
                     event.candidate
                 )}'`
             );
@@ -987,9 +1012,6 @@ export class SparkRTC {
             this.updateTheStatus(
                 `Peer Connection negotiation needed for ${target} preparing video offer`
             );
-            this.updateTheStatus(
-                `[newPeerConnectionInstance] onnegotiationneeded`
-            );
             try {
                 await peerConnection.setLocalDescription(
                     await peerConnection.createOffer()
@@ -1004,7 +1026,6 @@ export class SparkRTC {
                         })
                     );
             } catch (e) {
-                this.updateTheStatus(e);
                 this.updateTheStatus(`[newPeerConnectionInstance] failed ${e}`);
             }
         };
@@ -1694,6 +1715,7 @@ export class SparkRTC {
      * we don't need to close the socket this time
      */
     restart = (closeSocket) => {
+        this.updateTheStatus(`restarting.. close socket: `, closeSocket);
         //check for local stream and stop tracks
         if (this.localStream) {
             this.localStream.getTracks().forEach(function (track) {
