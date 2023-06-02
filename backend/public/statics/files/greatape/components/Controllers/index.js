@@ -19,7 +19,6 @@ export const Controllers = () => {
         isCameraOn,
         isMicrophoneOn,
         isMeetingMuted,
-        isRaisingHand,
     } = currentUser.value;
     const toggleMuteMeeting = () => {
         updateUser({
@@ -52,9 +51,8 @@ export const Controllers = () => {
         });
     };
     const onRaiseHand = async () => {
-        if (isRaisingHand) {
+        if (isStreamming) {
             updateUser({
-                isRaisingHand: false,
                 isStreamming: false,
             });
             sparkRTC.value.lowerHand();

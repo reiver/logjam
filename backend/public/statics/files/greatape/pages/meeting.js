@@ -22,7 +22,6 @@ export const currentUser = signal({
     isMicrophoneOn: true,
     isCameraOn: true,
     isMeetingMuted: false,
-    isRaisingHand: false,
     sharingScreenStream: null,
     ableToRaiseHand: true,
     hasMic: true,
@@ -176,6 +175,10 @@ const Meeting = () => {
                             stream === 'no-stream'
                         ) {
                             broadcastIsInTheMeeting.value = false;
+                            updateUser({
+                                isStreamming: false,
+                                ableToRaiseHand: true,
+                            });
                             log(`broadcasterDC...`);
                         }
                     }
@@ -261,7 +264,7 @@ const Meeting = () => {
                 },
                 onUserListUpdate: (users) => {
                     log(`[On Users List Update], ${users}`);
-                    const usersTmp = { ...attendees.value };
+                    const usersTmp = {};
                     for (const {
                         name: userInfo,
                         role,
