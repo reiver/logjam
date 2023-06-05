@@ -1785,6 +1785,9 @@ export class SparkRTC {
         //check for local stream and stop tracks
         //stop all the sender tracks
         if (this.localStream) {
+            
+            this.leftMeeting = true;
+
             for (const userId in this.myPeerConnectionArray) {
                 const apeerConnection = this.myPeerConnectionArray[userId];
 
@@ -1813,6 +1816,16 @@ export class SparkRTC {
             }
 
             this.localStream = null;
+        } else {
+            //close websocket
+            if (this.socket) {
+                this.socket.onclose = () => {
+                    this.updateTheStatus(`socket is closed after leaveMeeting`);
+                }; //empty on close callback
+                this.socket.close();
+                this.socket = null;
+                return;
+            }
         }
 
         //close all the peer connections
@@ -1830,8 +1843,6 @@ export class SparkRTC {
         idList.forEach((id) => delete sparkRTC.value.myPeerConnectionArray[id]);
 
         this.updateTheStatus(`left meeting`);
-
-        this.leftMeeting = true;
     };
 
     //Reset all the variables
