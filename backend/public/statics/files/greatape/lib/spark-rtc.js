@@ -735,7 +735,7 @@ export class SparkRTC {
     raiseHand = async () => {
         if (this.startedRaiseHand) return;
         this.startedRaiseHand = true;
-        // send a raise hand request with empty streamId
+        // send a raise hand request with empty streamId, no local stream at that Moment
         if (await this.checkSocketStatus())
             this.socket.send(
                 JSON.stringify({
@@ -744,7 +744,6 @@ export class SparkRTC {
                     streamId: '',
                 })
             );
-        // return this.startBroadcasting('alt-broadcast');
     };
 
     async getLatestUserList() {
