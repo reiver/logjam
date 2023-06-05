@@ -304,23 +304,12 @@ export class SparkRTC {
                                 const data = JSON.parse(msg.name);
                                 const name = data.name;
                                 const email = data.email;
-                                var message;
 
-                                if (email.length === 0) {
-                                    message = `<b>${name}</b> wants to broadcast, do you approve?`;
-                                } else {
-                                    message = `<b>${name} / ${email}</b> wants to broadcast, do you approve?`;
-                                }
-
-                                result = await this.raiseHandConfirmation(
-                                    message,
-                                    {
-                                        name,
-                                        email,
-                                        userId: msg.Data,
-                                    },
-                                    limitReached
-                                );
+                                result = await this.raiseHandConfirmation({
+                                    name,
+                                    email,
+                                    userId: msg.Data,
+                                });
                                 this.updateTheStatus(
                                     `[handleMessage] alt-broadcast result ${result}`
                                 );

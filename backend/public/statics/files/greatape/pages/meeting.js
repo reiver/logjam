@@ -206,8 +206,8 @@ const Meeting = () => {
                         }
                     }
                 },
-                onRaiseHand: (message, user, ...rest) => {
-                    log(`[On Raise Hand Request] ${message}`, user, rest);
+                onRaiseHand: (user) => {
+                    log(`[On Raise Hand Request]`, user);
 
                     let raiseHandCallback = () => {};
                     const handler = new Promise((resolve, reject) => {
