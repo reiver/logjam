@@ -1,11 +1,12 @@
-import { html } from 'htm';
 import { Icon, IconButton, makeDialog, Tooltip } from 'components';
+import { html } from 'htm';
 import {
     currentUser,
-    updateUser,
-    sparkRTC,
     onStartShareScreen,
     onStopShareScreen,
+    raiseHandMaxLimitReached,
+    sparkRTC,
+    updateUser,
 } from '../../pages/meeting.js';
 
 export const Controllers = () => {
@@ -51,11 +52,21 @@ export const Controllers = () => {
         });
     };
     const onRaiseHand = async () => {
-        await sparkRTC.value
-            .raiseHand()
-            .then(() =>
-                makeDialog('info', 'Raise hand request has been sent.')
-            );
+        if (isStreamming) {
+            updateUser({
+                isStreamming: false,
+            });
+            sparkRTC.value.lowerHand();
+        } else {
+            updateUser({
+                isRaisingHand: true,
+            });
+            sparkRTC.value.raiseHand();
+            makeDialog('info', {
+                message: 'Raise hand request has been sent.',
+                icon: 'Check',
+            });
+        }
     };
     const handleReload = () => {
         sparkRTC.value.startProcedure();
@@ -91,10 +102,16 @@ export const Controllers = () => {
                 <${Icon} icon="Share${sharingScreenStream ? 'Off' : ''}" />
             <//>
         <//>`}
-        ${!isStreamming &&
-        ableToRaiseHand &&
-        html`<${Tooltip} label="Raise Hand">
-            <${IconButton} onClick=${onRaiseHand}> <${Icon} icon="Hand" /> <//
+        ${((!raiseHandMaxLimitReached.value &&
+            !isStreamming &&
+            ableToRaiseHand) ||
+            (isStreamming && !isHost && ableToRaiseHand)) &&
+        html`<${Tooltip} label=${isStreamming ? 'Lower Hand' : 'Raise Hand'}>
+            <${IconButton}
+                onClick=${onRaiseHand}
+                variant=${isStreamming && 'danger'}
+            >
+                <${Icon} icon="Hand" /> <//
         ><//>`}
         ${hasCamera &&
         isStreamming &&
