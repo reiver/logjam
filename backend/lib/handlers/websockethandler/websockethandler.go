@@ -276,7 +276,6 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 			return
 		}
 		if (newValue && !socket.CanConnect()) || (!newValue && socket.CanConnect()) {
-			println("new", newValue, socket.CanConnect())
 			Map.Room.ToggleCanConnect(socket.Socket)
 			{
 				err = roommapssrv.RoomMaps.Set(roomName, Map.Room)
