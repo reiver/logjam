@@ -1785,7 +1785,7 @@ export class SparkRTC {
         //check for local stream and stop tracks
         //stop all the sender tracks
         if (this.localStream) {
-            
+
             this.leftMeeting = true;
 
             for (const userId in this.myPeerConnectionArray) {
@@ -1824,7 +1824,6 @@ export class SparkRTC {
                 }; //empty on close callback
                 this.socket.close();
                 this.socket = null;
-                return;
             }
         }
 
