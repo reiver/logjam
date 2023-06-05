@@ -185,7 +185,7 @@ const Meeting = () => {
                         );
                     });
                 },
-                onStart: async (closeSocket = true) => {
+                onStart: async (closeSocket = false) => {
                     if (meetingStatus.value) {
                         if (role === 'audience') {
                             await sparkRTC.value.restart(closeSocket);

@@ -358,7 +358,7 @@ export class SparkRTC {
             case 'broadcasting':
                 if (this.role === 'broadcast') return;
                 this.updateTheStatus(`[handleMessage] ${msg.type}`);
-                this.startProcedure(false);
+                this.startProcedure();
                 break;
             case 'event-reconnect':
             case 'event-broadcaster-disconnected':
@@ -382,7 +382,7 @@ export class SparkRTC {
             case 'event-parent-dc':
                 this.updateTheStatus(`parentDC ${msg.type}`);
                 this.parentDC = true;
-                this.startProcedure(false);
+                this.startProcedure();
                 break;
             case 'metadata-get':
             case 'metadata-set':
@@ -541,7 +541,7 @@ export class SparkRTC {
                 this.remoteStreamNotified = false;
                 this.myPeerConnectionArray = {};
                 this.started = false;
-                if (this.startProcedure) this.startProcedure(false);
+                if (this.startProcedure) this.startProcedure();
             };
             socket.onerror = (error) => {
                 this.updateTheStatus(
@@ -901,7 +901,7 @@ export class SparkRTC {
         ) {
             this.updateTheStatus(`Waiting to restart..`);
             setTimeout(() => {
-                this.startProcedure(false);
+                this.startProcedure();
             }, 1000);
         }
     }
@@ -1774,7 +1774,7 @@ export class SparkRTC {
             this.socket.close();
             this.socket = null;
         } else {
-            this.updateTheStatus(`socket closing is not required on refresh`);
+            this.updateTheStatus(`socket closing is not required`);
         }
     };
 
