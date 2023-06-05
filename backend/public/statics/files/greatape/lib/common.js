@@ -32,10 +32,11 @@ export const createBroadcastSpartRTC = (role, props) => {
         raiseHandConfirmation: props.onRaiseHand,
         userListUpdated: props.onUserListUpdate,
         startProcedure: props.onStart,
+        connectionStatus: props.connectionStatus,
         treeCallback: props.treeCallback,
         constraintResults: props.constraintResults,
         updateStatus: props.updateStatus,
-        connectionStatus: props.connectionStatus,
+        userInitialized: props.onUserInitialized,
     });
 };
 
@@ -50,5 +51,6 @@ export const createAudienceSpartRTC = (role, props) => {
         disableBroadcasting: props.disableBroadcasting,
         updateStatus: props.updateStatus,
         connectionStatus: props.connectionStatus,
+        userInitialized: props.onUserInitialized,
     });
 };

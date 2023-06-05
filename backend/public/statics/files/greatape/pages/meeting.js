@@ -1,20 +1,29 @@
-import { html } from 'htm';
+import { computed, signal } from '@preact/signals';
 import {
-    TopBar,
     BottomBar,
-    MeetingBody,
-    attendees,
-    streamers,
-    makeDialog,
     Button,
+    MeetingBody,
+    TopBar,
+    attendees,
+    attendeesBadge,
+    makeDialog,
+    streamers,
 } from 'components';
-import { createSparkRTC, getWsUrl } from '../lib/common.js';
-import { signal } from '@preact/signals';
+import { html } from 'htm';
 import { useEffect } from 'preact';
+import { isAttendeesOpen } from '../components/Attendees/index.js';
+import { createSparkRTC, getWsUrl } from '../lib/common.js';
 
 export const sparkRTC = signal(null);
 export const meetingStatus = signal(true);
 export const broadcastIsInTheMeeting = signal(true);
+export const raisedHandsCount = signal(0);
+export const raiseHandMaxLimitReached = computed(() => {
+    return (
+        sparkRTC.value &&
+        raisedHandsCount.value === sparkRTC.value.maxRaisedHands
+    );
+});
 export const currentUser = signal({
     isHost: false,
     isMicrophoneOn: true,
@@ -101,6 +110,22 @@ export const leaveMeeting = () => {
     }
 };
 
+export const onUserRaisedHand = (userId, raisedHand, acceptRaiseHand) => {
+    attendees.value = {
+        ...attendees.value,
+        [userId]: {
+            ...attendees.value[userId],
+            raisedHand,
+            acceptRaiseHand,
+        },
+    };
+    console.log('LOWER HAND', userId, raisedHand);
+};
+
+export const getUserRaiseHandStatus = (userId) => {
+    return attendees.value[userId]?.raisedHand || false;
+};
+
 const Meeting = () => {
     useEffect(() => {
         const queryParams = new URLSearchParams(window.location.search);
@@ -120,6 +145,9 @@ const Meeting = () => {
             log(`Setup SparkRTC`);
 
             sparkRTC.value = createSparkRTC(role, {
+                onUserInitialized: (userId) => {
+                    currentUser.userId = userId;
+                },
                 localStreamChangeCallback: (stream) => {
                     log('[Local Stream Callback]', stream);
                     streamers.value = {
@@ -170,20 +198,39 @@ const Meeting = () => {
                             stream === 'no-stream'
                         ) {
                             broadcastIsInTheMeeting.value = false;
+                            updateUser({
+                                isStreamming: false,
+                                ableToRaiseHand: true,
+                            });
                             log(`broadcasterDC...`);
                         }
                     }
                 },
-                onRaiseHand: (...props) => {
-                    log(`[On Raise Hand Request] ${props}`);
-                    return new Promise((resolve, reject) => {
-                        makeDialog(
-                            'confirm',
-                            props[0],
-                            resolve.bind(null, true),
-                            resolve.bind(null, false)
-                        );
+                onRaiseHand: (message, user, ...rest) => {
+                    log(`[On Raise Hand Request] ${message}`, user, rest);
+
+                    let raiseHandCallback = () => {};
+                    const handler = new Promise((resolve, reject) => {
+                        raiseHandCallback = resolve;
                     });
+
+                    attendeesBadge.value = true;
+
+                    makeDialog(
+                        'info',
+                        {
+                            message: 'Someone has raised their hand!',
+                            icon: 'Clock',
+                        },
+                        null,
+                        () => {
+                            isAttendeesOpen.value = true;
+                            attendeesBadge.value = false;
+                        }
+                    );
+                    onUserRaisedHand(user.userId, true, raiseHandCallback);
+
+                    return handler;
                 },
                 onStart: async (closeSocket = false) => {
                     if (meetingStatus.value) {
@@ -210,39 +257,59 @@ const Meeting = () => {
                     updateUser({ isStreamming });
                     if (!isStreamming) {
                         sparkRTC.value.onRaiseHandRejected();
-                        makeDialog(
-                            'error',
-                            'Your raise hand request rejected!'
-                        );
+                        makeDialog('info', {
+                            message: 'Your raise hand request rejected!',
+                            icon: 'Close',
+                        });
                     } else {
-                        makeDialog(
-                            'success',
-                            'Your raise hand request Approved!'
-                        );
+                        makeDialog('info', {
+                            message: 'You’ve been added to the stage',
+                            icon: 'Check',
+                        });
                     }
                 },
                 disableBroadcasting: () => {
                     updateUser({ isStreamming: false });
-                    makeDialog('info', 'You just removed from broadcasting');
+                    makeDialog('info', {
+                        message: 'You just removed from stage',
+                        icon: 'Close',
+                    });
                     sparkRTC.value.onRaiseHandRejected();
                 },
                 maxLimitReached: (message) => {
-                    makeDialog('error', message);
+                    makeDialog('info', { message, icon: 'Close' });
                 },
                 onUserListUpdate: (users) => {
                     log(`[On Users List Update], ${users}`);
-                    attendees.value = users.map(
-                        ({ name: userInfo, role, video }) => {
-                            const { name, email } = JSON.parse(userInfo);
-                            return {
-                                name,
-                                isHost: role === 'broadcaster',
-                                avatar: '',
-                                raisedHand: false,
-                                hasCamera: !!video,
-                            };
-                        }
+                    const usersTmp = {};
+                    for (const {
+                        name: userInfo,
+                        role,
+                        video,
+                        id: userId,
+                    } of users) {
+                        const { name, email } = JSON.parse(userInfo);
+                        usersTmp[userId] = {
+                            ...(attendees.value[userId] || {}),
+                            name,
+                            email,
+                            isHost: role === 'broadcaster',
+                            avatar: '',
+                            raisedHand: getUserRaiseHandStatus(userId),
+                            hasCamera: !!video,
+                            userId,
+                            video,
+                        };
+                    }
+                    raisedHandsCount.value = Object.values(usersTmp).reduce(
+                        (prev, user) => {
+                            if (!user.isHost && user.video) return prev + 1;
+                            return prev;
+                        },
+                        0
                     );
+
+                    attendees.value = usersTmp;
                 },
                 constraintResults: (constraints) => {
                     if (!constraints.audio) {

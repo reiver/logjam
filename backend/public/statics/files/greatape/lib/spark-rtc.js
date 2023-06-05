@@ -5,6 +5,7 @@
  */
 export class SparkRTC {
     started = false;
+    maxRaisedHands = 2;
     myPeerConnectionConfig = {
         iceServers,
     };
@@ -235,11 +236,14 @@ export class SparkRTC {
                 }
 
                 this.myUsername = msg.data;
+
+                if (this.userInitialized) this.userInitialized(msg.data);
+
                 break;
             case 'add_audience':
             case 'add_broadcast_audience':
-                this.updateTheStatus(`[handleMessage] add audience`, msg);
-                this.updateTheStatus(`New Audience arrived`, msg.data);
+                this.updateTheStatus(`[handleMessage] add audience ${msg}`);
+                this.updateTheStatus(`New Audience arrived ${msg.data}`);
                 this.connectToAudience(msg.data);
                 break;
             case 'alt-broadcast-approve':
@@ -256,9 +260,6 @@ export class SparkRTC {
                     this.startedRaiseHand = false;
                     this.broadcastingApproved = false;
 
-                    //zaid
-                    //todo: pop a ui component up about why user can't raise hand
-
                     if (this.maxLimitReached) {
                         this.maxLimitReached(
                             'Max limit of 2 Broadcasting Audiences is Reached'
@@ -268,6 +269,7 @@ export class SparkRTC {
                     this.broadcastingApproved = true;
 
                     if (msg.result == true) {
+                        await this.startBroadcasting('alt-broadcast');
                         this.lastBroadcasterId = msg.data;
                         if (this.localStream) {
                             this.sendStreamTo(msg.data, this.localStream);
@@ -284,10 +286,9 @@ export class SparkRTC {
                 if (this.role === 'broadcast') {
                     var limitReached = false;
 
-                    if (this.raiseHands.length >= 2) {
+                    if (this.raiseHands.length >= this.maxRaisedHands) {
                         limitReached = true;
                     }
-
                     this.updateTheStatus(`My ID: ${this.myUsername}`);
 
                     if (this.raiseHands.indexOf(msg.data) === -1) {
@@ -307,6 +308,11 @@ export class SparkRTC {
 
                                 result = await this.raiseHandConfirmation(
                                     message,
+                                    {
+                                        name,
+                                        email,
+                                        userId: msg.Data,
+                                    },
                                     limitReached
                                 );
                                 this.updateTheStatus(
@@ -724,10 +730,19 @@ export class SparkRTC {
      *
      * @returns initiate Broadcasting
      */
-    raiseHand = () => {
+    raiseHand = async () => {
         if (this.startedRaiseHand) return;
         this.startedRaiseHand = true;
-        return this.startBroadcasting('alt-broadcast');
+        // send a raise hand request with empty streamId
+        if (await this.checkSocketStatus())
+            this.socket.send(
+                JSON.stringify({
+                    type: 'role',
+                    data: 'alt-broadcast',
+                    streamId: '',
+                })
+            );
+        // return this.startBroadcasting('alt-broadcast');
     };
 
     async getLatestUserList() {
@@ -1905,5 +1920,6 @@ export class SparkRTC {
         this.maxLimitReached = options.maxLimitReached;
         this.disableBroadcasting = options.disableBroadcasting;
         this.connectionStatus = options.connectionStatus;
+        this.userInitialized = options.userInitialized;
     }
 }
