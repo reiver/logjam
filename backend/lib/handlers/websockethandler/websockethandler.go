@@ -258,7 +258,25 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 		receiver.emitUserEvent(roomName)
 		return
 	case "stream":
-		if !socket.CanConnect() {
+		var msgData map[string]string
+		err := json.Unmarshal(messageJSON, &msgData)
+		if err != nil {
+			println(err.Error())
+			return
+		}
+		newValue := true
+		if data, exists := msgData["data"]; exists {
+			if data == "true" {
+				newValue = true
+			} else {
+				newValue = false
+			}
+		}
+		if (newValue && socket.CanConnect()) || (!newValue && !socket.CanConnect()) {
+			return
+		}
+		if (newValue && !socket.CanConnect()) || (!newValue && socket.CanConnect()) {
+			println("new", newValue, socket.CanConnect())
 			Map.Room.ToggleCanConnect(socket.Socket)
 			{
 				err = roommapssrv.RoomMaps.Set(roomName, Map.Room)
@@ -399,7 +417,7 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 	case "get-latest-user-list":
 		receiver.emitUserEvent(roomName)
 		return
-		
+
 	default:
 		ID, err := strconv.ParseUint(theMessage.Target, 10, 64)
 		if err != nil {
