@@ -12,7 +12,7 @@ import {
 import { html } from 'htm';
 import { useEffect } from 'preact';
 import { isAttendeesOpen } from '../components/Attendees/index.js';
-import { createSparkRTC, getWsUrl } from '../lib/common.js';
+import { createSparkRTC, getWsUrl, Roles } from '../lib/common.js';
 
 export const sparkRTC = signal(null);
 export const meetingStatus = signal(true);
@@ -137,8 +137,8 @@ const Meeting = () => {
         updateUser({
             name,
             role,
-            isStreamming: role === 'broadcast',
-            isHost: role === 'broadcast',
+            isStreamming: role === Roles.BROADCAST,
+            isHost: role === Roles.BROADCAST,
         });
 
         const setupSparkRTC = async () => {
@@ -154,7 +154,7 @@ const Meeting = () => {
                         ...streamers.value,
                         [stream.id]: {
                             name: stream.name,
-                            isHost: role === 'broadcast',
+                            isHost: role === Roles.BROADCAST,
                             avatar: '',
                             raisedHand: false,
                             hasCamera: false,
@@ -173,7 +173,7 @@ const Meeting = () => {
                         [stream.id]: {
                             name: stream.name,
                             userId: stream.userId,
-                            isHost: stream.role === 'broadcast',
+                            isHost: stream.role === Roles.BROADCAST,
                             avatar: '',
                             raisedHand: false,
                             hasCamera: false,
@@ -181,7 +181,7 @@ const Meeting = () => {
                         },
                     };
 
-                    if (!sparkRTC.value.broadcasterDC && role === 'audience') {
+                    if (!sparkRTC.value.broadcasterDC && role === Roles.AUDIENCE) {
                         broadcastIsInTheMeeting.value = true;
                     }
                 },
@@ -192,7 +192,7 @@ const Meeting = () => {
 
                     onStopStream(stream);
 
-                    if (role === 'audience') {
+                    if (role === Roles.AUDIENCE) {
                         if (
                             sparkRTC.value.broadcasterDC ||
                             stream === 'no-stream'
@@ -234,7 +234,7 @@ const Meeting = () => {
                 },
                 onStart: async (closeSocket = false) => {
                     if (meetingStatus.value) {
-                        if (role === 'audience') {
+                        if (role === Roles.AUDIENCE) {
                             await sparkRTC.value.restart(closeSocket);
                         }
 
@@ -248,7 +248,7 @@ const Meeting = () => {
                         ) {
                             await setupSignalingSocket(host, name, room);
                         }
-                        
+
                         //start sparkRTC
                         await start();
                     }
@@ -293,7 +293,7 @@ const Meeting = () => {
                             ...(attendees.value[userId] || {}),
                             name,
                             email,
-                            isHost: role === 'broadcaster',
+                            isHost: role === Roles.BROADCASTER,
                             avatar: '',
                             raisedHand: getUserRaiseHandStatus(userId),
                             hasCamera: !!video,
@@ -328,7 +328,7 @@ const Meeting = () => {
                 treeCallback: (tree) => {},
                 connectionStatus: (status) => {
                     log(`Connection Status: `, status);
-                    if (role === 'audience') {
+                    if (role === Roles.AUDIENCE) {
                         if (status === 'failed') {
                             window.location.reload();
                         }
