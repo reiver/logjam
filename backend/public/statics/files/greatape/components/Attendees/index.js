@@ -33,7 +33,7 @@ export const toggleAttendees = () => {
 
 export const attendeesWidth = computed(() => {
     if (!isAttendeesOpen.value) return 0;
-    return 350;
+    return 350 + 40;
 });
 
 export const Participant = ({ participant }) => {

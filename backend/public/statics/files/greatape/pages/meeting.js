@@ -95,7 +95,7 @@ export const leaveMeeting = () => {
     if (sparkRTC.value) {
         sparkRTC.value.leaveMeeting();
         meetingStatus.value = false;
-        streamers.value = [];
+        streamers.value = {};
     }
 };
 
