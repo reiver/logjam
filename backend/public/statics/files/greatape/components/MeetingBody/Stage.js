@@ -11,7 +11,7 @@ import {
     sparkRTC,
 } from '../../pages/meeting.js';
 
-export const streamers = signal([]);
+export const streamers = signal({});
 export const streamersLength = computed(
     () => Object.keys(streamers.value).length
 );
@@ -19,7 +19,7 @@ export const streamersLength = computed(
 const topBarBottomBarHeight = 58 + 108;
 const windowWidth = signal(window.innerWidth);
 const windowHeight = signal(window.innerHeight);
-const stageWidth = computed(() => windowWidth.value - attendeesWidth - 130);
+const stageWidth = computed(() => windowWidth.value - attendeesWidth - 140);
 const itemsWidth = computed(() => {
     let width = Math.max(
         stageWidth.value / streamersLength.value,
@@ -54,8 +54,8 @@ export const Stage = () => {
     }, []);
 
     return html`<div
-        class="transition-all relative h-full px-4 lg:px-10"
-        style="width: calc(100% - ${attendeesWidth + 20}px);"
+        class="transition-all relative h-full px-4 lg:px-0"
+        style="width: calc(100% - ${attendeesWidth}px);"
     >
         ${broadcastIsInTheMeeting.value
             ? html`<div
