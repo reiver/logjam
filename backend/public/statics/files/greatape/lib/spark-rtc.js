@@ -1854,17 +1854,13 @@ export class SparkRTC {
 
             this.localStream = null;
         } else {
-            //close websocket for audience if not streaming anything
-            if (this.role === this.Roles.AUDIENCE) {
-                if (this.socket) {
-                    this.socket.onclose = () => {
-                        this.updateTheStatus(
-                            `socket is closed after leaveMeeting`
-                        );
-                    }; //empty on close callback
-                    this.socket.close();
-                    this.socket = null;
-                }
+            //close websocket if not streaming anything
+            if (this.socket) {
+                this.socket.onclose = () => {
+                    this.updateTheStatus(`socket is closed after leaveMeeting`);
+                }; //empty on close callback
+                this.socket.close();
+                this.socket = null;
             }
         }
 
