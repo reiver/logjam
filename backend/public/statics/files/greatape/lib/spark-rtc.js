@@ -11,6 +11,7 @@ export class SparkRTC {
     };
     role = 'broadcast';
     localStream;
+    shareStream;
     socketURL = '';
     remoteStreamNotified = false;
     remoteStreams = [];
@@ -638,25 +639,25 @@ export class SparkRTC {
     startShareScreen = async () => {
         this.updateTheStatus(`[handleMessage] startShareScreen`);
         try {
-            const shareStream = await navigator.mediaDevices.getDisplayMedia({
+            this.shareStream = await navigator.mediaDevices.getDisplayMedia({
                 audio: true,
                 video: true,
             });
 
-            this.remoteStreams.push(shareStream);
+            this.remoteStreams.push(this.shareStream);
 
             for (const userId in this.myPeerConnectionArray) {
                 const apeerConnection = this.myPeerConnectionArray[userId];
-                shareStream.getTracks().forEach((track) => {
-                    apeerConnection.addTrack(track, shareStream);
+                this.shareStream.getTracks().forEach((track) => {
+                    apeerConnection.addTrack(track, this.shareStream);
                 });
             }
 
             //add name to stream
             const data = JSON.parse(this.myName);
-            shareStream.name = data.name;
+            this.shareStream.name = data.name;
 
-            return shareStream;
+            return this.shareStream;
         } catch (e) {
             console.error(e);
             this.updateTheStatus(`[handleMessage] startShareScreen error ${e}`);
@@ -1865,6 +1866,45 @@ export class SparkRTC {
                     this.socket = null;
                 }
             }
+        }
+
+        //stop screen share But only for broadcaster
+        if (this.role === this.Roles.BROADCAST && this.shareStream) {
+            for (const userId in this.myPeerConnectionArray) {
+                const apeerConnection = this.myPeerConnectionArray[userId];
+
+                this.shareStream.getTracks().forEach((track) => {
+                    const sender = apeerConnection
+                        .getSenders()
+                        .find(
+                            (sender) =>
+                                sender.track && sender.track.id === track.id
+                        );
+
+                    if (sender) {
+                        apeerConnection.removeTrack(sender);
+                    }
+                });
+            }
+
+            this.shareStream.getTracks().forEach(function (track) {
+                track.stop();
+            });
+
+            //remove local stream from remotestreamslist
+            this.remoteStreams.forEach((stream) => {
+                if (stream.id === this.shareStream.id) {
+                    this.updateTheStatus(`ids matched`);
+
+                    let newArray = this.remoteStreams.filter(
+                        (str) => str !== stream
+                    );
+
+                    this.remoteStreams = newArray;
+                }
+            });
+
+            this.shareStream = null;
         }
 
         //close all the peer connections
