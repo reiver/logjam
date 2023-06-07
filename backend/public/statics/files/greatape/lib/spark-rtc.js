@@ -369,10 +369,12 @@ export class SparkRTC {
                 this.broadcasterDC = true;
                 const broadcasterId = this.broadcasterUserId();
 
-                this.socket.send(JSON.stringify({
-                    type: 'stream',
-                    data: 'false',
-                }));
+                this.socket.send(
+                    JSON.stringify({
+                        type: 'stream',
+                        data: 'false',
+                    })
+                );
                 for (const u in this.myPeerConnectionArray) {
                     this.myPeerConnectionArray[u].close();
                 }
@@ -381,8 +383,7 @@ export class SparkRTC {
                 try {
                     if (this.remoteStreamDCCallback)
                         this.remoteStreamDCCallback('no-stream');
-                } catch {
-                }
+                } catch {}
                 this.localStream?.getTracks()?.forEach((track) => track.stop());
                 this.localStream = null;
                 this.startedRaiseHand = false;
@@ -438,8 +439,7 @@ export class SparkRTC {
                     if (this.userListUpdated) {
                         try {
                             this.userListUpdated(users);
-                        } catch {
-                        }
+                        } catch {}
                     }
                 }, 1000);
                 break;
@@ -872,7 +872,7 @@ export class SparkRTC {
             }
         });
         const allStreams = peerConnection.getRemoteStreams();
-        this.updateTheStatus(`All Remote streams of PC`, {allStreams});
+        this.updateTheStatus(`All Remote streams of PC`, { allStreams });
         this.updateTheStatus(
             `All Remotestreams from List before`,
             this.remoteStreams
@@ -911,8 +911,7 @@ export class SparkRTC {
                 this.remoteStreams.forEach((strm) => {
                     try {
                         this.remoteStreamDCCallback(strm);
-                    } catch {
-                    }
+                    } catch {}
                 });
             }
             this.parentStreamId = undefined;
@@ -924,8 +923,7 @@ export class SparkRTC {
                 this.remoteStreamDCCallback(
                     peerConnection.getRemoteStreams()[0]
                 );
-        } catch {
-        }
+        } catch {}
 
         if (
             (this.parentDC || this.startedRaiseHand || !isAudience) &&
@@ -1212,8 +1210,7 @@ export class SparkRTC {
                 if (this.remoteStreamDCCallback) {
                     try {
                         this.remoteStreamDCCallback(event.target);
-                    } catch {
-                    }
+                    } catch {}
                 }
                 if (
                     this.role === this.Roles.BROADCAST &&
@@ -1306,8 +1303,7 @@ export class SparkRTC {
                     try {
                         track.streamId = stream.id;
                         apeerConnection.addTrack(track, stream);
-                    } catch {
-                    }
+                    } catch {}
                 });
             }
 
@@ -1421,8 +1417,7 @@ export class SparkRTC {
                                         stream.userId = user.id;
                                         this.remoteStreamCallback(stream);
                                     }
-                                } catch {
-                                }
+                                } catch {}
                             }
                         }
                     }
@@ -1445,8 +1440,7 @@ export class SparkRTC {
                             stream.role = this.Roles.BROADCAST;
                             this.remoteStreamCallback(stream);
                         }
-                    } catch {
-                    }
+                    } catch {}
                 } else {
                     this.updateTheStatus('Name Matched');
                 }
@@ -1520,8 +1514,7 @@ export class SparkRTC {
                             track,
                             astream
                         );
-                    } catch {
-                    }
+                    } catch {}
                 });
             });
         }
@@ -1787,7 +1780,10 @@ export class SparkRTC {
      * we don't need to close the socket this time
      */
     restart = (closeSocket) => {
-        this.updateTheStatus(`restarting.. close socket: `, closeSocket === true);
+        this.updateTheStatus(
+            `restarting.. close socket: `,
+            closeSocket === true
+        );
         //check for local stream and stop tracks
         if (this.localStream) {
             this.localStream.getTracks().forEach(function (track) {
@@ -1943,6 +1939,8 @@ export class SparkRTC {
                 this.socket = null;
             }
         }
+
+        this.resetVariables(false);
 
         this.updateTheStatus(`left meeting`);
     };
