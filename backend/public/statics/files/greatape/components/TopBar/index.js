@@ -1,10 +1,10 @@
+import { Button, Container, Logo } from 'components';
 import { html } from 'htm';
-import { Button, Logo, Container } from 'components';
 import { leaveMeeting } from '../../pages/meeting.js';
 
 export const TopBar = () => {
     const handleLeaveMeeting = leaveMeeting;
-    return html`<div class="w-full bg-white dark:bg-black py-3">
+    return html`<div class="w-full bg-white dark:bg-black py-3" id="top-bar">
         <${Container}>
             <div class="grid grid-cols-12">
                 <div class="col-span-3"><${Logo} /></div>

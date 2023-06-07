@@ -62,6 +62,7 @@ export const onStartShareScreen = (stream) => {
             raisedHand: false,
             hasCamera: false,
             stream,
+            isShareScreen: true,
         },
     };
 };
@@ -136,6 +137,7 @@ const Meeting = () => {
                 },
                 localStreamChangeCallback: (stream) => {
                     log('[Local Stream Callback]', stream);
+                    console.log(stream);
                     streamers.value = {
                         ...streamers.value,
                         [stream.id]: {
@@ -145,13 +147,14 @@ const Meeting = () => {
                             raisedHand: false,
                             hasCamera: false,
                             stream,
+                            isShareScreen: stream.isShareScreen || false,
                         },
                     };
                 },
                 remoteStreamCallback: (stream) => {
                     sparkRTC.value.getLatestUserList();
-
                     log(`[Remote Stream Callback] ${stream}`);
+                    console.log(stream);
                     log(`NameCallback: ${stream.name}`);
 
                     streamers.value = {
@@ -164,6 +167,7 @@ const Meeting = () => {
                             raisedHand: false,
                             hasCamera: false,
                             stream,
+                            isShareScreen: stream.isShareScreen || false,
                         },
                     };
 

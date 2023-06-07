@@ -2,8 +2,10 @@ import { computed, signal } from '@preact/signals';
 import clsx from 'clsx';
 import { Icon, IconButton, attendeesWidth, makeDialog } from 'components';
 import { html } from 'htm';
+import throttle from 'lodash.throttle';
 import { useEffect, useRef, useState } from 'preact';
 import { memo } from 'preact/compat';
+import { getDeviceConfig } from '../../hooks/use-breakpoint.js';
 import { userInteractedWithDom } from '../../index.js';
 import {
     broadcastIsInTheMeeting,
@@ -15,11 +17,19 @@ export const streamers = signal({});
 export const streamersLength = computed(
     () => Object.keys(streamers.value).length
 );
-
-const topBarBottomBarHeight = 58 + 108;
+export const deviceSize = signal(getDeviceConfig(window.innerWidth));
+const topBarBottomBarHeight = () =>
+    document.getElementById('top-bar').offsetHeight +
+    document.getElementById('bottom-bar').offsetHeight +
+    16;
 const windowWidth = signal(window.innerWidth);
 const windowHeight = signal(window.innerHeight);
-const stageWidth = computed(() => windowWidth.value - attendeesWidth - 140);
+const stageWidth = computed(
+    () =>
+        windowWidth.value -
+        attendeesWidth.value -
+        (deviceSize.value !== 'xs' ? 140 : 32)
+);
 const itemsWidth = computed(() => {
     let width = Math.max(
         stageWidth.value / streamersLength.value,
@@ -31,7 +41,7 @@ const itemsWidth = computed(() => {
     const gapHeight = (lines - 1) * 16 + 16;
 
     const availableHeight =
-        windowHeight.value - topBarBottomBarHeight - gapHeight;
+        windowHeight.value - topBarBottomBarHeight() - gapHeight;
 
     if (availableHeight < lines * height) {
         height =
@@ -43,12 +53,33 @@ const itemsWidth = computed(() => {
     return width;
 });
 
+export const getVideoWidth = (index) => {
+    if (deviceSize.value === 'xs') {
+        const lines = Math.ceil(streamersLength.value / 2);
+        const gapHeight = (lines - 1) * 16 + 16;
+        let availableHeight =
+            windowHeight.value - topBarBottomBarHeight() - gapHeight;
+
+        if (index == 0) return `calc(100%); height: ${availableHeight / 2}px`;
+        else {
+            const lines = Math.ceil((streamersLength.value - 1) / 2);
+            availableHeight = availableHeight / 2;
+            let rowHeight = availableHeight / lines;
+            const columns = streamersLength.value - 1 > 1 && lines >= 1 ? 2 : 1;
+
+            return `calc(${100 / columns}% - 8px); height: ${rowHeight}px`;
+        }
+    }
+    return `${itemsWidth.value}px`;
+};
+
 export const Stage = () => {
     useEffect(() => {
-        const onResize = () => {
+        const onResize = throttle(() => {
             windowWidth.value = window.innerWidth;
             windowHeight.value = window.innerHeight;
-        };
+            deviceSize.value = getDeviceConfig(window.innerWidth);
+        }, 200);
         window.addEventListener('resize', onResize);
         return () => window.removeEventListener('resize', onResize);
     }, []);
@@ -61,25 +92,35 @@ export const Stage = () => {
             ? html`<div
                   class="flex gap-4 flex-wrap justify-center items-center h-full"
               >
-                  ${Object.values(streamers.value).map((attendee, i) => {
-                      return html`<div
-                          key=${i}
-                          style="width: ${itemsWidth.value}px"
-                          class=${clsx(
-                              'transition-all aspect-video relative max-w-full min-w-[100%] sm:min-w-[unset] text-white-f-9',
-                              'bg-gray-1 rounded-lg min-w-10',
-                              'dark:bg-gray-3 dark:'
-                          )}
-                      >
-                          <${Video}
-                              stream=${attendee.stream}
-                              userId=${attendee.userId}
-                              isMuted=${currentUser.value.isMeetingMuted}
-                              name=${attendee.name}
-                              isHostStream=${attendee.isHost}
-                          />
-                      </div>`;
-                  })}
+                  ${Object.values(streamers.value)
+                      .sort((a, b) => {
+                          let aScore = 0;
+                          let bScore = 0;
+                          if (a.isHost) aScore += 10;
+                          if (a.isShareScreen) aScore += 20;
+                          if (b.isHost) bScore += 10;
+                          if (b.isShareScreen) bScore += 20;
+                          return bScore - aScore;
+                      })
+                      .map((attendee, i) => {
+                          return html`<div
+                              key=${i}
+                              style="width: ${getVideoWidth(i)}"
+                              class=${clsx(
+                                  'transition-all aspect-video relative max-w-full text-white-f-9',
+                                  'bg-gray-1 rounded-lg min-w-10',
+                                  'dark:bg-gray-3'
+                              )}
+                          >
+                              <${Video}
+                                  stream=${attendee.stream}
+                                  userId=${attendee.userId}
+                                  isMuted=${currentUser.value.isMeetingMuted}
+                                  name=${attendee.name}
+                                  isHostStream=${attendee.isHost}
+                              />
+                          </div>`;
+                      })}
               </div>`
             : html`<span class="inline-block w-full text-center">
                   The broadcaster is not in the meeting, please wait until the

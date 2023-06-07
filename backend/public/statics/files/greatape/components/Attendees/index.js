@@ -1,13 +1,13 @@
 import { computed, signal } from '@preact/signals';
 import clsx from 'clsx';
-import { Icon, makeDialog } from 'components';
+import { BottomSheet, Icon, makeDialog } from 'components';
 import { html } from 'htm';
 import {
     currentUser,
     onUserRaisedHand,
     raiseHandMaxLimitReached,
 } from '../../pages/meeting.js';
-
+import { deviceSize } from '../MeetingBody/Stage.js';
 export const attendees = signal(
     {}
     // {
@@ -32,7 +32,7 @@ export const toggleAttendees = () => {
 };
 
 export const attendeesWidth = computed(() => {
-    if (!isAttendeesOpen.value) return 0;
+    if (!isAttendeesOpen.value || deviceSize.value === 'xs') return 0;
     return 350 + 40;
 });
 
@@ -107,29 +107,68 @@ export const Participant = ({ participant }) => {
 };
 
 export const Attendees = () => {
-    return html` <div
-        class="${clsx(
-            'h-full min-w-[350px] border rounded-lg p-2 pb-0',
-            'bg-white-f border-gray-0 text-secondary-1-a',
-            'dark:bg-gray-3 dark:border-0 dark:text-white-f-9',
-            'absolute top-0',
-            'transition-all ease-in-out',
-            'lg:right-10 right-4',
-            {
-                'translate-x-[100%] lg:-mr-10 -mr-4': !isAttendeesOpen.value,
-                'translate-x-[100%]': !isAttendeesOpen.value,
-            }
-        )}"
-        onClick=${() => (attendeesBadge.value = false)}
-    >
-        <div class="flex flex-col pt-2 gap-2 max-h-full">
-            <div class="flex justify-center items-center w-full gap-2">
-                <${Icon} icon="Avatar" />
-                <span
-                    >Attendees List (${attendeesCount}${' '}
-                    ${attendeesCount > 1 ? 'people' : 'person'})</span
-                >
+    return html`
+        <div
+            class="${clsx(
+                'h-full min-w-[350px] border rounded-lg p-2 pb-0',
+                'bg-white-f border-gray-0 text-secondary-1-a',
+                'dark:bg-gray-3 dark:border-0 dark:text-white-f-9',
+                'absolute top-0',
+                'transition-all ease-in-out',
+                'lg:right-10 right-4',
+                {
+                    'translate-x-[100%] lg:-mr-10 -mr-4':
+                        !isAttendeesOpen.value,
+                    'translate-x-[100%]': !isAttendeesOpen.value,
+                },
+                'hidden sm:block'
+            )}"
+            onClick=${() => (attendeesBadge.value = false)}
+        >
+            <div class="flex flex-col pt-2 gap-2 max-h-full">
+                <div class="flex justify-center items-center w-full gap-2">
+                    <${Icon} icon="Avatar" />
+                    <span
+                        >Attendees List (${attendeesCount}${' '}
+                        ${attendeesCount > 1 ? 'people' : 'person'})</span
+                    >
+                </div>
+                <div class="flex flex-col gap-2 w-full mt-4 pt-2 overflow-auto">
+                    ${Object.values(attendees.value)
+                        .sort((a, b) => {
+                            let aScore = 0;
+                            let bScore = 0;
+
+                            if (a.isHost) aScore += 10;
+                            if (a.hasCamera) aScore += 5;
+                            if (a.raisedHand) aScore += 1;
+
+                            if (b.isHost) bScore += 10;
+                            if (b.hasCamera) bScore += 5;
+                            if (b.raisedHand) bScore += 1;
+
+                            return bScore - aScore;
+                        })
+                        .map((attendee, i) => {
+                            return html`<${Participant}
+                                key=${attendee.userId}
+                                participant=${attendee}
+                            />`;
+                        })}
+                </div>
             </div>
+        </div>
+    `;
+};
+
+export const AttendeesBottomSheet = () => {
+    return html`<${BottomSheet}
+        open=${isAttendeesOpen.value}
+        onClose=${toggleAttendees}
+        class="block sm:hidden"
+        title="Attendees List (${Object.values(attendees.value).length})"
+    >
+        <div class="w-full h-full flex gap-3 pb-6 flex-col">
             <div class="flex flex-col gap-2 w-full mt-4 pt-2 overflow-auto">
                 ${Object.values(attendees.value)
                     .sort((a, b) => {
@@ -154,5 +193,5 @@ export const Attendees = () => {
                     })}
             </div>
         </div>
-    </div>`;
+    <//>`;
 };
