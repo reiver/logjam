@@ -7,10 +7,10 @@ export const TopBar = () => {
     return html`<div class="w-full bg-white dark:bg-black py-3" id="top-bar">
         <${Container}>
             <div class="grid grid-cols-12">
-                <div class="col-span-3"><${Logo} /></div>
+                <div class="col-span-3 flex items-center"><${Logo} /></div>
                 <div class="col-span-6 flex items-center justify-center">
                     <span
-                        class="text-black dark:text-white text-center text-bold-14"
+                        class="text-black dark:text-white text-center text-bold-14 hidden sm:block"
                         >Is Your Future Distributed? Welcome to the
                         Fediverse!</span
                     >

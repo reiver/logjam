@@ -13,6 +13,8 @@ import {
     sparkRTC,
 } from '../../pages/meeting.js';
 
+export const fullScreenedStream = signal(null);
+export const hasFullScreenedStream = computed(() => !!fullScreenedStream.value);
 export const streamers = signal({});
 export const streamersLength = computed(
     () => Object.keys(streamers.value).length
@@ -53,13 +55,17 @@ const itemsWidth = computed(() => {
     return width;
 });
 
-export const getVideoWidth = (index) => {
+export const getVideoWidth = (attendee, index) => {
     if (deviceSize.value === 'xs') {
+        let availableHeight = windowHeight.value - topBarBottomBarHeight();
+        if (hasFullScreenedStream.value) {
+            if (attendee.stream.id === fullScreenedStream.value) {
+                return `100%; height: ${availableHeight}px`;
+            } else return `0px; height: 0px;`;
+        }
         const lines = Math.ceil(streamersLength.value / 2);
         const gapHeight = (lines - 1) * 16 + 16;
-        let availableHeight =
-            windowHeight.value - topBarBottomBarHeight() - gapHeight;
-
+        availableHeight -= gapHeight;
         if (index == 0) return `calc(100%); height: ${availableHeight / 2}px`;
         else {
             const lines = Math.ceil((streamersLength.value - 1) / 2);
@@ -67,7 +73,9 @@ export const getVideoWidth = (index) => {
             let rowHeight = availableHeight / lines;
             const columns = streamersLength.value - 1 > 1 && lines >= 1 ? 2 : 1;
 
-            return `calc(${100 / columns}% - 8px); height: ${rowHeight}px`;
+            return `calc(${100 / columns}% - ${
+                columns > 1 ? '8px' : '0px'
+            }); height: ${rowHeight}px`;
         }
     }
     return `${itemsWidth.value}px`;
@@ -85,12 +93,22 @@ export const Stage = () => {
     }, []);
 
     return html`<div
-        class="transition-all relative h-full px-4 lg:px-0"
+        class="transition-all h-full px-4 lg:px-0 relative"
         style="width: calc(100% - ${attendeesWidth}px);"
     >
         ${broadcastIsInTheMeeting.value
             ? html`<div
-                  class="flex gap-4 flex-wrap justify-center items-center h-full"
+                  class=${clsx(
+                      'flex flex-wrap justify-center items-center h-full transition-all',
+                      {
+                          'gap-4':
+                              !hasFullScreenedStream.value ||
+                              deviceSize.value !== 'xs',
+                          'gap-0':
+                              hasFullScreenedStream.value &&
+                              deviceSize.value === 'xs',
+                      }
+                  )}
               >
                   ${Object.values(streamers.value)
                       .sort((a, b) => {
@@ -105,11 +123,11 @@ export const Stage = () => {
                       .map((attendee, i) => {
                           return html`<div
                               key=${i}
-                              style="width: ${getVideoWidth(i)}"
+                              style="width: ${getVideoWidth(attendee, i)}"
                               class=${clsx(
-                                  'transition-all aspect-video relative max-w-full text-white-f-9',
+                                  'group transition-all aspect-video relative max-w-full text-white-f-9',
                                   'bg-gray-1 rounded-lg min-w-10',
-                                  'dark:bg-gray-3'
+                                  'dark:bg-gray-3 overflow-hidden'
                               )}
                           >
                               <${Video}
@@ -135,6 +153,11 @@ export const Video = memo(({ stream, isMuted, isHostStream, name, userId }) => {
     const menu = useRef();
     const videoRef = useRef();
     const [menuOpen, setMenuOpen] = useState(false);
+    const toggleFullScreen = () => {
+        if (fullScreenedStream.value === stream.id) {
+            fullScreenedStream.value = null;
+        } else fullScreenedStream.value = stream.id;
+    };
     useEffect(() => {
         videoRef.current.srcObject = stream;
     }, [stream]);
@@ -191,27 +214,40 @@ export const Video = memo(({ stream, isMuted, isHostStream, name, userId }) => {
         >
             ${name} ${isHostStream && '(Host)'}
         </div>
-        ${isHost &&
-        !isHostStream &&
-        html` <${IconButton} class="absolute top-3 right-3" variant="ghost" onClick=${handleOpenMenu} ref=${menu}>
-      <${Icon} icon="verticalDots" width="20px" height="20px" />
+        <div class=" absolute top-3 right-3 group-hover:flex hidden gap-2">
+            <${IconButton} variant="ghost" onClick=${toggleFullScreen}>
+                <${Icon}
+                    icon=${fullScreenedStream.value === stream.id
+                        ? 'ScreenNormal'
+                        : 'ScreenFull'}
+                    width="20px"
+                    height="20px"
+                />
+            <//>
+            ${isHost &&
+            !isHostStream &&
+            html`
+                <${IconButton}
+                    variant="ghost"
+                    onClick=${handleOpenMenu}
+                    ref=${menu}
+                >
+                    <${Icon} icon="verticalDots" width="20px" height="20px" />
 
-      ${
-          menuOpen &&
-          html`<div class="relative top-0 right-0 h-full w-full">
-              <ul
-                  class="bg-white absolute top-0 right-0 mt-3 -ml-2 text-black rounded-sm p-1"
-              >
-                  <li
-                      class="w-full whitespace-nowrap px-4 py-1 rounded-sm bg-black bg-opacity-0 hover:bg-opacity-10"
-                      onClick=${handleRemoveStream}
-                  >
-                      Stop broadcast
-                  </li>
-              </ul>
-          </div>`
-      }
-      <div>
-				<//>
-				</${IconButton}>`} `;
+                    ${menuOpen &&
+                    html`<div class="relative top-full right-0 h-full w-full">
+                        <ul
+                            class="bg-white absolute top-0 right-0 mt-3 -ml-2 text-black rounded-sm p-1"
+                        >
+                            <li
+                                class="w-full whitespace-nowrap px-4 py-1 rounded-sm bg-black bg-opacity-0 hover:bg-opacity-10"
+                                onClick=${handleRemoveStream}
+                            >
+                                Stop broadcast
+                            </li>
+                        </ul>
+                    </div>`}
+                <//>
+            `}
+        </div>`;
 });
