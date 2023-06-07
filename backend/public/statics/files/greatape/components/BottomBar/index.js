@@ -79,6 +79,10 @@ export const BottomBar = () => {
 };
 
 export const BottomBarBottomSheet = () => {
+    const handleAttendeesOpen = () => {
+        toggleAttendees();
+        isMoreOptionsOpen.value = false;
+    };
     return html`<${BottomSheet}
         open=${isMoreOptionsOpen.value}
         onClose=${toggleMoreOptions}
@@ -90,13 +94,13 @@ export const BottomBarBottomSheet = () => {
                 >Is Your Future Distributed? Welcome to the Fediverse!</span
             >
             <div
-                class="flex items-center gap-2 dark:bg-gray-2  bg-gray-0 rounded-full px-4 py-1 justify-between"
+                class="truncate max-w-full flex items-center gap-2 dark:bg-gray-2  bg-gray-0 rounded-full px-4 py-1"
             >
-                <div class="flex gap-2 items-center">
-                    <${Icon} icon="Link" />
-                    <span>https://great.ape/r/thu-kiu</span>
-                </div>
-                <div class="ml-3">
+                <${Icon} icon="Link" class="min-w-[24px]" />
+                <span class="truncate flex-grow"
+                    >https://great.ape/r/thu-kiu</span
+                >
+                <div class="ml-3 min-w-[24px]">
                     <${Icon} icon="Copy" />
                 </div>
             </div>
@@ -106,7 +110,7 @@ export const BottomBarBottomSheet = () => {
                     : 'Show Attendees'}
             >
                 <div
-                    onClick="${toggleAttendees}"
+                    onClick="${handleAttendeesOpen}"
                     class="w-fit transition-all select-none cursor-pointer flex items-center gap-2 rounded-md hover:bg-gray-0 hover:bg-opacity-10 hover:dark:bg-gray-2 hover:dark:bg-opacity-20 py-1 px-3"
                 >
                     <div class="relative">

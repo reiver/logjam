@@ -6,6 +6,7 @@ import {
     TopBar,
     attendees,
     attendeesBadge,
+    isMoreOptionsOpen,
     makeDialog,
     streamers,
 } from 'components';
@@ -52,6 +53,8 @@ export const onStartShareScreen = (stream) => {
         });
         onStopStream(stream);
     };
+
+    isMoreOptionsOpen.value = false;
 
     streamers.value = {
         ...streamers.value,
