@@ -14,7 +14,11 @@ export const BottomSheet = ({ open, children, onClose, title }) => {
             class="bottom-0 to-top absolute max-h-[80%] w-full dark:bg-gray-3 bg-white-f flex flex-col rounded-t-[16px]"
         >
             <div class="flex justify-between relative px-4 py-4">
-                <${Icon} icon="Close" onClick=${onClose}><//>
+                <${Icon}
+                    icon="Close"
+                    onClick=${onClose}
+                    class="cursor-pointer"
+                />
                 <span
                     class="dark:text-white absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 font-bold-12"
                     >${title}</span

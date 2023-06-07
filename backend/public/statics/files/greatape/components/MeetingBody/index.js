@@ -17,6 +17,8 @@ export const MeetingBody = () => {
             <${Stage} />
             <$${Attendees} />
         <//>
-        <${BottomBarBottomSheet} />
-        <${AttendeesBottomSheet} />`;
+        <div class="sm:hidden">
+            <${BottomBarBottomSheet} />
+            <${AttendeesBottomSheet} />
+        </div>`;
 };
