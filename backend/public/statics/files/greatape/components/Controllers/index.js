@@ -114,7 +114,7 @@ export const Controllers = () => {
             !isStreamming &&
             ableToRaiseHand) ||
             (isStreamming && !isHost && ableToRaiseHand)) &&
-        html`<${Tooltip} label=${isStreamming ? 'Lower Hand' : 'Raise Hand'}>
+        html`<${Tooltip} label=${isStreamming ? 'Put Hand Down' : 'Raise Hand'}>
             <${IconButton}
                 onClick=${onRaiseHand}
                 variant=${isStreamming && 'danger'}
