@@ -361,7 +361,7 @@ export class SparkRTC {
                 if (this.role === this.Roles.BROADCAST) return;
                 this.broadcasterDC = false;
                 this.updateTheStatus(`[handleMessage] ${msg.type}`);
-                this.startProcedure();
+                this.startProcedure(true);
                 break;
             case 'event-reconnect':
             case 'event-broadcaster-disconnected':
@@ -1950,11 +1950,11 @@ export class SparkRTC {
         if (resetAll) {
             this.socketURL = '';
             this.socket = null;
-            this.myName = 'NoName';
-            this.roomName = 'SparkRTC';
-            this.myUsername = 'NoUsername';
-            this.role = '';
         }
+        this.myName = 'NoName';
+        this.roomName = 'SparkRTC';
+        this.myUsername = 'NoUsername';
+        this.role = '';
         this.started = false;
         this.myPeerConnectionConfig = {
             iceServers,

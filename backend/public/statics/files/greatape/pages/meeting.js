@@ -181,7 +181,10 @@ const Meeting = () => {
                         },
                     };
 
-                    if (!sparkRTC.value.broadcasterDC && role === Roles.AUDIENCE) {
+                    if (
+                        !sparkRTC.value.broadcasterDC &&
+                        role === Roles.AUDIENCE
+                    ) {
                         broadcastIsInTheMeeting.value = true;
                     }
                 },
@@ -239,13 +242,7 @@ const Meeting = () => {
                         }
 
                         //if socket is closed, repoen again
-                        if (
-                            sparkRTC.value.socket &&
-                            (sparkRTC.value.socket.readyState ===
-                                WebSocket.CLOSED ||
-                                sparkRTC.value.socket.readyState ===
-                                    WebSocket.CLOSING)
-                        ) {
+                        if (!sparkRTC.value.socket) {
                             await setupSignalingSocket(host, name, room);
                         }
 
