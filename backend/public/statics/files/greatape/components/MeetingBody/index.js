@@ -11,7 +11,7 @@ export { streamers };
 
 export const MeetingBody = () => {
     return html`<${Container}
-            class="relative h-full flex-grow overflow-hidden mt-4 flex items-center"
+            class="relative h-full flex-grow overflow-hidden py-4 flex items-center"
             id="meeting-body"
         >
             <${Stage} />

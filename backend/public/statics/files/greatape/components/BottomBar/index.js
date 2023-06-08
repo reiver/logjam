@@ -1,3 +1,4 @@
+import clsx from 'clsx';
 import {
     BottomSheet,
     Container,
@@ -14,9 +15,15 @@ import {
 } from 'components';
 import { html } from 'htm';
 import { broadcastIsInTheMeeting } from '../../pages/meeting.js';
+import { bottomBarVisible } from '../MeetingBody/Stage.js';
 
 export const BottomBar = () => {
-    return html`<${Container}>
+    return html`<${Container}
+        class=${clsx({
+            hidden: !bottomBarVisible.value,
+            block: bottomBarVisible.value,
+        })}
+    >
         <div
             class="w-full grid grid-cols-12 dark:bg-secondary-1-a py-3 dark:text-gray-0 text-gray-2"
             id="bottom-bar"
@@ -81,7 +88,6 @@ export const BottomBar = () => {
 export const BottomBarBottomSheet = () => {
     const handleAttendeesOpen = () => {
         toggleAttendees();
-        isMoreOptionsOpen.value = false;
     };
     return html`<${BottomSheet}
         open=${isMoreOptionsOpen.value}
@@ -90,11 +96,11 @@ export const BottomBarBottomSheet = () => {
         title="More"
     >
         <div class="w-full h-full flex gap-3 py-6 flex-col pb-0">
-            <span class="font-bold-14"
+            <span class="text-bold-14"
                 >Is Your Future Distributed? Welcome to the Fediverse!</span
             >
             <div
-                class="truncate max-w-full flex items-center gap-2 dark:bg-gray-2  bg-gray-0 rounded-full px-4 py-1"
+                class="truncate text-gray-2 dark:text-gray-0 max-w-full flex items-center gap-2 dark:bg-gray-2  bg-gray-0 rounded-full px-4 py-1"
             >
                 <${Icon} icon="Link" class="min-w-[24px]" />
                 <span class="truncate flex-grow"

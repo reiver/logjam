@@ -83,7 +83,7 @@ export const Controllers = () => {
             <${IconButton}
                 variant=${isMeetingMuted && 'danger'}
                 onClick=${toggleMuteMeeting}
-                class="hidden sm:block"
+                class="hidden sm:flex"
             >
                 <${Icon} icon="Volume${isMeetingMuted ? 'Off' : ''}" />
             <//>
@@ -105,7 +105,7 @@ export const Controllers = () => {
             <${IconButton}
                 variant=${sharingScreenStream && 'danger'}
                 onClick=${handleShareScreen}
-                class="hidden sm:block"
+                class="hidden sm:flex"
             >
                 <${Icon} icon="Share${sharingScreenStream ? 'Off' : ''}" />
             <//>
@@ -152,7 +152,7 @@ export const Controllers = () => {
             <${IconButton}
                 onClick=${toggleBottomSheet}
                 onClick=${toggleMoreOptions}
-                class="block sm:hidden"
+                class="flex sm:hidden"
             >
                 <${Icon} icon="KebabMenuVertical" />
             <//>

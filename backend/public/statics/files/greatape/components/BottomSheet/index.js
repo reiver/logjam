@@ -20,7 +20,7 @@ export const BottomSheet = ({ open, children, onClose, title }) => {
                     class="cursor-pointer"
                 />
                 <span
-                    class="dark:text-white absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 font-bold-12"
+                    class="dark:text-white absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 text-bold-12"
                     >${title}</span
                 >
             </div>

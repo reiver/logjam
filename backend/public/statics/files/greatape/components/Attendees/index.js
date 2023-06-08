@@ -110,10 +110,10 @@ export const Attendees = () => {
     return html`
         <div
             class="${clsx(
-                'h-full min-w-[350px] border rounded-lg p-2 pb-0',
+                'h-auto min-w-[350px] border rounded-lg p-2 pb-0',
                 'bg-white-f border-gray-0 text-secondary-1-a',
                 'dark:bg-gray-3 dark:border-0 dark:text-white-f-9',
-                'absolute top-0',
+                'absolute top-4 bottom-4',
                 'transition-all ease-in-out',
                 'lg:right-10 right-4',
                 {
