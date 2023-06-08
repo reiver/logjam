@@ -44,6 +44,7 @@ export const createBroadcastSpartRTC = (role, props) => {
         constraintResults: props.constraintResults,
         updateStatus: props.updateStatus,
         userInitialized: props.onUserInitialized,
+        startAgain: props.startAgain,
     });
 };
 
@@ -59,5 +60,6 @@ export const createAudienceSpartRTC = (role, props) => {
         updateStatus: props.updateStatus,
         connectionStatus: props.connectionStatus,
         userInitialized: props.onUserInitialized,
+        startAgain: props.startAgain,
     });
 };

@@ -391,7 +391,8 @@ export class SparkRTC {
             case 'event-parent-dc':
                 this.updateTheStatus(`parentDC ${msg.type}`);
                 this.parentDC = true;
-                this.startProcedure();
+                window.location.reload();
+                // this.startProcedure(true);
                 break;
             case 'metadata-get':
             case 'metadata-set':
@@ -519,10 +520,10 @@ export class SparkRTC {
             `[setupSignalingSocket] url=${url} myName=${myName} roomName=${roomName}`
         );
         return new Promise((resolve, reject) => {
-            // if (this.pingInterval) {
-            //   clearInterval(this.pingInterval)
-            //   this.pingInterval = null
-            // }
+            if (this.pingInterval) {
+                clearInterval(this.pingInterval);
+                this.pingInterval = null;
+            }
             if (myName) this.myName = myName;
             if (roomName) this.roomName = roomName;
 
@@ -537,7 +538,7 @@ export class SparkRTC {
                         data: myName,
                     })
                 );
-                // this.pingInterval = setInterval(this.ping, 5000)
+                this.pingInterval = setInterval(this.ping, 5000);
                 this.updateTheStatus(
                     `[setupSignalingSocket] socket onopen and sent start`
                 );
@@ -550,7 +551,9 @@ export class SparkRTC {
                 this.remoteStreamNotified = false;
                 this.myPeerConnectionArray = {};
                 this.started = false;
-                if (this.startProcedure) this.startProcedure();
+                if (this.startProcedure && !this.leftMeeting) {
+                    this.startProcedure();
+                }
             };
             socket.onerror = (error) => {
                 this.updateTheStatus(
@@ -558,8 +561,10 @@ export class SparkRTC {
                     error
                 );
                 reject(error);
-                window.location.reload(); //reload before, alert because alert blocks the reload
-                alert('Can not connect to server');
+                if (!this.leftMeeting) {
+                    window.location.reload(); //reload before, alert because alert blocks the reload
+                    alert('Can not connect to server');
+                }
             };
 
             this.socket = socket;
@@ -931,7 +936,7 @@ export class SparkRTC {
         ) {
             this.updateTheStatus(`Waiting to restart..`);
             setTimeout(() => {
-                this.startProcedure();
+                this.startProcedure(true);
             }, 1000);
         }
     }
@@ -1132,10 +1137,7 @@ export class SparkRTC {
                         event
                     )}`
                 );
-                this.updateTheStatus(
-                    `[stream.oninactive] event ${event}`,
-                    event.currentTarget.getTracks()
-                );
+                this.updateTheStatus(`[stream.oninactive] event `, event);
                 this.updateTheStatus(`targetTracks`, event.target.getTracks());
 
                 this.remoteStreamNotified = false;
@@ -1224,7 +1226,6 @@ export class SparkRTC {
 
                 //check meeting status and close socket
                 if (this.leftMeeting) {
-                    this.leftMeeting = false;
                     //close websocket
                     if (this.socket) {
                         this.socket.onclose = () => {
@@ -1234,6 +1235,7 @@ export class SparkRTC {
                         }; //empty on close callback
                         this.socket.close();
                         this.socket = null;
+
                         return;
                     }
                 }
@@ -1559,14 +1561,6 @@ export class SparkRTC {
                 (i) => i.url.indexOf('turn') < 0
             );
         }
-        //Automatically send rasie hand request
-        // if (this.startedRaiseHand) {
-        //     this.updateTheStatus('its true, calling it');
-        //     setTimeout(() => {
-        //         this.startedRaiseHand = false;
-        //         this.raiseHand();
-        //     }, 2000);
-        // }
         this.updateTheStatus(`[start] ${this.role}`);
         this.updateTheStatus(`Getting media capabilities`);
         await this.getSupportedConstraints();
@@ -1779,11 +1773,8 @@ export class SparkRTC {
      * To restart again and connect to new parent
      * we don't need to close the socket this time
      */
-    restart = (closeSocket) => {
-        this.updateTheStatus(
-            `restarting.. close socket: `,
-            closeSocket === true
-        );
+    restart = async (closeSocket) => {
+        this.updateTheStatus(`restarting.. close socket: `, closeSocket);
         //check for local stream and stop tracks
         if (this.localStream) {
             this.localStream.getTracks().forEach(function (track) {
@@ -1811,11 +1802,16 @@ export class SparkRTC {
 
         //close the web socket
         if (closeSocket && this.socket) {
-            this.socket.onclose = () => {
-                this.updateTheStatus(`socket is closed in restart`);
-            }; //empty on close callback
             this.socket.close();
-            this.socket = null;
+            this.socket.onclose = async () => {
+                this.updateTheStatus(`socket is closed in restart`);
+                this.socket = null;
+
+                //waiting to websocket to close then repoen again
+                if (this.startAgain) {
+                    this.startAgain();
+                }
+            }; //on close callback
         } else {
             this.updateTheStatus(`socket closing is not required`);
         }
@@ -2007,5 +2003,6 @@ export class SparkRTC {
         this.disableBroadcasting = options.disableBroadcasting;
         this.connectionStatus = options.connectionStatus;
         this.userInitialized = options.userInitialized;
+        this.startAgain = options.startAgain;
     }
 }

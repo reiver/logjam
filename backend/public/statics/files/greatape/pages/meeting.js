@@ -241,12 +241,16 @@ const Meeting = () => {
                             await sparkRTC.value.restart(closeSocket);
                         }
 
-                        //if socket is closed, repoen again
-                        if (!sparkRTC.value.socket) {
-                            await setupSignalingSocket(host, name, room);
+                        if (!closeSocket) {
+                            //start sparkRTC
+                            await start();
                         }
-
-                        //start sparkRTC
+                    }
+                },
+                startAgain: async () => {
+                    if (sparkRTC.value) {
+                        //Init socket and start sparkRTC
+                        await setupSignalingSocket(host, name, room);
                         await start();
                     }
                 },
@@ -322,7 +326,9 @@ const Meeting = () => {
                 updateStatus: (tag, data) => {
                     log(tag, data);
                 },
-                treeCallback: (tree) => {},
+                treeCallback: (tree) => {
+                    log(`tree`, tree);
+                },
                 connectionStatus: (status) => {
                     log(`Connection Status: `, status);
                     if (role === Roles.AUDIENCE) {
