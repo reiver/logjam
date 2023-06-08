@@ -25,7 +25,7 @@ export const BottomBar = () => {
         })}
     >
         <div
-            class="w-full grid grid-cols-12 dark:bg-secondary-1-a py-3 dark:text-gray-0 text-gray-2"
+            class="w-full grid grid-cols-12 dark:bg-secondary-1-a py-3 pt-0 dark:text-gray-0 text-gray-2"
             id="bottom-bar"
         >
             <div class="col-span-3 sm:block hidden">

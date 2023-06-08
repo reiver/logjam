@@ -12,6 +12,7 @@ import {
     currentUser,
     sparkRTC,
 } from '../../pages/meeting.js';
+let timeOut;
 export const bottomBarVisible = signal(true);
 export const fullScreenedStream = signal(null);
 export const hasFullScreenedStream = computed(() => !!fullScreenedStream.value);
@@ -104,23 +105,22 @@ export const Stage = () => {
         return () => window.removeEventListener('resize', onResize);
     }, []);
 
+    const documentClick = () => {
+        if (timeOut) clearTimeout(timeOut);
+        if (hasFullScreenedStream.value && bottomBarVisible.value) {
+            bottomBarVisible.value = true;
+            handleMaximize();
+        }
+    };
+    const handleMaximize = () => {
+        timeOut = setTimeout(() => {
+            if (bottomBarVisible.value) bottomBarVisible.value = false;
+        }, 2000);
+        document
+            .getElementsByTagName('body')[0]
+            .addEventListener('click', documentClick);
+    };
     useEffect(() => {
-        let timeOut;
-        const documentClick = () => {
-            if (timeOut) clearTimeout(timeOut);
-            if (hasFullScreenedStream.value) {
-                bottomBarVisible.value = true;
-                handleMaximize();
-            }
-        };
-        const handleMaximize = () => {
-            timeOut = setTimeout(() => {
-                bottomBarVisible.value = false;
-            }, 2000);
-            document
-                .getElementsByTagName('body')[0]
-                .addEventListener('click', documentClick);
-        };
         if (hasFullScreenedStream.value) {
             handleMaximize();
         } else {
@@ -128,7 +128,16 @@ export const Stage = () => {
             if (timeOut) clearTimeout(timeOut);
         }
     }, [hasFullScreenedStream.value]);
-
+    const handleOnClick = (e, streamId) => {
+        if (
+            deviceSize.value === 'xs' &&
+            streamId === fullScreenedStream.value
+        ) {
+            bottomBarVisible.value = !bottomBarVisible.value;
+            documentClick();
+            e.stopPropagation();
+        }
+    };
     return html`<div
         class="transition-all h-full lg:px-0 relative"
         style="width: calc(100% - ${attendeesWidth}px);"
@@ -136,7 +145,7 @@ export const Stage = () => {
         ${broadcastIsInTheMeeting.value
             ? html`<div
                   class=${clsx(
-                      'flex flex-wrap justify-center items-center h-full transition-all',
+                      'flex flex-wrap justify-start sm:justify-center items-center h-full transition-all',
                       {
                           'gap-4': !hasFullScreenedStream.value,
                           'gap-0': hasFullScreenedStream.value,
@@ -162,6 +171,8 @@ export const Stage = () => {
                                   'bg-gray-1 rounded-lg min-w-10',
                                   'dark:bg-gray-3 overflow-hidden'
                               )}
+                              onClick=${(e) =>
+                                  handleOnClick(e, attendee.stream.id)}
                           >
                               <${Video}
                                   stream=${attendee.stream}
@@ -247,7 +258,14 @@ export const Video = memo(({ stream, isMuted, isHostStream, name, userId }) => {
         >
             ${name} ${isHostStream && '(Host)'}
         </div>
-        <div class="absolute top-3 right-3 group-hover:flex hidden gap-2">
+        <div
+            class=${clsx(
+                'absolute top-3 sm:group-hover:flex right-3 hidden gap-2',
+                {
+                    'group-hover:flex': bottomBarVisible.value,
+                }
+            )}
+        >
             <${IconButton} variant="ghost" onClick=${toggleFullScreen}>
                 <${Icon}
                     icon=${fullScreenedStream.value === stream.id

@@ -78,7 +78,7 @@ export const Controllers = () => {
 
     const toggleBottomSheet = () => {};
 
-    return html`<div class="flex gap-5 py-5">
+    return html`<div class="flex gap-5 py-3 pt-0">
         <${Tooltip} label=${isMeetingMuted ? 'Listen' : 'Deafen'}>
             <${IconButton}
                 variant=${isMeetingMuted && 'danger'}
