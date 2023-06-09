@@ -392,8 +392,12 @@ export class SparkRTC {
             case 'event-parent-dc':
                 this.updateTheStatus(`parentDC ${msg.type}`);
                 this.parentDC = true;
-                window.location.reload();
-                // this.startProcedure(true);
+
+                if (this.localStream) {
+                    window.location.reload();
+                } else {
+                    this.startProcedure(true);
+                }
                 break;
             case 'metadata-get':
             case 'metadata-set':
