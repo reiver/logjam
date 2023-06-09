@@ -276,6 +276,7 @@ export class SparkRTC {
                     this.broadcastingApproved = true;
 
                     if (msg.result == true) {
+                        this.localStream = null;
                         await this.startBroadcasting('alt-broadcast');
                         this.lastBroadcasterId = msg.data;
                         if (this.localStream) {
@@ -624,6 +625,7 @@ export class SparkRTC {
 
                     if (sender) {
                         apeerConnection.removeTrack(sender);
+                        track.stop();
                     }
                 });
             }
@@ -1232,6 +1234,7 @@ export class SparkRTC {
                             this.updateTheStatus(
                                 `socket is closed after leaveMeeting`
                             );
+                            this.resetVariables(true);
                         }; //empty on close callback
                         this.socket.close();
                         this.socket = null;
@@ -1711,7 +1714,6 @@ export class SparkRTC {
         this.localStream.getTracks().forEach((track) => {
             track.stop();
         });
-        this.localStream = null;
         this.startedRaiseHand = false;
     };
 
@@ -1820,123 +1822,42 @@ export class SparkRTC {
     /**
      * To leave the meeting
      */
-    leaveMeeting = () => {
+    leaveMeeting = async () => {
         //check for local stream and stop tracks
         //stop all the sender tracks
         if (this.localStream) {
             this.leftMeeting = true;
 
-            for (const userId in this.myPeerConnectionArray) {
-                const apeerConnection = this.myPeerConnectionArray[userId];
-
-                this.localStream.getTracks().forEach((track) => {
-                    const sender = apeerConnection
-                        .getSenders()
-                        .find(
-                            (sender) =>
-                                sender.track && sender.track.id === track.id
-                        );
-
-                    if (sender) {
-                        apeerConnection.removeTrack(sender);
-                    }
-                });
-            }
-
-            this.localStream.getTracks().forEach(function (track) {
-                track.stop();
-            });
-
-            //remove local stream from remotestreamslist
-            this.remoteStreams.forEach((stream) => {
-                if (stream.id === this.localStream.id) {
-                    this.updateTheStatus(`ids matched`);
-
-                    let newArray = this.remoteStreams.filter(
-                        (str) => str !== stream
-                    );
-
-                    this.remoteStreams = newArray;
-                }
-            });
-
-            this.localStream = null;
+            await this.lowerHand();
         } else {
             //close websocket if not streaming anything
-            if (this.socket) {
+            if (this.role === this.Roles.AUDIENCE && this.socket) {
                 this.socket.onclose = () => {
                     this.updateTheStatus(`socket is closed after leaveMeeting`);
+                    this.resetVariables();
                 }; //empty on close callback
                 this.socket.close();
                 this.socket = null;
             }
         }
 
-        //stop screen share But only for broadcaster
-        if (this.role === this.Roles.BROADCAST && this.shareStream) {
-            for (const userId in this.myPeerConnectionArray) {
-                const apeerConnection = this.myPeerConnectionArray[userId];
-
-                this.shareStream.getTracks().forEach((track) => {
-                    const sender = apeerConnection
-                        .getSenders()
-                        .find(
-                            (sender) =>
-                                sender.track && sender.track.id === track.id
-                        );
-
-                    if (sender) {
-                        apeerConnection.removeTrack(sender);
-                    }
-                });
-            }
-
-            this.shareStream.getTracks().forEach(function (track) {
-                track.stop();
-            });
-
-            //remove local stream from remotestreamslist
-            this.remoteStreams.forEach((stream) => {
-                if (stream.id === this.shareStream.id) {
-                    this.updateTheStatus(`ids matched`);
-
-                    let newArray = this.remoteStreams.filter(
-                        (str) => str !== stream
-                    );
-
-                    this.remoteStreams = newArray;
-                }
-            });
-
-            this.shareStream = null;
-        }
-
-        //close all the peer connections
-        let idList = [];
-        if (
-            this.myPeerConnectionArray &&
-            this.myPeerConnectionArray.length > 0
-        ) {
-            for (const u in this.myPeerConnectionArray) {
-                this.myPeerConnectionArray[u].close();
-                idList.push(u);
-            }
-        }
-
-        idList.forEach((id) => delete sparkRTC.value.myPeerConnectionArray[id]);
-
         if (this.role === this.Roles.BROADCAST) {
+            //stop screen share
+            if (this.shareStream) {
+                await this.stopShareScreen(this.shareStream);
+                this.shareStream = null;
+            }
+
             //close websocket
             if (this.socket) {
                 this.socket.onclose = () => {
                     this.updateTheStatus(`socket is closed after leaveMeeting`);
+                    this.resetVariables();
                 }; //empty on close callback
                 this.socket.close();
                 this.socket = null;
             }
         }
-
-        this.resetVariables(false);
 
         this.updateTheStatus(`left meeting`);
     };
