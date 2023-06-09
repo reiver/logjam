@@ -113,7 +113,6 @@ export class SparkRTC {
      * @returns
      */
     handleMessage = async (event) => {
-        this.updateTheStatus(`[handleMessage]`, event.data);
 
         let msg;
         try {
@@ -459,9 +458,9 @@ export class SparkRTC {
                 break;
 
             default:
-                this.updateTheStatus(
-                    `[handleMessage] default ${JSON.stringify(msg)}`
-                );
+                // this.updateTheStatus(
+                //     `[handleMessage] default ${JSON.stringify(msg)}`
+                // );
                 break;
         }
     };
