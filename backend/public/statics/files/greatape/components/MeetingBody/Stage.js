@@ -62,6 +62,16 @@ export const Stage = () => {
                   class="flex gap-4 flex-wrap justify-center items-center h-full"
               >
                   ${Object.values(streamers.value).map((attendee, i) => {
+                      let muted = false;
+
+                      //mute the stream if it's my local stream
+                      if (attendee.isLocalStream === true) {
+                          muted = true;
+                      } else {
+                          //mute it based on meeting status
+                          muted = currentUser.value.isMeetingMuted;
+                      }
+
                       return html`<div
                           key=${i}
                           style="width: ${itemsWidth.value}px"
@@ -74,7 +84,7 @@ export const Stage = () => {
                           <${Video}
                               stream=${attendee.stream}
                               userId=${attendee.userId}
-                              isMuted=${currentUser.value.isMeetingMuted}
+                              isMuted=${muted}
                               name=${attendee.name}
                               isHostStream=${attendee.isHost}
                           />

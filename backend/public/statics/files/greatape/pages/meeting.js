@@ -159,6 +159,7 @@ const Meeting = () => {
                             raisedHand: false,
                             hasCamera: false,
                             stream,
+                            isLocalStream: true,
                         },
                     };
                 },
@@ -167,6 +168,14 @@ const Meeting = () => {
 
                     log(`remoteStreamCallback`, stream);
                     log(`remoteStreamCallback-Name`, stream.name);
+
+                    //if receive my localStream then mute it for me
+                    let local = false;
+                    if (sparkRTC.value.localStream) {
+                        if (sparkRTC.value.localStream.id === stream.id) {
+                            local = true;
+                        }
+                    }
 
                     streamers.value = {
                         ...streamers.value,
@@ -178,6 +187,7 @@ const Meeting = () => {
                             raisedHand: false,
                             hasCamera: false,
                             stream,
+                            isLocalStream: local,
                         },
                     };
 
