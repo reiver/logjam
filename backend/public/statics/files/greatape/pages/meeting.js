@@ -341,11 +341,6 @@ const Meeting = () => {
                 },
                 connectionStatus: (status) => {
                     log(`Connection Status: `, status);
-                    if (role === Roles.AUDIENCE) {
-                        if (status === 'failed') {
-                            window.location.reload();
-                        }
-                    }
                 },
             });
 

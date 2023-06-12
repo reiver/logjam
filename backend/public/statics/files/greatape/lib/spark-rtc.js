@@ -391,7 +391,8 @@ export class SparkRTC {
                 this.updateTheStatus(`parentDC ${msg.type}`);
                 this.parentDC = true;
 
-                if (this.localStream) {
+                if (this.startedRaiseHand) {
+                    await this.wait();
                     window.location.reload();
                 } else {
                     this.startProcedure(true);
@@ -596,20 +597,11 @@ export class SparkRTC {
 
         if (this.socket.readyState === WebSocket.CONNECTING) {
             //sleep for few seconds
-            await this.sleep(2000);
+            await this.wait(2000);
             return true;
         }
 
         return false;
-    }
-
-    /**
-     * To sleep
-     * @param {} ms
-     * @returns
-     */
-    sleep(ms) {
-        return new Promise((resolve) => setTimeout(resolve, ms));
     }
 
     stopShareScreen = async (stream) => {
