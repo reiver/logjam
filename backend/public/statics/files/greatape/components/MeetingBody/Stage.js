@@ -235,7 +235,19 @@ export const Video = memo(({ stream, isMuted, isHostStream, name, userId }) => {
         );
     };
     const handleOpenMenu = setMenuOpen.bind(null, !menuOpen);
-
+    const [isHover, setHover] = useState(false);
+    console.log('init', isHover, bottomBarVisible.value);
+    const handleOnClick = () => {
+        setHover(!isHover);
+    };
+    useEffect(() => {
+        if (
+            (!bottomBarVisible.value && isHover) ||
+            (!hasFullScreenedStream.value && isHover)
+        ) {
+            setHover(false);
+        }
+    }, [bottomBarVisible.value, hasFullScreenedStream.value]);
     useEffect(() => {
         function handleClickOutside(event) {
             if (
@@ -253,58 +265,69 @@ export const Video = memo(({ stream, isMuted, isHostStream, name, userId }) => {
         };
     }, [menu, menuOpen]);
 
-    return html`<video
-            ref=${videoRef}
-            autoplay
-            muted="${muted}"
-            className="w-full h-full object-cover rounded-lg"
-        />
-        <div
-            class="px-4 py-1 bg-black bg-opacity-50 text-white rounded-full absolute top-3 left-3 text-medium-12"
-        >
-            ${name} ${isHostStream && '(Host)'}
-        </div>
-        <div
-            class=${clsx(
-                'absolute top-3 sm:group-hover:flex right-3 hidden gap-2',
-                {
-                    'group-hover:flex': bottomBarVisible.value,
-                }
-            )}
-        >
-            <${IconButton} variant="ghost" onClick=${toggleFullScreen}>
-                <${Icon}
-                    icon=${fullScreenedStream.value === stream.id
-                        ? 'ScreenNormal'
-                        : 'ScreenFull'}
-                    width="20px"
-                    height="20px"
-                />
-            <//>
-            ${isHost &&
-            !isHostStream &&
-            html`
-                <${IconButton}
-                    variant="ghost"
-                    onClick=${handleOpenMenu}
-                    ref=${menu}
-                >
-                    <${Icon} icon="verticalDots" width="20px" height="20px" />
-
-                    ${menuOpen &&
-                    html`<div class="relative top-full right-0 h-full w-full">
-                        <ul
-                            class="bg-white absolute top-0 right-0 mt-3 -ml-2 text-black rounded-sm p-1"
-                        >
-                            <li
-                                class="w-full whitespace-nowrap px-4 py-1 rounded-sm bg-black bg-opacity-0 hover:bg-opacity-10"
-                                onClick=${handleRemoveStream}
-                            >
-                                Stop broadcast
-                            </li>
-                        </ul>
-                    </div>`}
+    return html`
+        <div onClick=${handleOnClick} className="w-full h-full rounded-lg">
+            <video
+                ref=${videoRef}
+                autoplay
+                muted="${muted}"
+                className="w-full h-full object-cover rounded-lg"
+            />
+            <div
+                class="px-4 py-1 bg-black bg-opacity-50 text-white rounded-full absolute top-3 left-3 text-medium-12"
+            >
+                ${name} ${isHostStream && '(Host)'}
+            </div>
+            <div
+                class=${clsx(
+                    'absolute top-3 sm:group-hover:flex right-3 sm:hidden gap-2',
+                    {
+                        'group-hover:flex': isHover && bottomBarVisible.value,
+                        hidden: !(isHover && bottomBarVisible.value),
+                    }
+                )}
+            >
+                <${IconButton} variant="ghost" onClick=${toggleFullScreen}>
+                    <${Icon}
+                        icon=${fullScreenedStream.value === stream.id
+                            ? 'ScreenNormal'
+                            : 'ScreenFull'}
+                        width="20px"
+                        height="20px"
+                    />
                 <//>
-            `}
-        </div>`;
+                ${isHost &&
+                !isHostStream &&
+                html`
+                    <${IconButton}
+                        variant="ghost"
+                        onClick=${handleOpenMenu}
+                        ref=${menu}
+                    >
+                        <${Icon}
+                            icon="verticalDots"
+                            width="20px"
+                            height="20px"
+                        />
+
+                        ${menuOpen &&
+                        html`<div
+                            class="relative top-full right-0 h-full w-full"
+                        >
+                            <ul
+                                class="bg-white absolute top-0 right-0 mt-3 -ml-2 text-black rounded-sm p-1"
+                            >
+                                <li
+                                    class="w-full whitespace-nowrap px-4 py-1 rounded-sm bg-black bg-opacity-0 hover:bg-opacity-10"
+                                    onClick=${handleRemoveStream}
+                                >
+                                    Stop broadcast
+                                </li>
+                            </ul>
+                        </div>`}
+                    <//>
+                `}
+            </div>
+        </div>
+    `;
 });

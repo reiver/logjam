@@ -351,22 +351,24 @@ const Meeting = () => {
             ? html` <${MeetingBody} />
                   <${BottomBar} />`
             : html`<div
-                  class="flex flex-col justify-center items-center p-10 rounded-md gap-4 h-full flex-grow"
+                  class="flex flex-col justify-center items-center sm:p-10 rounded-md gap-4 h-full flex-grow"
               >
-                  <span class="text-bold-18">You Left The Live Show</span>
+                  <span class="text-bold-18 text-center"
+                      >You Left The Live Show</span
+                  >
                   <div
-                      class="flex w-full justify-center items-center gap-4 sm:flex-row flex-col max-w-[70%] sm:max-w-[400px]"
+                      class="flex w-full justify-center items-center gap-4 flex-row max-w-[85%] sm:max-w-[400px]"
                   >
                       <${Button}
                           onClick=${rejoinMeeting}
                           variant="outline"
-                          class="flex-1 w-full"
+                          class="flex-1 w-full px-0"
                           >Go To Home Feed<//
                       >
                       <${Button}
                           onClick=${rejoinMeeting}
                           variant="primary"
-                          class="flex-1 w-full"
+                          class="flex-1 w-full px-0"
                           >Rejoin<//
                       >
                   </div>
