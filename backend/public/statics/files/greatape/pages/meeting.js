@@ -219,7 +219,11 @@ const Meeting = () => {
                             attendeesBadge.value = false;
                         }
                     );
-                    onUserRaisedHand(user.userId, true, raiseHandCallback);
+                    onUserRaisedHand(
+                        user.userId,
+                        new Date(),
+                        raiseHandCallback
+                    );
 
                     return handler;
                 },

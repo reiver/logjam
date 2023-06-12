@@ -139,13 +139,35 @@ export const Attendees = () => {
                             let aScore = 0;
                             let bScore = 0;
 
-                            if (a.isHost) aScore += 10;
-                            if (a.hasCamera) aScore += 5;
-                            if (a.raisedHand) aScore += 1;
+                            if (a.isHost) aScore += 1000;
+                            if (a.hasCamera) aScore += 500;
+                            if (a.raisedHand) {
+                                if (b.raisedHand) {
+                                    aScore +=
+                                        a.raisedHand.getTime() -
+                                            b.raisedHand.getTime() >
+                                        0
+                                            ? -1
+                                            : 1;
+                                } else {
+                                    aScore += 1;
+                                }
+                            }
 
-                            if (b.isHost) bScore += 10;
-                            if (b.hasCamera) bScore += 5;
-                            if (b.raisedHand) bScore += 1;
+                            if (b.isHost) bScore += 1000;
+                            if (b.hasCamera) bScore += 500;
+                            if (b.raisedHand) {
+                                if (a.raisedHand) {
+                                    bScore +=
+                                        b.raisedHand.getTime() -
+                                            a.raisedHand.getTime() >
+                                        0
+                                            ? -1
+                                            : 1;
+                                } else {
+                                    bScore += 1;
+                                }
+                            }
 
                             return bScore - aScore;
                         })
