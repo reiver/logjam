@@ -1,6 +1,6 @@
 import { Button, Container, Logo } from 'components';
 import { html } from 'htm';
-import { leaveMeeting } from '../../pages/meeting.js';
+import { leaveMeeting, meetingStatus } from '../../pages/meeting.js';
 
 export const TopBar = () => {
     const handleLeaveMeeting = leaveMeeting;
@@ -9,16 +9,18 @@ export const TopBar = () => {
             <div class="grid grid-cols-12">
                 <div class="col-span-3 flex items-center"><${Logo} /></div>
                 <div class="col-span-6 flex items-center justify-center">
-                    <span
+                    ${meetingStatus.value &&
+                    html`<span
                         class="text-black dark:text-white text-center text-bold-14 hidden sm:block"
                         >Is Your Future Distributed? Welcome to the
                         Fediverse!</span
-                    >
+                    >`}
                 </div>
                 <div class="col-span-3 text-right">
-                    <${Button} variant="red" onClick=${handleLeaveMeeting}
+                    ${meetingStatus.value &&
+                    html`<${Button} variant="red" onClick=${handleLeaveMeeting}
                         >Leave<//
-                    >
+                    >`}
                 </div>
             <//>
         <//>

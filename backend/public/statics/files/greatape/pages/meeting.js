@@ -251,7 +251,7 @@ const Meeting = () => {
                     }
                 },
                 altBroadcastApprove: (isStreamming) => {
-                    updateUser({ isStreamming });
+                    updateUser({ isStreamming, ableToRaiseHand: true });
                     if (!isStreamming) {
                         sparkRTC.value.onRaiseHandRejected();
                         makeDialog('info', {
@@ -346,15 +346,30 @@ const Meeting = () => {
     return html` <div
         class="flex flex-col justify-between min-h-screen dark:bg-secondary-1-a bg-white-f-9 text-medium-12 text-gray-800 dark:text-gray-200"
     >
+        <${TopBar} />
         ${meetingStatus.value
-            ? html`<${TopBar} />
-                  <${MeetingBody} />
+            ? html` <${MeetingBody} />
                   <${BottomBar} />`
             : html`<div
-                  class="flex flex-col justify-center items-center p-10 rounded-md gap-2"
+                  class="flex flex-col justify-center items-center p-10 rounded-md gap-4 h-full flex-grow"
               >
-                  <span>You left the meeting</span>
-                  <${Button} onClick=${rejoinMeeting}>Rejoin<//>
+                  <span class="text-bold-18">You Left The Live Show</span>
+                  <div
+                      class="flex w-full justify-center items-center gap-4 sm:flex-row flex-col max-w-[70%] sm:max-w-[400px]"
+                  >
+                      <${Button}
+                          onClick=${rejoinMeeting}
+                          variant="outline"
+                          class="flex-1 w-full"
+                          >Go To Home Feed<//
+                      >
+                      <${Button}
+                          onClick=${rejoinMeeting}
+                          variant="primary"
+                          class="flex-1 w-full"
+                          >Rejoin<//
+                      >
+                  </div>
               </div>`}
     </div>`;
 };

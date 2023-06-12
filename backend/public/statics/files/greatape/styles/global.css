@@ -153,6 +153,15 @@
 	text-transform: none;
 }
 
+/* Text Buttons */
+.text-bold-18 {
+	font-family: 'Inter';
+	font-style: normal;
+	font-weight: 900;
+	font-size: 18px;
+}
+
+
 /* Names - Titles - 40h Buttons' text */
 .text-semi-bold-16 {
 	font-size: 1rem;
