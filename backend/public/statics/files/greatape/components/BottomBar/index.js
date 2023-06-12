@@ -15,13 +15,12 @@ import {
 } from 'components';
 import { html } from 'htm';
 import { broadcastIsInTheMeeting } from '../../pages/meeting.js';
-import { bottomBarVisible } from '../MeetingBody/Stage.js';
 
 export const BottomBar = () => {
     return html`<${Container}
-        class=${clsx({
-            hidden: !bottomBarVisible.value,
-            block: bottomBarVisible.value,
+        class=${clsx('transition-all', {
+            // 'max-h-0': !bottomBarVisible.value,
+            // 'max-h-[72px]': bottomBarVisible.value,
         })}
     >
         <div

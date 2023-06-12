@@ -91,7 +91,8 @@ export const getVideoWidth = (attendee, index) => {
             return `100%; height: ${availableHeight}px`;
         } else return `0px; height: 0px;`;
     }
-    return `${itemsWidth.value}px`;
+    let height = (itemsWidth.value * 9) / 16;
+    return `${itemsWidth.value}px;height: ${height}px;`;
 };
 
 export const Stage = () => {
@@ -107,34 +108,37 @@ export const Stage = () => {
 
     const documentClick = () => {
         if (timeOut) clearTimeout(timeOut);
-        if (hasFullScreenedStream.value && bottomBarVisible.value) {
+        if (hasFullScreenedStream.value) {
             bottomBarVisible.value = true;
             handleMaximize();
         }
     };
     const handleMaximize = () => {
+        if (timeOut) clearTimeout(timeOut);
         timeOut = setTimeout(() => {
-            if (bottomBarVisible.value) bottomBarVisible.value = false;
+            if (bottomBarVisible.value) {
+                bottomBarVisible.value = false;
+            }
         }, 2000);
-        document
-            .getElementsByTagName('body')[0]
-            .addEventListener('click', documentClick);
     };
     useEffect(() => {
         if (hasFullScreenedStream.value) {
             handleMaximize();
+            document
+                .getElementsByTagName('body')[0]
+                .addEventListener('click', documentClick);
         } else {
+            document
+                .getElementsByTagName('body')[0]
+                .removeEventListener('click', documentClick);
             bottomBarVisible.value = true;
             if (timeOut) clearTimeout(timeOut);
         }
     }, [hasFullScreenedStream.value]);
     const handleOnClick = (e, streamId) => {
-        if (
-            deviceSize.value === 'xs' &&
-            streamId === fullScreenedStream.value
-        ) {
+        if (streamId === fullScreenedStream.value) {
             bottomBarVisible.value = !bottomBarVisible.value;
-            documentClick();
+            handleMaximize();
             e.stopPropagation();
         }
     };
@@ -197,10 +201,12 @@ export const Video = memo(({ stream, isMuted, isHostStream, name, userId }) => {
     const menu = useRef();
     const videoRef = useRef();
     const [menuOpen, setMenuOpen] = useState(false);
-    const toggleFullScreen = () => {
+    const toggleFullScreen = (e) => {
         if (fullScreenedStream.value === stream.id) {
             fullScreenedStream.value = null;
         } else fullScreenedStream.value = stream.id;
+
+        e.stopPropagation();
     };
     useEffect(() => {
         videoRef.current.srcObject = stream;
