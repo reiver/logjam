@@ -113,7 +113,6 @@ export class SparkRTC {
      * @returns
      */
     handleMessage = async (event) => {
-
         let msg;
         try {
             msg = JSON.parse(event.data);
@@ -1834,7 +1833,7 @@ export class SparkRTC {
             await this.lowerHand();
         } else {
             //close websocket if not streaming anything
-            if (this.role === this.Roles.AUDIENCE && this.socket) {
+            if (this.socket) {
                 this.socket.onclose = () => {
                     this.updateTheStatus(`socket is closed after leaveMeeting`);
                     this.resetVariables();
