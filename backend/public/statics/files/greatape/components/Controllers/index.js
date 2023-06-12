@@ -59,11 +59,13 @@ export const Controllers = () => {
         if (isStreamming) {
             updateUser({
                 isStreamming: false,
+                ableToRaiseHand: true,
             });
             sparkRTC.value.lowerHand();
         } else {
             updateUser({
                 isRaisingHand: true,
+                ableToRaiseHand: false,
             });
             sparkRTC.value.raiseHand();
             makeDialog('info', {
@@ -110,17 +112,24 @@ export const Controllers = () => {
                 <${Icon} icon="Share${sharingScreenStream ? 'Off' : ''}" />
             <//>
         <//>`}
-        ${((!raiseHandMaxLimitReached.value &&
-            !isStreamming &&
-            ableToRaiseHand) ||
-            (isStreamming && !isHost && ableToRaiseHand)) &&
-        html`<${Tooltip} label=${isStreamming ? 'Put Hand Down' : 'Raise Hand'}>
-            <${IconButton}
+        ${((!raiseHandMaxLimitReached.value && !isStreamming) ||
+            (isStreamming && !isHost)) &&
+        html`<${Tooltip} label=${
+            isStreamming
+                ? 'Put Hand Down'
+                : ableToRaiseHand
+                ? 'Raise Hand'
+                : 'Raise hand request has been sent'
+        }>
+            <div>
+						<${IconButton}
                 onClick=${onRaiseHand}
                 variant=${isStreamming && 'danger'}
+                disabled=${!ableToRaiseHand}
             >
-                <${Icon} icon="Hand" /> <//
-        ><//>`}
+                <${Icon} icon="Hand" /> <//>
+								<//>
+						</div>`}
         ${hasCamera &&
         isStreamming &&
         html` <${Tooltip}
