@@ -75,7 +75,7 @@ export const Controllers = () => {
         }
     };
     const handleReload = () => {
-        sparkRTC.value.startProcedure();
+        sparkRTC.value.startProcedure(true);
     };
 
     const toggleBottomSheet = () => {};

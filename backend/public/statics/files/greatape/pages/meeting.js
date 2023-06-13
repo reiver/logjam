@@ -13,7 +13,7 @@ import {
 import { html } from 'htm';
 import { useEffect } from 'preact';
 import { isAttendeesOpen } from '../components/Attendees/index.js';
-import { createSparkRTC, getWsUrl } from '../lib/common.js';
+import { createSparkRTC, getWsUrl, Roles } from '../lib/common.js';
 
 export const sparkRTC = signal(null);
 export const meetingStatus = signal(true);
@@ -86,12 +86,23 @@ export const onStopShareScreen = (stream) => {
     streamers.value = streamersTmp;
 };
 
-const log = (data) => {
+const log = (tag, data) => {
     const date = new Date().toLocaleTimeString();
-    console.log('[', date, '] ', data);
-};
 
-const startSocket = async (name, room, host = null) => {
+    if (data) {
+        console.log('[', date, '] ', tag, ' | ', data);
+    } else {
+        console.log('[', date, '] ', tag);
+    }
+};
+const setupSignalingSocket = async (host, name, room) => {
+    await sparkRTC.value.setupSignalingSocket(
+        getWsUrl(host),
+        JSON.stringify({ name, email: '' }),
+        room
+    );
+};
+const start = async () => {
     return sparkRTC.value.start();
 };
 
@@ -130,10 +141,13 @@ const Meeting = () => {
         updateUser({
             name,
             role,
-            isStreamming: role === 'broadcast',
-            isHost: role === 'broadcast',
+            isStreamming: role === Roles.BROADCAST,
+            isHost: role === Roles.BROADCAST,
         });
+
         const setupSparkRTC = async () => {
+            log(`Setup SparkRTC`);
+
             sparkRTC.value = createSparkRTC(role, {
                 onUserInitialized: (userId) => {
                     currentUser.userId = userId;
@@ -145,17 +159,29 @@ const Meeting = () => {
                         ...streamers.value,
                         [stream.id]: {
                             name: stream.name,
-                            isHost: role === 'broadcast',
+                            isHost: role === Roles.BROADCAST,
                             avatar: '',
                             raisedHand: false,
                             hasCamera: false,
                             stream,
+                            isLocalStream: true,
                             isShareScreen: stream.isShareScreen || false,
                         },
                     };
                 },
                 remoteStreamCallback: (stream) => {
                     sparkRTC.value.getLatestUserList();
+
+                    log(`remoteStreamCallback`, stream);
+                    log(`remoteStreamCallback-Name`, stream.name);
+
+                    //if receive my localStream then mute it for me
+                    let local = false;
+                    if (sparkRTC.value.localStream) {
+                        if (sparkRTC.value.localStream.id === stream.id) {
+                            local = true;
+                        }
+                    }
                     log(`[Remote Stream Callback] ${stream}`);
                     console.log(stream);
                     log(`NameCallback: ${stream.name}`);
@@ -165,25 +191,31 @@ const Meeting = () => {
                         [stream.id]: {
                             name: stream.name,
                             userId: stream.userId,
-                            isHost: stream.role === 'broadcast',
+                            isHost: stream.role === Roles.BROADCAST,
                             avatar: '',
                             raisedHand: false,
                             hasCamera: false,
                             stream,
+                            isLocalStream: local,
                             isShareScreen: stream.isShareScreen || false,
                         },
                     };
 
-                    if (!sparkRTC.value.broadcasterDC && role === 'audience') {
+                    if (
+                        !sparkRTC.value.broadcasterDC &&
+                        role === Roles.AUDIENCE
+                    ) {
                         broadcastIsInTheMeeting.value = true;
                     }
                 },
                 remoteStreamDCCallback: (stream) => {
                     sparkRTC.value.getLatestUserList();
 
+                    log(`remoteStreamDCCallback`, stream);
+
                     onStopStream(stream);
 
-                    if (role === 'audience') {
+                    if (role === Roles.AUDIENCE) {
                         if (
                             sparkRTC.value.broadcasterDC ||
                             stream === 'no-stream'
@@ -197,8 +229,8 @@ const Meeting = () => {
                         }
                     }
                 },
-                onRaiseHand: (message, user, ...rest) => {
-                    log(`[On Raise Hand Request] ${message}`, user, rest);
+                onRaiseHand: (user) => {
+                    log(`[On Raise Hand Request]`, user);
 
                     let raiseHandCallback = () => {};
                     const handler = new Promise((resolve, reject) => {
@@ -227,31 +259,23 @@ const Meeting = () => {
 
                     return handler;
                 },
-                onStart: async () => {
+                onStart: async (closeSocket = false) => {
                     if (meetingStatus.value) {
-                        if (role === 'audience') {
-                            let idList = [];
-                            for (const id in sparkRTC.value
-                                .myPeerConnectionArray) {
-                                const peerConn =
-                                    sparkRTC.value.myPeerConnectionArray[id];
-                                await peerConn.close();
-                                idList.push(id);
-                            }
-                            idList.forEach(
-                                (id) =>
-                                    delete sparkRTC.value.myPeerConnectionArray[
-                                        id
-                                    ]
-                            );
-                            sparkRTC.value.remoteStreams = [];
-                            sparkRTC.value.localStream
-                                ?.getTracks()
-                                ?.forEach((track) => track.stop());
-                            sparkRTC.value.localStream = null;
+                        if (role === Roles.AUDIENCE) {
+                            await sparkRTC.value.restart(closeSocket);
                         }
 
-                        await startSocket(name, room, host);
+                        if (!closeSocket) {
+                            //start sparkRTC
+                            await start();
+                        }
+                    }
+                },
+                startAgain: async () => {
+                    if (sparkRTC.value) {
+                        //Init socket and start sparkRTC
+                        await setupSignalingSocket(host, name, room);
+                        await start();
                     }
                 },
                 altBroadcastApprove: (isStreamming) => {
@@ -281,7 +305,7 @@ const Meeting = () => {
                     makeDialog('info', { message, icon: 'Close' });
                 },
                 onUserListUpdate: (users) => {
-                    log(`[On Users List Update], ${users}`);
+                    log(`[On Users List Update]`, users);
                     const usersTmp = {};
                     for (const {
                         name: userInfo,
@@ -294,7 +318,7 @@ const Meeting = () => {
                             ...(attendees.value[userId] || {}),
                             name,
                             email,
-                            isHost: role === 'broadcaster',
+                            isHost: role === Roles.BROADCASTER,
                             avatar: '',
                             raisedHand: getUserRaiseHandStatus(userId),
                             hasCamera: !!video,
@@ -323,21 +347,24 @@ const Meeting = () => {
                         updateUser({ hasCamera: false });
                     }
                 },
-                updateStatus: (status) => {
-                    log(status);
+                updateStatus: (tag, data) => {
+                    log(tag, data);
                 },
-                treeCallback: (tree) => {},
-                signalingDisconnectedCallback: () => {},
+                treeCallback: (tree) => {
+                    log(`tree`, tree);
+                },
+                connectionStatus: (status) => {
+                    log(`Connection Status: `, status);
+                },
             });
 
-            log(`Setup SparkRTC`);
-            await sparkRTC.value.setupSignalingSocket(
-                getWsUrl(host),
-                JSON.stringify({ name, email: '' }),
-                room
-            );
-            await startSocket(name, room, host);
+            if (sparkRTC.value) {
+                //Init socket and start sparkRTC
+                await setupSignalingSocket(host, name, room);
+                await start();
+            }
         };
+
         if (meetingStatus.value) {
             setupSparkRTC();
         }

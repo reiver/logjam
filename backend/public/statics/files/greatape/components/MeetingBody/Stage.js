@@ -167,6 +167,16 @@ export const Stage = () => {
                           return bScore - aScore;
                       })
                       .map((attendee, i) => {
+                          let muted = false;
+
+                          //mute the stream if it's my local stream
+                          if (attendee.isLocalStream === true) {
+                              muted = true;
+                          } else {
+                              //mute it based on meeting status
+                              muted = currentUser.value.isMeetingMuted;
+                          }
+
                           return html`<div
                               key=${i}
                               style="width: ${getVideoWidth(attendee, i)}"
@@ -181,7 +191,7 @@ export const Stage = () => {
                               <${Video}
                                   stream=${attendee.stream}
                                   userId=${attendee.userId}
-                                  isMuted=${currentUser.value.isMeetingMuted}
+                                  isMuted=${muted}
                                   name=${attendee.name}
                                   isHostStream=${attendee.isHost}
                               />

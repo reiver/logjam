@@ -1,5 +1,12 @@
 import { SparkRTC } from './spark-rtc.js';
 
+//enum for Roles
+export const Roles = {
+    BROADCAST: 'broadcast',
+    AUDIENCE: 'audience',
+    BROADCASTER: 'broadcaster',
+};
+
 // TODO: set base url
 export function getWsUrl(host = null) {
     let baseUrl = null;
@@ -17,7 +24,7 @@ export function getWsUrl(host = null) {
 
 export function createSparkRTC(role, options) {
     // TODO: set role
-    if (role === 'broadcast') {
+    if (role === Roles.BROADCAST) {
         return createBroadcastSpartRTC(role, options);
     } else {
         return createAudienceSpartRTC(role, options);
@@ -32,11 +39,12 @@ export const createBroadcastSpartRTC = (role, props) => {
         raiseHandConfirmation: props.onRaiseHand,
         userListUpdated: props.onUserListUpdate,
         startProcedure: props.onStart,
-        signalingDisconnectedCallback: props.signalingDisconnectedCallback,
+        connectionStatus: props.connectionStatus,
         treeCallback: props.treeCallback,
         constraintResults: props.constraintResults,
         updateStatus: props.updateStatus,
         userInitialized: props.onUserInitialized,
+        startAgain: props.startAgain,
     });
 };
 
@@ -50,6 +58,8 @@ export const createAudienceSpartRTC = (role, props) => {
         maxLimitReached: props.maxLimitReached,
         disableBroadcasting: props.disableBroadcasting,
         updateStatus: props.updateStatus,
+        connectionStatus: props.connectionStatus,
         userInitialized: props.onUserInitialized,
+        startAgain: props.startAgain,
     });
 };
