@@ -1,3 +1,4 @@
+import { signal } from '@preact/signals';
 import { Icon, IconButton, makeDialog, Tooltip } from 'components';
 import { html } from 'htm';
 import {
@@ -9,6 +10,9 @@ import {
     updateUser,
 } from '../../pages/meeting.js';
 
+export const isMoreOptionsOpen = signal(false);
+export const toggleMoreOptions = () =>
+    (isMoreOptionsOpen.value = !isMoreOptionsOpen.value);
 export const Controllers = () => {
     const {
         isHost,
@@ -55,11 +59,13 @@ export const Controllers = () => {
         if (isStreamming) {
             updateUser({
                 isStreamming: false,
+                ableToRaiseHand: true,
             });
             sparkRTC.value.lowerHand();
         } else {
             updateUser({
                 isRaisingHand: true,
+                ableToRaiseHand: false,
             });
             sparkRTC.value.raiseHand();
             makeDialog('info', {
@@ -72,11 +78,14 @@ export const Controllers = () => {
         sparkRTC.value.startProcedure();
     };
 
-    return html`<div class="flex gap-5 py-5">
+    const toggleBottomSheet = () => {};
+
+    return html`<div class="flex gap-5 py-3 pt-0">
         <${Tooltip} label=${isMeetingMuted ? 'Listen' : 'Deafen'}>
             <${IconButton}
                 variant=${isMeetingMuted && 'danger'}
                 onClick=${toggleMuteMeeting}
+                class="hidden sm:flex"
             >
                 <${Icon} icon="Volume${isMeetingMuted ? 'Off' : ''}" />
             <//>
@@ -98,21 +107,29 @@ export const Controllers = () => {
             <${IconButton}
                 variant=${sharingScreenStream && 'danger'}
                 onClick=${handleShareScreen}
+                class="hidden sm:flex"
             >
                 <${Icon} icon="Share${sharingScreenStream ? 'Off' : ''}" />
             <//>
         <//>`}
-        ${((!raiseHandMaxLimitReached.value &&
-            !isStreamming &&
-            ableToRaiseHand) ||
-            (isStreamming && !isHost && ableToRaiseHand)) &&
-        html`<${Tooltip} label=${isStreamming ? 'Lower Hand' : 'Raise Hand'}>
-            <${IconButton}
+        ${((!raiseHandMaxLimitReached.value && !isStreamming) ||
+            (isStreamming && !isHost)) &&
+        html`<${Tooltip} label=${
+            isStreamming
+                ? 'Put Hand Down'
+                : ableToRaiseHand
+                ? 'Raise Hand'
+                : 'Raise hand request has been sent'
+        }>
+            <div>
+						<${IconButton}
                 onClick=${onRaiseHand}
                 variant=${isStreamming && 'danger'}
+                disabled=${!ableToRaiseHand}
             >
-                <${Icon} icon="Hand" /> <//
-        ><//>`}
+                <${Icon} icon="Hand" /> <//>
+								<//>
+						</div>`}
         ${hasCamera &&
         isStreamming &&
         html` <${Tooltip}
@@ -126,16 +143,74 @@ export const Controllers = () => {
         ><//>`}
         ${hasMic &&
         isStreamming &&
+        html`
+            <${Tooltip}
+                label=${!isMicrophoneOn
+                    ? 'Turn Microphone On'
+                    : 'Turn Microphone Off'}
+            >
+                <${IconButton}
+                    variant=${!isMicrophoneOn && 'danger'}
+                    onClick=${toggleMicrophone}
+                >
+                    <${Icon} icon="Microphone${!isMicrophoneOn ? 'Off' : ''}" />
+                <//>
+            <//>
+        `}
+        <${Tooltip} label=${'Menu'}>
+            <${IconButton}
+                onClick=${toggleBottomSheet}
+                onClick=${toggleMoreOptions}
+                class="flex sm:hidden"
+            >
+                <${Icon} icon="KebabMenuVertical" />
+            <//>
+        <//>
+    </div>`;
+};
+
+export const MoreControllers = () => {
+    const { isHost, sharingScreenStream, isStreamming, isMeetingMuted } =
+        currentUser.value;
+    const toggleMuteMeeting = () => {
+        updateUser({
+            isMeetingMuted: !isMeetingMuted,
+        });
+    };
+
+    const handleShareScreen = async () => {
+        if (!sharingScreenStream) {
+            const stream = await sparkRTC.value.startShareScreen();
+            onStartShareScreen(stream);
+            updateUser({
+                sharingScreenStream: stream,
+            });
+        } else {
+            await sparkRTC.value.stopShareScreen(sharingScreenStream);
+            onStopShareScreen(sharingScreenStream);
+        }
+    };
+    return html`<div class="flex gap-5 py-5 justify-center">
+        <${Tooltip} label=${isMeetingMuted ? 'Listen' : 'Deafen'}>
+            <${IconButton}
+                variant=${isMeetingMuted && 'danger'}
+                onClick=${toggleMuteMeeting}
+            >
+                <${Icon} icon="Volume${isMeetingMuted ? 'Off' : ''}" />
+            <//>
+        <//>
+        ${isStreamming &&
+        isHost &&
         html` <${Tooltip}
-            label=${!isMicrophoneOn
-                ? 'Turn Microphone On'
-                : 'Turn Microphone Off'}
+            label="${!sharingScreenStream
+                ? 'Share Screen'
+                : 'Stop Sharing Screen'}"
         >
             <${IconButton}
-                variant=${!isMicrophoneOn && 'danger'}
-                onClick=${toggleMicrophone}
+                variant=${sharingScreenStream && 'danger'}
+                onClick=${handleShareScreen}
             >
-                <${Icon} icon="Microphone${!isMicrophoneOn ? 'Off' : ''}" />
+                <${Icon} icon="Share${sharingScreenStream ? 'Off' : ''}" />
             <//>
         <//>`}
     </div>`;
