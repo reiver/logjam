@@ -244,7 +244,10 @@ export const Video = memo(({ stream, isMuted, isHostStream, name, userId }) => {
             }
         );
     };
-    const handleOpenMenu = setMenuOpen.bind(null, !menuOpen);
+    const handleOpenMenu = (e) => {
+        e.stopPropagation();
+        setMenuOpen(!menuOpen);
+    };
     const [isHover, setHover] = useState(false);
     console.log('init', isHover, bottomBarVisible.value);
     const handleOnClick = () => {
@@ -294,6 +297,7 @@ export const Video = memo(({ stream, isMuted, isHostStream, name, userId }) => {
                     {
                         'group-hover:flex': isHover && bottomBarVisible.value,
                         hidden: !(isHover && bottomBarVisible.value),
+                        flex: menuOpen || isHover,
                     }
                 )}
             >
@@ -322,10 +326,10 @@ export const Video = memo(({ stream, isMuted, isHostStream, name, userId }) => {
 
                         ${menuOpen &&
                         html`<div
-                            class="relative top-full right-0 h-full w-full"
+                            class="absolute top-full right-0 h-full w-full"
                         >
                             <ul
-                                class="bg-white absolute top-0 right-0 mt-3 -ml-2 text-black rounded-sm p-1"
+                                class="bg-white absolute top-0 right-0 mt-1 -ml-2 text-black rounded-sm p-1"
                             >
                                 <li
                                     class="w-full whitespace-nowrap px-4 py-1 rounded-sm bg-black bg-opacity-0 hover:bg-opacity-10"

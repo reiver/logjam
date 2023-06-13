@@ -64,14 +64,17 @@ export const ConfirmDialog = ({
 export const InfoDialog = ({
     onOk,
     onClose,
-    message: { message, icon },
+    message: { message, icon, variant },
     pointer,
 }) => {
     return html`<div
         class=${clsx(
-            'select-none py-4 px-6 dark:bg-white-f-9 dark:text-gray-3 bg-gray-3 text-white-f-9 flex justify-between items-center text-medium-12 min-w-[350px] rounded-md border dark:border-gray-1 border-gray-0',
+            'select-none py-4 px-6 flex justify-between items-center text-medium-12 min-w-full sm:min-w-[350px] rounded-md',
             {
                 'cursor-pointer': pointer,
+                'bg-red-distructive text-white-f-9': variant === 'danger',
+                'dark:bg-white-f-9 dark:text-gray-3 bg-gray-3 text-white-f-9 border dark:border-gray-1 border-gray-0':
+                    !variant,
             }
         )}
         onClick=${onClose}
@@ -86,7 +89,7 @@ export const InfoDialog = ({
 
 export const DialogPool = () => {
     return html`<div
-            className="absolute right-4 md:right-10 bottom-24 flex flex-col justify-end gap-2"
+            className="absolute right-0 left-0 md:left-[unset] md:right-10 bottom-[5.5rem] flex flex-col justify-end gap-2 px-4 sm:px-0"
         >
             ${Object.values(dialogs.value).map((dialog) => {
                 if (dialog.type === 'info')

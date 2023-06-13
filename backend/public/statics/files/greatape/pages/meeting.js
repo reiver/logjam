@@ -283,8 +283,9 @@ const Meeting = () => {
                     if (!isStreamming) {
                         sparkRTC.value.onRaiseHandRejected();
                         makeDialog('info', {
-                            message: 'Your raise hand request rejected!',
+                            message: 'You’ve been Rejected',
                             icon: 'Close',
+                            variant: 'danger',
                         });
                     } else {
                         makeDialog('info', {
@@ -298,6 +299,7 @@ const Meeting = () => {
                     makeDialog('info', {
                         message: 'You just removed from stage',
                         icon: 'Close',
+                        variant: 'danger',
                     });
                     sparkRTC.value.onRaiseHandRejected();
                 },
