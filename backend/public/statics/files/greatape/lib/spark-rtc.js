@@ -392,9 +392,11 @@ export class SparkRTC {
                 this.parentDC = true;
 
                 if (this.startedRaiseHand) {
+                    this.updateTheStatus(`Reloading..`);
                     await this.wait();
                     window.location.reload();
                 } else {
+                    this.updateTheStatus(`Only Starting Procedure..`);
                     this.startProcedure(true);
                 }
                 break;
