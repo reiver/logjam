@@ -202,7 +202,7 @@ func (receiver *Type) GetSocketByStreamId(roomName, streamId string) (binarytree
 		return nil, errRoomNotFound
 	}
 
-	for _, node := range room.Room.All() {
+	for _, node := range room.Room.Nodes() {
 		nodeStreamId, ok := node.(*binarytreesrv.MySocket).MetaData["streamId"]
 		if ok {
 			if nodeStreamId == streamId {
@@ -232,7 +232,7 @@ func (receiver *Type) GetUsers(roomName string) ([]User, error) {
 		return nil, errRoomNotFound
 	}
 
-	for _, node := range room.Room.All() {
+	for _, node := range room.Room.Nodes() {
 		nodeStreamId := node.(*binarytreesrv.MySocket).MetaData["streamId"]
 		role := "audience"
 		if node.(*binarytreesrv.MySocket).IsBroadcaster {
