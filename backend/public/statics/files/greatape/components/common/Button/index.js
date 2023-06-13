@@ -21,6 +21,12 @@ export const Button = ({
             variantClasses =
                 'border dark:bg-white dark:hover:bg-gray-200 dark:text-black bg:text-secondary-1-a bg-black text-white';
             break;
+
+        case 'primary':
+            variantClasses =
+                'border border-gray-1 border-secondary-1-a border-inset bg-primary text-black';
+            break;
+
         default:
             variantClasses = 'bg-blue-500 hover:bg-blue-600 text-white';
     }

@@ -1241,7 +1241,7 @@ export class SparkRTC {
 
             let revceivedStream = false;
             try {
-                stream.name = ''; //currenlty we don't know name so it's empty
+                stream.name = ''; // currently we don't know name so it's empty
 
                 revceivedStream = true;
                 this.updateTheStatus(`ReceivedStream:`, stream);
@@ -1466,6 +1466,7 @@ export class SparkRTC {
                             );
                             stream.name = broadcasterName;
                             stream.role = this.Roles.BROADCAST;
+                            stream.isShareScreen = true;
                             this.remoteStreamCallback(stream);
                             return;
                         }

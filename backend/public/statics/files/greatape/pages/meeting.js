@@ -6,6 +6,7 @@ import {
     TopBar,
     attendees,
     attendeesBadge,
+    isMoreOptionsOpen,
     makeDialog,
     streamers,
 } from 'components';
@@ -53,6 +54,8 @@ export const onStartShareScreen = (stream) => {
         onStopStream(stream);
     };
 
+    isMoreOptionsOpen.value = false;
+
     streamers.value = {
         ...streamers.value,
         [stream.id]: {
@@ -62,6 +65,7 @@ export const onStartShareScreen = (stream) => {
             raisedHand: false,
             hasCamera: false,
             stream,
+            isShareScreen: true,
         },
     };
 };
@@ -150,6 +154,7 @@ const Meeting = () => {
                 },
                 localStreamChangeCallback: (stream) => {
                     log('[Local Stream Callback]', stream);
+                    console.log(stream);
                     streamers.value = {
                         ...streamers.value,
                         [stream.id]: {
@@ -160,6 +165,7 @@ const Meeting = () => {
                             hasCamera: false,
                             stream,
                             isLocalStream: true,
+                            isShareScreen: stream.isShareScreen || false,
                         },
                     };
                 },
@@ -176,6 +182,9 @@ const Meeting = () => {
                             local = true;
                         }
                     }
+                    log(`[Remote Stream Callback] ${stream}`);
+                    console.log(stream);
+                    log(`NameCallback: ${stream.name}`);
 
                     streamers.value = {
                         ...streamers.value,
@@ -188,6 +197,7 @@ const Meeting = () => {
                             hasCamera: false,
                             stream,
                             isLocalStream: local,
+                            isShareScreen: stream.isShareScreen || false,
                         },
                     };
 
@@ -241,7 +251,11 @@ const Meeting = () => {
                             attendeesBadge.value = false;
                         }
                     );
-                    onUserRaisedHand(user.userId, true, raiseHandCallback);
+                    onUserRaisedHand(
+                        user.userId,
+                        new Date(),
+                        raiseHandCallback
+                    );
 
                     return handler;
                 },
@@ -265,7 +279,7 @@ const Meeting = () => {
                     }
                 },
                 altBroadcastApprove: (isStreamming) => {
-                    updateUser({ isStreamming });
+                    updateUser({ isStreamming, ableToRaiseHand: true });
                     if (!isStreamming) {
                         sparkRTC.value.onRaiseHandRejected();
                         makeDialog('info', {
@@ -363,15 +377,32 @@ const Meeting = () => {
     return html` <div
         class="flex flex-col justify-between min-h-screen dark:bg-secondary-1-a bg-white-f-9 text-medium-12 text-gray-800 dark:text-gray-200"
     >
+        <${TopBar} />
         ${meetingStatus.value
-            ? html`<${TopBar} />
-                  <${MeetingBody} />
+            ? html` <${MeetingBody} />
                   <${BottomBar} />`
             : html`<div
-                  class="flex flex-col justify-center items-center p-10 rounded-md gap-2"
+                  class="flex flex-col justify-center items-center sm:p-10 rounded-md gap-4 h-full flex-grow"
               >
-                  <span>You left the meeting</span>
-                  <${Button} onClick=${rejoinMeeting}>Rejoin<//>
+                  <span class="text-bold-18 text-center"
+                      >You Left The Live Show</span
+                  >
+                  <div
+                      class="flex w-full justify-center items-center gap-4 flex-row max-w-[85%] sm:max-w-[400px]"
+                  >
+                      <${Button}
+                          onClick=${rejoinMeeting}
+                          variant="outline"
+                          class="flex-1 w-full px-0"
+                          >Go To Home Feed<//
+                      >
+                      <${Button}
+                          onClick=${rejoinMeeting}
+                          variant="primary"
+                          class="flex-1 w-full px-0"
+                          >Rejoin<//
+                      >
+                  </div>
               </div>`}
     </div>`;
 };
