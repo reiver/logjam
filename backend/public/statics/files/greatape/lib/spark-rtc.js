@@ -930,7 +930,7 @@ export class SparkRTC {
         } catch {}
 
         if (
-            (this.parentDC || this.startedRaiseHand || !isAudience) &&
+            (this.parentDC || !isAudience) &&
             this.role !== this.Roles.BROADCAST
         ) {
             this.updateTheStatus(`Waiting to restart..`);
@@ -1314,6 +1314,7 @@ export class SparkRTC {
             }
         };
 
+        let connectedOnce = false;
         peerConnection.oniceconnectionstatechange = (event) => {
             this.updateTheStatus(
                 `[newPeerConnectionInstance] oniceconnectionstatechange peerConnection.iceConnectionState = ${
@@ -1322,6 +1323,7 @@ export class SparkRTC {
             );
             switch (peerConnection.iceConnectionState) {
                 case 'connected': {
+                    connectedOnce = true;
                     peerConnection._iceIsConnected = true;
                     break;
                 }
@@ -1343,11 +1345,17 @@ export class SparkRTC {
                         this.raiseHands.splice(index, 1);
                     }
                 }
-                if (!this.parentDC)
+                if (!this.parentDC && !connectedOnce)
+                {
                     setTimeout(() => {
                         this.updateTheStatus('restarting ice');
                         peerConnection.restartIce();
                     }, 0);
+                } else {
+                    this.updateTheStatus("closing the peer connection: " + target);
+                    peerConnection.close();
+                    delete this.myPeerConnectionArray[target];
+                }
                 this.restartEverything(peerConnection, target, isAudience);
             }
         };
