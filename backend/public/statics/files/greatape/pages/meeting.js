@@ -13,7 +13,7 @@ import {
 import { html } from 'htm';
 import { useEffect } from 'preact';
 import { isAttendeesOpen } from '../components/Attendees/index.js';
-import { createSparkRTC, getWsUrl, Roles } from '../lib/common.js';
+import { Roles, createSparkRTC, getWsUrl } from '../lib/common.js';
 
 export const sparkRTC = signal(null);
 export const meetingStatus = signal(true);
@@ -283,8 +283,9 @@ const Meeting = () => {
                     if (!isStreamming) {
                         sparkRTC.value.onRaiseHandRejected();
                         makeDialog('info', {
-                            message: 'Your raise hand request rejected!',
+                            message: 'You’ve been Rejected',
                             icon: 'Close',
+                            variant: 'danger',
                         });
                     } else {
                         makeDialog('info', {
@@ -298,6 +299,7 @@ const Meeting = () => {
                     makeDialog('info', {
                         message: 'You just removed from stage',
                         icon: 'Close',
+                        variant: 'danger',
                     });
                     sparkRTC.value.onRaiseHandRejected();
                 },
@@ -375,7 +377,7 @@ const Meeting = () => {
     };
 
     return html` <div
-        class="flex flex-col justify-between min-h-screen dark:bg-secondary-1-a bg-white-f-9 text-medium-12 text-gray-800 dark:text-gray-200"
+        class="flex flex-col justify-between min-h-[--doc-height] dark:bg-secondary-1-a bg-white-f-9 text-medium-12 text-gray-800 dark:text-gray-200"
     >
         <${TopBar} />
         ${meetingStatus.value
