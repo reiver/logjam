@@ -1489,6 +1489,7 @@ export class SparkRTC {
                         this.updateTheStatus('message: ', message);
 
                         if (
+                            message &&
                             message.id === stream.id &&
                             message.type === this.StreamType.SCREEN
                         ) {
