@@ -358,6 +358,14 @@ const Meeting = () => {
                 connectionStatus: (status) => {
                     log(`Connection Status: `, status);
                 },
+                updateUi: () => {
+                    //Todo Nariman
+                    //show original controllers i:e, rise hand, reload, mute meeting
+                },
+                parentDcMessage: () => {
+                    //Todo Nariman
+                    //show message: You've Got disconnected
+                },
             });
 
             if (sparkRTC.value) {
