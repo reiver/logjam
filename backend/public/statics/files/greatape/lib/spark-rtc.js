@@ -1384,8 +1384,6 @@ export class SparkRTC {
      *
      */
     registerUserListCallback() {
-        let enqueuedOnce = false;
-
         //here's logic to get name of stream owener
 
         //set userlist callback to receive list of all the users in the meeting with thier streams
@@ -1396,7 +1394,6 @@ export class SparkRTC {
             const stream = this.dequeue(this.remoteStreamsQueue);
 
             if (stream) {
-                let noNameMatched = true;
                 let broadcasterName = '';
 
                 // //check if user list contain broadcaster and save it's name
@@ -1445,7 +1442,6 @@ export class SparkRTC {
                                 user.video !== undefined
                             ) {
                                 if (user.video.id === stream.id) {
-                                    noNameMatched = false;
                                     const data = JSON.parse(user.name);
                                     userName = data.name;
                                 }
@@ -1487,6 +1483,7 @@ export class SparkRTC {
                         }
                     });
 
+                    //screen share video name
                     if (this.broadcastersMessage != null) {
                         let message = JSON.parse(this.broadcastersMessage);
                         this.updateTheStatus('message: ', message);
