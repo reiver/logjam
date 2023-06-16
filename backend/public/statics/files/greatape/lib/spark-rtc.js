@@ -42,7 +42,7 @@ export class SparkRTC {
     remoteStreamsQueue = [];
 
     parentDisconnectionTimeOut = 2000; // 2 second timeout to check parent is alive or not
-    sendMessageInterval = 1; // send message to child after every 10 ms
+    sendMessageInterval = 1000; // send message to child after every 10 ms
     metaData = {};
     userStreamData = {};
     users = [];
@@ -1032,9 +1032,39 @@ export class SparkRTC {
         //callback for datachannel
         peerConnection.ondatachannel = (event) => {
             let receive = event.channel;
+            let displyedStream = false;
 
             receive.onmessage = (e) => {
                 this.broadcastersMessage = e.data;
+
+                if (!displyedStream) {
+                    this.updateTheStatus(`insideDisplay`);
+                    let message = JSON.parse(this.broadcastersMessage);
+                    let hostName = null;
+
+                    //get name
+                    if (message.name) {
+                        let name = JSON.parse(message.name);
+                        hostName = name.name;
+                    }
+
+                    //match stream and display it with name
+                    if (this.remoteStreams && hostName) {
+                        this.remoteStreams.forEach((stream) => {
+                            if (
+                                stream &&
+                                message.id === stream.id &&
+                                this.remoteStreamCallback
+                            ) {
+                                stream.name = hostName;
+                                stream.role = this.Roles.BROADCAST;
+                                stream.isShareScreen = true;
+                                this.remoteStreamCallback(stream);
+                                displyedStream = true;
+                            }
+                        });
+                    }
+                }
             };
 
             //handle error event
