@@ -9,7 +9,7 @@ export class SparkRTC {
     myPeerConnectionConfig = {
         iceServers,
     };
-    role = 'broadcast';
+    role = 'audience';
     localStream;
     shareStream;
     socketURL = '';
@@ -1921,7 +1921,7 @@ export class SparkRTC {
         this.myName = 'NoName';
         this.roomName = 'SparkRTC';
         this.myUsername = 'NoUsername';
-        this.role = '';
+        this.role = 'audience';
         this.started = false;
         this.myPeerConnectionConfig = {
             iceServers,

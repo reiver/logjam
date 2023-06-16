@@ -135,9 +135,13 @@ const Meeting = () => {
     useEffect(() => {
         const queryParams = new URLSearchParams(window.location.search);
         const name = queryParams.get('name');
-        const role = queryParams.get('role');
+        var role = queryParams.get('role');
         const room = queryParams.get('room');
         const host = queryParams.get('host');
+
+        if (role === null || role === '') {
+            role = Roles.AUDIENCE; //by default set role to Audience
+        }
 
         updateUser({
             name,
