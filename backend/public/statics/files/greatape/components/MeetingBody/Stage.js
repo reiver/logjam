@@ -223,9 +223,13 @@ export const Video = memo(({ stream, isMuted, isHostStream, name, userId }) => {
     }, [stream]);
 
     useEffect(() => {
-        if (userInteractedWithDom.value) setMuted(isMuted);
+        if (userInteractedWithDom.value) {
+            setMuted(isMuted);
+        }
     }, [userInteractedWithDom.value, isMuted]);
-
+    useEffect(() => {
+        videoRef.current.play();
+    }, []);
     const handleRemoveStream = () => {
         makeDialog(
             'confirm',
@@ -249,7 +253,7 @@ export const Video = memo(({ stream, isMuted, isHostStream, name, userId }) => {
         setMenuOpen(!menuOpen);
     };
     const [isHover, setHover] = useState(false);
-    console.log('init', isHover, bottomBarVisible.value);
+
     const handleOnClick = () => {
         setHover(!isHover);
     };
@@ -283,6 +287,7 @@ export const Video = memo(({ stream, isMuted, isHostStream, name, userId }) => {
             <video
                 ref=${videoRef}
                 autoplay
+                playsinline
                 muted="${muted}"
                 className="w-full h-full object-cover rounded-lg"
             />

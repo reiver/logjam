@@ -16,6 +16,7 @@ export const toggleMoreOptions = () =>
 export const Controllers = () => {
     const {
         isHost,
+        showControllers,
         hasCamera,
         hasMic,
         ableToRaiseHand,
@@ -80,6 +81,7 @@ export const Controllers = () => {
 
     const toggleBottomSheet = () => {};
 
+    if (!showControllers) return null;
     return html`<div class="flex gap-5 py-3 pt-0">
         <${Tooltip} label=${isMeetingMuted ? 'Listen' : 'Deafen'}>
             <${IconButton}

@@ -26,6 +26,7 @@ export const raiseHandMaxLimitReached = computed(() => {
     );
 });
 export const currentUser = signal({
+    showControllers: true,
     isHost: false,
     isMicrophoneOn: true,
     isCameraOn: true,
@@ -154,7 +155,6 @@ const Meeting = () => {
                 },
                 localStreamChangeCallback: (stream) => {
                     log('[Local Stream Callback]', stream);
-                    console.log(stream);
                     streamers.value = {
                         ...streamers.value,
                         [stream.id]: {
@@ -183,7 +183,6 @@ const Meeting = () => {
                         }
                     }
                     log(`[Remote Stream Callback] ${stream}`);
-                    console.log(stream);
                     log(`NameCallback: ${stream.name}`);
 
                     streamers.value = {
@@ -361,10 +360,16 @@ const Meeting = () => {
                 updateUi: () => {
                     //Todo Nariman
                     //show original controllers i:e, rise hand, reload, mute meeting
+                    updateUser({ showControllers: true });
                 },
                 parentDcMessage: () => {
-                    //Todo Nariman
-                    //show message: You've Got disconnected
+                    // Todo Nariman
+                    // show message: You've Got disconnected
+                    makeDialog({
+                        message: 'You’ve got disconnected',
+                        icon: 'Close',
+                        variant: 'danger',
+                    });
                 },
             });
 
