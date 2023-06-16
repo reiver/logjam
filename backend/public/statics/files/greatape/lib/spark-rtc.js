@@ -401,13 +401,11 @@ export class SparkRTC {
                 this.parentDC = true;
 
                 if (this.startedRaiseHand) {
-                    this.updateTheStatus(`Reloading..`);
                     if (this.parentDcMessage) this.parentDcMessage(); //show parent dc message on Audience side
                     await this.wait();
                     window.location.reload();
                 } else {
-                    this.updateTheStatus(`Only Starting Procedure..`);
-                    this.startProcedure(true);
+                    if (this.startProcedure) this.startProcedure(true);
                 }
                 break;
             case 'metadata-get':

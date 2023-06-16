@@ -365,7 +365,7 @@ const Meeting = () => {
                 parentDcMessage: () => {
                     // Todo Nariman
                     // show message: You've Got disconnected
-                    makeDialog({
+                    makeDialog('info', {
                         message: 'You’ve got disconnected',
                         icon: 'Close',
                         variant: 'danger',
