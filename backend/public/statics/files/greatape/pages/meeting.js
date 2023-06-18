@@ -393,6 +393,10 @@ const Meeting = () => {
         window.location.reload();
     };
 
+    const leaveMeeting = () => {
+        window.parent.postMessage('leave', '*');
+    };
+
     return html` <div
         class="flex flex-col justify-between min-h-[--doc-height] dark:bg-secondary-1-a bg-white-f-9 text-medium-12 text-gray-800 dark:text-gray-200"
     >
@@ -410,7 +414,7 @@ const Meeting = () => {
                       class="flex w-full justify-center items-center gap-4 flex-row max-w-[85%] sm:max-w-[400px]"
                   >
                       <${Button}
-                          onClick=${rejoinMeeting}
+                          onClick=${leaveMeeting}
                           variant="outline"
                           class="flex-1 w-full px-0"
                           >Go To Home Feed<//
