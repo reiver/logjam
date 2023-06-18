@@ -364,7 +364,11 @@ const Meeting = () => {
                 updateUi: () => {
                     //Todo Nariman
                     //show original controllers i:e, rise hand, reload, mute meeting
-                    updateUser({ showControllers: true });
+                    updateUser({
+                        showControllers: true,
+                        isStreamming: false,
+                        ableToRaiseHand: true,
+                    });
                 },
                 parentDcMessage: () => {
                     // Todo Nariman
