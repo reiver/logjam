@@ -1042,27 +1042,29 @@ export class SparkRTC {
                     let message = JSON.parse(this.broadcastersMessage);
                     let hostName = null;
 
-                    //get name
-                    if (message.name) {
-                        let name = JSON.parse(message.name);
-                        hostName = name.name;
-                    }
+                    if (message) {
+                        //get name
+                        if (message.name) {
+                            let name = JSON.parse(message.name);
+                            hostName = name.name;
+                        }
 
-                    //match stream and display it with name
-                    if (this.remoteStreams && hostName) {
-                        this.remoteStreams.forEach((stream) => {
-                            if (
-                                stream &&
-                                message.id === stream.id &&
-                                this.remoteStreamCallback
-                            ) {
-                                stream.name = hostName;
-                                stream.role = this.Roles.BROADCAST;
-                                stream.isShareScreen = true;
-                                this.remoteStreamCallback(stream);
-                                displyedStream = true;
-                            }
-                        });
+                        //match stream and display it with name
+                        if (this.remoteStreams && hostName) {
+                            this.remoteStreams.forEach((stream) => {
+                                if (
+                                    stream &&
+                                    message.id === stream.id &&
+                                    this.remoteStreamCallback
+                                ) {
+                                    stream.name = hostName;
+                                    stream.role = this.Roles.BROADCAST;
+                                    stream.isShareScreen = true;
+                                    this.remoteStreamCallback(stream);
+                                    displyedStream = true;
+                                }
+                            });
+                        }
                     }
                 }
             };
