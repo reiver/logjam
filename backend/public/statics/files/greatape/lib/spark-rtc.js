@@ -1482,29 +1482,7 @@ export class SparkRTC {
                                     stream.name = userName;
                                     stream.role = role;
                                     stream.userId = user.id;
-
-                                    //stream from Broadcatser
-                                    if (
-                                        role === this.Roles.BROADCAST &&
-                                        userName === broadcasterName
-                                    ) {
-                                        this.updateTheStatus(
-                                            `stream from Broadcast`
-                                        );
-                                        this.remoteStreamCallback(stream);
-                                    }
-
-                                    //stream from Audience
-                                    if (
-                                        role === this.Roles.AUDIENCE &&
-                                        userName != broadcasterName
-                                    ) {
-                                        this.updateTheStatus(
-                                            `stream from Audience`
-                                        );
-                                        this.remoteStreamCallback(stream);
-                                    }
-
+                                    this.remoteStreamCallback(stream);
                                     return;
                                 }
                             }
