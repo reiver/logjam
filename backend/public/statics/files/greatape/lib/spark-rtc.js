@@ -431,7 +431,7 @@ export class SparkRTC {
                 this.getMetadata();
                 setTimeout(() => {
                     const users = JSON.parse(msg.data).map((u) => {
-                        this.updateTheStatus(u);
+                        this.updateTheStatus('user', u);
                         const video =
                             u.streamId !== ''
                                 ? this.streamById(u.streamId)
@@ -835,7 +835,9 @@ export class SparkRTC {
                             dc.send(JSON.stringify(message));
                         }
                     } else {
-                        dc.send(this.broadcastersMessage);
+                        if (this.broadcastersMessage) {
+                            dc.send(this.broadcastersMessage);
+                        }
                     }
                 }
             } else if (dc.readyState === 'connecting') {
@@ -1038,7 +1040,10 @@ export class SparkRTC {
                 this.broadcastersMessage = e.data;
 
                 if (!displyedStream) {
-                    this.updateTheStatus(`insideDisplay`);
+                    this.updateTheStatus(
+                        `insideDisplay`,
+                        this.broadcastersMessage
+                    );
                     let message = JSON.parse(this.broadcastersMessage);
                     let hostName = null;
 
@@ -1307,6 +1312,14 @@ export class SparkRTC {
 
             this.registerUserListCallback(); //calback to get user list with streams, to identify username of stream
 
+            //wait for 10 seconds and fetch names again
+            setTimeout(() => {
+                this.remoteStreams.forEach((str) => {
+                    this.enqueue(this.remoteStreamsQueue, str);
+                });
+                this.registerUserListCallback(); //calback to get user list with streams, to identify username of stream
+            }, 10000);
+
             this.remoteStreams.push(stream);
             stream.getTracks().forEach((t) => {
                 this.trackToStreamMap[t.id] = stream.id;
@@ -1472,9 +1485,18 @@ export class SparkRTC {
                                 user.video !== undefined
                             ) {
                                 if (user.video.id === stream.id) {
+                                    this.updateTheStatus(
+                                        'video stream id matched'
+                                    );
                                     const data = JSON.parse(user.name);
                                     userName = data.name;
+                                } else {
+                                    this.updateTheStatus(
+                                        'video stream id not matched'
+                                    );
                                 }
+                            } else {
+                                this.updateTheStatus('video stream null');
                             }
 
                             //user name is not null nor empty
@@ -1488,6 +1510,8 @@ export class SparkRTC {
                                     return;
                                 }
                             }
+                        } else {
+                            this.updateTheStatus('user is null');
                         }
                     });
 
