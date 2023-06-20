@@ -10,6 +10,7 @@ import { userInteractedWithDom } from '../../index.js';
 import {
     broadcastIsInTheMeeting,
     currentUser,
+    onStopStream,
     sparkRTC,
 } from '../../pages/meeting.js';
 let timeOut;
@@ -220,6 +221,10 @@ export const Video = memo(({ stream, isMuted, isHostStream, name, userId }) => {
     };
     useEffect(() => {
         videoRef.current.srcObject = stream;
+        videoRef.current.play().catch((e) => {
+            console.log('device is on low battery');
+            console.error(e);
+        });
     }, [stream]);
 
     useEffect(() => {
@@ -228,7 +233,12 @@ export const Video = memo(({ stream, isMuted, isHostStream, name, userId }) => {
         }
     }, [userInteractedWithDom.value, isMuted]);
     useEffect(() => {
-        videoRef.current.play();
+        videoRef.current.addEventListener('ended', () => onStopStream(stream));
+
+        videoRef.current.play().catch((e) => {
+            console.log('device is on low battery');
+            console.error(e);
+        });
     }, []);
     const handleRemoveStream = () => {
         makeDialog(
