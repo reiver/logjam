@@ -4,10 +4,10 @@ import { html } from 'htm';
 export const BottomSheet = ({ open, children, onClose, title }) => {
     if (!open) return null;
     return html`<div
-        class="min-w-[100vw] min-h-[100vh] absolute top-0 left-0 dark:text-white-f-9"
+        class="min-w-[100vw] min-h-[--doc-height] absolute top-0 left-0 dark:text-white-f-9 z-20"
     >
         <div
-            class="overlay bg-black bg-opacity-50 w-full min-h-[100vh]"
+            class="overlay bg-black bg-opacity-50 w-full min-h-[--doc-height]"
             onClick=${onClose}
         />
         <div

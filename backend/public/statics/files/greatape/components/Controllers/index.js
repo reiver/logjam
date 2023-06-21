@@ -1,5 +1,11 @@
 import { signal } from '@preact/signals';
-import { Icon, IconButton, makeDialog, Tooltip } from 'components';
+import {
+    Icon,
+    IconButton,
+    Tooltip,
+    attendeesBadge,
+    makeDialog,
+} from 'components';
 import { html } from 'htm';
 import {
     currentUser,
@@ -16,6 +22,7 @@ export const toggleMoreOptions = () =>
 export const Controllers = () => {
     const {
         isHost,
+        showControllers,
         hasCamera,
         hasMic,
         ableToRaiseHand,
@@ -80,6 +87,7 @@ export const Controllers = () => {
 
     const toggleBottomSheet = () => {};
 
+    if (!showControllers) return null;
     return html`<div class="flex gap-5 py-3 pt-0">
         <${Tooltip} label=${isMeetingMuted ? 'Listen' : 'Deafen'}>
             <${IconButton}
@@ -161,9 +169,13 @@ export const Controllers = () => {
             <${IconButton}
                 onClick=${toggleBottomSheet}
                 onClick=${toggleMoreOptions}
-                class="flex sm:hidden"
+                class="flex sm:hidden relative"
             >
                 <${Icon} icon="KebabMenuVertical" />
+                ${attendeesBadge.value &&
+                html`<span
+                    class="absolute z-10 top-[0px] right-[0px] w-[10px] h-[10px] rounded-full bg-red-distructive border dark:border-secondary-1-a border-white-f-9"
+                ></span>`}
             <//>
         <//>
     </div>`;

@@ -26,6 +26,7 @@ export const raiseHandMaxLimitReached = computed(() => {
     );
 });
 export const currentUser = signal({
+    showControllers: true,
     isHost: false,
     isMicrophoneOn: true,
     isCameraOn: true,
@@ -134,9 +135,13 @@ const Meeting = () => {
     useEffect(() => {
         const queryParams = new URLSearchParams(window.location.search);
         const name = queryParams.get('name');
-        const role = queryParams.get('role');
+        var role = queryParams.get('role');
         const room = queryParams.get('room');
         const host = queryParams.get('host');
+
+        if (role === null || role === '') {
+            role = Roles.AUDIENCE; //by default set role to Audience
+        }
 
         updateUser({
             name,
@@ -154,7 +159,6 @@ const Meeting = () => {
                 },
                 localStreamChangeCallback: (stream) => {
                     log('[Local Stream Callback]', stream);
-                    console.log(stream);
                     streamers.value = {
                         ...streamers.value,
                         [stream.id]: {
@@ -183,7 +187,6 @@ const Meeting = () => {
                         }
                     }
                     log(`[Remote Stream Callback] ${stream}`);
-                    console.log(stream);
                     log(`NameCallback: ${stream.name}`);
 
                     streamers.value = {
@@ -358,6 +361,24 @@ const Meeting = () => {
                 connectionStatus: (status) => {
                     log(`Connection Status: `, status);
                 },
+                updateUi: () => {
+                    //Todo Nariman
+                    //show original controllers i:e, rise hand, reload, mute meeting
+                    updateUser({
+                        showControllers: true,
+                        isStreamming: false,
+                        ableToRaiseHand: true,
+                    });
+                },
+                parentDcMessage: () => {
+                    // Todo Nariman
+                    // show message: You've Got disconnected
+                    makeDialog('info', {
+                        message: 'You’ve got disconnected',
+                        icon: 'Close',
+                        variant: 'danger',
+                    });
+                },
             });
 
             if (sparkRTC.value) {
@@ -374,6 +395,10 @@ const Meeting = () => {
 
     const rejoinMeeting = () => {
         window.location.reload();
+    };
+
+    const leaveMeeting = () => {
+        window.parent.postMessage('leave', '*');
     };
 
     return html` <div
@@ -393,7 +418,7 @@ const Meeting = () => {
                       class="flex w-full justify-center items-center gap-4 flex-row max-w-[85%] sm:max-w-[400px]"
                   >
                       <${Button}
-                          onClick=${rejoinMeeting}
+                          onClick=${leaveMeeting}
                           variant="outline"
                           class="flex-1 w-full px-0"
                           >Go To Home Feed<//
