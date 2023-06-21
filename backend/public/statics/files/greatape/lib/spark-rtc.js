@@ -56,6 +56,12 @@ export class SparkRTC {
 
     broadcastersMessage = null;
 
+    operaAgent = null;
+    safariAgent = null;
+    IExplorerAgent = null;
+    chromeAgent = null;
+    edgeAgent = null;
+
     //enum for Roles
     Roles = {
         BROADCAST: 'broadcast',
@@ -1059,6 +1065,7 @@ export class SparkRTC {
                             this.remoteStreams.forEach((stream) => {
                                 if (
                                     stream &&
+                                    stream.active &&
                                     message.id === stream.id &&
                                     this.remoteStreamCallback
                                 ) {
@@ -1177,119 +1184,256 @@ export class SparkRTC {
                 this.updateTheStatus(`stream tracks was ended ${stream.id}`);
                 return;
             }
+
+            //callback to detect stream inactive status for Chrome, Edge
             stream.oninactive = (event) => {
-                this.updateTheStatus(`inactiveStream `, stream);
-                this.updateTheStatus(`currentTarget `, event.currentTarget);
+                this.updateTheStatus(`oninactive called`);
 
-                this.updateTheStatus(
-                    `[newPeerConnectionInstance] stream.oninactive ${JSON.stringify(
-                        event
-                    )}`
-                );
-                this.updateTheStatus(`[stream.oninactive] event `, event);
-                this.updateTheStatus(`targetTracks`, event.target.getTracks());
+                if (this.chromeAgent || this.edgeAgent || this.operaAgent) {
+                    this.updateTheStatus(`inactiveStream `, stream);
+                    this.updateTheStatus(`currentTarget `, event.currentTarget);
 
-                this.remoteStreamNotified = false;
+                    this.updateTheStatus(
+                        `[newPeerConnectionInstance] stream.oninactive ${JSON.stringify(
+                            event
+                        )}`
+                    );
+                    this.updateTheStatus(`[stream.oninactive] event `, event);
+                    this.updateTheStatus(
+                        `targetTracks`,
+                        event.target.getTracks()
+                    );
 
-                const theEventStream = event.currentTarget;
-                const trackIds = theEventStream.getTracks().map((t) => t.id);
+                    this.remoteStreamNotified = false;
 
-                for (const userId in this.myPeerConnectionArray) {
-                    const apeerConnection = this.myPeerConnectionArray[userId];
-                    //if (!apeerConnection.isAdience) continue;
-                    const allSenders = apeerConnection.getSenders();
-                    for (const sender of allSenders) {
-                        if (!sender.track) continue;
-                        this.updateTheStatus(
-                            `the streamId`,
-                            this.trackToStreamMap[sender.track.id]
-                        );
-                        if (
-                            this.trackToStreamMap[sender.track.id] ===
-                            theEventStream.id
-                        ) {
-                            try {
-                                apeerConnection.removeTrack(sender);
-                                // delete this.trackToStreamMap[sender.track.id];
-                            } catch (e) {
-                                this.updateTheStatus(e);
+                    const theEventStream = event.currentTarget;
+                    const trackIds = theEventStream
+                        .getTracks()
+                        .map((t) => t.id);
+
+                    for (const userId in this.myPeerConnectionArray) {
+                        const apeerConnection =
+                            this.myPeerConnectionArray[userId];
+                        //if (!apeerConnection.isAdience) continue;
+                        const allSenders = apeerConnection.getSenders();
+                        for (const sender of allSenders) {
+                            if (!sender.track) continue;
+                            this.updateTheStatus(
+                                `the streamId`,
+                                this.trackToStreamMap[sender.track.id]
+                            );
+                            if (
+                                this.trackToStreamMap[sender.track.id] ===
+                                theEventStream.id
+                            ) {
+                                try {
+                                    apeerConnection.removeTrack(sender);
+                                    // delete this.trackToStreamMap[sender.track.id];
+                                } catch (e) {
+                                    this.updateTheStatus(e);
+                                }
                             }
                         }
                     }
-                }
 
-                this.updateTheStatus(
-                    `indx`,
-                    this.remoteStreams.indexOf(theEventStream)
-                );
+                    this.updateTheStatus(
+                        `indx`,
+                        this.remoteStreams.indexOf(theEventStream)
+                    );
 
-                //remove the event stream from remotestreamslist
-                this.remoteStreams.forEach((stream) => {
-                    if (stream.id === theEventStream.id) {
-                        this.updateTheStatus(`ids matched`);
+                    //remove the event stream from remotestreamslist
+                    this.remoteStreams.forEach((stream) => {
+                        if (stream.id === theEventStream.id) {
+                            this.updateTheStatus(`ids matched`);
 
-                        let newArray = this.remoteStreams.filter(
-                            (str) => str !== stream
-                        );
-
-                        this.remoteStreams = newArray;
-                    }
-                });
-
-                //print remote stream array
-                if (this.remoteStreams.length > 0) {
-                    for (var i = 0; i < this.remoteStreams.length; i++) {
-                        this.updateTheStatus(
-                            `RemoteStreamsList-1`,
-                            this.remoteStreams[i]
-                        );
-                    }
-                }
-
-                if (
-                    this.parentStreamId &&
-                    this.parentStreamId === theEventStream.id
-                ) {
-                    if (this.remoteStreamDCCallback) {
-                        this.remoteStreams.forEach((strm) => {
-                            this.remoteStreamDCCallback(strm);
-                        });
-                    }
-                    this.parentStreamId = undefined;
-                    this.parentDC = true;
-                }
-                if (this.remoteStreamDCCallback) {
-                    try {
-                        this.remoteStreamDCCallback(event.target);
-                    } catch {}
-                }
-                if (
-                    this.role === this.Roles.BROADCAST &&
-                    this.raiseHands.includes(target)
-                ) {
-                    var index = this.raiseHands.indexOf(target);
-                    if (index > -1) {
-                        this.raiseHands.splice(index, 1);
-                    }
-                }
-
-                //check meeting status and close socket
-                if (this.leftMeeting) {
-                    //close websocket
-                    if (this.socket) {
-                        this.socket.onclose = () => {
-                            this.updateTheStatus(
-                                `socket is closed after leaveMeeting`
+                            let newArray = this.remoteStreams.filter(
+                                (str) => str !== stream
                             );
-                            this.resetVariables(true);
-                        }; //empty on close callback
-                        this.socket.close();
-                        this.socket = null;
 
-                        return;
+                            this.remoteStreams = newArray;
+                        }
+                    });
+
+                    //print remote stream array
+                    if (this.remoteStreams.length > 0) {
+                        for (var i = 0; i < this.remoteStreams.length; i++) {
+                            this.updateTheStatus(
+                                `RemoteStreamsList-1`,
+                                this.remoteStreams[i]
+                            );
+                        }
+                    }
+
+                    if (
+                        this.parentStreamId &&
+                        this.parentStreamId === theEventStream.id
+                    ) {
+                        if (this.remoteStreamDCCallback) {
+                            this.remoteStreams.forEach((strm) => {
+                                this.remoteStreamDCCallback(strm);
+                            });
+                        }
+                        this.parentStreamId = undefined;
+                        this.parentDC = true;
+                    }
+                    if (this.remoteStreamDCCallback) {
+                        try {
+                            this.remoteStreamDCCallback(event.target);
+                        } catch {}
+                    }
+                    if (
+                        this.role === this.Roles.BROADCAST &&
+                        this.raiseHands.includes(target)
+                    ) {
+                        var index = this.raiseHands.indexOf(target);
+                        if (index > -1) {
+                            this.raiseHands.splice(index, 1);
+                        }
+                    }
+
+                    //check meeting status and close socket
+                    if (this.leftMeeting) {
+                        //close websocket
+                        if (this.socket) {
+                            this.socket.onclose = () => {
+                                this.updateTheStatus(
+                                    `socket is closed after leaveMeeting`
+                                );
+                                this.resetVariables(true);
+                            }; //empty on close callback
+                            this.socket.close();
+                            this.socket = null;
+
+                            return;
+                        }
                     }
                 }
             }; //end of on Inactive
+
+            //callback to detect stream inactive status for firefox
+            stream.onremovetrack = (event) => {
+                this.updateTheStatus(`onremovetrack called`);
+
+                if (this.firefoxAgent || this.safariAgent) {
+                    this.updateTheStatus(`onremovetrack `, event);
+                    this.updateTheStatus(`currentTarget `, event.currentTarget);
+
+                    this.updateTheStatus(
+                        `[newPeerConnectionInstance] stream.oninactive ${JSON.stringify(
+                            event
+                        )}`
+                    );
+                    this.updateTheStatus(`[stream.oninactive] event `, event);
+                    this.updateTheStatus(
+                        `targetTracks`,
+                        event.target.getTracks()
+                    );
+
+                    this.remoteStreamNotified = false;
+
+                    const theEventStream = event.currentTarget;
+                    const trackIds = theEventStream
+                        .getTracks()
+                        .map((t) => t.id);
+
+                    for (const userId in this.myPeerConnectionArray) {
+                        const apeerConnection =
+                            this.myPeerConnectionArray[userId];
+                        //if (!apeerConnection.isAdience) continue;
+                        const allSenders = apeerConnection.getSenders();
+                        for (const sender of allSenders) {
+                            if (!sender.track) continue;
+                            this.updateTheStatus(
+                                `the streamId`,
+                                this.trackToStreamMap[sender.track.id]
+                            );
+                            if (
+                                this.trackToStreamMap[sender.track.id] ===
+                                theEventStream.id
+                            ) {
+                                try {
+                                    apeerConnection.removeTrack(sender);
+                                    // delete this.trackToStreamMap[sender.track.id];
+                                } catch (e) {
+                                    this.updateTheStatus(e);
+                                }
+                            }
+                        }
+                    }
+
+                    this.updateTheStatus(
+                        `indx`,
+                        this.remoteStreams.indexOf(theEventStream)
+                    );
+
+                    //remove the event stream from remotestreamslist
+                    this.remoteStreams.forEach((stream) => {
+                        if (stream.id === theEventStream.id) {
+                            this.updateTheStatus(`ids matched`);
+
+                            let newArray = this.remoteStreams.filter(
+                                (str) => str !== stream
+                            );
+
+                            this.remoteStreams = newArray;
+                        }
+                    });
+
+                    //print remote stream array
+                    if (this.remoteStreams.length > 0) {
+                        for (var i = 0; i < this.remoteStreams.length; i++) {
+                            this.updateTheStatus(
+                                `RemoteStreamsList-1`,
+                                this.remoteStreams[i]
+                            );
+                        }
+                    }
+
+                    if (
+                        this.parentStreamId &&
+                        this.parentStreamId === theEventStream.id
+                    ) {
+                        if (this.remoteStreamDCCallback) {
+                            this.remoteStreams.forEach((strm) => {
+                                this.remoteStreamDCCallback(strm);
+                            });
+                        }
+                        this.parentStreamId = undefined;
+                        this.parentDC = true;
+                    }
+                    if (this.remoteStreamDCCallback) {
+                        try {
+                            this.remoteStreamDCCallback(event.target);
+                        } catch {}
+                    }
+                    if (
+                        this.role === this.Roles.BROADCAST &&
+                        this.raiseHands.includes(target)
+                    ) {
+                        var index = this.raiseHands.indexOf(target);
+                        if (index > -1) {
+                            this.raiseHands.splice(index, 1);
+                        }
+                    }
+
+                    //check meeting status and close socket
+                    if (this.leftMeeting) {
+                        //close websocket
+                        if (this.socket) {
+                            this.socket.onclose = () => {
+                                this.updateTheStatus(
+                                    `socket is closed after leaveMeeting`
+                                );
+                                this.resetVariables(true);
+                            }; //empty on close callback
+                            this.socket.close();
+                            this.socket = null;
+
+                            return;
+                        }
+                    }
+                }
+            }; //end of on removeTrack
 
             stream.name = ''; // currently we don't know name so it's empty
 
@@ -1422,6 +1566,36 @@ export class SparkRTC {
         return peerConnection;
     };
 
+    checkBrowser() {
+        // Get the user-agent string
+        let userAgentString = navigator.userAgent;
+
+        // Detect Chrome
+        this.chromeAgent = userAgentString.indexOf('Chrome') > -1;
+
+        // Detect Edge
+        this.edgeAgent = userAgentString.indexOf('Edg') > -1;
+
+        // Detect Internet Explorer
+        this.IExplorerAgent =
+            userAgentString.indexOf('MSIE') > -1 ||
+            userAgentString.indexOf('rv:') > -1;
+
+        // Detect Firefox
+        this.firefoxAgent = userAgentString.indexOf('Firefox') > -1;
+
+        // Detect Safari
+        this.safariAgent = userAgentString.indexOf('Safari') > -1;
+
+        // // Discard Safari since it also matches Chrome
+        // if (this.chromeAgent && this.safariAgent) this.safariAgent = false;
+
+        // Detect Opera
+        this.operaAgent = userAgentString.indexOf('OP') > -1;
+
+        // // Discard Chrome since it also matches Opera
+        // if (this.chromeAgent && this.operaAgent) this.chromeAgent = false;
+    }
     /**
      * Get list of user and match their name with respective stream
      *
@@ -1436,7 +1610,7 @@ export class SparkRTC {
 
             const stream = this.dequeue(this.remoteStreamsQueue);
 
-            if (stream) {
+            if (stream && stream.active) {
                 let broadcasterName = '';
 
                 // //check if user list contain broadcaster and save it's name
@@ -2011,5 +2185,7 @@ export class SparkRTC {
         this.startAgain = options.startAgain;
         this.updateUi = options.updateUi;
         this.parentDcMessage = options.parentDcMessage;
+
+        this.checkBrowser(); //detect browser
     }
 }
