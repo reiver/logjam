@@ -397,7 +397,8 @@ const Meeting = () => {
         window.location.reload();
     };
 
-    const leaveMeeting = () => {
+    const leaveMeeting = (e) => {
+        e.stopPropagation();
         window.parent.postMessage('leave', '*');
     };
 
