@@ -309,12 +309,13 @@ export const Video = memo(({ stream, isMuted, isHostStream, name, userId }) => {
             </div>
             <div
                 class=${clsx(
-                    'absolute top-3 sm:group-hover:flex right-3 sm:hidden gap-2',
+                    'absolute z-20 top-3 right-3 sm:hidden gap-2',
                     {
                         'group-hover:flex': isHover && bottomBarVisible.value,
                         hidden: !(isHover && bottomBarVisible.value),
                         flex: menuOpen || isHover,
-                    }
+                    },
+                    'sm:group-hover:flex '
                 )}
             >
                 <${IconButton} variant="ghost" onClick=${toggleFullScreen}>
