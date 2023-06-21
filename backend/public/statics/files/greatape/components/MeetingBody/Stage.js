@@ -218,8 +218,10 @@ export const Video = memo(({ stream, isMuted, isHostStream, name, userId }) => {
 
         e.stopPropagation();
     };
+
     useEffect(() => {
         videoRef.current.srcObject = stream;
+        videoRef.current.play().catch(console.error);
     }, [stream]);
 
     useEffect(() => {
@@ -228,7 +230,16 @@ export const Video = memo(({ stream, isMuted, isHostStream, name, userId }) => {
         }
     }, [userInteractedWithDom.value, isMuted]);
     useEffect(() => {
-        videoRef.current.play();
+        var isSafari = /^((?!chrome|android).)*safari/i.test(
+            navigator.userAgent
+        );
+        videoRef.current.play().catch(() => {
+            const play = () => {
+                videoRef.current.play();
+                document.removeEventListener('click', play);
+            };
+            document.addEventListener('click', play);
+        });
     }, []);
     const handleRemoveStream = () => {
         makeDialog(
