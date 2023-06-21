@@ -1610,7 +1610,7 @@ export class SparkRTC {
 
             const stream = this.dequeue(this.remoteStreamsQueue);
 
-            if (stream) {
+            if (stream && stream.active) {
                 let broadcasterName = '';
 
                 // //check if user list contain broadcaster and save it's name
@@ -1697,8 +1697,6 @@ export class SparkRTC {
                         if (
                             message &&
                             message.id === stream.id &&
-                            stream &&
-                            stream.active &&
                             message.type === this.StreamType.SCREEN
                         ) {
                             if (this.remoteStreamCallback) {
