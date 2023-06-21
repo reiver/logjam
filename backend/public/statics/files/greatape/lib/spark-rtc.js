@@ -1163,350 +1163,376 @@ export class SparkRTC {
             );
             const stream = event.streams[0];
 
-            this.updateTheStatus(`user-by-stream ${stream.id}`);
-            if (await this.checkSocketStatus())
-                this.socket.send(
-                    JSON.stringify({
-                        type: 'user-by-stream',
-                        data: stream.id,
-                    })
-                );
-            if (this.remoteStreams.length === 0) {
-                this.parentStreamId = stream.id;
-            }
-            let ended = false;
-            stream.getTracks().forEach((t) => {
-                if (t.readyState === 'ended') {
-                    ended = true;
-                }
-            });
-            if (ended) {
-                this.updateTheStatus(`stream tracks was ended ${stream.id}`);
-                return;
-            }
-
-            //callback to detect stream inactive status for Chrome, Edge
-            stream.oninactive = (event) => {
-                this.updateTheStatus(`oninactive called`);
-
-                if (this.chromeAgent || this.edgeAgent || this.operaAgent) {
-                    this.updateTheStatus(`inactiveStream `, stream);
-                    this.updateTheStatus(`currentTarget `, event.currentTarget);
-
-                    this.updateTheStatus(
-                        `[newPeerConnectionInstance] stream.oninactive ${JSON.stringify(
-                            event
-                        )}`
-                    );
-                    this.updateTheStatus(`[stream.oninactive] event `, event);
-                    this.updateTheStatus(
-                        `targetTracks`,
-                        event.target.getTracks()
-                    );
-
-                    this.remoteStreamNotified = false;
-
-                    const theEventStream = event.currentTarget;
-                    const trackIds = theEventStream
-                        .getTracks()
-                        .map((t) => t.id);
-
-                    for (const userId in this.myPeerConnectionArray) {
-                        const apeerConnection =
-                            this.myPeerConnectionArray[userId];
-                        //if (!apeerConnection.isAdience) continue;
-                        const allSenders = apeerConnection.getSenders();
-                        for (const sender of allSenders) {
-                            if (!sender.track) continue;
-                            this.updateTheStatus(
-                                `the streamId`,
-                                this.trackToStreamMap[sender.track.id]
-                            );
-                            if (
-                                this.trackToStreamMap[sender.track.id] ===
-                                theEventStream.id
-                            ) {
-                                try {
-                                    apeerConnection.removeTrack(sender);
-                                    // delete this.trackToStreamMap[sender.track.id];
-                                } catch (e) {
-                                    this.updateTheStatus(e);
-                                }
-                            }
-                        }
-                    }
-
-                    this.updateTheStatus(
-                        `indx`,
-                        this.remoteStreams.indexOf(theEventStream)
-                    );
-
-                    //remove the event stream from remotestreamslist
-                    this.remoteStreams.forEach((stream) => {
-                        if (stream.id === theEventStream.id) {
-                            this.updateTheStatus(`ids matched`);
-
-                            let newArray = this.remoteStreams.filter(
-                                (str) => str !== stream
-                            );
-
-                            this.remoteStreams = newArray;
-                        }
-                    });
-
-                    //print remote stream array
-                    if (this.remoteStreams.length > 0) {
-                        for (var i = 0; i < this.remoteStreams.length; i++) {
-                            this.updateTheStatus(
-                                `RemoteStreamsList-1`,
-                                this.remoteStreams[i]
-                            );
-                        }
-                    }
-
-                    if (
-                        this.parentStreamId &&
-                        this.parentStreamId === theEventStream.id
-                    ) {
-                        if (this.remoteStreamDCCallback) {
-                            this.remoteStreams.forEach((strm) => {
-                                this.remoteStreamDCCallback(strm);
-                            });
-                        }
-                        this.parentStreamId = undefined;
-                        this.parentDC = true;
-                    }
-                    if (this.remoteStreamDCCallback) {
-                        try {
-                            this.remoteStreamDCCallback(event.target);
-                        } catch {}
-                    }
-                    if (
-                        this.role === this.Roles.BROADCAST &&
-                        this.raiseHands.includes(target)
-                    ) {
-                        var index = this.raiseHands.indexOf(target);
-                        if (index > -1) {
-                            this.raiseHands.splice(index, 1);
-                        }
-                    }
-
-                    //check meeting status and close socket
-                    if (this.leftMeeting) {
-                        //close websocket
-                        if (this.socket) {
-                            this.socket.onclose = () => {
-                                this.updateTheStatus(
-                                    `socket is closed after leaveMeeting`
-                                );
-                                this.resetVariables(true);
-                            }; //empty on close callback
-                            this.socket.close();
-                            this.socket = null;
-
-                            return;
-                        }
-                    }
-                }
-            }; //end of on Inactive
-
-            //callback to detect stream inactive status for firefox
-            stream.onremovetrack = (event) => {
-                this.updateTheStatus(`onremovetrack called`);
-
-                if (this.firefoxAgent || this.safariAgent) {
-                    this.updateTheStatus(`onremovetrack `, event);
-                    this.updateTheStatus(`currentTarget `, event.currentTarget);
-
-                    this.updateTheStatus(
-                        `[newPeerConnectionInstance] stream.oninactive ${JSON.stringify(
-                            event
-                        )}`
-                    );
-                    this.updateTheStatus(`[stream.oninactive] event `, event);
-                    this.updateTheStatus(
-                        `targetTracks`,
-                        event.target.getTracks()
-                    );
-
-                    this.remoteStreamNotified = false;
-
-                    const theEventStream = event.currentTarget;
-                    const trackIds = theEventStream
-                        .getTracks()
-                        .map((t) => t.id);
-
-                    for (const userId in this.myPeerConnectionArray) {
-                        const apeerConnection =
-                            this.myPeerConnectionArray[userId];
-                        //if (!apeerConnection.isAdience) continue;
-                        const allSenders = apeerConnection.getSenders();
-                        for (const sender of allSenders) {
-                            if (!sender.track) continue;
-                            this.updateTheStatus(
-                                `the streamId`,
-                                this.trackToStreamMap[sender.track.id]
-                            );
-                            if (
-                                this.trackToStreamMap[sender.track.id] ===
-                                theEventStream.id
-                            ) {
-                                try {
-                                    apeerConnection.removeTrack(sender);
-                                    // delete this.trackToStreamMap[sender.track.id];
-                                } catch (e) {
-                                    this.updateTheStatus(e);
-                                }
-                            }
-                        }
-                    }
-
-                    this.updateTheStatus(
-                        `indx`,
-                        this.remoteStreams.indexOf(theEventStream)
-                    );
-
-                    //remove the event stream from remotestreamslist
-                    this.remoteStreams.forEach((stream) => {
-                        if (stream.id === theEventStream.id) {
-                            this.updateTheStatus(`ids matched`);
-
-                            let newArray = this.remoteStreams.filter(
-                                (str) => str !== stream
-                            );
-
-                            this.remoteStreams = newArray;
-                        }
-                    });
-
-                    //print remote stream array
-                    if (this.remoteStreams.length > 0) {
-                        for (var i = 0; i < this.remoteStreams.length; i++) {
-                            this.updateTheStatus(
-                                `RemoteStreamsList-1`,
-                                this.remoteStreams[i]
-                            );
-                        }
-                    }
-
-                    if (
-                        this.parentStreamId &&
-                        this.parentStreamId === theEventStream.id
-                    ) {
-                        if (this.remoteStreamDCCallback) {
-                            this.remoteStreams.forEach((strm) => {
-                                this.remoteStreamDCCallback(strm);
-                            });
-                        }
-                        this.parentStreamId = undefined;
-                        this.parentDC = true;
-                    }
-                    if (this.remoteStreamDCCallback) {
-                        try {
-                            this.remoteStreamDCCallback(event.target);
-                        } catch {}
-                    }
-                    if (
-                        this.role === this.Roles.BROADCAST &&
-                        this.raiseHands.includes(target)
-                    ) {
-                        var index = this.raiseHands.indexOf(target);
-                        if (index > -1) {
-                            this.raiseHands.splice(index, 1);
-                        }
-                    }
-
-                    //check meeting status and close socket
-                    if (this.leftMeeting) {
-                        //close websocket
-                        if (this.socket) {
-                            this.socket.onclose = () => {
-                                this.updateTheStatus(
-                                    `socket is closed after leaveMeeting`
-                                );
-                                this.resetVariables(true);
-                            }; //empty on close callback
-                            this.socket.close();
-                            this.socket = null;
-
-                            return;
-                        }
-                    }
-                }
-            }; //end of on removeTrack
-
-            stream.name = ''; // currently we don't know name so it's empty
-
-            this.updateTheStatus(`ReceivedStream:`, stream);
-
-            //print remote stream array
-            if (this.remoteStreams.length > 0) {
-                for (var i = 0; i < this.remoteStreams.length; i++) {
-                    this.updateTheStatus(
-                        `RemoteStreamsList-2:`,
-                        this.remoteStreams[i]
-                    );
-                }
-            }
-
-            //remote Stream callback
-            if (this.remoteStreamCallback) this.remoteStreamCallback(stream);
-
-            this.enqueue(this.remoteStreamsQueue, stream); //save stream into queue for Getting it's user name
-
-            this.registerUserListCallback(); //calback to get user list with streams, to identify username of stream
-
-            //wait for 10 seconds and fetch names again
-            setTimeout(() => {
-                this.remoteStreams.forEach((str) => {
-                    this.enqueue(this.remoteStreamsQueue, str);
-                });
-                this.registerUserListCallback(); //calback to get user list with streams, to identify username of stream
-            }, 10000);
-
-            this.remoteStreams.push(stream);
-            stream.getTracks().forEach((t) => {
-                this.trackToStreamMap[t.id] = stream.id;
-            });
-            if (!this.remoteStreamNotified) {
-                this.remoteStreamNotified = true;
-                this.updateTheStatus(`[newPeerConnectionInstance] A7`);
-
+            if (stream && stream.active) {
+                this.updateTheStatus(`user-by-stream ${stream.id}`);
                 if (await this.checkSocketStatus())
                     this.socket.send(
                         JSON.stringify({
-                            type: 'stream',
-                            data: 'true',
+                            type: 'user-by-stream',
+                            data: stream.id,
                         })
                     );
-                this.updateTheStatus(
-                    `[newPeerConnectionInstance] stream message`
-                );
-            }
-            this.targetStreams[target] = stream.id;
-
-            for (const userId in this.myPeerConnectionArray) {
-                const apeerConnection = this.myPeerConnectionArray[userId];
-                this.updateTheStatus(
-                    `check Sending the stream [${
-                        stream.id
-                    }] tracks to ${userId} ${apeerConnection.isAdience.toString()}`
-                );
-                if (!apeerConnection.isAdience) continue;
-
-                this.updateTheStatus(
-                    `Sending the stream [${stream.id}] tracks to ${userId}`
-                );
-                stream.getTracks().forEach((track) => {
-                    try {
-                        track.streamId = stream.id;
-                        apeerConnection.addTrack(track, stream);
-                    } catch {}
+                if (this.remoteStreams.length === 0) {
+                    this.parentStreamId = stream.id;
+                }
+                let ended = false;
+                stream.getTracks().forEach((t) => {
+                    if (t.readyState === 'ended') {
+                        ended = true;
+                    }
                 });
-            }
+                if (ended) {
+                    this.updateTheStatus(
+                        `stream tracks was ended ${stream.id}`
+                    );
+                    return;
+                }
 
-            if (!this.started) {
-                this.started = true;
+                //callback to detect stream inactive status for Chrome, Edge
+                stream.oninactive = (event) => {
+                    this.updateTheStatus(`oninactive called`);
+
+                    if (this.chromeAgent || this.edgeAgent || this.operaAgent) {
+                        this.updateTheStatus(`inactiveStream `, stream);
+                        this.updateTheStatus(
+                            `currentTarget `,
+                            event.currentTarget
+                        );
+
+                        this.updateTheStatus(
+                            `[newPeerConnectionInstance] stream.oninactive ${JSON.stringify(
+                                event
+                            )}`
+                        );
+                        this.updateTheStatus(
+                            `[stream.oninactive] event `,
+                            event
+                        );
+                        this.updateTheStatus(
+                            `targetTracks`,
+                            event.target.getTracks()
+                        );
+
+                        this.remoteStreamNotified = false;
+
+                        const theEventStream = event.currentTarget;
+                        const trackIds = theEventStream
+                            .getTracks()
+                            .map((t) => t.id);
+
+                        for (const userId in this.myPeerConnectionArray) {
+                            const apeerConnection =
+                                this.myPeerConnectionArray[userId];
+                            //if (!apeerConnection.isAdience) continue;
+                            const allSenders = apeerConnection.getSenders();
+                            for (const sender of allSenders) {
+                                if (!sender.track) continue;
+                                this.updateTheStatus(
+                                    `the streamId`,
+                                    this.trackToStreamMap[sender.track.id]
+                                );
+                                if (
+                                    this.trackToStreamMap[sender.track.id] ===
+                                    theEventStream.id
+                                ) {
+                                    try {
+                                        apeerConnection.removeTrack(sender);
+                                        // delete this.trackToStreamMap[sender.track.id];
+                                    } catch (e) {
+                                        this.updateTheStatus(e);
+                                    }
+                                }
+                            }
+                        }
+
+                        this.updateTheStatus(
+                            `indx`,
+                            this.remoteStreams.indexOf(theEventStream)
+                        );
+
+                        //remove the event stream from remotestreamslist
+                        this.remoteStreams.forEach((stream) => {
+                            if (stream.id === theEventStream.id) {
+                                this.updateTheStatus(`ids matched`);
+
+                                let newArray = this.remoteStreams.filter(
+                                    (str) => str !== stream
+                                );
+
+                                this.remoteStreams = newArray;
+                            }
+                        });
+
+                        //print remote stream array
+                        if (this.remoteStreams.length > 0) {
+                            for (
+                                var i = 0;
+                                i < this.remoteStreams.length;
+                                i++
+                            ) {
+                                this.updateTheStatus(
+                                    `RemoteStreamsList-1`,
+                                    this.remoteStreams[i]
+                                );
+                            }
+                        }
+
+                        if (
+                            this.parentStreamId &&
+                            this.parentStreamId === theEventStream.id
+                        ) {
+                            if (this.remoteStreamDCCallback) {
+                                this.remoteStreams.forEach((strm) => {
+                                    this.remoteStreamDCCallback(strm);
+                                });
+                            }
+                            this.parentStreamId = undefined;
+                            this.parentDC = true;
+                        }
+                        if (this.remoteStreamDCCallback) {
+                            try {
+                                this.remoteStreamDCCallback(event.target);
+                            } catch {}
+                        }
+                        if (
+                            this.role === this.Roles.BROADCAST &&
+                            this.raiseHands.includes(target)
+                        ) {
+                            var index = this.raiseHands.indexOf(target);
+                            if (index > -1) {
+                                this.raiseHands.splice(index, 1);
+                            }
+                        }
+
+                        //check meeting status and close socket
+                        if (this.leftMeeting) {
+                            //close websocket
+                            if (this.socket) {
+                                this.socket.onclose = () => {
+                                    this.updateTheStatus(
+                                        `socket is closed after leaveMeeting`
+                                    );
+                                    this.resetVariables(true);
+                                }; //empty on close callback
+                                this.socket.close();
+                                this.socket = null;
+
+                                return;
+                            }
+                        }
+                    }
+                }; //end of on Inactive
+
+                //callback to detect stream inactive status for firefox
+                stream.onremovetrack = (event) => {
+                    this.updateTheStatus(`onremovetrack called`);
+
+                    if (this.firefoxAgent || this.safariAgent) {
+                        this.updateTheStatus(`onremovetrack `, event);
+                        this.updateTheStatus(
+                            `currentTarget `,
+                            event.currentTarget
+                        );
+
+                        this.updateTheStatus(
+                            `[newPeerConnectionInstance] stream.oninactive ${JSON.stringify(
+                                event
+                            )}`
+                        );
+                        this.updateTheStatus(
+                            `[stream.oninactive] event `,
+                            event
+                        );
+                        this.updateTheStatus(
+                            `targetTracks`,
+                            event.target.getTracks()
+                        );
+
+                        this.remoteStreamNotified = false;
+
+                        const theEventStream = event.currentTarget;
+                        const trackIds = theEventStream
+                            .getTracks()
+                            .map((t) => t.id);
+
+                        for (const userId in this.myPeerConnectionArray) {
+                            const apeerConnection =
+                                this.myPeerConnectionArray[userId];
+                            //if (!apeerConnection.isAdience) continue;
+                            const allSenders = apeerConnection.getSenders();
+                            for (const sender of allSenders) {
+                                if (!sender.track) continue;
+                                this.updateTheStatus(
+                                    `the streamId`,
+                                    this.trackToStreamMap[sender.track.id]
+                                );
+                                if (
+                                    this.trackToStreamMap[sender.track.id] ===
+                                    theEventStream.id
+                                ) {
+                                    try {
+                                        apeerConnection.removeTrack(sender);
+                                        // delete this.trackToStreamMap[sender.track.id];
+                                    } catch (e) {
+                                        this.updateTheStatus(e);
+                                    }
+                                }
+                            }
+                        }
+
+                        this.updateTheStatus(
+                            `indx`,
+                            this.remoteStreams.indexOf(theEventStream)
+                        );
+
+                        //remove the event stream from remotestreamslist
+                        this.remoteStreams.forEach((stream) => {
+                            if (stream.id === theEventStream.id) {
+                                this.updateTheStatus(`ids matched`);
+
+                                let newArray = this.remoteStreams.filter(
+                                    (str) => str !== stream
+                                );
+
+                                this.remoteStreams = newArray;
+                            }
+                        });
+
+                        //print remote stream array
+                        if (this.remoteStreams.length > 0) {
+                            for (
+                                var i = 0;
+                                i < this.remoteStreams.length;
+                                i++
+                            ) {
+                                this.updateTheStatus(
+                                    `RemoteStreamsList-1`,
+                                    this.remoteStreams[i]
+                                );
+                            }
+                        }
+
+                        if (
+                            this.parentStreamId &&
+                            this.parentStreamId === theEventStream.id
+                        ) {
+                            if (this.remoteStreamDCCallback) {
+                                this.remoteStreams.forEach((strm) => {
+                                    this.remoteStreamDCCallback(strm);
+                                });
+                            }
+                            this.parentStreamId = undefined;
+                            this.parentDC = true;
+                        }
+                        if (this.remoteStreamDCCallback) {
+                            try {
+                                this.remoteStreamDCCallback(event.target);
+                            } catch {}
+                        }
+                        if (
+                            this.role === this.Roles.BROADCAST &&
+                            this.raiseHands.includes(target)
+                        ) {
+                            var index = this.raiseHands.indexOf(target);
+                            if (index > -1) {
+                                this.raiseHands.splice(index, 1);
+                            }
+                        }
+
+                        //check meeting status and close socket
+                        if (this.leftMeeting) {
+                            //close websocket
+                            if (this.socket) {
+                                this.socket.onclose = () => {
+                                    this.updateTheStatus(
+                                        `socket is closed after leaveMeeting`
+                                    );
+                                    this.resetVariables(true);
+                                }; //empty on close callback
+                                this.socket.close();
+                                this.socket = null;
+
+                                return;
+                            }
+                        }
+                    }
+                }; //end of on removeTrack
+
+                stream.name = ''; // currently we don't know name so it's empty
+
+                this.updateTheStatus(`ReceivedStream:`, stream);
+
+                //print remote stream array
+                if (this.remoteStreams.length > 0) {
+                    for (var i = 0; i < this.remoteStreams.length; i++) {
+                        this.updateTheStatus(
+                            `RemoteStreamsList-2:`,
+                            this.remoteStreams[i]
+                        );
+                    }
+                }
+
+                //remote Stream callback
+                if (this.remoteStreamCallback) {
+                    this.remoteStreamCallback(stream);
+                }
+
+                this.enqueue(this.remoteStreamsQueue, stream); //save stream into queue for Getting it's user name
+
+                this.registerUserListCallback(); //calback to get user list with streams, to identify username of stream
+
+                //wait for 10 seconds and fetch names again
+                setTimeout(() => {
+                    this.remoteStreams.forEach((str) => {
+                        this.enqueue(this.remoteStreamsQueue, str);
+                    });
+                    this.registerUserListCallback(); //calback to get user list with streams, to identify username of stream
+                }, 10000);
+
+                this.remoteStreams.push(stream);
+                stream.getTracks().forEach((t) => {
+                    this.trackToStreamMap[t.id] = stream.id;
+                });
+                if (!this.remoteStreamNotified) {
+                    this.remoteStreamNotified = true;
+                    this.updateTheStatus(`[newPeerConnectionInstance] A7`);
+
+                    if (await this.checkSocketStatus())
+                        this.socket.send(
+                            JSON.stringify({
+                                type: 'stream',
+                                data: 'true',
+                            })
+                        );
+                    this.updateTheStatus(
+                        `[newPeerConnectionInstance] stream message`
+                    );
+                }
+                this.targetStreams[target] = stream.id;
+
+                for (const userId in this.myPeerConnectionArray) {
+                    const apeerConnection = this.myPeerConnectionArray[userId];
+                    this.updateTheStatus(
+                        `check Sending the stream [${
+                            stream.id
+                        }] tracks to ${userId} ${apeerConnection.isAdience.toString()}`
+                    );
+                    if (!apeerConnection.isAdience) continue;
+
+                    this.updateTheStatus(
+                        `Sending the stream [${stream.id}] tracks to ${userId}`
+                    );
+                    stream.getTracks().forEach((track) => {
+                        try {
+                            track.streamId = stream.id;
+                            apeerConnection.addTrack(track, stream);
+                        } catch {}
+                    });
+                }
+
+                if (!this.started) {
+                    this.started = true;
+                }
             }
         };
 
