@@ -1065,6 +1065,7 @@ export class SparkRTC {
                             this.remoteStreams.forEach((stream) => {
                                 if (
                                     stream &&
+                                    stream.active &&
                                     message.id === stream.id &&
                                     this.remoteStreamCallback
                                 ) {
@@ -1313,7 +1314,7 @@ export class SparkRTC {
             stream.onremovetrack = (event) => {
                 this.updateTheStatus(`onremovetrack called`);
 
-                if (this.firefoxAgent) {
+                if (this.firefoxAgent || this.safariAgent) {
                     this.updateTheStatus(`onremovetrack `, event);
                     this.updateTheStatus(`currentTarget `, event.currentTarget);
 
@@ -1696,6 +1697,8 @@ export class SparkRTC {
                         if (
                             message &&
                             message.id === stream.id &&
+                            stream &&
+                            stream.active &&
                             message.type === this.StreamType.SCREEN
                         ) {
                             if (this.remoteStreamCallback) {
