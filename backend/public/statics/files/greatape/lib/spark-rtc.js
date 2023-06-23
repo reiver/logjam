@@ -62,6 +62,11 @@ export class SparkRTC {
     chromeAgent = null;
     edgeAgent = null;
 
+    codecs = [];
+    supportsSetCodecPreferences =
+        window.RTCRtpTransceiver &&
+        'setCodecPreferences' in window.RTCRtpTransceiver.prototype;
+
     //enum for Roles
     Roles = {
         BROADCAST: 'broadcast',
@@ -75,6 +80,22 @@ export class SparkRTC {
         CAMERA: 'camera',
     };
 
+    getSupportedCodecs() {
+        var h264Codec;
+
+        if (this.supportsSetCodecPreferences) {
+            let capabilities = RTCRtpSender.getCapabilities('video');
+            let allCodecs = capabilities.codecs;
+
+            for (let index = 0; index < allCodecs.length; ++index) {
+                let codec = allCodecs[index];
+                if (codec.mimeType === 'video/H264') {
+                    this.codecs.push(codec);
+                }
+            }
+            this.updateTheStatus(`codecs`, this.codecs);
+        }
+    }
     enqueue(queue, data) {
         queue.push(data);
     }
@@ -103,6 +124,16 @@ export class SparkRTC {
         );
         await broadcasterPeerConnection.setLocalDescription(
             await broadcasterPeerConnection.createAnswer()
+        );
+
+        this.updateTheStatus(
+            `broadcasterLocalDescription`,
+            broadcasterPeerConnection.localDescription.sdp
+        );
+
+        this.updateTheStatus(
+            `broadcasterRemoteDescription`,
+            broadcasterPeerConnection.remoteDescription.sdp
         );
 
         if (await this.checkSocketStatus())
@@ -158,6 +189,11 @@ export class SparkRTC {
                 try {
                     await audiencePeerConnection.setRemoteDescription(
                         new RTCSessionDescription(msg.sdp)
+                    );
+
+                    this.updateTheStatus(
+                        `remoteDescription`,
+                        audiencePeerConnection.remoteDescription.sdp
                     );
                 } catch (e) {
                     this.updateTheStatus(
@@ -675,6 +711,7 @@ export class SparkRTC {
                 this.shareStream.getTracks().forEach((track) => {
                     apeerConnection.addTrack(track, this.shareStream);
                 });
+                this.addCodecPrefrences(apeerConnection, this.shareStream);
             }
 
             //add name to stream
@@ -1134,6 +1171,11 @@ export class SparkRTC {
                 await peerConnection.setLocalDescription(
                     await peerConnection.createOffer()
                 );
+
+                this.updateTheStatus(
+                    `localDescription`,
+                    peerConnection.localDescription.sdp
+                );
                 if (await this.checkSocketStatus())
                     this.socket.send(
                         JSON.stringify({
@@ -1528,6 +1570,7 @@ export class SparkRTC {
                             apeerConnection.addTrack(track, stream);
                         } catch {}
                     });
+                    this.addCodecPrefrences(apeerConnection, stream);
                 }
 
                 if (!this.started) {
@@ -1802,6 +1845,11 @@ export class SparkRTC {
                         );
                     } catch {}
                 });
+
+                this.addCodecPrefrences(
+                    this.myPeerConnectionArray[audienceName],
+                    astream
+                );
             });
         }
     };
@@ -1827,6 +1875,22 @@ export class SparkRTC {
             }
             peerConnection.addTrack(track, stream);
         });
+
+        this.addCodecPrefrences(peerConnection, stream);
+    };
+
+    addCodecPrefrences = (peerConnection, stream) => {
+        if (this.codecs && this.codecs.length > 0) {
+            const transceiver = peerConnection
+                .getTransceivers()
+                .find(
+                    (t) =>
+                        t.sender &&
+                        t.sender.track === stream.getVideoTracks()[0]
+                );
+            transceiver.setCodecPreferences(this.codecs);
+            this.updateTheStatus(`setCodecPreferences`, transceiver);
+        }
     };
 
     /**
@@ -2227,5 +2291,6 @@ export class SparkRTC {
         this.parentDcMessage = options.parentDcMessage;
 
         this.checkBrowser(); //detect browser
+        this.getSupportedCodecs();
     }
 }
