@@ -1960,6 +1960,16 @@ export class SparkRTC {
         }
     };
 
+    closeCamera = async () => {
+        if (this.localStream) {
+            this.localStream.getTracks().forEach((track) => {
+                track.stop();
+            });
+
+            this.localStream = null;
+        }
+    };
+
     /**
      * Function to lower hand and take request(to broadcast) back, if sharing already stop sharing
      *
@@ -2112,7 +2122,11 @@ export class SparkRTC {
         if (this.localStream) {
             this.leftMeeting = true;
 
-            await this.lowerHand();
+            if (this.role === this.Roles.BROADCAST) {
+                await this.closeCamera();
+            } else {
+                await this.lowerHand();
+            }
         } else {
             //close websocket if not streaming anything
             if (this.socket) {
