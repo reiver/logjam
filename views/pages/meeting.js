@@ -135,9 +135,13 @@ const Meeting = () => {
     useEffect(() => {
         const queryParams = new URLSearchParams(window.location.search);
         const name = queryParams.get('name');
-        const role = queryParams.get('role');
+        var role = queryParams.get('role');
         const room = queryParams.get('room');
         const host = queryParams.get('host');
+
+        if (role === null || role === '') {
+            role = Roles.AUDIENCE; //by default set role to Audience
+        }
 
         updateUser({
             name,
@@ -360,7 +364,11 @@ const Meeting = () => {
                 updateUi: () => {
                     //Todo Nariman
                     //show original controllers i:e, rise hand, reload, mute meeting
-                    updateUser({ showControllers: true });
+                    updateUser({
+                        showControllers: true,
+                        isStreamming: false,
+                        ableToRaiseHand: true,
+                    });
                 },
                 parentDcMessage: () => {
                     // Todo Nariman
@@ -389,6 +397,10 @@ const Meeting = () => {
         window.location.reload();
     };
 
+    const leaveMeeting = () => {
+        window.parent.postMessage('leave', '*');
+    };
+
     return html` <div
         class="flex flex-col justify-between min-h-[--doc-height] dark:bg-secondary-1-a bg-white-f-9 text-medium-12 text-gray-800 dark:text-gray-200"
     >
@@ -406,7 +418,7 @@ const Meeting = () => {
                       class="flex w-full justify-center items-center gap-4 flex-row max-w-[85%] sm:max-w-[400px]"
                   >
                       <${Button}
-                          onClick=${rejoinMeeting}
+                          onClick=${leaveMeeting}
                           variant="outline"
                           class="flex-1 w-full px-0"
                           >Go To Home Feed<//

@@ -4,7 +4,9 @@ import (
 	"errors"
 	"github.com/sparkscience/logjam/models"
 	"github.com/sparkscience/logjam/models/contracts"
+	"github.com/sparkscience/logjam/models/dto"
 	"sync"
+	"time"
 )
 
 type roomRepository struct {
@@ -42,8 +44,8 @@ func (r *roomRepository) CreateRoom(id string) error {
 	r.rooms[id] = &models.RoomModel{
 		Mutex:     &sync.Mutex{},
 		Title:     "",
-		PeersTree: &models.PeerTreeModel{},
-		Members:   make(map[uint64]*models.UserModel),
+		PeersTree: &models.PeerModel{},
+		Members:   make(map[uint64]*models.MemberModel),
 		MetaData:  make(map[string]any),
 	}
 	return nil
@@ -64,7 +66,9 @@ func (r *roomRepository) SetBroadcaster(roomId string, id uint64, name string, s
 	defer r.Unlock()
 	email := ""
 	if r.doesRoomExists(roomId) {
-		r.rooms[roomId].Members[id] = &models.UserModel{
+		r.rooms[roomId].Lock()
+		defer r.rooms[roomId].Unlock()
+		r.rooms[roomId].Members[id] = &models.MemberModel{
 			ID:       id,
 			Name:     name,
 			Email:    email,
@@ -79,12 +83,14 @@ func (r *roomRepository) SetBroadcaster(roomId string, id uint64, name string, s
 	return nil
 }
 
-func (r *roomRepository) GetBroadcaster(roomId string) (*models.UserModel, error) {
+func (r *roomRepository) GetBroadcaster(roomId string) (*models.MemberModel, error) {
 	r.Lock()
 	defer r.Unlock()
 	if !r.doesRoomExists(roomId) {
 		return nil, errors.New("room doesnt exists")
 	}
+	r.rooms[roomId].Lock()
+	defer r.rooms[roomId].Unlock()
 	if r.rooms[roomId].PeersTree.IsConnected {
 		return r.rooms[roomId].Members[r.rooms[roomId].PeersTree.ID], nil
 	} else {
@@ -96,6 +102,8 @@ func (r *roomRepository) ClearBroadcasterSeat(roomId string) error {
 	r.Lock()
 	defer r.Unlock()
 	if r.doesRoomExists(roomId) {
+		r.rooms[roomId].Lock()
+		defer r.rooms[roomId].Unlock()
 		r.rooms[roomId].PeersTree.ID = 0
 		r.rooms[roomId].PeersTree.IsConnected = false
 	}
@@ -108,7 +116,9 @@ func (r *roomRepository) AddMember(roomId string, id uint64, name, email, stream
 	if !r.doesRoomExists(roomId) {
 		return errors.New("room doesnt' exists")
 	}
-	r.rooms[roomId].Members[id] = &models.UserModel{
+	r.rooms[roomId].Lock()
+	defer r.rooms[roomId].Unlock()
+	r.rooms[roomId].Members[id] = &models.MemberModel{
 		ID:             id,
 		Name:           name,
 		Email:          email,
@@ -119,11 +129,13 @@ func (r *roomRepository) AddMember(roomId string, id uint64, name, email, stream
 	return nil
 }
 
-func (r *roomRepository) GetMember(roomId string, id uint64) (*models.UserModel, error) {
+func (r *roomRepository) GetMember(roomId string, id uint64) (*models.MemberModel, error) {
 	r.Lock()
 	defer r.Unlock()
 
 	if r.doesRoomExists(roomId) {
+		r.rooms[roomId].Lock()
+		defer r.rooms[roomId].Unlock()
 		if user, exists := r.rooms[roomId].Members[id]; exists {
 			return user, nil
 		} else {
@@ -139,6 +151,8 @@ func (r *roomRepository) UpdateMemberMeta(roomId string, id uint64, metaKey stri
 	defer r.Unlock()
 
 	if r.doesRoomExists(roomId) {
+		r.rooms[roomId].Lock()
+		defer r.rooms[roomId].Unlock()
 		if user, exists := r.rooms[roomId].Members[id]; exists {
 			user.MetaData[metaKey] = value
 		} else {
@@ -157,6 +171,8 @@ func (r *roomRepository) GetAllMembersId(roomId string, excludeBroadcaster bool)
 		return nil, errors.New("room doesn't exists")
 	}
 
+	r.rooms[roomId].Lock()
+	defer r.rooms[roomId].Unlock()
 	memberIds := make([]uint64, 0, len(r.rooms[roomId].Members))
 	for id := range r.rooms[roomId].Members {
 		if excludeBroadcaster && id == r.rooms[roomId].PeersTree.ID {
@@ -173,6 +189,8 @@ func (r *roomRepository) UpdateCanConnect(roomId string, id uint64, newState boo
 	if !r.doesRoomExists(roomId) {
 		return errors.New("room doesn't exists")
 	}
+	r.rooms[roomId].Lock()
+	defer r.rooms[roomId].Unlock()
 	if _, exists := r.rooms[roomId].Members[id]; !exists {
 		return errors.New("no such a member in this room")
 	}
@@ -181,10 +199,174 @@ func (r *roomRepository) UpdateCanConnect(roomId string, id uint64, newState boo
 }
 
 func (r *roomRepository) InsertMemberToTree(roomId string, audienceId uint64) (parentId *uint64, err error) {
-	r.rooms[roomId].PeersTree.Children[0] = &models.PeerTreeModel{
-		ID:          audienceId,
-		IsConnected: true,
-		Children:    [2]*models.PeerTreeModel{},
+	r.Lock()
+	defer r.Unlock()
+	if !r.doesRoomExists(roomId) {
+		return nil, errors.New("room doesn't exists")
 	}
-	return &r.rooms[roomId].PeersTree.ID, nil
+	r.rooms[roomId].Lock()
+	defer r.rooms[roomId].Unlock()
+	tryCount := 0
+	lastCheckedLevel := 0
+start:
+
+	levelNodes, err := r.rooms[roomId].GetLevelAudiences(uint(lastCheckedLevel))
+	if err != nil {
+		println(err.Error())
+		return
+	}
+	lastCheckedLevel++
+	if len(levelNodes) == 0 && tryCount < 10 {
+		time.Sleep(1 * time.Second)
+		tryCount++
+		lastCheckedLevel = 0
+		goto start
+	} else if len(levelNodes) == 0 && tryCount > 10 {
+		return nil, errors.New("no node to connect to")
+	}
+	found := false
+	for _, node := range levelNodes {
+		if node.Children[0] == nil {
+			node.Children[0] = &models.PeerModel{
+				ID:          audienceId,
+				IsConnected: true,
+				Children:    [2]*models.PeerModel{},
+			}
+			parentId = &node.ID
+			found = true
+		} else if node.Children[1] == nil {
+			node.Children[1] = &models.PeerModel{
+				ID:          audienceId,
+				IsConnected: true,
+				Children:    [2]*models.PeerModel{},
+			}
+			parentId = &node.ID
+			found = true
+		}
+	}
+	if !found {
+		goto start
+	}
+	return parentId, nil
+}
+
+func (r *roomRepository) UpdateTurnStatus(roomId string, id uint64, newState bool) error {
+	r.Lock()
+	defer r.Unlock()
+	if !r.doesRoomExists(roomId) {
+		return errors.New("room doesn't exists")
+	}
+
+	r.rooms[roomId].Lock()
+	defer r.rooms[roomId].Unlock()
+	if _, exists := r.rooms[roomId].Members[id]; !exists {
+		return errors.New("member doesn't exists")
+	}
+	r.rooms[roomId].Members[id].IsUsingTurn = newState
+	return nil
+}
+
+func (r *roomRepository) UpdateMemberName(roomId string, id uint64, name string) error {
+	r.Lock()
+	defer r.Unlock()
+	if !r.doesRoomExists(roomId) {
+		return errors.New("room doesn't exists")
+	}
+
+	r.rooms[roomId].Lock()
+	defer r.rooms[roomId].Unlock()
+	if _, exists := r.rooms[roomId].Members[id]; !exists {
+		return errors.New("member doesn't exists")
+	}
+	r.rooms[roomId].Members[id].Name = name
+	return nil
+}
+
+func (r *roomRepository) SetRoomMetaData(roomId string, metaData map[string]any) error {
+	r.Lock()
+	defer r.Unlock()
+	if !r.doesRoomExists(roomId) {
+		return errors.New("room doesn't exists")
+	}
+
+	r.rooms[roomId].Lock()
+	defer r.rooms[roomId].Unlock()
+	r.rooms[roomId].MetaData = metaData
+	return nil
+}
+
+func (r *roomRepository) GetRoomMetaData(roomId string) (map[string]any, error) {
+	r.Lock()
+	defer r.Unlock()
+	if !r.doesRoomExists(roomId) {
+		return nil, errors.New("room doesn't exists")
+	}
+
+	r.rooms[roomId].Lock()
+	defer r.rooms[roomId].Unlock()
+	copiedMap := make(map[string]any)
+	for k, v := range r.rooms[roomId].MetaData {
+		copiedMap[k] = v
+	}
+	return copiedMap, nil
+}
+
+func (r *roomRepository) GetUserByStreamId(roomId string, streamId string) (*models.MemberModel, error) {
+	r.Lock()
+	defer r.Unlock()
+	if !r.doesRoomExists(roomId) {
+		return nil, errors.New("room doesn't exists")
+	}
+
+	r.rooms[roomId].Lock()
+	defer r.rooms[roomId].Unlock()
+	var chosen *models.MemberModel
+	for _, member := range r.rooms[roomId].Members {
+		if member.StreamId != streamId {
+			continue
+		}
+		chosen = member
+		break
+	}
+	if chosen == nil {
+		return nil, nil
+	}
+	return chosen, nil
+}
+
+func (r *roomRepository) IsBroadcaster(roomId string, id uint64) (bool, error) {
+	r.Lock()
+	defer r.Unlock()
+	if !r.doesRoomExists(roomId) {
+		return false, errors.New("room doesn't exists")
+	}
+
+	r.rooms[roomId].Lock()
+	defer r.rooms[roomId].Unlock()
+	return r.rooms[roomId].PeersTree.ID == id, nil
+}
+
+func (r *roomRepository) GetMembersList(roomId string) ([]dto.MemberDTO, error) {
+	r.Lock()
+	defer r.Unlock()
+	if !r.doesRoomExists(roomId) {
+		return nil, errors.New("room doesn't exists")
+	}
+
+	r.rooms[roomId].Lock()
+	defer r.rooms[roomId].Unlock()
+	var list []dto.MemberDTO
+	for _, member := range r.rooms[roomId].Members {
+		role := "audience"
+		if r.rooms[roomId].PeersTree.ID == member.ID {
+			role = "broadcaster"
+		}
+		list = append(list, dto.MemberDTO{
+			Id:       member.ID,
+			Name:     member.Name,
+			Role:     role,
+			StreamId: member.StreamId,
+		})
+	}
+	return list, nil
 }

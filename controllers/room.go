@@ -37,11 +37,16 @@ func (c *RoomController) Start(ctx *models.WSContext) {
 		Name:   "",
 	}
 	_ = c.roomRepo.CreateRoom(ctx.RoomId)
-	err := c.socketSVC.Send(resultEvent, ctx.SocketID)
-	println("sent")
+	err := c.roomRepo.AddMember(ctx.RoomId, ctx.SocketID, "", "", "")
+	if err != nil {
+		println(err.Error())
+		return
+	}
+	err = c.roomRepo.UpdateMemberName(ctx.RoomId, ctx.SocketID, ctx.ParsedMessage.Data)
 	if err != nil {
 		println(err.Error())
 	}
+	_ = c.socketSVC.Send(resultEvent, ctx.SocketID)
 }
 func (c *RoomController) Role(ctx *models.WSContext) {
 	var eventData map[string]string
@@ -50,11 +55,7 @@ func (c *RoomController) Role(ctx *models.WSContext) {
 		return
 	}
 	streamId, exists := eventData["streamId"]
-	err = c.roomRepo.AddMember(ctx.RoomId, ctx.SocketID, "", "", streamId)
-	if err != nil {
-		println(err.Error())
-		return
-	}
+	defer c.emitUserList(ctx.RoomId)
 	if exists {
 		err = c.roomRepo.UpdateMemberMeta(ctx.RoomId, ctx.SocketID, "streamId", streamId)
 		if err != nil {
@@ -112,11 +113,15 @@ func (c *RoomController) Role(ctx *models.WSContext) {
 		resultEvent.Data = strconv.FormatUint(broadcaster.ID, 10)
 		_ = c.socketSVC.Send(resultEvent, ctx.SocketID)
 
-		//todo: set name
+		userInfo, err := c.roomRepo.GetMember(ctx.RoomId, ctx.SocketID)
+		if err != nil {
+			println(err.Error())
+			return
+		}
 		broadcasterReceivingEvent := models.MessageContract{
 			Type: `alt-broadcast`,
 			Data: strconv.FormatUint(ctx.SocketID, 10),
-			Name: "",
+			Name: userInfo.Name,
 		}
 		_ = c.socketSVC.Send(broadcasterReceivingEvent, broadcaster.ID)
 	} else if ctx.ParsedMessage.Data == "audience" {
@@ -137,7 +142,7 @@ func (c *RoomController) Role(ctx *models.WSContext) {
 			println(err.Error())
 			return
 		}
-		c.socketSVC.Send(models.MessageContract{
+		_ = c.socketSVC.Send(models.MessageContract{
 			Type: "add_audience",
 			Data: strconv.FormatUint(ctx.SocketID, 10),
 		}, *parentId)
@@ -170,27 +175,105 @@ func (c *RoomController) Ping(ctx *models.WSContext) {
 }
 
 func (c *RoomController) TurnStatus(ctx *models.WSContext) {
-
+	err := c.roomRepo.UpdateTurnStatus(ctx.RoomId, ctx.SocketID, ctx.ParsedMessage.Data == "on")
+	if err != nil {
+		println(err.Error())
+		return
+	}
 }
 
 func (c *RoomController) Tree(ctx *models.WSContext) {
-
+	room, err := c.roomRepo.GetRoom(ctx.RoomId)
+	if err != nil {
+		println(err.Error())
+		return
+	}
+	if room == nil {
+		println("room doesn't exists")
+		return
+	}
+	tree, err := room.GetTree()
+	if err != nil {
+		println(err.Error())
+		return
+	}
+	buffer, err := json.Marshal(tree)
+	resultEvent := models.MessageContract{
+		Type: "tree",
+		Data: string(buffer),
+	}
+	c.socketSVC.Send(resultEvent, ctx.SocketID)
 }
 
 func (c *RoomController) MetadataSet(ctx *models.WSContext) {
-
+	metaData := make(map[string]any)
+	err := json.Unmarshal([]byte(ctx.ParsedMessage.Data), &metaData)
+	if err != nil {
+		println(err.Error())
+		return
+	}
+	err = c.roomRepo.SetRoomMetaData(ctx.RoomId, metaData)
+	if err != nil {
+		println(err.Error())
+		return
+	}
 }
 
 func (c *RoomController) MetadataGet(ctx *models.WSContext) {
-
+	meta, err := c.roomRepo.GetRoomMetaData(ctx.RoomId)
+	if err != nil {
+		println(err.Error())
+		return
+	}
+	_ = c.socketSVC.Send(meta, ctx.SocketID)
 }
 
 func (c *RoomController) UserByStream(ctx *models.WSContext) {
-
+	userInfo, err := c.roomRepo.GetUserByStreamId(ctx.RoomId, ctx.ParsedMessage.Data)
+	if err != nil {
+		println(err.Error())
+		return
+	}
+	isBroadcaster, err := c.roomRepo.IsBroadcaster(ctx.RoomId, userInfo.ID)
+	if err != nil {
+		println(err.Error())
+	}
+	resultEvent := models.MessageContract{
+		Type: "user-by-stream",
+	}
+	userRole := "audience"
+	if isBroadcaster {
+		userRole = "broadcast"
+	}
+	resultEvent.Data = strconv.FormatUint(userInfo.ID, 10) + "," + userInfo.Name + "," + ctx.ParsedMessage.Data + "," + userRole
+	_ = c.socketSVC.Send(ctx.SocketID)
 }
 
 func (c *RoomController) GetLatestUserList(ctx *models.WSContext) {
+	c.emitUserList(ctx.RoomId)
+}
 
+func (c *RoomController) emitUserList(roomId string) {
+	list, err := c.roomRepo.GetMembersList(roomId)
+	if err != nil {
+		println(err.Error())
+		return
+	}
+	roomMembersIdList, err := c.roomRepo.GetAllMembersId(roomId, false)
+	if err != nil {
+		println(err.Error())
+		return
+	}
+	buffer, err := json.Marshal(list)
+	if err != nil {
+		println(err.Error())
+		return
+	}
+	event := models.MessageContract{
+		Type: "user-event",
+		Data: string(buffer),
+	}
+	_ = c.socketSVC.Send(event, roomMembersIdList...)
 }
 
 func (c *RoomController) DefaultHandler(ctx *models.WSContext) {
@@ -211,8 +294,12 @@ func (c *RoomController) DefaultHandler(ctx *models.WSContext) {
 		println(err.Error())
 		return
 	}
-	//todo: get name
-	fullMessage["username"] = ""
+	userInfo, err := c.roomRepo.GetMember(ctx.RoomId, ctx.SocketID)
+	if err != nil {
+		println(err.Error())
+		return
+	}
+	fullMessage["username"] = userInfo.Name
 	fullMessage["data"] = strconv.FormatUint(ctx.SocketID, 10)
 	c.socketSVC.Send(fullMessage, targetMember.ID)
 }

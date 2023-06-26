@@ -17,8 +17,8 @@ type App struct {
 	listenPort int
 }
 
-func (app *App) Init(listenHost string, listenPort int, mode string) {
-	app.Logger = logger.NewSTDOUTLogger()
+func (app *App) Init(listenHost string, listenPort int, prodMode bool) {
+	app.Logger = logger.NewSTDOUTLogger(prodMode)
 	_ = app.Logger.Log("app", contracts.LInfo, "initializing logjam ..")
 	app.listenHost = listenHost
 	app.listenPort = listenPort
