@@ -74,6 +74,32 @@ export class SparkRTC {
         BROADCASTER: 'broadcaster',
     };
 
+    //enum for FPS
+    FPS = {
+        F10: 10,
+        F15: 15,
+        F20: 20,
+        F25: 25,
+        F30: 30,
+        F35: 35,
+        F40: 40,
+    };
+
+    //enum for Bitrates
+    Bitrate = {
+        B_1000: 1000,
+        B_1500: 1500,
+        B_2000: 2000,
+        B_2500: 2500,
+        B_3000: 3000,
+        B_3500: 3500,
+        B_4000: 4000,
+        B_4500: 4500,
+        B_5000: 5000,
+        B_5500: 5500,
+        B_6000: 6000,
+    };
+
     //enum for stream kind
     StreamType = {
         SCREEN: 'screen',
@@ -704,14 +730,27 @@ export class SparkRTC {
                 video: true,
             });
 
+            // //update fps
+            // await this.updateFPS(this.shareStream);
+
+            //add hint to content type
+            await this.addHintToTrack(this.shareStream);
+
             this.remoteStreams.push(this.shareStream);
 
             for (const userId in this.myPeerConnectionArray) {
                 const apeerConnection = this.myPeerConnectionArray[userId];
-                this.shareStream.getTracks().forEach((track) => {
-                    apeerConnection.addTrack(track, this.shareStream);
+                this.shareStream.getTracks().forEach(async (track) => {
+                    let sender = apeerConnection.addTrack(
+                        track,
+                        this.shareStream
+                    );
+                    await this.updatePeerConnectionParams(sender);
                 });
-                this.addCodecPrefrences(apeerConnection, this.shareStream);
+                await this.addCodecPrefrences(
+                    apeerConnection,
+                    this.shareStream
+                );
             }
 
             //add name to stream
@@ -723,6 +762,13 @@ export class SparkRTC {
             console.error(e);
             this.updateTheStatus(`[handleMessage] startShareScreen error ${e}`);
             alert('Unable to get access to screenshare.');
+        }
+    };
+
+    updateFPS = async (stream, maxFPS = this.FPS.F15) => {
+        if (stream) {
+            const track = stream.getVideoTracks()[0];
+            track.applyConstraints({ frameRate: { max: maxFPS } });
         }
     };
 
@@ -744,6 +790,13 @@ export class SparkRTC {
                 this.localStream = await navigator.mediaDevices.getUserMedia(
                     this.constraints
                 );
+
+                //add hint to content type
+                await this.addHintToTrack(this.localStream);
+
+                // //update fps
+                // await this.updateFPS(this.localStream);
+
                 this.updateTheStatus(`Local stream loaded`);
                 this.updateTheStatus(`[startBroadcasting] local stream loaded`);
                 this.remoteStreams.push(this.localStream);
@@ -768,6 +821,23 @@ export class SparkRTC {
         }
     };
 
+    /**
+     * Add content Hint to Track
+     * @param {*} stream 
+     */
+    addHintToTrack = async (stream) => {
+        if (this.stream) {
+            stream.getTracks.forEach((track) => {
+                if (track) {
+                    if (track.kind === 'video') {
+                        track.contentHint = 'motion';
+                    } else if (track.kind === 'audio') {
+                        track.contentHint = 'speech';
+                    }
+                }
+            });
+        }
+    };
     /**
      * Function to intiate Listening to / Receiving of
      *
@@ -1564,13 +1634,17 @@ export class SparkRTC {
                     this.updateTheStatus(
                         `Sending the stream [${stream.id}] tracks to ${userId}`
                     );
-                    stream.getTracks().forEach((track) => {
+                    stream.getTracks().forEach(async (track) => {
                         try {
                             track.streamId = stream.id;
-                            apeerConnection.addTrack(track, stream);
+                            let sender = apeerConnection.addTrack(
+                                track,
+                                stream
+                            );
+                            await this.updatePeerConnectionParams(sender);
                         } catch {}
                     });
-                    this.addCodecPrefrences(apeerConnection, stream);
+                    await this.addCodecPrefrences(apeerConnection, stream);
                 }
 
                 if (!this.started) {
@@ -1835,18 +1909,19 @@ export class SparkRTC {
 
         if (this.remoteStreams.length > 0) {
             this.updateTheStatus(`publishing stream/s to ${audienceName}`);
-            this.remoteStreams.forEach((astream) => {
+            this.remoteStreams.forEach(async (astream) => {
                 this.updateTheStatus(`streamToPublish:`, astream);
-                astream.getTracks().forEach((track) => {
+                astream.getTracks().forEach(async (track) => {
                     try {
-                        this.myPeerConnectionArray[audienceName].addTrack(
-                            track,
-                            astream
-                        );
+                        let sender = this.myPeerConnectionArray[
+                            audienceName
+                        ].addTrack(track, astream);
+
+                        await this.updatePeerConnectionParams(sender);
                     } catch {}
                 });
 
-                this.addCodecPrefrences(
+                await this.addCodecPrefrences(
                     this.myPeerConnectionArray[audienceName],
                     astream
                 );
@@ -1862,24 +1937,44 @@ export class SparkRTC {
      * @param {String} target
      * @param {MediaStream} stream
      */
-    sendStreamTo = (target, stream) => {
+    sendStreamTo = async (target, stream) => {
         this.updateTheStatus(`[handleMessage] sendStreamTo ${target}`);
 
         const peerConnection = this.createOrGetPeerConnection(target, false);
-        stream.getTracks().forEach((track) => {
+        stream.getTracks().forEach(async (track) => {
             if (this.lastVideoState === 'Disabled') {
                 this.disableVideo();
             }
             if (this.lastAudioState === 'Disabled') {
                 this.disableAudio();
             }
-            peerConnection.addTrack(track, stream);
+            let sender = peerConnection.addTrack(track, stream);
+            await this.updatePeerConnectionParams(sender);
         });
 
-        this.addCodecPrefrences(peerConnection, stream);
+        await this.addCodecPrefrences(peerConnection, stream);
     };
 
-    addCodecPrefrences = (peerConnection, stream) => {
+    updatePeerConnectionParams = async (sender) => {
+        if (sender) {
+            // get the current parameters first
+            const params = sender.getParameters();
+
+            if (!params.encodings) params.encodings = [{}]; // Firefox workaround!
+
+            if (params.encodings[0]) {
+                params.encodings[0].active = true;
+                // params.encodings[0].maxBitrate = this.Bitrate.B_6000;
+                params.encodings[0].maxFramerate = this.FPS.F10;
+                // params.encodings[0].scaleResolutionDownBy = 1;
+            }
+
+            this.updateTheStatus(`params`, params);
+
+            sender.setParameters(params);
+        }
+    };
+    addCodecPrefrences = async (peerConnection, stream) => {
         if (this.codecs && this.codecs.length > 0) {
             const transceiver = peerConnection
                 .getTransceivers()
@@ -1888,8 +1983,10 @@ export class SparkRTC {
                         t.sender &&
                         t.sender.track === stream.getVideoTracks()[0]
                 );
-            transceiver.setCodecPreferences(this.codecs);
-            this.updateTheStatus(`setCodecPreferences`, transceiver);
+            if (transceiver) {
+                transceiver.setCodecPreferences(this.codecs);
+                this.updateTheStatus(`setCodecPreferences`, transceiver);
+            }
         }
     };
 
