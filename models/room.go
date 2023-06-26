@@ -8,7 +8,6 @@ type MemberModel struct {
 	ID             uint64
 	Name           string
 	Email          string
-	StreamId       string
 	IsUsingTurn    bool
 	MetaData       map[string]any
 	CanAcceptChild bool

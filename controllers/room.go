@@ -77,7 +77,12 @@ func (c *RoomController) Role(ctx *models.WSContext) {
 			println(err.Error())
 			return
 		}
-		err = c.roomRepo.SetBroadcaster(ctx.RoomId, ctx.SocketID, "", streamId)
+		userInfo, err := c.roomRepo.GetMember(ctx.RoomId, ctx.SocketID)
+		if err != nil {
+			println(err.Error())
+			return
+		}
+		err = c.roomRepo.SetBroadcaster(ctx.RoomId, ctx.SocketID, userInfo.Name, streamId)
 		if err != nil {
 			println(err.Error())
 			return

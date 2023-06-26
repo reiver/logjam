@@ -61,7 +61,7 @@ func (r *roomRepository) GetRoom(id string) (*models.RoomModel, error) {
 	}
 }
 
-func (r *roomRepository) SetBroadcaster(roomId string, id uint64, name string, stream string) error {
+func (r *roomRepository) SetBroadcaster(roomId string, id uint64, name string, streamId string) error {
 	r.Lock()
 	defer r.Unlock()
 	email := ""
@@ -72,8 +72,7 @@ func (r *roomRepository) SetBroadcaster(roomId string, id uint64, name string, s
 			ID:       id,
 			Name:     name,
 			Email:    email,
-			StreamId: stream,
-			MetaData: make(map[string]any),
+			MetaData: map[string]any{"streamId": streamId},
 		}
 		r.rooms[roomId].PeersTree.ID = id
 		r.rooms[roomId].PeersTree.IsConnected = true
@@ -122,7 +121,6 @@ func (r *roomRepository) AddMember(roomId string, id uint64, name, email, stream
 		ID:             id,
 		Name:           name,
 		Email:          email,
-		StreamId:       streamId,
 		MetaData:       make(map[string]any),
 		CanAcceptChild: false,
 	}
@@ -311,7 +309,7 @@ func (r *roomRepository) GetRoomMetaData(roomId string) (map[string]any, error) 
 	return copiedMap, nil
 }
 
-func (r *roomRepository) GetUserByStreamId(roomId string, streamId string) (*models.MemberModel, error) {
+func (r *roomRepository) GetUserByStreamId(roomId string, targetStreamId string) (*models.MemberModel, error) {
 	r.Lock()
 	defer r.Unlock()
 	if !r.doesRoomExists(roomId) {
@@ -322,7 +320,7 @@ func (r *roomRepository) GetUserByStreamId(roomId string, streamId string) (*mod
 	defer r.rooms[roomId].Unlock()
 	var chosen *models.MemberModel
 	for _, member := range r.rooms[roomId].Members {
-		if member.StreamId != streamId {
+		if streamId, exists := member.MetaData["streamId"]; exists && streamId != targetStreamId {
 			continue
 		}
 		chosen = member
@@ -361,11 +359,19 @@ func (r *roomRepository) GetMembersList(roomId string) ([]dto.MemberDTO, error) 
 		if r.rooms[roomId].PeersTree.ID == member.ID {
 			role = "broadcaster"
 		}
+		streamId := ""
+		_streamId, exists := member.MetaData["streamId"]
+		if exists {
+			strStreamId, ok := _streamId.(string)
+			if ok {
+				streamId = strStreamId
+			}
+		}
 		list = append(list, dto.MemberDTO{
 			Id:       member.ID,
 			Name:     member.Name,
 			Role:     role,
-			StreamId: member.StreamId,
+			StreamId: streamId,
 		})
 	}
 	return list, nil
