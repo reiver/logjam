@@ -39,30 +39,50 @@ func (r *RoomModel) GetBroadcaster() *MemberModel {
 	return nil
 }
 
-func (r *RoomModel) GetLevelAudiences(level uint) ([]*PeerModel, error) {
+func (r *RoomModel) GetLevelMembers(level uint, includeAll bool) ([]**PeerModel, error) {
 	if level == 0 {
-		if r.PeersTree.IsConnected {
-			return []*PeerModel{r.PeersTree}, nil
+		if !includeAll && r.PeersTree.IsConnected {
+			return []**PeerModel{&r.PeersTree}, nil
+		} else if includeAll {
+			return []**PeerModel{&r.PeersTree}, nil
 		}
-		return []*PeerModel{}, nil
+		return []**PeerModel{}, nil
 	}
-	var lastLevelChildren = r.PeersTree.Children[:]
-	if lastLevelChildren[0] == nil || !r.Members[lastLevelChildren[0].ID].CanAcceptChild {
-		lastLevelChildren = append(lastLevelChildren[:0], lastLevelChildren[1:]...)
+	var lastLevelChildren []**PeerModel
+
+	if r.PeersTree.Children[0] != nil {
+		if !includeAll && r.Members[r.PeersTree.Children[0].ID].CanAcceptChild {
+			lastLevelChildren = append(lastLevelChildren, &r.PeersTree.Children[0])
+		} else if includeAll {
+			lastLevelChildren = append(lastLevelChildren, &r.PeersTree.Children[0])
+		}
 	}
-	if lastLevelChildren[0] == nil || !r.Members[lastLevelChildren[0].ID].CanAcceptChild {
-		lastLevelChildren = append(lastLevelChildren[:0], lastLevelChildren[1:]...)
+	if r.PeersTree.Children[1] != nil {
+		if !includeAll && r.Members[r.PeersTree.Children[1].ID].CanAcceptChild {
+			lastLevelChildren = append(lastLevelChildren, &r.PeersTree.Children[1])
+		} else if includeAll {
+			lastLevelChildren = append(lastLevelChildren, &r.PeersTree.Children[1])
+		}
 	}
 	if level == 1 {
 		return lastLevelChildren, nil
 	}
 	currentLevel := uint(1)
 	for currentLevel < level && len(lastLevelChildren) > 0 {
-		var newList []*PeerModel
+		var newList []**PeerModel
 		for _, currentLevelChild := range lastLevelChildren {
-			for _, nextLevelChild := range currentLevelChild.Children {
-				if nextLevelChild != nil && r.Members[nextLevelChild.ID].CanAcceptChild {
-					newList = append(newList, nextLevelChild)
+			if (*currentLevelChild).Children[0] != nil {
+				if !includeAll && r.Members[(*currentLevelChild).Children[0].ID].CanAcceptChild {
+					newList = append(newList, &(*currentLevelChild).Children[0])
+				} else if includeAll {
+					newList = append(newList, &(*currentLevelChild).Children[0])
+				}
+			}
+			if (*currentLevelChild).Children[1] != nil {
+				if !includeAll && r.Members[(*currentLevelChild).Children[1].ID].CanAcceptChild {
+					newList = append(newList, &(*currentLevelChild).Children[1])
+				} else if includeAll {
+					newList = append(newList, &(*currentLevelChild).Children[1])
 				}
 			}
 		}

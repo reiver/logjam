@@ -436,7 +436,7 @@ export class SparkRTC {
                 this.updateTheStatus(`[handleMessage] ${msg.type}`);
                 this.getMetadata();
                 setTimeout(() => {
-                    const users = JSON.parse(msg.data).map((u) => {
+                    const users = JSON.parse(msg.data)?.map((u) => {
                         this.updateTheStatus('user', u);
                         const video =
                             u.streamId !== ''

@@ -5,6 +5,7 @@ import (
 	"github.com/sparkscience/logjam/models"
 	"github.com/sparkscience/logjam/models/contracts"
 	"github.com/sparkscience/logjam/models/dto"
+	"strconv"
 	"sync"
 	"time"
 )
@@ -61,19 +62,12 @@ func (r *roomRepository) GetRoom(id string) (*models.RoomModel, error) {
 	}
 }
 
-func (r *roomRepository) SetBroadcaster(roomId string, id uint64, name string, streamId string) error {
+func (r *roomRepository) SetBroadcaster(roomId string, id uint64) error {
 	r.Lock()
 	defer r.Unlock()
-	email := ""
 	if r.doesRoomExists(roomId) {
 		r.rooms[roomId].Lock()
 		defer r.rooms[roomId].Unlock()
-		r.rooms[roomId].Members[id] = &models.MemberModel{
-			ID:       id,
-			Name:     name,
-			Email:    email,
-			MetaData: map[string]any{"streamId": streamId},
-		}
 		r.rooms[roomId].PeersTree.ID = id
 		r.rooms[roomId].PeersTree.IsConnected = true
 	} else {
@@ -154,7 +148,7 @@ func (r *roomRepository) UpdateMemberMeta(roomId string, id uint64, metaKey stri
 		if user, exists := r.rooms[roomId].Members[id]; exists {
 			user.MetaData[metaKey] = value
 		} else {
-			return errors.New("audience doesn't exists")
+			return errors.New("member doesn't exists " + strconv.FormatUint(id, 10))
 		}
 	} else {
 		return errors.New("room doesnt exists")
@@ -196,7 +190,7 @@ func (r *roomRepository) UpdateCanConnect(roomId string, id uint64, newState boo
 	return nil
 }
 
-func (r *roomRepository) InsertMemberToTree(roomId string, audienceId uint64) (parentId *uint64, err error) {
+func (r *roomRepository) InsertMemberToTree(roomId string, memberId uint64) (parentId *uint64, err error) {
 	r.Lock()
 	defer r.Unlock()
 	if !r.doesRoomExists(roomId) {
@@ -207,11 +201,9 @@ func (r *roomRepository) InsertMemberToTree(roomId string, audienceId uint64) (p
 	tryCount := 0
 	lastCheckedLevel := 0
 start:
-
-	levelNodes, err := r.rooms[roomId].GetLevelAudiences(uint(lastCheckedLevel))
+	levelNodes, err := r.rooms[roomId].GetLevelMembers(uint(lastCheckedLevel), false)
 	if err != nil {
-		println(err.Error())
-		return
+		return nil, err
 	}
 	lastCheckedLevel++
 	if len(levelNodes) == 0 && tryCount < 10 {
@@ -224,22 +216,25 @@ start:
 	}
 	found := false
 	for _, node := range levelNodes {
-		if node.Children[0] == nil {
-			node.Children[0] = &models.PeerModel{
-				ID:          audienceId,
+		if (*node).Children[0] == nil {
+			(*node).Children[0] = &models.PeerModel{
+				ID:          memberId,
 				IsConnected: true,
 				Children:    [2]*models.PeerModel{},
 			}
-			parentId = &node.ID
+			parentId = &(*node).ID
 			found = true
-		} else if node.Children[1] == nil {
-			node.Children[1] = &models.PeerModel{
-				ID:          audienceId,
+		} else if (*node).Children[1] == nil {
+			(*node).Children[1] = &models.PeerModel{
+				ID:          memberId,
 				IsConnected: true,
 				Children:    [2]*models.PeerModel{},
 			}
-			parentId = &node.ID
+			parentId = &(*node).ID
 			found = true
+		}
+		if found {
+			break
 		}
 	}
 	if !found {
@@ -375,4 +370,59 @@ func (r *roomRepository) GetMembersList(roomId string) ([]dto.MemberDTO, error) 
 		})
 	}
 	return list, nil
+}
+
+func (r *roomRepository) RemoveMember(roomId string, memberId uint64) (wasBroadcaster bool, nodeChildrenIdList []uint64, err error) {
+	r.Lock()
+	defer r.Unlock()
+	if !r.doesRoomExists(roomId) {
+		return false, nil, errors.New("room doesn't exists")
+	}
+	defer func() {
+		delete(r.rooms[roomId].Members, memberId)
+	}()
+	r.rooms[roomId].Lock()
+	defer r.rooms[roomId].Unlock()
+	if r.rooms[roomId].PeersTree.ID == memberId {
+		if r.rooms[roomId].PeersTree.Children[0] != nil {
+			nodeChildrenIdList = append(nodeChildrenIdList, r.rooms[roomId].PeersTree.Children[0].ID)
+		}
+		if r.rooms[roomId].PeersTree.Children[1] != nil {
+			nodeChildrenIdList = append(nodeChildrenIdList, r.rooms[roomId].PeersTree.Children[1].ID)
+		}
+		r.rooms[roomId].PeersTree.IsConnected = false
+		return true, nodeChildrenIdList, nil
+	}
+	var lastNodesList []**models.PeerModel
+	var targetNode ***models.PeerModel
+	lastCheckedLevel := uint(0)
+
+	if !r.rooms[roomId].PeersTree.IsConnected {
+		lastCheckedLevel++
+	}
+start:
+	lastNodesList, err = r.rooms[roomId].GetLevelMembers(lastCheckedLevel, true)
+	if len(lastNodesList) == 0 {
+		return false, nodeChildrenIdList, nil
+	}
+	lastCheckedLevel++
+	for _, node := range lastNodesList {
+		if (*node).ID == memberId {
+			targetNode = &node
+			break
+		}
+	}
+
+	if targetNode != nil {
+		if (*(*targetNode)).Children[0] != nil {
+			nodeChildrenIdList = append(nodeChildrenIdList, (*(*targetNode)).Children[0].ID)
+		}
+		if (*(*targetNode)).Children[1] != nil {
+			nodeChildrenIdList = append(nodeChildrenIdList, (*(*targetNode)).Children[1].ID)
+		}
+		**targetNode = nil
+		return false, nodeChildrenIdList, nil
+	} else {
+		goto start
+	}
 }
