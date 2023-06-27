@@ -30,6 +30,10 @@ export class SparkRTC {
     targetStreams = {};
     parentStreamId;
     broadcasterStatus = '';
+    resolutionConstraints = {
+        width: 1920,
+        height: 1080,
+    };
     constraints = {
         audio: true,
         video: true,
@@ -66,6 +70,34 @@ export class SparkRTC {
     supportsSetCodecPreferences =
         window.RTCRtpTransceiver &&
         'setCodecPreferences' in window.RTCRtpTransceiver.prototype;
+
+    // Enum for video settings
+    VideoSettings = {
+        VS_0_5Mbps_15FPS: {
+            bitrate: 0.5,
+            fps: 15,
+        },
+        VS_1Mbps_30FPS: {
+            bitrate: 1.0,
+            fps: 30,
+        },
+        VS_0_8Mbps_15FPS: {
+            bitrate: 0.8,
+            fps: 15,
+        },
+        VS_1_5Mbps_30FPS: {
+            bitrate: 1.5,
+            fps: 30,
+        },
+        VS_1_5Mbps_15FPS: {
+            bitrate: 1.5,
+            fps: 15,
+        },
+        VS_2Mbps_30FPS: {
+            bitrate: 2.0,
+            fps: 30,
+        },
+    };
 
     //enum for Roles
     Roles = {
@@ -725,16 +757,13 @@ export class SparkRTC {
     startShareScreen = async () => {
         this.updateTheStatus(`[handleMessage] startShareScreen`);
         try {
-            this.shareStream = await navigator.mediaDevices.getDisplayMedia({
-                audio: true,
-                video: true,
-            });
-
-            // //update fps
-            // await this.updateFPS(this.shareStream);
+            this.shareStream = await navigator.mediaDevices.getDisplayMedia(
+                this.constraints
+            );
 
             //add hint to content type
             await this.addHintToTrack(this.shareStream);
+            await this.setResolution(this.shareStream);
 
             this.remoteStreams.push(this.shareStream);
 
@@ -765,13 +794,6 @@ export class SparkRTC {
         }
     };
 
-    updateFPS = async (stream, maxFPS = this.FPS.F15) => {
-        if (stream) {
-            const track = stream.getVideoTracks()[0];
-            track.applyConstraints({ frameRate: { max: maxFPS } });
-        }
-    };
-
     /**
      * Function to initiate Video Broadcasting
      *
@@ -794,8 +816,7 @@ export class SparkRTC {
                 //add hint to content type
                 await this.addHintToTrack(this.localStream);
 
-                // //update fps
-                // await this.updateFPS(this.localStream);
+                await this.setResolution(this.localStream);
 
                 this.updateTheStatus(`Local stream loaded`);
                 this.updateTheStatus(`[startBroadcasting] local stream loaded`);
@@ -821,9 +842,19 @@ export class SparkRTC {
         }
     };
 
+    setResolution = async (stream) => {
+        if (stream) {
+            stream.getVideoTracks().forEach((track) => {
+                if (track) {
+                    track.applyConstraints(this.resolutionConstraints);
+                }
+            });
+        }
+    };
+
     /**
      * Add content Hint to Track
-     * @param {*} stream 
+     * @param {*} stream
      */
     addHintToTrack = async (stream) => {
         if (this.stream) {
@@ -1955,25 +1986,100 @@ export class SparkRTC {
         await this.addCodecPrefrences(peerConnection, stream);
     };
 
-    updatePeerConnectionParams = async (sender) => {
-        if (sender) {
-            // get the current parameters first
-            const params = sender.getParameters();
+    /**
+     *
+     *
+     */
 
-            if (!params.encodings) params.encodings = [{}]; // Firefox workaround!
+    // Function to set FPS, bitrate, and resolution
+    setVideoSettings = async (sender, fps, bitrate, resolutionScale) => {
+        // Get the current parameters of the sender
+        const parameters = sender.getParameters();
 
-            if (params.encodings[0]) {
-                params.encodings[0].active = true;
-                // params.encodings[0].maxBitrate = this.Bitrate.B_6000;
-                params.encodings[0].maxFramerate = this.FPS.F10;
-                // params.encodings[0].scaleResolutionDownBy = 1;
-            }
+        if (!parameters.encodings) parameters.encodings = [{}];
 
-            this.updateTheStatus(`params`, params);
+        if (parameters.encodings[0]) {
+            // Set the desired FPS
+            parameters.encodings[0].maxFramerate = fps;
 
-            sender.setParameters(params);
+            // Set the desired bitrate
+            // parameters.encodings[0].maxBitrate = bitrate * 1000; // Convert bitrate to bits per second
+
+            // Set the desired resolution
+            parameters.encodings[0].scaleResolutionDownBy = resolutionScale;
+
+            // Apply the modified parameters to the sender
+            sender
+                .setParameters(parameters)
+                .then(() => {
+                    this.updateTheStatus(
+                        'Video settings changed successfully!'
+                    );
+                })
+                .catch((error) => {
+                    this.updateTheStatus(
+                        'Failed to change video settings:',
+                        error
+                    );
+                });
+        } else {
+            this.updateTheStatus(`No Encodings exist`);
         }
     };
+
+    // Function to calculate resolution scale based on available bandwidth
+    calculateResolutionScale = async (bandwidth) => {
+        // Adjust the resolution scale based on available bandwidth
+        if (bandwidth < 1000000) {
+            return 2; // Scale down by 2
+        } else if (bandwidth < 2000000) {
+            return 1.5; // Scale down by 1.5
+        } else {
+            return 1; // No scaling
+        }
+    };
+    // Function to calculate video settings based on available bandwidth
+    calculateVideoSettings = async (bandwidth) => {
+        if (bandwidth < 500000) {
+            return this.VideoSettings.VS_0_5Mbps_15FPS;
+        } else if (bandwidth < 1000000) {
+            return this.VideoSettings.VS_1Mbps_30FPS;
+        } else if (bandwidth < 1500000) {
+            return this.VideoSettings.VS_0_8Mbps_15FPS;
+        } else if (bandwidth < 2000000) {
+            return this.VideoSettings.VS_1_5Mbps_30FPS;
+        } else if (bandwidth < 2500000) {
+            return this.VideoSettings.VS_1_5Mbps_15FPS;
+        } else {
+            return this.VideoSettings.VS_2Mbps_30FPS;
+        }
+    };
+
+    /**
+     * Set FPS, Bitrate etc for Better Encoding
+     */
+    updatePeerConnectionParams = async (sender) => {
+        if (sender) {
+            const bandwidth = navigator.connection.downlink * 1000 * 1000; // Convert downlink to bits per second
+            const videoSettings = await this.calculateVideoSettings(bandwidth);
+            const resolutionScale = await this.calculateResolutionScale(
+                bandwidth
+            );
+
+            this.updateTheStatus(`videoSettings`, videoSettings);
+            this.updateTheStatus(`resolutionScale`, resolutionScale);
+
+            await this.setVideoSettings(
+                sender,
+                videoSettings.fps,
+                videoSettings.bitrate,
+                resolutionScale
+            );
+        }
+    };
+    /**
+     * func to set codec preferences for peer connection and it's relevent stream
+     */
     addCodecPrefrences = async (peerConnection, stream) => {
         if (this.codecs && this.codecs.length > 0) {
             const transceiver = peerConnection
@@ -2009,6 +2115,7 @@ export class SparkRTC {
         this.updateTheStatus(`[start] ${this.role}`);
         this.updateTheStatus(`Getting media capabilities`);
         await this.getSupportedConstraints();
+
         if (this.role === this.Roles.BROADCAST) {
             this.updateTheStatus(`Start broadcasting`);
             return this.startBroadcasting();
