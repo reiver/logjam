@@ -54,7 +54,7 @@ func (s *socketService) Send(data any, receiverIds ...uint64) error {
 	s.Lock()
 	defer s.Unlock()
 	for _, id := range receiverIds {
-		if socket, exists := s.socketsById[uint64(id)]; exists {
+		if socket, exists := s.socketsById[id]; exists {
 			keeper := s.sockets[socket]
 			_ = keeper.WriteMessage(jsonData)
 		}

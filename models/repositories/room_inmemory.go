@@ -7,7 +7,6 @@ import (
 	"github.com/sparkscience/logjam/models/dto"
 	"strconv"
 	"sync"
-	"time"
 )
 
 type roomRepository struct {
@@ -198,7 +197,6 @@ func (r *roomRepository) InsertMemberToTree(roomId string, memberId uint64) (par
 	}
 	r.rooms[roomId].Lock()
 	defer r.rooms[roomId].Unlock()
-	tryCount := 0
 	lastCheckedLevel := 0
 start:
 	levelNodes, err := r.rooms[roomId].GetLevelMembers(uint(lastCheckedLevel), false)
@@ -206,12 +204,7 @@ start:
 		return nil, err
 	}
 	lastCheckedLevel++
-	if len(levelNodes) == 0 && tryCount < 10 {
-		time.Sleep(1 * time.Second)
-		tryCount++
-		lastCheckedLevel = 0
-		goto start
-	} else if len(levelNodes) == 0 && tryCount > 10 {
+	if len(levelNodes) == 0 {
 		return nil, errors.New("no node to connect to")
 	}
 	found := false

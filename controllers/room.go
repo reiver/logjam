@@ -5,6 +5,7 @@ import (
 	"github.com/sparkscience/logjam/models"
 	"github.com/sparkscience/logjam/models/contracts"
 	"strconv"
+	"time"
 )
 
 type RoomController struct {
@@ -166,9 +167,20 @@ func (c *RoomController) Role(ctx *models.WSContext) {
 			}, ctx.SocketID)
 			return
 		}
+		tryCount := 0
+	start:
 		parentId, err := c.roomRepo.InsertMemberToTree(ctx.RoomId, ctx.SocketID)
+		if err != nil && tryCount <= 20 {
+			time.Sleep(500 * time.Millisecond)
+			tryCount++
+			goto start
+		}
 		if err != nil {
 			c.log(contracts.LError, err.Error())
+			_ = c.socketSVC.Send(map[string]any{
+				"type": "error",
+				"data": "Insert Child Error : " + err.Error(),
+			}, ctx.SocketID)
 			return
 		}
 		_ = c.socketSVC.Send(models.MessageContract{
