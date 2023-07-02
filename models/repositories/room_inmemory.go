@@ -114,7 +114,7 @@ func (r *roomRepository) AddMember(roomId string, id uint64, name, email, stream
 		ID:             id,
 		Name:           name,
 		Email:          email,
-		MetaData:       make(map[string]any),
+		MetaData:       map[string]any{"streamId": streamId},
 		CanAcceptChild: false,
 	}
 	return nil
