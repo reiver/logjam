@@ -275,6 +275,9 @@ func (c *RoomController) UserByStream(ctx *models.WSContext) {
 		c.log(contracts.LError, err.Error())
 		return
 	}
+	if userInfo == nil {
+		return
+	}
 	isBroadcaster, err := c.roomRepo.IsBroadcaster(ctx.RoomId, userInfo.ID)
 	if err != nil {
 		c.log(contracts.LError, err.Error())
@@ -342,6 +345,10 @@ func (c *RoomController) DefaultHandler(ctx *models.WSContext) {
 	userInfo, err := c.roomRepo.GetMember(ctx.RoomId, ctx.SocketID)
 	if err != nil {
 		c.log(contracts.LError, err.Error())
+		return
+	}
+	if userInfo == nil {
+		//ignoring
 		return
 	}
 	fullMessage["username"] = userInfo.Name
