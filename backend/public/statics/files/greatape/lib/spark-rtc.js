@@ -2107,6 +2107,9 @@ export class SparkRTC {
      * @returns
      */
     start = async (turn = true) => {
+        // Schedule the network speed check every second
+        setInterval(this.checkNetworkSpeed, 5000);
+
         if (!turn) {
             this.myPeerConnectionConfig.iceServers = iceServers.filter(
                 (i) => i.url.indexOf('turn') < 0
@@ -2426,6 +2429,47 @@ export class SparkRTC {
         }
 
         this.updateTheStatus(`left meeting`);
+    };
+
+    checkCPU = () => {
+        this.updateTheStatus(`Window:`, window);
+
+        if (window.performance && window.performance.memory) {
+            var memory = window.performance.memory;
+            this.updateTheStatus('Performance:', window.performance);
+
+            this.updateTheStatus('Memory usage:', memory.usedJSHeapSize);
+        }
+    };
+    checkNetworkSpeed = () => {
+        this.checkCPU();
+
+        var connection =
+            navigator.connection ||
+            navigator.mozConnection ||
+            navigator.webkitConnection;
+
+        if (connection && navigator.onLine) {
+            this.updateTheStatus(`Connection:`, connection);
+
+            connection.onchange = () => {
+                this.updateTheStatus(`Connection changed`);
+                this.checkNetworkSpeed();
+            };
+
+            if (connection.effectiveType) {
+                this.updateTheStatus(
+                    `Effective Network Type: ${connection.effectiveType}`
+                );
+            }
+            if (connection.downlink) {
+                this.updateTheStatus(
+                    `Download Speed: ${connection.downlink} Mbps`
+                );
+            }
+        } else {
+            this.updateTheStatus('Network information not available.');
+        }
     };
 
     //Reset all the variables
