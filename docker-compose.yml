@@ -13,4 +13,4 @@ services:
         condition: any
       resources:
         limits:
-          memory: 2048M
+          memory: 4096M
