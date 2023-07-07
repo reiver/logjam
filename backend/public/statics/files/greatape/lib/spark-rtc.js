@@ -47,6 +47,7 @@ export class SparkRTC {
 
     parentDisconnectionTimeOut = 2000; // 2 second timeout to check parent is alive or not
     sendMessageInterval = 1000; // send message to child after every 10 ms
+    statsIntervalTime = 5000;
     metaData = {};
     userStreamData = {};
     users = [];
@@ -531,7 +532,7 @@ export class SparkRTC {
                 this.getMetadata();
                 setTimeout(() => {
                     const users = JSON.parse(msg.data).map((u) => {
-                        this.updateTheStatus('user', u);
+                        // this.updateTheStatus('user', u);
                         const video =
                             u.streamId !== ''
                                 ? this.streamById(u.streamId)
@@ -1910,6 +1911,9 @@ export class SparkRTC {
             `[createOrGetPeerConnection] generate newPeerConnectionInstance`
         );
 
+        //get stats for pc
+        this.getStatsForPC(this.myPeerConnectionArray[audienceName]);
+
         return this.myPeerConnectionArray[audienceName];
     };
 
@@ -1933,6 +1937,9 @@ export class SparkRTC {
                     this.localStream || this.remoteStreams,
                     true
                 );
+
+            //get stats for pc
+            this.getStatsForPC(this.myPeerConnectionArray[audienceName]);
         }
         this.updateTheStatus(
             `[handleMessage] generate newPeerConnectionInstance`
@@ -2069,12 +2076,12 @@ export class SparkRTC {
             this.updateTheStatus(`videoSettings`, videoSettings);
             this.updateTheStatus(`resolutionScale`, resolutionScale);
 
-            await this.setVideoSettings(
-                sender,
-                videoSettings.fps,
-                videoSettings.bitrate,
-                resolutionScale
-            );
+            // await this.setVideoSettings(
+            //     sender,
+            //     videoSettings.fps,
+            //     videoSettings.bitrate,
+            //     resolutionScale
+            // );
         }
     };
     /**
@@ -2108,7 +2115,7 @@ export class SparkRTC {
      */
     start = async (turn = true) => {
         // Schedule the network speed check every second
-        setInterval(this.checkNetworkSpeed, 5000);
+        setInterval(this.checkNetworkSpeed, this.statsIntervalTime);
 
         if (!turn) {
             this.myPeerConnectionConfig.iceServers = iceServers.filter(
@@ -2431,26 +2438,74 @@ export class SparkRTC {
         this.updateTheStatus(`left meeting`);
     };
 
-    checkCPU = () => {
-        this.updateTheStatus(`Window:`, window);
+    getStatsForPC = (peerConnection) => {
+        const self = this;
+        setInterval(() => {
+            console.log('-------------------------------------');
+            peerConnection
+                .getStats()
+                .then(function (stats) {
+                    stats.forEach(function (report) {
+                        // Extract the desired network-related metrics
+                        if (
+                            report.type === 'candidate-pair' &&
+                            report.hasOwnProperty('availableOutgoingBitrate')
+                        ) {
+                            // Round-Trip Time (RTT)
+                            self.updateTheStatus(
+                                'RTT:',
+                                report.currentRoundTripTime
+                            );
 
-        if (window.performance && window.performance.memory) {
-            var memory = window.performance.memory;
-            this.updateTheStatus('Performance:', window.performance);
+                            // Available Bandwidth
+                            self.updateTheStatus(
+                                'Available Bandwidth:',
+                                report.availableOutgoingBitrate
+                            );
+                        }
 
-            this.updateTheStatus('Memory usage:', memory.usedJSHeapSize);
-        }
+                        if (report.type === 'remote-inbound-rtp') {
+                            self.updateTheStatus('\n--Remote-Inbound-RTP--');
+
+                            self.updateTheStatus('Media kind: ', report.kind);
+                            // Packet Loss
+                            self.updateTheStatus(
+                                'Packet Loss:',
+                                report.packetsLost
+                            );
+
+                            // Jitter
+                            self.updateTheStatus('Jitter:', report.jitter);
+                        }
+
+                        if (report.type === 'inbound-rtp') {
+                            self.updateTheStatus('\n--Inbound-RTP--');
+                            self.updateTheStatus('Media kind: ', report.kind);
+                            // Packet Loss
+                            self.updateTheStatus(
+                                'Packet Loss:',
+                                report.packetsLost
+                            );
+
+                            // Jitter
+                            self.updateTheStatus('Jitter:', report.jitter);
+                        }
+                    });
+                })
+                .catch(function (error) {
+                    console.error('Error retrieving stats:', error);
+                });
+        }, this.statsIntervalTime);
     };
-    checkNetworkSpeed = () => {
-        this.checkCPU();
 
+    checkNetworkSpeed = () => {
         var connection =
             navigator.connection ||
             navigator.mozConnection ||
             navigator.webkitConnection;
 
         if (connection && navigator.onLine) {
-            this.updateTheStatus(`Connection:`, connection);
+            // this.updateTheStatus(`Connection:`, connection);
 
             connection.onchange = () => {
                 this.updateTheStatus(`Connection changed`);
