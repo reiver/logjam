@@ -157,6 +157,11 @@ func (r *RoomRouter) handleEvent(ctx *models.WSContext) {
 			break
 		}
 
+	case "reconnect-children":
+		{
+			r.roomCtrl.ReconnectChildren(ctx)
+			break
+		}
 	default:
 		{
 			r.roomCtrl.DefaultHandler(ctx)

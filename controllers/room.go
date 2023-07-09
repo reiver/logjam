@@ -320,6 +320,19 @@ func (c *RoomController) emitUserList(roomId string) {
 	_ = c.socketSVC.Send(event, roomMembersIdList...)
 }
 
+func (c *RoomController) ReconnectChildren(ctx *models.WSContext) {
+	childrenIdList, err := c.roomRepo.GetChildrenIdList(ctx.RoomId, ctx.SocketID)
+	if err != nil {
+		c.log(contracts.LError, err.Error())
+		return
+	}
+	event := models.MessageContract{
+		Type: "reconnect",
+		Data: strconv.FormatUint(ctx.SocketID, 10),
+	}
+	_ = c.socketSVC.Send(event, childrenIdList...)
+}
+
 func (c *RoomController) DefaultHandler(ctx *models.WSContext) {
 	id, err := strconv.Atoi(ctx.ParsedMessage.Target)
 	if err != nil {

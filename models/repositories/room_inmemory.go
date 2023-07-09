@@ -419,3 +419,41 @@ start:
 		goto start
 	}
 }
+
+func (r *roomRepository) GetChildrenIdList(roomId string, id uint64) ([]uint64, error) {
+	r.Lock()
+	defer r.Unlock()
+	if !r.doesRoomExists(roomId) {
+		return nil, errors.New("room doesn't exists")
+	}
+
+	r.rooms[roomId].Lock()
+	defer r.rooms[roomId].Unlock()
+	var list []uint64
+	lastCheckedLevel := 0
+start:
+	levelNodes, err := r.rooms[roomId].GetLevelMembers(uint(lastCheckedLevel), true)
+	if err != nil {
+		return nil, err
+	}
+	if len(levelNodes) == 0 {
+		return nil, nil
+	}
+	lastCheckedLevel++
+	for _, node := range levelNodes {
+		if (*node).ID == id {
+			if (*node).Children[0] != nil {
+				list = append(list, (*node).Children[0].ID)
+			}
+			if (*node).Children[1] != nil {
+				list = append(list, (*node).Children[1].ID)
+			}
+			break
+		}
+	}
+	if len(list) == 0 {
+		goto start
+	}
+
+	return list, nil
+}

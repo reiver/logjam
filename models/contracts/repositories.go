@@ -26,4 +26,5 @@ type IRoomRepository interface {
 	GetUserByStreamId(roomId string, streamId string) (*models.MemberModel, error)
 	IsBroadcaster(roomId string, id uint64) (bool, error)
 	GetMembersList(roomId string) ([]dto.MemberDTO, error)
+	GetChildrenIdList(roomId string, id uint64) ([]uint64, error)
 }
