@@ -1912,7 +1912,10 @@ export class SparkRTC {
         );
 
         //get stats for pc
-        this.getStatsForPC(this.myPeerConnectionArray[audienceName]);
+        this.getStatsForPC(
+            this.myPeerConnectionArray[audienceName],
+            audienceName
+        );
 
         return this.myPeerConnectionArray[audienceName];
     };
@@ -1939,7 +1942,10 @@ export class SparkRTC {
                 );
 
             //get stats for pc
-            this.getStatsForPC(this.myPeerConnectionArray[audienceName]);
+            this.getStatsForPC(
+                this.myPeerConnectionArray[audienceName],
+                audienceName
+            );
         }
         this.updateTheStatus(
             `[handleMessage] generate newPeerConnectionInstance`
@@ -2438,8 +2444,16 @@ export class SparkRTC {
         this.updateTheStatus(`left meeting`);
     };
 
-    getStatsForPC = (peerConnection) => {
+    getStatsForPC = (peerConnection, userid) => {
         const self = this;
+        var rtt = 0;
+        var bitrate = 0;
+        var outPacketsLost = 0;
+        var inPacketsLost = 0;
+        var inJitter = 0;
+        var outJitter = 0;
+        var counter = 0;
+
         setInterval(() => {
             console.log('-------------------------------------');
             peerConnection
@@ -2451,49 +2465,102 @@ export class SparkRTC {
                             report.type === 'candidate-pair' &&
                             report.hasOwnProperty('availableOutgoingBitrate')
                         ) {
+                            rtt = report.currentRoundTripTime;
+                            bitrate = report.availableOutgoingBitrate;
+
                             // Round-Trip Time (RTT)
                             self.updateTheStatus(
-                                'RTT:',
+                                `userid: ${userid} RTT`,
                                 report.currentRoundTripTime
                             );
 
                             // Available Bandwidth
                             self.updateTheStatus(
-                                'Available Bandwidth:',
+                                `userid: ${userid} Available Bandwidth`,
                                 report.availableOutgoingBitrate
                             );
+
+                            if (report.availableOutgoingBitrate < 500000) {
+                                counter++;
+                            }
                         }
 
                         if (report.type === 'remote-inbound-rtp') {
                             self.updateTheStatus('\n--Remote-Inbound-RTP--');
 
-                            self.updateTheStatus('Media kind: ', report.kind);
+                            self.updateTheStatus(
+                                `userid: ${userid} Media kind`,
+                                report.kind
+                            );
                             // Packet Loss
                             self.updateTheStatus(
-                                'Packet Loss:',
+                                `userid: ${userid} Packet Loss`,
                                 report.packetsLost
                             );
 
                             // Jitter
-                            self.updateTheStatus('Jitter:', report.jitter);
+                            self.updateTheStatus(
+                                `userid: ${userid} Jitter`,
+                                report.jitter
+                            );
+
+                            inPacketsLost = report.packetsLost;
+                            inJitter = report.jitter;
                         }
 
                         if (report.type === 'inbound-rtp') {
                             self.updateTheStatus('\n--Inbound-RTP--');
-                            self.updateTheStatus('Media kind: ', report.kind);
+                            self.updateTheStatus(
+                                `userid: ${userid} Media kind`,
+                                report.kind
+                            );
                             // Packet Loss
                             self.updateTheStatus(
-                                'Packet Loss:',
+                                `userid: ${userid} Packet Loss`,
                                 report.packetsLost
                             );
 
                             // Jitter
-                            self.updateTheStatus('Jitter:', report.jitter);
+                            self.updateTheStatus(
+                                `userid: ${userid} Jitter`,
+                                report.jitter
+                            );
+
+                            outPacketsLost = report.packetsLost;
+                            outJitter = report.jitter;
+                        }
+
+                        //check values
+
+                        // if (counter === 10) {
+                        //   counter = 0;
+                        //   self.updateTheStatus(`reconnect required for Childern`);
+                        //   self.socket.send(
+                        //     JSON.stringify({
+                        //       type: "reconnect-children",
+                        //     })
+                        //   );
+                        // }
+
+                        if (rtt < 100) {
+                            //100 ms
+                        } else if (bitrate < 800000) {
+                        } else if (inPacketsLost < 10) {
+                            //10 Lost
+                        } else if (inJitter < 0.5) {
+                            //0.5 ms
+                        } else if (outPacketsLost < 10) {
+                            //10 Lost
+                        } else if (outJitter < 0.5) {
+                            //0.5 ms
                         }
                     });
                 })
                 .catch(function (error) {
-                    console.error('Error retrieving stats:', error);
+                    console.error(
+                        `userid: ${userid} Error retrieving stats`,
+                        error
+                    );
                 });
         }, this.statsIntervalTime);
     };
