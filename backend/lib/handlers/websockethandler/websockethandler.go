@@ -417,6 +417,25 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 		receiver.emitUserEvent(roomName)
 		return
 
+	case "reconnect-children":
+		connectedSocketsList := socket.GetConnectedSocketsList()
+		if len(connectedSocketsList) == 0 {
+			return
+		}
+		event := message.MessageContract{
+			Type: "reconnect",
+			Data: strconv.FormatUint(socket.ID, 10),
+		}
+		msgBytes, err := json.Marshal(event)
+		if err != nil {
+			return
+		}
+
+		for _, child := range connectedSocketsList {
+			_ = child.Writer.WriteMessage(1, msgBytes)
+		}
+		return
+
 	default:
 		ID, err := strconv.ParseUint(theMessage.Target, 10, 64)
 		if err != nil {
