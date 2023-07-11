@@ -568,6 +568,10 @@ export class SparkRTC {
                 }
                 break;
 
+            case 'reconnect':
+                this.updateTheStatus(`need to reconnect with new parent`);
+                break;
+
             default:
                 // this.updateTheStatus(
                 //     `[handleMessage] default ${JSON.stringify(msg)}`
@@ -2480,9 +2484,15 @@ export class SparkRTC {
                                 report.availableOutgoingBitrate
                             );
 
-                            if (report.availableOutgoingBitrate < 500000) {
-                                counter++;
-                            }
+                            self.socket.send(
+                                JSON.stringify({
+                                    type: 'reconnect-children',
+                                })
+                            );
+
+                            // if (report.availableOutgoingBitrate < 500000) {
+                            //     counter++;
+                            // }
                         }
 
                         if (report.type === 'remote-inbound-rtp') {
@@ -2533,13 +2543,15 @@ export class SparkRTC {
                         //check values
 
                         // if (counter === 10) {
-                        //   counter = 0;
-                        //   self.updateTheStatus(`reconnect required for Childern`);
-                        //   self.socket.send(
-                        //     JSON.stringify({
-                        //       type: "reconnect-children",
-                        //     })
-                        //   );
+                        //     counter = 0;
+                        //     self.updateTheStatus(
+                        //         `reconnect required for Childern`
+                        //     );
+                        //     self.socket.send(
+                        //         JSON.stringify({
+                        //             type: 'reconnect-children',
+                        //         })
+                        //     );
                         // }
 
                         if (rtt < 100) {
