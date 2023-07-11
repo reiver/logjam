@@ -192,6 +192,7 @@ func fillFunction(node interface{}, socketIndex uint64) binarytree.SingleNode {
 		Name:             "Socket " + strconv.FormatUint(socketIndex, 10),
 		IsTURN:           true,
 		ConnectedSockets: make(map[*websocket.Conn]*MySocket),
+		MetaData:         make(map[string]string),
 	}
 	go func(w *WSWriter) {
 		hadError := false
