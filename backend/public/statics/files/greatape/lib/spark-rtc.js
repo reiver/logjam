@@ -4,6 +4,12 @@
  *
  */
 export class SparkRTC {
+    blob = null; // Initialize blob as null
+    netBlob = null; // Initialize blob as null
+    statsFileLink = '';
+    netFileLink = '';
+    blobData = null;
+    netBlobData = null;
     started = false;
     maxRaisedHands = 2;
     myPeerConnectionConfig = {
@@ -2124,6 +2130,9 @@ export class SparkRTC {
      * @returns
      */
     start = async (turn = true) => {
+        this.createStatsFile(); //logs file
+        this.createNetFile();
+
         // Schedule the network speed check every second
         setInterval(this.checkNetworkSpeed, this.statsIntervalTime);
 
@@ -2446,6 +2455,9 @@ export class SparkRTC {
         }
 
         this.updateTheStatus(`left meeting`);
+
+        this.downloadNetFile();
+        this.downloadStatsFile();
     };
 
     getStatsForPC = (peerConnection, userid) => {
@@ -2464,108 +2476,134 @@ export class SparkRTC {
                 .getStats()
                 .then(function (stats) {
                     stats.forEach(function (report) {
-                        // Extract the desired network-related metrics
-                        if (
-                            report.type === 'candidate-pair' &&
-                            report.hasOwnProperty('availableOutgoingBitrate')
-                        ) {
-                            rtt = report.currentRoundTripTime;
-                            bitrate = report.availableOutgoingBitrate;
+                        //save stats to logs file
+                        self.writeStatsFile(report, userid);
 
-                            // Round-Trip Time (RTT)
-                            self.updateTheStatus(
-                                `userid: ${userid} RTT`,
-                                report.currentRoundTripTime
-                            );
+                        // // Extract the desired network-related metrics
+                        // if (
+                        //     report.type === 'candidate-pair' &&
+                        //     report.hasOwnProperty('availableOutgoingBitrate')
+                        // ) {
+                        //     rtt = report.currentRoundTripTime;
+                        //     bitrate = report.availableOutgoingBitrate;
 
-                            // Available Bandwidth
-                            self.updateTheStatus(
-                                `userid: ${userid} Available Bandwidth`,
-                                report.availableOutgoingBitrate
-                            );
-
-                            self.socket.send(
-                                JSON.stringify({
-                                    type: 'reconnect-children',
-                                })
-                            );
-
-                            // if (report.availableOutgoingBitrate < 500000) {
-                            //     counter++;
-                            // }
-                        }
-
-                        if (report.type === 'remote-inbound-rtp') {
-                            self.updateTheStatus('\n--Remote-Inbound-RTP--');
-
-                            self.updateTheStatus(
-                                `userid: ${userid} Media kind`,
-                                report.kind
-                            );
-                            // Packet Loss
-                            self.updateTheStatus(
-                                `userid: ${userid} Packet Loss`,
-                                report.packetsLost
-                            );
-
-                            // Jitter
-                            self.updateTheStatus(
-                                `userid: ${userid} Jitter`,
-                                report.jitter
-                            );
-
-                            inPacketsLost = report.packetsLost;
-                            inJitter = report.jitter;
-                        }
-
-                        if (report.type === 'inbound-rtp') {
-                            self.updateTheStatus('\n--Inbound-RTP--');
-                            self.updateTheStatus(
-                                `userid: ${userid} Media kind`,
-                                report.kind
-                            );
-                            // Packet Loss
-                            self.updateTheStatus(
-                                `userid: ${userid} Packet Loss`,
-                                report.packetsLost
-                            );
-
-                            // Jitter
-                            self.updateTheStatus(
-                                `userid: ${userid} Jitter`,
-                                report.jitter
-                            );
-
-                            outPacketsLost = report.packetsLost;
-                            outJitter = report.jitter;
-                        }
-
-                        //check values
-
-                        // if (counter === 10) {
-                        //     counter = 0;
+                        //     // Round-Trip Time (RTT)
                         //     self.updateTheStatus(
-                        //         `reconnect required for Childern`
+                        //         `userid: ${userid} RTT`,
+                        //         report.currentRoundTripTime
                         //     );
-                        //     self.socket.send(
-                        //         JSON.stringify({
-                        //             type: 'reconnect-children',
-                        //         })
+
+                        //     // Available Bandwidth
+                        //     self.updateTheStatus(
+                        //         `userid: ${userid} Available Bandwidth`,
+                        //         report.availableOutgoingBitrate
                         //     );
+
+                        //     // if (report.availableOutgoingBitrate < 500000) {
+                        //     //     counter++;
+                        //     // }
                         // }
 
-                        if (rtt < 100) {
-                            //100 ms
-                        } else if (bitrate < 800000) {
-                        } else if (inPacketsLost < 10) {
-                            //10 Lost
-                        } else if (inJitter < 0.5) {
-                            //0.5 ms
-                        } else if (outPacketsLost < 10) {
-                            //10 Lost
-                        } else if (outJitter < 0.5) {
-                            //0.5 ms
-                        }
+                        // if (
+                        //     report.type === 'remote-inbound-rtp' &&
+                        //     report.kind === 'video'
+                        // ) {
+                        //     self.updateTheStatus('\n--Remote-Inbound-RTP--');
+
+                        //     self.updateTheStatus(`report`, report);
+
+                        //     // self.updateTheStatus(
+                        //     //     `userid: ${userid} Media kind`,
+                        //     //     report.kind
+                        //     // );
+                        //     // // Packet Loss
+                        //     // self.updateTheStatus(
+                        //     //     `userid: ${userid} Packet Loss`,
+                        //     //     report.packetsLost
+                        //     // );
+
+                        //     // Jitter
+                        //     // self.updateTheStatus(
+                        //     //     `userid: ${userid} Jitter`,
+                        //     //     report.jitter
+                        //     // );
+
+                        //     inPacketsLost = report.packetsLost;
+                        //     inJitter = report.jitter;
+                        // }
+
+                        // if (
+                        //     report.type === 'inbound-rtp' &&
+                        //     report.kind === 'video'
+                        // ) {
+                        //     self.updateTheStatus('\n--Inbound-RTP--');
+
+                        //     self.updateTheStatus(`report`, report);
+
+                        //     // self.updateTheStatus(
+                        //     //     `userid: ${userid} Media kind`,
+                        //     //     report.kind
+                        //     // );
+                        //     // // Packet Loss
+                        //     // self.updateTheStatus(
+                        //     //     `userid: ${userid} Packet Loss`,
+                        //     //     report.packetsLost
+                        //     // );
+
+                        //     // // Jitter
+                        //     // self.updateTheStatus(
+                        //     //     `userid: ${userid} Jitter`,
+                        //     //     report.jitter
+                        //     // );
+
+                        //     outPacketsLost = report.packetsLost;
+                        //     outJitter = report.jitter;
+                        // }
+
+                        // if (
+                        //     report.type === 'outbound-rtp' &&
+                        //     report.kind === 'video'
+                        // ) {
+                        //     self.updateTheStatus('\n--Outbound-RTP--');
+
+                        //     self.updateTheStatus(`report`, report);
+                        // }
+
+                        // if (
+                        //     report.type === 'remote-outbound-rtp' &&
+                        //     report.kind === 'video'
+                        // ) {
+                        //     self.updateTheStatus('\n--Remote Outbound-RTP--');
+
+                        //     self.updateTheStatus(`report`, report);
+                        // }
+
+                        // //check values
+
+                        // // if (counter === 10) {
+                        // //     counter = 0;
+                        // //     self.updateTheStatus(
+                        // //         `reconnect required for Childern`
+                        // //     );
+                        // //     self.socket.send(
+                        // //         JSON.stringify({
+                        // //             type: 'reconnect-children',
+                        // //         })
+                        // //     );
+                        // // }
+
+                        // if (rtt < 100) {
+                        //     //100 ms
+                        // } else if (bitrate < 800000) {
+                        // } else if (inPacketsLost < 10) {
+                        //     //10 Lost
+                        // } else if (inJitter < 0.5) {
+                        //     //0.5 ms
+                        // } else if (outPacketsLost < 10) {
+                        //     //10 Lost
+                        // } else if (outJitter < 0.5) {
+                        //     //0.5 ms
+                        // }
                     });
                 })
                 .catch(function (error) {
@@ -2586,23 +2624,113 @@ export class SparkRTC {
         if (connection && navigator.onLine) {
             // this.updateTheStatus(`Connection:`, connection);
 
-            connection.onchange = () => {
-                this.updateTheStatus(`Connection changed`);
-                this.checkNetworkSpeed();
+            const con = {
+                networkType: connection.effectiveType,
+                downlink: connection.downlink,
+                rtt: connection.rtt,
             };
+            this.writeNetworkLogs(con);
 
-            if (connection.effectiveType) {
-                this.updateTheStatus(
-                    `Effective Network Type: ${connection.effectiveType}`
-                );
-            }
-            if (connection.downlink) {
-                this.updateTheStatus(
-                    `Download Speed: ${connection.downlink} Mbps`
-                );
-            }
+            // connection.onchange = () => {
+            //     this.updateTheStatus(`Connection changed`);
+            //     this.checkNetworkSpeed();
+            // };
+
+            // if (connection.effectiveType) {
+            //     this.updateTheStatus(
+            //         `Effective Network Type: ${connection.effectiveType}`
+            //     );
+            // }
+            // if (connection.downlink) {
+            //     this.updateTheStatus(
+            //         `Download Speed: ${connection.downlink} Mbps`
+            //     );
+            // }
         } else {
             this.updateTheStatus('Network information not available.');
+        }
+    };
+
+    createStatsFile = () => {
+        const name = this.role + '_' + this.myName;
+        // Create a link element
+        this.statsFileLink = document.createElement('a');
+        this.statsFileLink.download = name + '_stats.txt'; // File name
+    };
+
+    createNetFile = () => {
+        const name = this.role + '_' + this.myName;
+        // Create a link element
+        this.netFileLink = document.createElement('a');
+        this.netFileLink.download = name + '_net.txt'; // File name
+    };
+
+    writeNetworkLogs = (data) => {
+        const jsonContent = JSON.stringify(data);
+        const separator = '\n\n****************\n\n';
+
+        if (this.netBlobData === null) {
+            this.netBlobData = JSON.stringify(data);
+        } else {
+            this.netBlobData = this.netBlobData + separator + jsonContent;
+        }
+
+        // Create a new Blob object with the content
+        this.netBlob = new Blob([this.netBlobData], {
+            type: 'application/json',
+        });
+    };
+
+    writeStatsFile = (data, userid) => {
+        const jsonContent = JSON.stringify(data);
+        const separator = '\n\n****************\n\n';
+
+        if (this.blobData === null) {
+            this.blobData = JSON.stringify(data);
+        } else {
+            if (userid) {
+                this.blobData =
+                    this.blobData +
+                    separator +
+                    'peerConnectionUserid: ' +
+                    userid +
+                    '\tmyUserID: ' +
+                    this.myUsername +
+                    '\n\n' +
+                    jsonContent;
+            }
+        }
+
+        // Create a new Blob object with the content
+        this.blob = new Blob([this.blobData], {
+            type: 'application/json',
+        });
+    };
+
+
+    downloadStatsFile = () => {
+        if (this.blob !== null) {
+            // Set the href of the link to the URL of the Blob object
+            this.statsFileLink.href = URL.createObjectURL(this.blob);
+
+            // Programmatically trigger the download
+            this.statsFileLink.click();
+
+            // Cleanup the URL object after the download
+            URL.revokeObjectURL(this.statsFileLink.href);
+        }
+    };
+
+    downloadNetFile = () => {
+        if (this.netBlob !== null) {
+            // Set the href of the link to the URL of the Blob object
+            this.netFileLink.href = URL.createObjectURL(this.netBlob);
+
+            // Programmatically trigger the download
+            this.netFileLink.click();
+
+            // Cleanup the URL object after the download
+            URL.revokeObjectURL(this.netFileLink.href);
         }
     };
 
