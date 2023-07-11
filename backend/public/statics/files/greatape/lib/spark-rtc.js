@@ -2666,6 +2666,8 @@ export class SparkRTC {
     };
 
     writeNetworkLogs = (data) => {
+        data.date =  new Date().toLocaleTimeString();
+
         const jsonContent = JSON.stringify(data);
         const separator = '\n\n****************\n\n';
 
@@ -2682,9 +2684,12 @@ export class SparkRTC {
     };
 
     writeStatsFile = (data, userid) => {
+        data.date =  new Date().toLocaleTimeString();
+
         const jsonContent = JSON.stringify(data);
         const separator = '\n\n****************\n\n';
 
+        
         if (this.blobData === null) {
             this.blobData = JSON.stringify(data);
         } else {
