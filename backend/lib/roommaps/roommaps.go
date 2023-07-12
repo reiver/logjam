@@ -25,6 +25,7 @@ type User struct {
 	Name     string `json:"name"`
 	Role     string `json:"role"`
 	StreamId string `json:"streamId"`
+	Quality  string `json:"quality"`
 }
 
 func (receiver *Type) Get(roomName string) (*RoomType, bool) {
@@ -256,11 +257,10 @@ func (receiver *Type) GetUsers(roomName string) ([]User, error) {
 					Name:     node.(*binarytreesrv.MySocket).Name,
 					StreamId: nodeStreamId,
 					Role:     role,
+					Quality:  node.(*binarytreesrv.MySocket).MetaData["quality"],
 				}
-
 				output = append(output, user)
 			}
-
 		}
 	}
 

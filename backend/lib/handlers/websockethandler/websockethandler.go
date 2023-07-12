@@ -435,6 +435,11 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 			_ = child.Writer.WriteMessage(1, msgBytes)
 		}
 		return
+	case "update-quality":
+		if len(theMessage.Data) > 0 {
+			socket.MetaData["quality"] = theMessage.Data
+		}
+		return
 
 	default:
 		ID, err := strconv.ParseUint(theMessage.Target, 10, 64)
