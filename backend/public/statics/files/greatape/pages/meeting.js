@@ -310,7 +310,7 @@ const Meeting = () => {
                     makeDialog('info', { message, icon: 'Close' });
                 },
                 onUserListUpdate: (users) => {
-                    log(`[On Users List Update]`, users);
+                    // log(`[On Users List Update]`, users);
                     const usersTmp = {};
                     for (const {
                         name: userInfo,

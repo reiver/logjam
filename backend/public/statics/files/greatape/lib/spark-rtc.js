@@ -146,7 +146,6 @@ export class SparkRTC {
     };
 
     getSupportedCodecs() {
-        var h264Codec;
 
         if (this.supportsSetCodecPreferences) {
             let capabilities = RTCRtpSender.getCapabilities('video');
@@ -788,7 +787,7 @@ export class SparkRTC {
                         track,
                         this.shareStream
                     );
-                    await this.updatePeerConnectionParams(sender);
+                    // await this.updatePeerConnectionParams(sender);
                 });
                 await this.addCodecPrefrences(
                     apeerConnection,
@@ -1695,7 +1694,7 @@ export class SparkRTC {
                                 track,
                                 stream
                             );
-                            await this.updatePeerConnectionParams(sender);
+                            // await this.updatePeerConnectionParams(sender);
                         } catch {}
                     });
                     await this.addCodecPrefrences(apeerConnection, stream);
@@ -1803,7 +1802,7 @@ export class SparkRTC {
         //set userlist callback to receive list of all the users in the meeting with thier streams
 
         this.userListCallback = (users) => {
-            this.updateTheStatus(`userList:`, users);
+            // this.updateTheStatus(`userList:`, users);
 
             const stream = this.dequeue(this.remoteStreamsQueue);
 
@@ -1934,10 +1933,10 @@ export class SparkRTC {
         );
 
         //get stats for pc
-        this.getStatsForPC(
-            this.myPeerConnectionArray[audienceName],
-            audienceName
-        );
+        // this.getStatsForPC(
+        //     this.myPeerConnectionArray[audienceName],
+        //     audienceName
+        // );
 
         return this.myPeerConnectionArray[audienceName];
     };
@@ -1964,10 +1963,10 @@ export class SparkRTC {
                 );
 
             //get stats for pc
-            this.getStatsForPC(
-                this.myPeerConnectionArray[audienceName],
-                audienceName
-            );
+            // this.getStatsForPC(
+            //     this.myPeerConnectionArray[audienceName],
+            //     audienceName
+            // );
         }
         this.updateTheStatus(
             `[handleMessage] generate newPeerConnectionInstance`
@@ -1983,7 +1982,7 @@ export class SparkRTC {
                             audienceName
                         ].addTrack(track, astream);
 
-                        await this.updatePeerConnectionParams(sender);
+                        // await this.updatePeerConnectionParams(sender);
                     } catch {}
                 });
 
@@ -2015,7 +2014,7 @@ export class SparkRTC {
                 this.disableAudio();
             }
             let sender = peerConnection.addTrack(track, stream);
-            await this.updatePeerConnectionParams(sender);
+            // await this.updatePeerConnectionParams(sender);
         });
 
         await this.addCodecPrefrences(peerConnection, stream);
@@ -2104,12 +2103,12 @@ export class SparkRTC {
             this.updateTheStatus(`videoSettings`, videoSettings);
             this.updateTheStatus(`resolutionScale`, resolutionScale);
 
-            // await this.setVideoSettings(
-            //     sender,
-            //     videoSettings.fps,
-            //     videoSettings.bitrate,
-            //     resolutionScale
-            // );
+            await this.setVideoSettings(
+                sender,
+                videoSettings.fps,
+                videoSettings.bitrate,
+                resolutionScale
+            );
         }
     };
     /**
