@@ -146,7 +146,6 @@ export class SparkRTC {
     };
 
     getSupportedCodecs() {
-
         if (this.supportsSetCodecPreferences) {
             let capabilities = RTCRtpSender.getCapabilities('video');
             let allCodecs = capabilities.codecs;
@@ -922,8 +921,8 @@ export class SparkRTC {
             );
     };
 
-    async getLatestUserList() {
-        this.updateTheStatus(`Request to fetch Latest UserList`);
+    async getLatestUserList(from) {
+        this.updateTheStatus(`Request to fetch Latest UserList ${from}`);
         if (await this.checkSocketStatus())
             this.socket.send(
                 JSON.stringify({
@@ -1465,7 +1464,6 @@ export class SparkRTC {
                             //close websocket
                             if (this.socket) {
                                 this.socket.onclose = () => {
-
                                     this.downloadNetFile();
                                     this.downloadStatsFile();
 
@@ -1473,7 +1471,6 @@ export class SparkRTC {
                                         `socket is closed after leaveMeeting`
                                     );
                                     this.resetVariables(true);
-
                                 }; //empty on close callback
                                 this.socket.close();
                                 this.socket = null;
@@ -1605,7 +1602,6 @@ export class SparkRTC {
                             //close websocket
                             if (this.socket) {
                                 this.socket.onclose = () => {
-
                                     this.downloadNetFile();
                                     this.downloadStatsFile();
 
@@ -1792,87 +1788,81 @@ export class SparkRTC {
         // // Discard Chrome since it also matches Opera
         // if (this.chromeAgent && this.operaAgent) this.chromeAgent = false;
     }
+
     /**
      * Get list of user and match their name with respective stream
      *
      */
     registerUserListCallback() {
-        //here's logic to get name of stream owener
+        // Logic to get the name of the stream owner
 
-        //set userlist callback to receive list of all the users in the meeting with thier streams
-
+        // Set userList callback to receive the list of all the users in the meeting with their streams
         this.userListCallback = (users) => {
-            // this.updateTheStatus(`userList:`, users);
+            // Check if users array is defined and not empty
+            if (users && users.length > 0) {
+                const stream = this.dequeue(this.remoteStreamsQueue);
 
-            const stream = this.dequeue(this.remoteStreamsQueue);
+                if (stream && stream.active) {
+                    let broadcasterName = '';
 
-            if (stream && stream.active) {
-                let broadcasterName = '';
-
-                // //check if user list contain broadcaster and save it's name
-                let hasBroadcaster = false;
-                users.forEach((user) => {
-                    if (user.role === this.Roles.BROADCASTER) {
-                        hasBroadcaster = true;
-                        const data = JSON.parse(user.name);
+                    // Find the broadcaster in the user list and retrieve the name
+                    const broadcaster = users.find(
+                        (user) => user.role === this.Roles.BROADCASTER
+                    );
+                    if (broadcaster) {
+                        const data = JSON.parse(broadcaster.name);
                         broadcasterName = data.name;
                     }
-                });
 
-                //if not then, enqueue curret stream again to the Queue
-                if (hasBroadcaster === false) {
-                    this.updateTheStatus(`hasBroadcaster`, hasBroadcaster);
-                    this.enqueue(this.remoteStreamsQueue, stream);
-                    this.getLatestUserList();
-                    return;
-                }
+                    if (!broadcaster) {
+                        // No broadcaster found, enqueue current stream again to the queue
+                        this.enqueue(this.remoteStreamsQueue, stream);
+                        this.getLatestUserList(`no broadcaster in list`);
+                        return;
+                    }
 
-                if (hasBroadcaster) {
-                    //iterate over each user
+                    // Iterate over each user
                     users.forEach((user) => {
                         let role = this.Roles.AUDIENCE;
                         let userName = '';
 
                         if (user) {
-                            //if video is undefined, it means user list not updated yet, fetch again
-                            //It must be null or have MediaStream
+                            // If video is undefined, it means the user list is not updated yet, fetch again
+                            // It must be null or have a MediaStream
                             if (user.video === undefined) {
-                                this.getLatestUserList();
-                                this.updateTheStatus(
-                                    `going to fetch latestuserlist`
-                                );
+                                // this.getLatestUserList(`video is undefined`);
+                                // this.updateTheStatus(
+                                //     'Going to fetch the latest user list'
+                                // );
                                 return;
                             }
 
-                            //save broadcaster role
+                            // Save broadcaster role
                             if (user.role === this.Roles.BROADCASTER) {
                                 role = this.Roles.BROADCAST;
                             }
 
-                            //if video not null nor undefined, get it's name
-                            if (
-                                user.video !== null &&
-                                user.video !== undefined
-                            ) {
+                            // If video is not null, get its name
+                            if (user.video !== null) {
                                 if (user.video.id === stream.id) {
                                     this.updateTheStatus(
-                                        'video stream id matched'
+                                        'Video stream id matched'
                                     );
                                     const data = JSON.parse(user.name);
                                     userName = data.name;
                                 } else {
                                     this.updateTheStatus(
-                                        'video stream id not matched'
+                                        'Video stream id not matched'
                                     );
                                 }
                             } else {
-                                this.updateTheStatus('video stream null');
+                                this.updateTheStatus('Video stream is null');
                             }
 
-                            //user name is not null nor empty
-                            if (userName != null && userName != '') {
+                            // User name is not null or empty
+                            if (userName) {
                                 if (this.remoteStreamCallback) {
-                                    this.updateTheStatus(`userName:`, userName);
+                                    this.updateTheStatus('userName:', userName);
                                     stream.name = userName;
                                     stream.role = role;
                                     stream.userId = user.id;
@@ -1881,14 +1871,14 @@ export class SparkRTC {
                                 }
                             }
                         } else {
-                            this.updateTheStatus('user is null');
+                            this.updateTheStatus('User is null');
                         }
                     });
 
-                    //screen share video name
-                    if (this.broadcastersMessage != null) {
+                    // Check if screen share video name is available
+                    if (this.broadcastersMessage) {
                         let message = JSON.parse(this.broadcastersMessage);
-                        this.updateTheStatus('message: ', message);
+                        this.updateTheStatus('Message:', message);
 
                         if (
                             message &&
@@ -1907,8 +1897,11 @@ export class SparkRTC {
             }
         };
 
-        this.getLatestUserList();
+        this.getLatestUserList(`inital request`);
     }
+
+    
+
 
     /**
      * Helper fucntion to iniiate select
@@ -1933,10 +1926,10 @@ export class SparkRTC {
         );
 
         //get stats for pc
-        // this.getStatsForPC(
-        //     this.myPeerConnectionArray[audienceName],
-        //     audienceName
-        // );
+        this.getStatsForPC(
+            this.myPeerConnectionArray[audienceName],
+            audienceName
+        );
 
         return this.myPeerConnectionArray[audienceName];
     };
@@ -1963,10 +1956,10 @@ export class SparkRTC {
                 );
 
             //get stats for pc
-            // this.getStatsForPC(
-            //     this.myPeerConnectionArray[audienceName],
-            //     audienceName
-            // );
+            this.getStatsForPC(
+                this.myPeerConnectionArray[audienceName],
+                audienceName
+            );
         }
         this.updateTheStatus(
             `[handleMessage] generate newPeerConnectionInstance`
@@ -2439,7 +2432,6 @@ export class SparkRTC {
             //close websocket if not streaming anything
             if (this.socket) {
                 this.socket.onclose = () => {
-
                     this.downloadNetFile();
                     this.downloadStatsFile();
 
@@ -2461,7 +2453,6 @@ export class SparkRTC {
             //close websocket
             if (this.socket) {
                 this.socket.onclose = () => {
-
                     this.downloadNetFile();
                     this.downloadStatsFile();
 
@@ -2685,7 +2676,7 @@ export class SparkRTC {
     };
 
     writeNetworkLogs = (data) => {
-        data.date =  new Date().toLocaleTimeString();
+        data.date = new Date().toLocaleTimeString();
 
         const jsonContent = JSON.stringify(data);
         const separator = '\n\n****************\n\n';
@@ -2703,12 +2694,11 @@ export class SparkRTC {
     };
 
     writeStatsFile = (data, userid) => {
-        data.date =  new Date().toLocaleTimeString();
+        data.date = new Date().toLocaleTimeString();
 
         const jsonContent = JSON.stringify(data);
         const separator = '\n\n****************\n\n';
 
-        
         if (this.blobData === null) {
             this.blobData = JSON.stringify(data);
         } else {
@@ -2730,7 +2720,6 @@ export class SparkRTC {
             type: 'application/json',
         });
     };
-
 
     downloadStatsFile = () => {
         if (this.blob !== null) {
