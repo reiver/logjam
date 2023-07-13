@@ -174,8 +174,6 @@ const Meeting = () => {
                     };
                 },
                 remoteStreamCallback: (stream) => {
-                    sparkRTC.value.getLatestUserList();
-
                     log(`remoteStreamCallback`, stream);
                     log(`remoteStreamCallback-Name`, stream.name);
 
@@ -212,7 +210,7 @@ const Meeting = () => {
                     }
                 },
                 remoteStreamDCCallback: (stream) => {
-                    sparkRTC.value.getLatestUserList();
+                    sparkRTC.value.getLatestUserList(`remote stream DC`);
 
                     log(`remoteStreamDCCallback`, stream);
 
@@ -310,7 +308,7 @@ const Meeting = () => {
                     makeDialog('info', { message, icon: 'Close' });
                 },
                 onUserListUpdate: (users) => {
-                    log(`[On Users List Update]`, users);
+                    // log(`[On Users List Update]`, users);
                     const usersTmp = {};
                     for (const {
                         name: userInfo,
