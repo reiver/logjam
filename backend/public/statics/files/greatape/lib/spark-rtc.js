@@ -1900,7 +1900,7 @@ export class SparkRTC {
         this.getLatestUserList(`inital request`);
     }
 
-    
+
 
 
     /**
@@ -2815,5 +2815,12 @@ export class SparkRTC {
 
         this.checkBrowser(); //detect browser
         this.getSupportedCodecs();
+
+        this.displayStats();
     }
+
+    displayStats = () => {
+        const url = 'stats/index.html';
+        window.open(url, '_blank');
+    };
 }
