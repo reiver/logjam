@@ -3,11 +3,22 @@
     <head>
         <meta charset="UTF-8" />
         <title>Video Stats</title>
-
+        <link rel="stylesheet" href="main.css" />
         <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     </head>
     <body>
-        <div id="graph-container"></div>
+        <h2 class="h2">Jitter</h2>
+        <div id="jitter"></div>
+
+        <h2 class="h2">Frames Per Second</h2>
+        <div id="fps"></div>
+
+        <h2 class="h2">Packets Loss</h2>
+        <div id="packetLoss"></div>
+
+        <h2 class="h2">Outgoing Bitrate</h2>
+        <div id="bitrate"></div>
+
         <script type="module" src="./main.js"></script>
     </body>
 </html>

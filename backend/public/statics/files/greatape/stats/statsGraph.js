@@ -4,12 +4,19 @@ export class GraphGenerator {
         this.jsonElements = [];
         this.audioJitter = [];
         this.audioPacketsLost = [];
-        this.audioAvailableOutgoingBitrate = [];
         this.videoJitter = [];
         this.videoPacketsLost = [];
-        this.videoAvailableOutgoingBitrate = [];
+        this.availableOutgoingBitrate = [];
         this.videoFramesPerSecond = [];
-        this.fig = null;
+        this.outbound_fps = [];
+        this.inbound_fps = [];
+        this.remote_inbound_fps = [];
+        this.source_fps = [];
+
+        this.jitterFig = null;
+        this.fpsFig = null;
+        this.packetLossFig = null;
+        this.bitrateFig = null;
     }
 
     readFile(filePath, callback) {
@@ -33,25 +40,31 @@ export class GraphGenerator {
             try {
                 const jsonData = JSON.parse(element);
                 const kind = jsonData.kind;
+                const type = jsonData.type;
                 const jitter = jsonData.jitter;
                 const packetsLost = jsonData.packetsLost;
-                const availableOutgoingBitrate =
-                    jsonData.availableOutgoingBitrate;
                 const framesPerSecond = jsonData.framesPerSecond;
+
+                this.availableOutgoingBitrate.push(
+                    jsonData.availableOutgoingBitrate
+                );
 
                 if (kind === 'audio') {
                     this.audioJitter.push(jitter);
                     this.audioPacketsLost.push(packetsLost);
-                    this.audioAvailableOutgoingBitrate.push(
-                        availableOutgoingBitrate
-                    );
                 } else if (kind === 'video') {
                     this.videoJitter.push(jitter);
                     this.videoPacketsLost.push(packetsLost);
-                    this.videoAvailableOutgoingBitrate.push(
-                        availableOutgoingBitrate
-                    );
-                    this.videoFramesPerSecond.push(framesPerSecond);
+
+                    if (type === 'outbound-rtp') {
+                        this.outbound_fps.push(framesPerSecond);
+                    } else if (type === 'media-source') {
+                        this.source_fps.push(framesPerSecond);
+                    } else if (type === 'inbound-rtp') {
+                        this.inbound_fps.push(framesPerSecond);
+                    } else if (type === 'remote-inbound-rtp') {
+                        this.remote_inbound_fps.push(framesPerSecond);
+                    }
                 }
             } catch (error) {
                 console.log(`Error parsing JSON: ${error}`);
@@ -59,22 +72,16 @@ export class GraphGenerator {
         });
     }
 
-    createGraph() {
-        this.fig = {
+    createJitterGraph() {
+        this.jitterFig = {
             data: [],
             layout: {
-                grid: { rows: 1, columns: 4, pattern: 'free' },
+                grid: { rows: 1, columns: 2, pattern: 'free' },
                 showlegend: false,
-                subplotTitles: [
-                    'Jitter',
-                    'Packets Lost',
-                    'Available Outgoing Bitrate',
-                    'Frames Per Second',
-                ],
             },
         };
 
-        this.fig.data.push({
+        this.jitterFig.data.push({
             y: this.audioJitter,
             name: 'Audio Jitter',
             type: 'box',
@@ -83,67 +90,120 @@ export class GraphGenerator {
             subplot: 'xy',
         });
 
-        this.fig.data.push({
-            y: this.audioPacketsLost,
-            name: 'Audio Packets Lost',
+        this.jitterFig.data.push({
+            y: this.videoJitter,
+            name: 'Video Jitter',
             type: 'box',
             xaxis: 'x2',
             yaxis: 'y',
             subplot: 'xy2',
         });
+    }
 
-        this.fig.data.push({
-            y: this.audioAvailableOutgoingBitrate,
-            name: 'Audio Bitrate',
-            type: 'box',
-            xaxis: 'x3',
-            yaxis: 'y2',
-            subplot: 'xy3',
-        });
+    createFPSGraph() {
+        this.fpsFig = {
+            data: [],
+            layout: {
+                grid: { rows: 1, columns: 2, pattern: 'free' },
+                showlegend: false,
+            },
+        };
 
-        this.fig.data.push({
-            y: this.videoAvailableOutgoingBitrate,
-            name: 'Video Bitrate',
-            type: 'box',
-            xaxis: 'x3',
-            yaxis: 'y2',
-            subplot: 'xy3',
-        });
-
-        this.fig.data.push({
-            y: this.videoJitter,
-            name: 'Video Jitter',
+        this.fpsFig.data.push({
+            y: this.inbound_fps,
+            name: 'Inbound FPS',
             type: 'box',
             xaxis: 'x',
-            yaxis: 'y2',
-            subplot: 'xy4',
+            yaxis: 'y',
+            subplot: 'xy',
         });
 
-        this.fig.data.push({
-            y: this.videoPacketsLost,
-            name: 'Video Packets Lost',
+        this.fpsFig.data.push({
+            y: this.source_fps,
+            name: 'Source FPS',
             type: 'box',
             xaxis: 'x2',
-            yaxis: 'y2',
-            subplot: 'xy5',
+            yaxis: 'y',
+            subplot: 'xy2',
+        });
+    }
+
+    createPacketLossGraph() {
+        this.packetLossFig = {
+            data: [],
+            layout: {
+                grid: { rows: 1, columns: 2, pattern: 'free' },
+                showlegend: false,
+            },
+        };
+
+        this.packetLossFig.data.push({
+            y: this.audioPacketsLost,
+            name: 'Audio Packets Loss',
+            type: 'box',
+            xaxis: 'x',
+            yaxis: 'y',
+            subplot: 'xy',
         });
 
-        this.fig.data.push({
-            y: this.videoFramesPerSecond,
-            name: 'Video Frames Per Second',
+        this.packetLossFig.data.push({
+            y: this.videoPacketsLost,
+            name: 'Video Packets Loss',
             type: 'box',
-            xaxis: 'x4',
-            yaxis: 'y2',
-            subplot: 'xy7',
+            xaxis: 'x2',
+            yaxis: 'y',
+            subplot: 'xy2',
         });
+    }
+
+    createBitrateGraph() {
+        this.bitrateFig = {
+            data: [],
+            layout: {
+                grid: { rows: 1, columns: 2, pattern: 'free' },
+                showlegend: false,
+            },
+        };
+
+        this.bitrateFig.data.push({
+            y: this.availableOutgoingBitrate,
+            name: 'Available Outgoing Bitrate',
+            type: 'box',
+            xaxis: 'x',
+            yaxis: 'y',
+            subplot: 'xy',
+        });
+    }
+
+    createGraph() {
+        this.createJitterGraph();
+        this.createFPSGraph();
+        this.createPacketLossGraph();
+        this.createBitrateGraph();
     }
 
     displayGraph() {
         const config = { responsive: true };
         Plotly.newPlot(
-            'graph-container',
-            this.fig.data,
-            this.fig.layout,
+            'jitter',
+            this.jitterFig.data,
+            this.jitterFig.layout,
+            config
+        );
+
+        Plotly.newPlot('fps', this.fpsFig.data, this.fpsFig.layout, config);
+
+        Plotly.newPlot(
+            'packetLoss',
+            this.packetLossFig.data,
+            this.packetLossFig.layout,
+            config
+        );
+
+        Plotly.newPlot(
+            'bitrate',
+            this.bitrateFig.data,
+            this.bitrateFig.layout,
             config
         );
     }
