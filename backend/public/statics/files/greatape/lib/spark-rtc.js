@@ -4,6 +4,7 @@
  *
  */
 export class SparkRTC {
+    tabKey = `tab_${Date.now()}_${Math.random()}`;
     blob = null; // Initialize blob as null
     netBlob = null; // Initialize blob as null
     statsFileLink = '';
@@ -668,8 +669,8 @@ export class SparkRTC {
                 resolve(socket);
             };
             socket.onclose = async () => {
-                this.downloadNetFile();
-                this.downloadStatsFile();
+                // this.downloadNetFile();
+                // this.downloadStatsFile();
 
                 this.updateTheStatus(
                     `socket is closed in setupSignalingSocket`
@@ -1464,8 +1465,8 @@ export class SparkRTC {
                             //close websocket
                             if (this.socket) {
                                 this.socket.onclose = () => {
-                                    this.downloadNetFile();
-                                    this.downloadStatsFile();
+                                    // this.downloadNetFile();
+                                    // this.downloadStatsFile();
 
                                     this.updateTheStatus(
                                         `socket is closed after leaveMeeting`
@@ -1602,8 +1603,8 @@ export class SparkRTC {
                             //close websocket
                             if (this.socket) {
                                 this.socket.onclose = () => {
-                                    this.downloadNetFile();
-                                    this.downloadStatsFile();
+                                    // this.downloadNetFile();
+                                    // this.downloadStatsFile();
 
                                     this.updateTheStatus(
                                         `socket is closed after leaveMeeting`
@@ -1899,9 +1900,6 @@ export class SparkRTC {
 
         this.getLatestUserList(`inital request`);
     }
-
-
-
 
     /**
      * Helper fucntion to iniiate select
@@ -2432,8 +2430,8 @@ export class SparkRTC {
             //close websocket if not streaming anything
             if (this.socket) {
                 this.socket.onclose = () => {
-                    this.downloadNetFile();
-                    this.downloadStatsFile();
+                    // this.downloadNetFile();
+                    // this.downloadStatsFile();
 
                     this.updateTheStatus(`socket is closed after leaveMeeting`);
                     this.resetVariables();
@@ -2453,8 +2451,8 @@ export class SparkRTC {
             //close websocket
             if (this.socket) {
                 this.socket.onclose = () => {
-                    this.downloadNetFile();
-                    this.downloadStatsFile();
+                    // this.downloadNetFile();
+                    // this.downloadStatsFile();
 
                     this.updateTheStatus(`socket is closed after leaveMeeting`);
                     this.resetVariables();
@@ -2481,11 +2479,13 @@ export class SparkRTC {
         var counter = 0;
 
         setInterval(() => {
+            let count = 0;
             console.log('-------------------------------------');
             peerConnection
                 .getStats()
                 .then(function (stats) {
                     stats.forEach(function (report) {
+                        count++;
                         //save stats to logs file
                         self.writeStatsFile(report, userid);
 
@@ -2697,20 +2697,21 @@ export class SparkRTC {
         data.date = new Date().toLocaleTimeString();
 
         const jsonContent = JSON.stringify(data);
-        const separator = '\n\n****************\n\n';
+        // const separator = '\n\n****************\n\n';
 
         if (this.blobData === null) {
             this.blobData = JSON.stringify(data);
+            this.sendStatsData();
         } else {
             if (userid) {
                 this.blobData =
                     this.blobData +
-                    separator +
-                    'peerConnectionUserid: ' +
-                    userid +
-                    '\tmyUserID: ' +
-                    this.myUsername +
-                    '\n\n' +
+                    // separator +
+                    // 'peerConnectionUserid: ' +
+                    // userid +
+                    // '\tmyUserID: ' +
+                    // this.myUsername +
+                    '\n' +
                     jsonContent;
             }
         }
@@ -2815,12 +2816,23 @@ export class SparkRTC {
 
         this.checkBrowser(); //detect browser
         this.getSupportedCodecs();
-
-        this.displayStats();
     }
 
-    displayStats = () => {
-        const url = 'stats/index.html';
-        window.open(url, '_blank');
+    sendStatsData = () => {
+        console.log('Sending stats...');
+        if (this.blobData) {
+            // Store data in local storage
+            // Store data in local storage with the tab-specific key
+            setInterval(() => {
+                localStorage.setItem(`${this.tabKey}_name`, this.myName);
+                localStorage.setItem(`${this.tabKey}_data`, this.blobData);
+            }, 1000);
+
+            // Open stats.html in a new window with the tab key as a query parameter
+            const url = `stats/index.html?tabKey=${this.tabKey}`;
+            window.open(url, '_blank');
+        } else {
+            console.log('no blob data');
+        }
     };
 }

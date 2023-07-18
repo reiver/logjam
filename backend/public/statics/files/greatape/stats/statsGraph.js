@@ -34,8 +34,6 @@ export class GraphGenerator {
         this.fileContents = fileContents;
         this.jsonElements = this.fileContents.match(/\{.*?\}/gms);
 
-        console.log('JSONELEMNT:', this.jsonElements);
-
         this.jsonElements.forEach((element) => {
             try {
                 const jsonData = JSON.parse(element);
@@ -67,7 +65,7 @@ export class GraphGenerator {
                     }
                 }
             } catch (error) {
-                console.log(`Error parsing JSON: ${error}`);
+                // console.log(`Error parsing JSON: ${error}`);
             }
         });
     }
@@ -77,12 +75,12 @@ export class GraphGenerator {
             data: [],
             layout: {
                 grid: { rows: 1, columns: 2, pattern: 'free' },
-                showlegend: false,
+                showlegend: true,
             },
         };
 
         this.jitterFig.data.push({
-            y: this.audioJitter,
+            y: this.audioJitter, // Use x instead of y for the jitter values
             name: 'Audio Jitter',
             type: 'box',
             xaxis: 'x',
@@ -91,7 +89,7 @@ export class GraphGenerator {
         });
 
         this.jitterFig.data.push({
-            y: this.videoJitter,
+            y: this.videoJitter, // Use x instead of y for the jitter values
             name: 'Video Jitter',
             type: 'box',
             xaxis: 'x2',
@@ -105,14 +103,15 @@ export class GraphGenerator {
             data: [],
             layout: {
                 grid: { rows: 1, columns: 2, pattern: 'free' },
-                showlegend: false,
+                showlegend: true,
             },
         };
 
         this.fpsFig.data.push({
             y: this.inbound_fps,
             name: 'Inbound FPS',
-            type: 'box',
+            type: 'scatter',
+            mode: 'lines',
             xaxis: 'x',
             yaxis: 'y',
             subplot: 'xy',
@@ -121,7 +120,8 @@ export class GraphGenerator {
         this.fpsFig.data.push({
             y: this.source_fps,
             name: 'Source FPS',
-            type: 'box',
+            type: 'scatter',
+            mode: 'lines',
             xaxis: 'x2',
             yaxis: 'y',
             subplot: 'xy2',
@@ -133,7 +133,7 @@ export class GraphGenerator {
             data: [],
             layout: {
                 grid: { rows: 1, columns: 2, pattern: 'free' },
-                showlegend: false,
+                showlegend: true,
             },
         };
 
@@ -161,7 +161,7 @@ export class GraphGenerator {
             data: [],
             layout: {
                 grid: { rows: 1, columns: 2, pattern: 'free' },
-                showlegend: false,
+                showlegend: true,
             },
         };
 
