@@ -12,11 +12,15 @@ export class GraphGenerator {
         this.inbound_fps = [];
         this.remote_inbound_fps = [];
         this.source_fps = [];
+        this.downlink = [];
+        this.networkLatency = [];
 
         this.jitterFig = null;
         this.fpsFig = null;
         this.packetLossFig = null;
         this.bitrateFig = null;
+        this.downlinkFig = null;
+        this.networkLatencyFig = null;
     }
 
     readFile(filePath, callback) {
@@ -37,6 +41,13 @@ export class GraphGenerator {
         this.jsonElements.forEach((element) => {
             try {
                 const jsonData = JSON.parse(element);
+
+                //get network logs
+
+                this.downlink.push(jsonData.downlink);
+                this.networkLatency.push(jsonData.rtt);
+
+                //get pc stats
                 const kind = jsonData.kind;
                 const type = jsonData.type;
                 const jitter = jsonData.jitter;
@@ -70,6 +81,43 @@ export class GraphGenerator {
         });
     }
 
+    createNetworkLatencyGraph() {
+        this.networkLatencyFig = {
+            data: [],
+            layout: {
+                grid: { rows: 1, columns: 2, pattern: 'free' },
+                showlegend: true,
+            },
+        };
+
+        this.networkLatencyFig.data.push({
+            y: this.networkLatency, // Use x instead of y for the jitter values
+            name: 'Round Trip Time',
+            type: 'box',
+            xaxis: 'x',
+            yaxis: 'y',
+            subplot: 'xy',
+        });
+    }
+
+    createDownLinkGraph() {
+        this.downlinkFig = {
+            data: [],
+            layout: {
+                grid: { rows: 1, columns: 2, pattern: 'free' },
+                showlegend: true,
+            },
+        };
+
+        this.downlinkFig.data.push({
+            y: this.downlink, // Use x instead of y for the jitter values
+            name: 'Downlink',
+            type: 'box',
+            xaxis: 'x',
+            yaxis: 'y',
+            subplot: 'xy',
+        });
+    }
     createJitterGraph() {
         this.jitterFig = {
             data: [],
@@ -176,6 +224,8 @@ export class GraphGenerator {
     }
 
     createGraph() {
+        this.createNetworkLatencyGraph()
+        this.createDownLinkGraph();
         this.createJitterGraph();
         this.createFPSGraph();
         this.createPacketLossGraph();
@@ -184,6 +234,20 @@ export class GraphGenerator {
 
     displayGraph() {
         const config = { responsive: true };
+        Plotly.newPlot(
+            'downlink',
+            this.downlinkFig.data,
+            this.downlinkFig.layout,
+            config
+        );
+
+        Plotly.newPlot(
+            'rtt',
+            this.networkLatencyFig.data,
+            this.networkLatencyFig.layout,
+            config
+        );
+
         Plotly.newPlot(
             'jitter',
             this.jitterFig.data,
