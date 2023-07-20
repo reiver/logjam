@@ -8,6 +8,7 @@ export class SparkRTC {
     netBlob = null; // Initialize blob as null
     statsFileLink = '';
     netFileLink = '';
+    statsDisplayed = false;
     blobData = null;
     netBlobData = null;
     started = false;
@@ -72,6 +73,8 @@ export class SparkRTC {
     IExplorerAgent = null;
     chromeAgent = null;
     edgeAgent = null;
+
+    networkSpeedInterval = null;
 
     codecs = [];
     supportsSetCodecPreferences =
@@ -1174,7 +1177,6 @@ export class SparkRTC {
         const peerConnection = new RTCPeerConnection(
             this.myPeerConnectionConfig
         );
-        let intervalId;
 
         peerConnection.isAdience = isAudience;
         peerConnection.alive = true;
@@ -1253,6 +1255,12 @@ export class SparkRTC {
                 `Connection state: ${peerConnection.connectionState}`
             );
 
+            if (
+                peerConnection.connectionState === 'closed' ||
+                peerConnection.connectionState === 'disconnected'
+            ) {
+                //close stats interval
+            }
             if (this.connectionStatus) {
                 this.connectionStatus(peerConnection.connectionState);
             }
@@ -2135,7 +2143,10 @@ export class SparkRTC {
         this.createNetFile();
 
         // Schedule the network speed check every second
-        setInterval(this.checkNetworkSpeed, this.statsIntervalTime);
+        this.networkSpeedInterval = setInterval(
+            this.checkNetworkSpeed,
+            this.statsIntervalTime
+        );
 
         if (!turn) {
             this.myPeerConnectionConfig.iceServers = iceServers.filter(
@@ -2412,6 +2423,21 @@ export class SparkRTC {
     };
 
     /**
+     * close all the peer connections
+     */
+    closeAllPeerConnections = async () => {
+        if (this.myPeerConnectionArray) {
+            for (const connectionId in this.myPeerConnectionArray) {
+                this.myPeerConnectionArray[connectionId].close();
+            }
+
+            this.myPeerConnectionArray = {};
+        } else {
+            this.updateTheStatus('connectionArray is null');
+        }
+    };
+
+    /**
      * To leave the meeting
      */
     leaveMeeting = async () => {
@@ -2461,31 +2487,50 @@ export class SparkRTC {
             }
         }
 
+        await this.closeAllPeerConnections();
+
         this.updateTheStatus(`left meeting`);
 
         // this.downloadNetFile();
         // this.downloadStatsFile();
+
+        clearInterval(this.networkSpeedInterval);
+        clearInterval(this.pingInterval);
     };
 
     getStatsForPC = (peerConnection, userid) => {
         const self = this;
 
-        setInterval(() => {
-            console.log('-------------------------------------');
-            peerConnection
-                .getStats()
-                .then(function (stats) {
-                    stats.forEach(function (report) {
-                        //save stats to logs file
-                        self.writeStatsFile(report, userid);
+        let interval = setInterval(() => {
+            if (peerConnection) {
+                if (
+                    peerConnection.connectionState === 'closed' ||
+                    peerConnection.connectionState === 'disconnected'
+                ) {
+                    this.updateTheStatus('clearing stats interval');
+                    this.blobData = null;
+                    clearInterval(interval);
+                }
+
+                console.log(
+                    '-------------------------------------',
+                    peerConnection.connectionState
+                );
+                peerConnection
+                    .getStats()
+                    .then(function (stats) {
+                        stats.forEach(function (report) {
+                            //save stats to logs file
+                            self.writeStatsFile(report, userid);
+                        });
+                    })
+                    .catch(function (error) {
+                        console.error(
+                            `userid: ${userid} Error retrieving stats`,
+                            error
+                        );
                     });
-                })
-                .catch(function (error) {
-                    console.error(
-                        `userid: ${userid} Error retrieving stats`,
-                        error
-                    );
-                });
+            }
         }, this.statsIntervalTime);
     };
 
@@ -2556,10 +2601,7 @@ export class SparkRTC {
             this.sendStatsData();
         } else {
             if (userid) {
-                this.blobData =
-                    this.blobData +
-                    '\n' +
-                    jsonContent;
+                this.blobData = this.blobData + '\n' + jsonContent;
             }
         }
 
@@ -2665,19 +2707,27 @@ export class SparkRTC {
         this.getSupportedCodecs();
     }
 
+    /**
+     * display stats in form of Graphs to Other webpage
+     */
     sendStatsData = () => {
-        console.log('Sending stats...');
-        if (this.blobData) {
-          
-            const url = `stats/index.html`;
-            var targetWindow = window.open(url, '_blank');
+        if (!this.statsDisplayed) {
+            this.statsDisplayed = true;
+            console.log('Sending stats...');
+            if (this.blobData) {
+                const url = `stats/index.html`;
+                var targetWindow = window.open(url, '_blank');
 
-            var self = this;
-            setInterval(() => {
-                targetWindow.postMessage(self.blobData);
-            }, self.statsIntervalTime);
-        } else {
-            console.log('no blob data');
+                var self = this;
+                let intervel = setInterval(() => {
+                    if (self.blobData === null) {
+                        clearInterval(intervel);
+                    }
+                    targetWindow.postMessage(self.blobData);
+                }, self.statsIntervalTime);
+            } else {
+                console.log('no blob data');
+            }
         }
     };
 }
