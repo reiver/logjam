@@ -8,25 +8,25 @@ import (
 	"time"
 )
 
-type RoomController struct {
+type RoomWSController struct {
 	logger    contracts.ILogger
 	socketSVC contracts.ISocketService
 	roomRepo  contracts.IRoomRepository
 }
 
-func NewRoomController(socketSVC contracts.ISocketService, roomRepo contracts.IRoomRepository, logger contracts.ILogger) *RoomController {
-	return &RoomController{
+func NewRoomWSController(socketSVC contracts.ISocketService, roomRepo contracts.IRoomRepository, logger contracts.ILogger) *RoomWSController {
+	return &RoomWSController{
 		logger:    logger,
 		socketSVC: socketSVC,
 		roomRepo:  roomRepo,
 	}
 }
 
-func (c *RoomController) OnConnect(ctx *models.WSContext) {
+func (c *RoomWSController) OnConnect(ctx *models.WSContext) {
 
 }
 
-func (c *RoomController) OnDisconnect(ctx *models.WSContext) {
+func (c *RoomWSController) OnDisconnect(ctx *models.WSContext) {
 	defer c.emitUserList(ctx.RoomId)
 	wasBroadcaster, childrenIdList, err := c.roomRepo.RemoveMember(ctx.RoomId, ctx.SocketID)
 	if err != nil {
@@ -58,7 +58,7 @@ func (c *RoomController) OnDisconnect(ctx *models.WSContext) {
 	}
 }
 
-func (c *RoomController) Start(ctx *models.WSContext) {
+func (c *RoomWSController) Start(ctx *models.WSContext) {
 	resultEvent := models.MessageContract{
 		Type:   "start",
 		Data:   strconv.FormatInt(int64(ctx.SocketID), 10),
@@ -77,7 +77,7 @@ func (c *RoomController) Start(ctx *models.WSContext) {
 	}
 	_ = c.socketSVC.Send(resultEvent, ctx.SocketID)
 }
-func (c *RoomController) Role(ctx *models.WSContext) {
+func (c *RoomWSController) Role(ctx *models.WSContext) {
 	var eventData map[string]string
 	err := json.Unmarshal(ctx.PureMessage, &eventData)
 	if err != nil {
@@ -169,7 +169,7 @@ func (c *RoomController) Role(ctx *models.WSContext) {
 		}
 		tryCount := 0
 	start:
-		parentId, err := c.roomRepo.InsertMemberToTree(ctx.RoomId, ctx.SocketID)
+		parentId, err := c.roomRepo.InsertMemberToTree(ctx.RoomId, ctx.SocketID, false)
 		if err != nil && tryCount <= 20 {
 			time.Sleep(500 * time.Millisecond)
 			tryCount++
@@ -189,7 +189,7 @@ func (c *RoomController) Role(ctx *models.WSContext) {
 		}, *parentId)
 	}
 }
-func (c *RoomController) Stream(ctx *models.WSContext) {
+func (c *RoomWSController) Stream(ctx *models.WSContext) {
 	payload := make(map[string]string)
 	err := json.Unmarshal(ctx.PureMessage, &payload)
 	if err != nil {
@@ -211,11 +211,11 @@ func (c *RoomController) Stream(ctx *models.WSContext) {
 	}
 }
 
-func (c *RoomController) Ping(ctx *models.WSContext) {
+func (c *RoomWSController) Ping(ctx *models.WSContext) {
 	_ = c.socketSVC.Send(models.MessageContract{Type: "pong"}, ctx.SocketID)
 }
 
-func (c *RoomController) TurnStatus(ctx *models.WSContext) {
+func (c *RoomWSController) TurnStatus(ctx *models.WSContext) {
 	err := c.roomRepo.UpdateTurnStatus(ctx.RoomId, ctx.SocketID, ctx.ParsedMessage.Data == "on")
 	if err != nil {
 		c.log(contracts.LError, err.Error())
@@ -223,7 +223,7 @@ func (c *RoomController) TurnStatus(ctx *models.WSContext) {
 	}
 }
 
-func (c *RoomController) Tree(ctx *models.WSContext) {
+func (c *RoomWSController) Tree(ctx *models.WSContext) {
 	room, err := c.roomRepo.GetRoom(ctx.RoomId)
 	if err != nil {
 		c.log(contracts.LError, err.Error())
@@ -246,7 +246,7 @@ func (c *RoomController) Tree(ctx *models.WSContext) {
 	_ = c.socketSVC.Send(resultEvent, ctx.SocketID)
 }
 
-func (c *RoomController) MetadataSet(ctx *models.WSContext) {
+func (c *RoomWSController) MetadataSet(ctx *models.WSContext) {
 	metaData := make(map[string]any)
 	err := json.Unmarshal([]byte(ctx.ParsedMessage.Data), &metaData)
 	if err != nil {
@@ -260,7 +260,7 @@ func (c *RoomController) MetadataSet(ctx *models.WSContext) {
 	}
 }
 
-func (c *RoomController) MetadataGet(ctx *models.WSContext) {
+func (c *RoomWSController) MetadataGet(ctx *models.WSContext) {
 	meta, err := c.roomRepo.GetRoomMetaData(ctx.RoomId)
 	if err != nil {
 		c.log(contracts.LError, err.Error())
@@ -269,7 +269,7 @@ func (c *RoomController) MetadataGet(ctx *models.WSContext) {
 	_ = c.socketSVC.Send(meta, ctx.SocketID)
 }
 
-func (c *RoomController) UserByStream(ctx *models.WSContext) {
+func (c *RoomWSController) UserByStream(ctx *models.WSContext) {
 	userInfo, err := c.roomRepo.GetUserByStreamId(ctx.RoomId, ctx.ParsedMessage.Data)
 	if err != nil {
 		c.log(contracts.LError, err.Error())
@@ -293,11 +293,11 @@ func (c *RoomController) UserByStream(ctx *models.WSContext) {
 	_ = c.socketSVC.Send(ctx.SocketID)
 }
 
-func (c *RoomController) GetLatestUserList(ctx *models.WSContext) {
+func (c *RoomWSController) GetLatestUserList(ctx *models.WSContext) {
 	c.emitUserList(ctx.RoomId)
 }
 
-func (c *RoomController) emitUserList(roomId string) {
+func (c *RoomWSController) emitUserList(roomId string) {
 	list, err := c.roomRepo.GetMembersList(roomId)
 	if err != nil {
 		c.log(contracts.LError, err.Error())
@@ -320,7 +320,7 @@ func (c *RoomController) emitUserList(roomId string) {
 	_ = c.socketSVC.Send(event, roomMembersIdList...)
 }
 
-func (c *RoomController) ReconnectChildren(ctx *models.WSContext) {
+func (c *RoomWSController) ReconnectChildren(ctx *models.WSContext) {
 	childrenIdList, err := c.roomRepo.GetChildrenIdList(ctx.RoomId, ctx.SocketID)
 	if err != nil {
 		c.log(contracts.LError, err.Error())
@@ -333,7 +333,7 @@ func (c *RoomController) ReconnectChildren(ctx *models.WSContext) {
 	_ = c.socketSVC.Send(event, childrenIdList...)
 }
 
-func (c *RoomController) DefaultHandler(ctx *models.WSContext) {
+func (c *RoomWSController) DefaultHandler(ctx *models.WSContext) {
 	id, err := strconv.Atoi(ctx.ParsedMessage.Target)
 	if err != nil {
 		c.log(contracts.LError, err.Error())
@@ -369,6 +369,6 @@ func (c *RoomController) DefaultHandler(ctx *models.WSContext) {
 	_ = c.socketSVC.Send(fullMessage, targetMember.ID)
 }
 
-func (c *RoomController) log(level contracts.TLogLevel, msg ...string) {
+func (c *RoomWSController) log(level contracts.TLogLevel, msg ...string) {
 	_ = c.logger.Log("room_ctrl", level, msg...)
 }

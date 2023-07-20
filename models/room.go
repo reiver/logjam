@@ -15,21 +15,25 @@ type MemberModel struct {
 
 type PeerTreeModel struct {
 	MemberModel
-	Children [2]MemberModel
+	//Children [2]MemberModel
+	Children []MemberModel
 }
 
 type PeerModel struct {
-	ID          uint64
-	IsConnected bool
-	Children    [2]*PeerModel
+	ID              uint64
+	IsConnected     bool
+	IsAuxiliaryNode bool
+	//Children        [2]*PeerModel
+	Children []*PeerModel
 }
 
 type RoomModel struct {
 	*sync.Mutex
-	Title     string
-	PeersTree *PeerModel
-	Members   map[uint64]*MemberModel
-	MetaData  map[string]any
+	Title         string
+	PeersTree     *PeerModel
+	Members       map[uint64]*MemberModel
+	MetaData      map[string]any
+	AuxiliaryNode **PeerModel
 }
 
 func (r *RoomModel) GetBroadcaster() *MemberModel {
@@ -50,14 +54,14 @@ func (r *RoomModel) GetLevelMembers(level uint, includeAll bool) ([]**PeerModel,
 	}
 	var lastLevelChildren []**PeerModel
 
-	if r.PeersTree.Children[0] != nil {
+	if len(r.PeersTree.Children) > 0 {
 		if !includeAll && r.Members[r.PeersTree.Children[0].ID].CanAcceptChild {
 			lastLevelChildren = append(lastLevelChildren, &r.PeersTree.Children[0])
 		} else if includeAll {
 			lastLevelChildren = append(lastLevelChildren, &r.PeersTree.Children[0])
 		}
 	}
-	if r.PeersTree.Children[1] != nil {
+	if len(r.PeersTree.Children) > 1 {
 		if !includeAll && r.Members[r.PeersTree.Children[1].ID].CanAcceptChild {
 			lastLevelChildren = append(lastLevelChildren, &r.PeersTree.Children[1])
 		} else if includeAll {
@@ -71,18 +75,14 @@ func (r *RoomModel) GetLevelMembers(level uint, includeAll bool) ([]**PeerModel,
 	for currentLevel < level && len(lastLevelChildren) > 0 {
 		var newList []**PeerModel
 		for _, currentLevelChild := range lastLevelChildren {
-			if (*currentLevelChild).Children[0] != nil {
-				if !includeAll && r.Members[(*currentLevelChild).Children[0].ID].CanAcceptChild {
-					newList = append(newList, &(*currentLevelChild).Children[0])
-				} else if includeAll {
-					newList = append(newList, &(*currentLevelChild).Children[0])
+			for _, child := range (*currentLevelChild).Children {
+				if child == nil {
+					continue
 				}
-			}
-			if (*currentLevelChild).Children[1] != nil {
-				if !includeAll && r.Members[(*currentLevelChild).Children[1].ID].CanAcceptChild {
-					newList = append(newList, &(*currentLevelChild).Children[1])
+				if !includeAll && r.Members[child.ID].CanAcceptChild {
+					newList = append(newList, &child)
 				} else if includeAll {
-					newList = append(newList, &(*currentLevelChild).Children[1])
+					newList = append(newList, &child)
 				}
 			}
 		}

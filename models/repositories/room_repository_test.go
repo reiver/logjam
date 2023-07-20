@@ -118,7 +118,7 @@ func Test_Tree(t *testing.T) {
 		t.Error(err)
 		return
 	}
-	_, err = repo.InsertMemberToTree(roomId, uint64(1))
+	_, err = repo.InsertMemberToTree(roomId, uint64(1), false)
 	if err != nil {
 		t.Error(err)
 		return
@@ -128,7 +128,7 @@ func Test_Tree(t *testing.T) {
 		t.Error(err)
 		return
 	}
-	_, err = repo.InsertMemberToTree(roomId, uint64(2))
+	_, err = repo.InsertMemberToTree(roomId, uint64(2), false)
 	if err != nil {
 		t.Error(err)
 		return
@@ -143,7 +143,7 @@ func Test_Tree(t *testing.T) {
 		t.Error(err)
 		return
 	}
-	_, err = repo.InsertMemberToTree(roomId, uint64(3))
+	_, err = repo.InsertMemberToTree(roomId, uint64(3), false)
 	if err == nil {
 		t.Error("shouldn't be added to tree as there is no active node to connect to")
 		return
@@ -153,7 +153,7 @@ func Test_Tree(t *testing.T) {
 		t.Error(err)
 		return
 	}
-	_, err = repo.InsertMemberToTree(roomId, uint64(3))
+	_, err = repo.InsertMemberToTree(roomId, uint64(3), false)
 	if err != nil {
 		t.Error(err)
 		return

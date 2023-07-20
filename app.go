@@ -10,28 +10,28 @@ import (
 )
 
 type App struct {
-	Logger     contracts.ILogger
-	roomRouter *routers.RoomRouter
+	Logger contracts.ILogger
+	Router *routers.Router
 
-	listenHost string
-	listenPort int
+	srcListenAddr string
 }
 
-func (app *App) Init(listenHost string, listenPort int, prodMode bool) {
+func (app *App) Init(srcListenAddr string, prodMode bool) {
 	app.Logger = logger.NewSTDOUTLogger(prodMode)
 	_ = app.Logger.Log("app", contracts.LInfo, "initializing logjam ..")
-	app.listenHost = listenHost
-	app.listenPort = listenPort
+	app.srcListenAddr = srcListenAddr
 
 	roomRepo := repositories.NewRoomRepository()
 	socketSVC := services.NewSocketService(app.Logger)
-	roomCtrl := controllers.NewRoomController(socketSVC, roomRepo, app.Logger)
-	app.roomRouter = routers.NewRoomRouter(roomCtrl, socketSVC, app.Logger)
+	roomWSCtrl := controllers.NewRoomWSController(socketSVC, roomRepo, app.Logger)
+	auxiliaryNodeCtrl := controllers.NewAuxiliaryNodeController(roomRepo, socketSVC, app.Logger)
+	app.Router = routers.NewRouter(roomWSCtrl, auxiliaryNodeCtrl, socketSVC, app.Logger)
+	panicIfErr(app.Router.RegisterRoutes())
 }
 
 func (app *App) Run() {
 	_ = app.Logger.Log("app", contracts.LInfo, "running ..")
-	panicIfErr(app.roomRouter.Serve(app.listenHost, app.listenPort))
+	panicIfErr(app.Router.Serve(app.srcListenAddr))
 }
 
 func panicIfErr(err error) {

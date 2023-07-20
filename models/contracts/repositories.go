@@ -19,7 +19,7 @@ type IRoomRepository interface {
 	UpdateMemberMeta(roomId string, id uint64, metaKey string, value string) error
 	UpdateMemberName(roomId string, id uint64, name string) error
 	GetAllMembersId(roomId string, excludeBroadcaster bool) ([]uint64, error)
-	InsertMemberToTree(roomId string, memberId uint64) (parentId *uint64, err error)
+	InsertMemberToTree(roomId string, memberId uint64, isAuxiliaryNode bool) (parentId *uint64, err error)
 	RemoveMember(roomId string, memberId uint64) (wasBroadcaster bool, nodeChildrenIdList []uint64, err error)
 	SetRoomMetaData(roomId string, metaData map[string]any) error
 	GetRoomMetaData(roomId string) (map[string]any, error)

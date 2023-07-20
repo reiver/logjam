@@ -189,7 +189,60 @@ func (r *roomRepository) UpdateCanConnect(roomId string, id uint64, newState boo
 	return nil
 }
 
-func (r *roomRepository) InsertMemberToTree(roomId string, memberId uint64) (parentId *uint64, err error) {
+func (r *roomRepository) InsertMemberToTree(roomId string, memberId uint64, isAuxiliaryNode bool) (parentId *uint64, err error) {
+	r.Lock()
+	defer r.Unlock()
+	if !r.doesRoomExists(roomId) {
+		return nil, errors.New("room doesn't exists")
+	}
+	r.rooms[roomId].Lock()
+	defer r.rooms[roomId].Unlock()
+	if r.rooms[roomId].AuxiliaryNode != nil {
+		(*r.rooms[roomId].AuxiliaryNode).Children = append((*r.rooms[roomId].AuxiliaryNode).Children, &models.PeerModel{
+			ID:              memberId,
+			IsConnected:     true,
+			Children:        []*models.PeerModel{},
+			IsAuxiliaryNode: false,
+		})
+	}
+	lastCheckedLevel := 0
+start:
+	levelNodes, err := r.rooms[roomId].GetLevelMembers(uint(lastCheckedLevel), false)
+	if err != nil {
+		return nil, err
+	}
+	lastCheckedLevel++
+	if len(levelNodes) == 0 {
+		return nil, errors.New("no node to connect to")
+	}
+	found := false
+	for _, node := range levelNodes {
+		if len((*node).Children) < 2 {
+			newChild := &models.PeerModel{
+				ID:              memberId,
+				IsConnected:     true,
+				Children:        []*models.PeerModel{},
+				IsAuxiliaryNode: isAuxiliaryNode,
+			}
+			(*node).Children = append((*node).Children, newChild)
+			parentId = &(*node).ID
+			found = true
+			if isAuxiliaryNode {
+				r.rooms[roomId].AuxiliaryNode = &newChild
+			}
+		}
+		if found {
+			break
+		}
+	}
+	if !found {
+		goto start
+	}
+	return parentId, nil
+}
+
+/*
+func (r *roomRepository) InsertMemberToTree(roomId string, memberId uint64, isAuxiliaryNode bool) (parentId *uint64, err error) {
 	r.Lock()
 	defer r.Unlock()
 	if !r.doesRoomExists(roomId) {
@@ -211,17 +264,19 @@ start:
 	for _, node := range levelNodes {
 		if (*node).Children[0] == nil {
 			(*node).Children[0] = &models.PeerModel{
-				ID:          memberId,
-				IsConnected: true,
-				Children:    [2]*models.PeerModel{},
+				ID:              memberId,
+				IsConnected:     true,
+				Children:        [2]*models.PeerModel{},
+				IsAuxiliaryNode: isAuxiliaryNode,
 			}
 			parentId = &(*node).ID
 			found = true
 		} else if (*node).Children[1] == nil {
 			(*node).Children[1] = &models.PeerModel{
-				ID:          memberId,
-				IsConnected: true,
-				Children:    [2]*models.PeerModel{},
+				ID:              memberId,
+				IsConnected:     true,
+				Children:        [2]*models.PeerModel{},
+				IsAuxiliaryNode: isAuxiliaryNode,
 			}
 			parentId = &(*node).ID
 			found = true
@@ -234,7 +289,7 @@ start:
 		goto start
 	}
 	return parentId, nil
-}
+}*/
 
 func (r *roomRepository) UpdateTurnStatus(roomId string, id uint64, newState bool) error {
 	r.Lock()
@@ -376,11 +431,26 @@ func (r *roomRepository) RemoveMember(roomId string, memberId uint64) (wasBroadc
 	}()
 	r.rooms[roomId].Lock()
 	defer r.rooms[roomId].Unlock()
+
+	return false, nil, nil
+}
+
+/*func (r *roomRepository) RemoveMember(roomId string, memberId uint64) (wasBroadcaster bool, nodeChildrenIdList []uint64, err error) {
+	r.Lock()
+	defer r.Unlock()
+	if !r.doesRoomExists(roomId) {
+		return false, nil, errors.New("room doesn't exists")
+	}
+	defer func() {
+		delete(r.rooms[roomId].Members, memberId)
+	}()
+	r.rooms[roomId].Lock()
+	defer r.rooms[roomId].Unlock()
 	if r.rooms[roomId].PeersTree.ID == memberId {
-		if r.rooms[roomId].PeersTree.Children[0] != nil {
+		if len(r.rooms[roomId].PeersTree.Children) > 0 {
 			nodeChildrenIdList = append(nodeChildrenIdList, r.rooms[roomId].PeersTree.Children[0].ID)
 		}
-		if r.rooms[roomId].PeersTree.Children[1] != nil {
+		if len(r.rooms[roomId].PeersTree.Children) > 1 {
 			nodeChildrenIdList = append(nodeChildrenIdList, r.rooms[roomId].PeersTree.Children[1].ID)
 		}
 		r.rooms[roomId].PeersTree.IsConnected = false
@@ -407,10 +477,10 @@ start:
 	}
 
 	if targetNode != nil {
-		if (*(*targetNode)).Children[0] != nil {
+		if len((*(*targetNode)).Children) > 0 {
 			nodeChildrenIdList = append(nodeChildrenIdList, (*(*targetNode)).Children[0].ID)
 		}
-		if (*(*targetNode)).Children[1] != nil {
+		if len((*(*targetNode)).Children) > 1 {
 			nodeChildrenIdList = append(nodeChildrenIdList, (*(*targetNode)).Children[1].ID)
 		}
 		**targetNode = nil
@@ -418,7 +488,7 @@ start:
 	} else {
 		goto start
 	}
-}
+}*/
 
 func (r *roomRepository) GetChildrenIdList(roomId string, id uint64) ([]uint64, error) {
 	r.Lock()

@@ -5,9 +5,12 @@ import (
 	"os"
 )
 
+type S struct {
+	Name string
+}
+
 func main() {
-	listenHost := flag.String("listen-host", "0.0.0.0", "interface to listen on")
-	listenPort := flag.Int("listen-port", 8090, "http listen port")
+	src := flag.String("src", "0.0.0.0:8090", "source listen address")
 	prodMode := flag.Bool("prod", false, "enable production mode ( its in dev mode by default )")
 	help := flag.Bool("h", false, "print help")
 	flag.Parse()
@@ -19,6 +22,6 @@ func main() {
 
 	app := App{}
 
-	app.Init(*listenHost, *listenPort, *prodMode)
+	app.Init(*src, *prodMode)
 	app.Run()
 }

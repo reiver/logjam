@@ -2,7 +2,7 @@ package routers
 
 import (
 	"encoding/json"
-	"fmt"
+	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 	"github.com/sparkscience/logjam/controllers"
 	"github.com/sparkscience/logjam/models"
@@ -10,15 +10,15 @@ import (
 	"net/http"
 )
 
-type RoomRouter struct {
-	roomCtrl  *controllers.RoomController
-	socketSVC contracts.ISocketService
+type roomWSRouter struct {
+	roomCtrl  *controllers.RoomWSController
 	upgrader  websocket.Upgrader
+	socketSVC contracts.ISocketService
 	logger    contracts.ILogger
 }
 
-func NewRoomRouter(roomCtrl *controllers.RoomController, socketSVC contracts.ISocketService, logger contracts.ILogger) *RoomRouter {
-	return &RoomRouter{
+func newRoomWSRouter(roomCtrl *controllers.RoomWSController, socketSVC contracts.ISocketService, logger contracts.ILogger) IRouteRegistrar {
+	return &roomWSRouter{
 		roomCtrl:  roomCtrl,
 		socketSVC: socketSVC,
 		logger:    logger,
@@ -32,21 +32,11 @@ func NewRoomRouter(roomCtrl *controllers.RoomController, socketSVC contracts.ISo
 	}
 }
 
-func (r *RoomRouter) Serve(listenHost string, listenPort int) error {
-	httpMux := http.NewServeMux()
-	addr := fmt.Sprintf(`%s:%d`, listenHost, listenPort)
-	httpMux.HandleFunc("/ws", r.wsHandler)
-	httpMux.Handle("/", http.FileServer(http.Dir("./views/")))
-	println(fmt.Sprintf(`[HTTP] Listening on %s ..`, addr))
-	err := http.ListenAndServe(addr, httpMux)
-	if err != nil {
-		return err
-	}
-
-	return nil
+func (r *roomWSRouter) registerRoutes(router *mux.Router) {
+	router.HandleFunc("/ws", r.wsHandler)
 }
 
-func (r *RoomRouter) wsHandler(writer http.ResponseWriter, request *http.Request) {
+func (r *roomWSRouter) wsHandler(writer http.ResponseWriter, request *http.Request) {
 	wsConn, err := r.upgrader.Upgrade(writer, request, nil)
 	if err != nil {
 		_ = r.logger.Log("ws_router", contracts.LError, err.Error())
@@ -63,7 +53,7 @@ func (r *RoomRouter) wsHandler(writer http.ResponseWriter, request *http.Request
 	go r.startReadingFromWS(wsConn, socketId, roomId)
 }
 
-func (r *RoomRouter) startReadingFromWS(wsConn *websocket.Conn, socketId uint64, roomId string) {
+func (r *roomWSRouter) startReadingFromWS(wsConn *websocket.Conn, socketId uint64, roomId string) {
 	for {
 		messageType, data, readErr := wsConn.ReadMessage()
 		if readErr != nil {
@@ -97,7 +87,7 @@ func (r *RoomRouter) startReadingFromWS(wsConn *websocket.Conn, socketId uint64,
 	}
 }
 
-func (r *RoomRouter) handleEvent(ctx *models.WSContext) {
+func (r *roomWSRouter) handleEvent(ctx *models.WSContext) {
 	if ctx.ParsedMessage == nil || len(ctx.PureMessage) <= 2 {
 		return
 	}
