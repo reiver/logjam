@@ -14,6 +14,9 @@ export const ConfirmDialog = ({
     cancelText = 'Reject',
     okButtonVariant = 'solid',
     onReject = onClose,
+    showButtons = true,
+    className,
+    contentClassName,
 }) => {
     return html` <div class="absolute top-0 left-0 w-full h-full">
         <div
@@ -21,7 +24,10 @@ export const ConfirmDialog = ({
             onClick=${onClose}
         />
         <div
-            class="absolute -translate-y-full z-20 top-full left-0 right-0 sm:right-unset sm:top-1/2 sm:left-1/2 transform sm:-translate-x-1/2 sm:-translate-y-1/2 dark:bg-gray-3 dark:text-gray-0 bg-white text-gray-2 sm:rounded-lg rounded-t-lg w-full w-full sm:max-w-[400px] sm:border dark:border-gray-1 border-gray-0"
+            class=${clsx(
+                className,
+                'absolute -translate-y-full z-20 top-full left-0 right-0 sm:right-unset sm:top-1/2 sm:left-1/2 transform sm:-translate-x-1/2 sm:-translate-y-1/2 dark:bg-gray-3 dark:text-gray-0 bg-white text-gray-2 sm:rounded-lg rounded-t-lg w-full w-full sm:max-w-[400px] sm:border dark:border-gray-1 border-gray-0'
+            )}
         >
             <div class="flex justify-center items-center p-5 relative">
                 <span class="dark:text-white text-black text-bold-12"
@@ -35,10 +41,14 @@ export const ConfirmDialog = ({
             </div>
             <hr class="dark:border-gray-2 border-gray-0 sm:block hidden" />
             <div
-                class="text-left text-bold-12 sm:py-8 py-5 p-5"
+                class=${clsx(
+                    contentClassName,
+                    'text-left text-bold-12 sm:py-8 py-5 p-5'
+                )}
                 dangerouslySetInnerHTML=${{ __html: message }}
             ></div>
-            <div class="flex justify-end gap-2 p-5 pt-0">
+            ${showButtons &&
+            html`<div class="flex justify-end gap-2 p-5 pt-0">
                 <${Button}
                     size="lg"
                     variant="outline"
@@ -56,7 +66,7 @@ export const ConfirmDialog = ({
                     onClick=${onOk}
                     >${okText}<//
                 >
-            </div>
+            </div>`}
         </div>
     </div>`;
 };

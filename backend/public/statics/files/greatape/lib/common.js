@@ -47,6 +47,7 @@ export const createBroadcastSpartRTC = (role, props) => {
         startAgain: props.startAgain,
         updateUi: props.updateUi,
         parentDcMessage: props.parentDcMessage,
+        onReceiveStatsData: props.onReceiveStatsData,
     });
 };
 
@@ -65,5 +66,6 @@ export const createAudienceSpartRTC = (role, props) => {
         startAgain: props.startAgain,
         updateUi: props.updateUi,
         parentDcMessage: props.parentDcMessage,
+        onReceiveStatsData: props.onReceiveStatsData,
     });
 };

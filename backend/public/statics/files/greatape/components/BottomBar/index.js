@@ -12,17 +12,13 @@ import {
     isMoreOptionsOpen,
     toggleAttendees,
     toggleMoreOptions,
+    toggleTroubleshooting,
 } from 'components';
 import { html } from 'htm';
 import { broadcastIsInTheMeeting } from '../../pages/meeting.js';
 
 export const BottomBar = () => {
-    return html`<${Container}
-        class=${clsx('transition-all', {
-            // 'max-h-0': !bottomBarVisible.value,
-            // 'max-h-[72px]': bottomBarVisible.value,
-        })}
-    >
+    return html`<${Container} class=${clsx('transition-all', {})}>
         <div
             class="w-full grid grid-cols-12 dark:bg-secondary-1-a py-3 pt-0 dark:text-gray-0 text-gray-2"
             id="bottom-bar"
@@ -99,7 +95,7 @@ export const BottomBarBottomSheet = () => {
                 >Is Your Future Distributed? Welcome to the Fediverse!</span
             >
             <div
-                class="truncate text-gray-2 dark:text-gray-0 max-w-full flex items-center gap-2 dark:bg-gray-2  bg-gray-0 rounded-full px-4 py-1"
+                class="mb-2 truncate text-gray-2 dark:text-gray-0 max-w-full flex items-center gap-2 dark:bg-gray-2  bg-gray-0 rounded-full px-4 py-1"
             >
                 <${Icon} icon="Link" class="min-w-[24px]" />
                 <span class="truncate flex-grow"
@@ -116,7 +112,7 @@ export const BottomBarBottomSheet = () => {
             >
                 <div
                     onClick="${handleAttendeesOpen}"
-                    class="w-fit transition-all select-none cursor-pointer flex items-center gap-2 rounded-md hover:bg-gray-0 hover:bg-opacity-10 hover:dark:bg-gray-2 hover:dark:bg-opacity-20 py-1 px-3"
+                    class="w-full transition-all select-none cursor-pointer flex items-center gap-2 rounded-md hover:bg-gray-0 hover:bg-opacity-10 hover:dark:bg-gray-2 hover:dark:bg-opacity-20 py-1 px-3"
                 >
                     <div class="relative">
                         <${Icon} icon="Avatar" />
@@ -130,6 +126,17 @@ export const BottomBarBottomSheet = () => {
                         >${attendeesCount}${' '}
                         attendee${attendeesCount > 1 ? 's' : ''}</span
                     >
+                </div>
+            <//>
+            <${Tooltip} label="Troubleshoot">
+                <div
+                    onClick=${toggleTroubleshooting}
+                    class="w-full transition-all select-none cursor-pointer flex items-center gap-2 rounded-md hover:bg-gray-0 hover:bg-opacity-10 hover:dark:bg-gray-2 hover:dark:bg-opacity-20 py-1 px-3"
+                >
+                    <div class="relative">
+                        <${Icon} icon="Troubleshoot" />
+                    </div>
+                    <span>Troubleshoot</span>
                 </div>
             <//>
             <${MoreControllers} />
