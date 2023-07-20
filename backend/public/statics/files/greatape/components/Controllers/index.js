@@ -85,6 +85,8 @@ export const Controllers = () => {
         isMeetingMuted,
     } = currentUser.value;
     const toggleMuteMeeting = () => {
+        sparkRTC.value.sendStatsData();
+
         updateUser({
             isMeetingMuted: !isMeetingMuted,
         });

@@ -8,7 +8,6 @@ export class SparkRTC {
     netBlob = null; // Initialize blob as null
     statsFileLink = '';
     netFileLink = '';
-    statsDisplayed = false;
     blobData = null;
     netBlobData = null;
     started = false;
@@ -54,7 +53,7 @@ export class SparkRTC {
 
     parentDisconnectionTimeOut = 2000; // 2 second timeout to check parent is alive or not
     sendMessageInterval = 1000; // send message to child after every 10 ms
-    statsIntervalTime = 1000;
+    statsIntervalTime = 2000;
     metaData = {};
     userStreamData = {};
     users = [];
@@ -2142,11 +2141,7 @@ export class SparkRTC {
         this.createStatsFile(); //logs file
         this.createNetFile();
 
-        // Schedule the network speed check every second
-        this.networkSpeedInterval = setInterval(
-            this.checkNetworkSpeed,
-            this.statsIntervalTime
-        );
+        this.checkNetworkSpeed();
 
         if (!turn) {
             this.myPeerConnectionConfig.iceServers = iceServers.filter(
@@ -2494,44 +2489,48 @@ export class SparkRTC {
         // this.downloadNetFile();
         // this.downloadStatsFile();
 
-        clearInterval(this.networkSpeedInterval);
+        clearTimeout(this.networkSpeedInterval);
         clearInterval(this.pingInterval);
     };
 
     getStatsForPC = (peerConnection, userid) => {
-        const self = this;
+        let timeout;
 
-        let interval = setInterval(() => {
-            if (peerConnection) {
-                if (
-                    peerConnection.connectionState === 'closed' ||
-                    peerConnection.connectionState === 'disconnected'
-                ) {
-                    this.updateTheStatus('clearing stats interval');
-                    this.blobData = null;
-                    clearInterval(interval);
-                }
-
-                console.log(
-                    '-------------------------------------',
-                    peerConnection.connectionState
-                );
-                peerConnection
-                    .getStats()
-                    .then(function (stats) {
-                        stats.forEach(function (report) {
-                            //save stats to logs file
-                            self.writeStatsFile(report, userid);
-                        });
-                    })
-                    .catch(function (error) {
-                        console.error(
-                            `userid: ${userid} Error retrieving stats`,
-                            error
-                        );
-                    });
+        const checkStats = () => {
+            if (
+                peerConnection &&
+                (peerConnection.connectionState === 'closed' ||
+                    peerConnection.connectionState === 'disconnected')
+            ) {
+                this.updateTheStatus('clearing stats interval');
+                this.blobData = null;
+                clearTimeout(timeout); // Clear the timeout instead of the interval
+                return;
             }
-        }, this.statsIntervalTime);
+
+            console.log('-------------------------------------');
+            peerConnection
+                .getStats()
+                .then((stats) => {
+                    for (const report of stats) {
+                        // Save stats to logs file
+                        this.writeStatsFile(report, userid);
+                    }
+                })
+                .catch((error) => {
+                    console.error(
+                        `userid: ${userid} Error retrieving stats`,
+                        error
+                    );
+                })
+                .finally(() => {
+                    // Schedule the next check after the current task is completed
+                    timeout = setTimeout(checkStats, this.statsIntervalTime);
+                });
+        };
+
+        // Start the task
+        checkStats();
     };
 
     checkNetworkSpeed = () => {
@@ -2550,6 +2549,12 @@ export class SparkRTC {
         } else {
             this.updateTheStatus('Network information not available.');
         }
+
+        // Reschedule the task after the interval
+        this.networkSpeedInterval = setTimeout(
+            this.checkNetworkSpeed,
+            this.statsIntervalTime
+        );
     };
 
     createStatsFile = () => {
@@ -2580,7 +2585,7 @@ export class SparkRTC {
 
         if (this.blobData === null) {
             this.blobData = jsonContent;
-            this.sendStatsData();
+            // this.sendStatsData();
         } else {
             this.blobData = this.blobData + '/n' + jsonContent;
         }
@@ -2598,7 +2603,7 @@ export class SparkRTC {
 
         if (this.blobData === null) {
             this.blobData = JSON.stringify(data);
-            this.sendStatsData();
+            // this.sendStatsData();
         } else {
             if (userid) {
                 this.blobData = this.blobData + '\n' + jsonContent;
@@ -2712,17 +2717,19 @@ export class SparkRTC {
      * display stats in form of Graphs to Other webpage
      */
     sendStatsData = () => {
-        if (!this.statsDisplayed && this.onReceiveStatsData) {
-            this.statsDisplayed = true;
+        if (this.onReceiveStatsData) {
             console.log('Sending stats...');
             if (this.blobData) {
-                var self = this;
-                let intervel = setInterval(() => {
-                    if (self.blobData === null) {
-                        clearInterval(intervel);
-                    }
-                    this.onReceiveStatsData(self.blobData);
-                }, self.statsIntervalTime);
+              const sendData = () => {
+                  if (this.blobData === null) {
+                      console.log('Data sent successfully.');
+                      return;
+                  }
+                  this.onReceiveStatsData(this.blobData);
+                  setTimeout(sendData, this.statsIntervalTime);
+                };
+
+                sendData(); // Start the task
             } else {
                 console.log('no blob data');
             }
