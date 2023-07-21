@@ -15,7 +15,7 @@ import {
     toggleTroubleshooting,
 } from 'components';
 import { html } from 'htm';
-import { broadcastIsInTheMeeting } from '../../pages/meeting.js';
+import { broadcastIsInTheMeeting, isDebugMode } from '../../pages/meeting.js';
 
 export const BottomBar = () => {
     return html`<${Container} class=${clsx('transition-all', {})}>
@@ -128,7 +128,8 @@ export const BottomBarBottomSheet = () => {
                     >
                 </div>
             <//>
-            <${Tooltip} label="Troubleshoot">
+            ${isDebugMode.value &&
+            html`<${Tooltip} label="Troubleshoot">
                 <div
                     onClick=${toggleTroubleshooting}
                     class="w-full transition-all select-none cursor-pointer flex items-center gap-2 rounded-md hover:bg-gray-0 hover:bg-opacity-10 hover:dark:bg-gray-2 hover:dark:bg-opacity-20 py-1 px-3"
@@ -138,7 +139,7 @@ export const BottomBarBottomSheet = () => {
                     </div>
                     <span>Troubleshoot</span>
                 </div>
-            <//>
+            <//>`}
             <${MoreControllers} />
         </div>
     <//>`;

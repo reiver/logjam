@@ -16,6 +16,11 @@ import { isAttendeesOpen } from '../components/Attendees/index.js';
 import { Roles, createSparkRTC, getWsUrl } from '../lib/common.js';
 import { GraphGenerator } from '../stats/statsGraph.js';
 
+export const isDebugMode = signal(
+    (
+        new URLSearchParams(window.location.search).get('debug') || ''
+    ).toLowerCase() === 'true'
+);
 export const statsDataOpen = signal(false);
 export const statsData = signal('');
 export const sparkRTC = signal(null);
