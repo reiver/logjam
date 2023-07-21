@@ -9,6 +9,7 @@ import {
 import { html } from 'htm';
 import {
     currentUser,
+    isDebugMode,
     onStartShareScreen,
     onStopShareScreen,
     raiseHandMaxLimitReached,
@@ -142,14 +143,15 @@ export const Controllers = () => {
 
     if (!showControllers) return null;
     return html`<div class="flex gap-5 py-3 pt-0">
-        <${Tooltip} label="Troubleshoot">
+        ${isDebugMode.value &&
+        html`<${Tooltip} label="Troubleshoot">
             <${IconButton}
                 onClick=${toggleTroubleshooting}
                 class="hidden sm:flex"
             >
                 <${Icon} icon="Troubleshoot" />
             <//>
-        <//>
+        <//>`}
 
         <${Tooltip} label=${isMeetingMuted ? 'Listen' : 'Deafen'}>
             <${IconButton}
@@ -265,11 +267,12 @@ export const MoreControllers = () => {
         }
     };
     return html`<div class="flex gap-5 py-5 justify-center">
-        <${Tooltip} label="Troubleshoot">
+        ${isDebugMode.value &&
+        html`<${Tooltip} label="Troubleshoot">
             <${IconButton} onClick=${toggleTroubleshooting}>
                 <${Icon} icon="Troubleshoot" />
             <//>
-        <//>
+        <//>`}
         <${Tooltip} label=${isMeetingMuted ? 'Listen' : 'Deafen'}>
             <${IconButton}
                 variant=${isMeetingMuted && 'danger'}
