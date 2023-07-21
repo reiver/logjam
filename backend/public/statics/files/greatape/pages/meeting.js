@@ -29,8 +29,8 @@ export const raiseHandMaxLimitReached = computed(() => {
     );
 });
 
-const url = `stats/index.html`;
-var targetWindow = window.open(url, '_blank');
+// const url = `stats/index.html`;
+// var targetWindow = window.open(url, '_blank');
 export const currentUser = signal({
     showControllers: true,
     isHost: false,
@@ -102,11 +102,12 @@ const log = (tag, data) => {
         console.log('[', date, '] ', tag);
     }
 };
-const setupSignalingSocket = async (host, name, room) => {
+const setupSignalingSocket = async (host, name, room, debug) => {
     await sparkRTC.value.setupSignalingSocket(
         getWsUrl(host),
         JSON.stringify({ name, email: '' }),
-        room
+        room,
+        debug
     );
 };
 const start = async () => {
@@ -144,6 +145,7 @@ const Meeting = () => {
         var role = queryParams.get('role');
         const room = queryParams.get('room');
         const host = queryParams.get('host');
+        const debug = queryParams.get('debug');
 
         if (role === null || role === '') {
             role = Roles.AUDIENCE; //by default set role to Audience
@@ -281,7 +283,7 @@ const Meeting = () => {
                 startAgain: async () => {
                     if (sparkRTC.value) {
                         //Init socket and start sparkRTC
-                        await setupSignalingSocket(host, name, room);
+                        await setupSignalingSocket(host, name, room, debug);
                         await start();
                     }
                 },
@@ -380,7 +382,7 @@ const Meeting = () => {
                     });
                 },
                 onReceiveStatsData: (data) => {
-                    if (targetWindow) targetWindow.postMessage(data);
+                    // if (targetWindow) targetWindow.postMessage(data);
                     if (statsDataOpen.value) {
                         const graphGenerator = new GraphGenerator();
                         graphGenerator.parseJSONData(data);
@@ -392,7 +394,7 @@ const Meeting = () => {
 
             if (sparkRTC.value) {
                 //Init socket and start sparkRTC
-                await setupSignalingSocket(host, name, room);
+                await setupSignalingSocket(host, name, room, debug);
                 await start();
             }
         };

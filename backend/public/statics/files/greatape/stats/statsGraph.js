@@ -224,7 +224,7 @@ export class GraphGenerator {
     }
 
     createGraph() {
-        this.createNetworkLatencyGraph()
+        this.createNetworkLatencyGraph();
         this.createDownLinkGraph();
         this.createJitterGraph();
         this.createFPSGraph();
@@ -233,7 +233,7 @@ export class GraphGenerator {
     }
 
     displayGraph() {
-        const config = { responsive: true };
+        const config = { responsive: true, displayModeBar: false };
         Plotly.newPlot(
             'downlink',
             this.downlinkFig.data,

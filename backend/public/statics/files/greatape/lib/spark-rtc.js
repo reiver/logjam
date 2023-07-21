@@ -25,6 +25,7 @@ export class SparkRTC {
     myName = 'NoName';
     roomName = 'SparkRTC';
     myUsername = 'NoUsername';
+    debug = false;
     lastBroadcasterId = '';
     broadcastingApproved = false;
     /**@type {{[key:string]:RTCPeerConnection}}*/
@@ -640,7 +641,7 @@ export class SparkRTC {
      * @param {String} roomName - room identifier
      * @returns
      */
-    setupSignalingSocket = (url, myName, roomName) => {
+    setupSignalingSocket = (url, myName, roomName, debug) => {
         this.updateTheStatus(
             `[setupSignalingSocket] url=${url} myName=${myName} roomName=${roomName}`
         );
@@ -651,6 +652,7 @@ export class SparkRTC {
             }
             if (myName) this.myName = myName;
             if (roomName) this.roomName = roomName;
+            if (debug) this.debug = debug;
 
             this.updateTheStatus(`[setupSignalingSocket] installing socket`);
             this.socketURL = url + '?room=' + this.roomName;
@@ -2494,130 +2496,145 @@ export class SparkRTC {
     };
 
     getStatsForPC = (peerConnection, userid) => {
-        let timeout;
+        if (this.debug) {
+            let timeout;
 
-        const checkStats = () => {
-            if (
-                peerConnection &&
-                (peerConnection.connectionState === 'closed' ||
-                    peerConnection.connectionState === 'disconnected')
-            ) {
-                this.updateTheStatus('clearing stats interval');
-                this.blobData = null;
-                clearTimeout(timeout); // Clear the timeout instead of the interval
-                return;
-            }
+            const checkStats = () => {
+                if (
+                    peerConnection &&
+                    (peerConnection.connectionState === 'closed' ||
+                        peerConnection.connectionState === 'disconnected')
+                ) {
+                    this.updateTheStatus('clearing stats interval');
+                    this.blobData = null;
+                    clearTimeout(timeout); // Clear the timeout instead of the interval
+                    return;
+                }
 
-            console.log('-------------------------------------');
-            peerConnection
-                .getStats()
-                .then((stats) => {
-                    for (const report of stats) {
-                        // Save stats to logs file
-                        this.writeStatsFile(report, userid);
-                    }
-                })
-                .catch((error) => {
-                    console.error(
-                        `userid: ${userid} Error retrieving stats`,
-                        error
-                    );
-                })
-                .finally(() => {
-                    // Schedule the next check after the current task is completed
-                    timeout = setTimeout(checkStats, this.statsIntervalTime);
-                });
-        };
+                console.log('-------------------------------------');
+                peerConnection
+                    .getStats()
+                    .then((stats) => {
+                        for (const report of stats) {
+                            // Save stats to logs file
+                            this.writeStatsFile(report, userid);
+                        }
+                    })
+                    .catch((error) => {
+                        console.error(
+                            `userid: ${userid} Error retrieving stats`,
+                            error
+                        );
+                    })
+                    .finally(() => {
+                        // Schedule the next check after the current task is completed
+                        timeout = setTimeout(
+                            checkStats,
+                            this.statsIntervalTime
+                        );
+                    });
+            };
 
-        // Start the task
-        checkStats();
+            // Start the task
+            checkStats();
+        }
     };
 
     checkNetworkSpeed = () => {
-        var connection =
-            navigator.connection ||
-            navigator.mozConnection ||
-            navigator.webkitConnection;
+        if (this.debug) {
+            var connection =
+                navigator.connection ||
+                navigator.mozConnection ||
+                navigator.webkitConnection;
 
-        if (connection && navigator.onLine) {
-            const con = {
-                networkType: connection.effectiveType,
-                downlink: connection.downlink,
-                rtt: connection.rtt,
-            };
-            this.writeNetworkLogs(con);
-        } else {
-            this.updateTheStatus('Network information not available.');
+            if (connection && navigator.onLine) {
+                const con = {
+                    networkType: connection.effectiveType,
+                    downlink: connection.downlink,
+                    rtt: connection.rtt,
+                };
+                this.writeNetworkLogs(con);
+            } else {
+                this.updateTheStatus('Network information not available.');
+            }
+
+            // Reschedule the task after the interval
+            this.networkSpeedInterval = setTimeout(
+                this.checkNetworkSpeed,
+                this.statsIntervalTime
+            );
         }
-
-        // Reschedule the task after the interval
-        this.networkSpeedInterval = setTimeout(
-            this.checkNetworkSpeed,
-            this.statsIntervalTime
-        );
     };
 
     createStatsFile = () => {
-        const name = this.role + '_' + this.myName;
-        // Create a link element
-        this.statsFileLink = document.createElement('a');
-        this.statsFileLink.download = name + '_stats.txt'; // File name
+        if (this.debug) {
+            const name = this.role + '_' + this.myName;
+            // Create a link element
+            this.statsFileLink = document.createElement('a');
+            this.statsFileLink.download = name + '_stats.txt'; // File name
+        }
     };
 
     createNetFile = () => {
-        const name = this.role + '_' + this.myName;
-        // Create a link element
-        this.netFileLink = document.createElement('a');
-        this.netFileLink.download = name + '_net.txt'; // File name
+        if (this.debug) {
+            const name = this.role + '_' + this.myName;
+            // Create a link element
+            this.netFileLink = document.createElement('a');
+            this.netFileLink.download = name + '_net.txt'; // File name
+        }
     };
 
     writeNetworkLogs = (data) => {
-        data.date = new Date().toLocaleTimeString();
+        if (this.debug) {
+            data.date = new Date().toLocaleTimeString();
 
-        const jsonContent = JSON.stringify(data);
-        const separator = '\n\n****************\n\n';
+            const jsonContent = JSON.stringify(data);
+            const separator = '\n\n****************\n\n';
 
-        if (this.netBlobData === null) {
-            this.netBlobData = JSON.stringify(data);
-        } else {
-            this.netBlobData = this.netBlobData + separator + jsonContent;
+            if (this.netBlobData === null) {
+                this.netBlobData = JSON.stringify(data);
+            } else {
+                this.netBlobData = this.netBlobData + separator + jsonContent;
+            }
+
+            if (this.blobData === null) {
+                this.blobData = jsonContent;
+                // this.sendStatsData();
+            } else {
+                this.blobData = this.blobData + '/n' + jsonContent;
+            }
+
+            // Create a new Blob object with the content
+            this.netBlob = new Blob([this.netBlobData], {
+                type: 'application/json',
+            });
         }
-
-        if (this.blobData === null) {
-            this.blobData = jsonContent;
-            // this.sendStatsData();
-        } else {
-            this.blobData = this.blobData + '/n' + jsonContent;
-        }
-
-        // Create a new Blob object with the content
-        this.netBlob = new Blob([this.netBlobData], {
-            type: 'application/json',
-        });
     };
 
     writeStatsFile = (data, userid) => {
-        data.date = new Date().toLocaleTimeString();
+        if (this.debug) {
+            data.date = new Date().toLocaleTimeString();
 
-        const jsonContent = JSON.stringify(data);
+            const jsonContent = JSON.stringify(data);
 
-        if (this.blobData === null) {
-            this.blobData = JSON.stringify(data);
-            // this.sendStatsData();
-        } else {
-            if (userid) {
-                this.blobData = this.blobData + '\n' + jsonContent;
+            if (this.blobData === null) {
+                this.blobData = JSON.stringify(data);
+                // this.sendStatsData();
+            } else {
+                if (userid) {
+                    this.blobData = this.blobData + '\n' + jsonContent;
+                }
             }
-        }
 
-        // Create a new Blob object with the content
-        this.blob = new Blob([this.blobData], {
-            type: 'application/json',
-        });
+            // Create a new Blob object with the content
+            this.blob = new Blob([this.blobData], {
+                type: 'application/json',
+            });
+        }
     };
 
     downloadStatsFile = () => {
-        if (this.blob !== null) {
+        if (this.blob !== null && this.debug) {
             // Set the href of the link to the URL of the Blob object
             this.statsFileLink.href = URL.createObjectURL(this.blob);
 
@@ -2630,7 +2647,7 @@ export class SparkRTC {
     };
 
     downloadNetFile = () => {
-        if (this.netBlob !== null) {
+        if (this.netBlob !== null && this.debug) {
             // Set the href of the link to the URL of the Blob object
             this.netFileLink.href = URL.createObjectURL(this.netBlob);
 
@@ -2717,16 +2734,16 @@ export class SparkRTC {
      * display stats in form of Graphs to Other webpage
      */
     sendStatsData = () => {
-        if (this.onReceiveStatsData) {
+        if (this.onReceiveStatsData && this.debug) {
             console.log('Sending stats...');
             if (this.blobData) {
-              const sendData = () => {
-                  if (this.blobData === null) {
-                      console.log('Data sent successfully.');
-                      return;
-                  }
-                  this.onReceiveStatsData(this.blobData);
-                  setTimeout(sendData, this.statsIntervalTime);
+                const sendData = () => {
+                    if (this.blobData === null) {
+                        console.log('Data sent successfully.');
+                        return;
+                    }
+                    this.onReceiveStatsData(this.blobData);
+                    setTimeout(sendData, this.statsIntervalTime);
                 };
 
                 sendData(); // Start the task

@@ -22,6 +22,7 @@ export const toggleMoreOptions = () =>
     (isMoreOptionsOpen.value = !isMoreOptionsOpen.value);
 
 export const toggleTroubleshooting = () => {
+    sparkRTC.value.sendStatsData();
     statsDataOpen.value = true;
     makeDialog(
         'confirm',
@@ -85,8 +86,6 @@ export const Controllers = () => {
         isMeetingMuted,
     } = currentUser.value;
     const toggleMuteMeeting = () => {
-        sparkRTC.value.sendStatsData();
-
         updateUser({
             isMeetingMuted: !isMeetingMuted,
         });
