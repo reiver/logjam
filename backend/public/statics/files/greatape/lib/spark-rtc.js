@@ -2707,6 +2707,7 @@ export class SparkRTC {
         this.startAgain = options.startAgain;
         this.updateUi = options.updateUi;
         this.parentDcMessage = options.parentDcMessage;
+        this.onReceiveStatsData = options.onReceiveStatsData;
 
         this.checkBrowser(); //detect browser
         this.getSupportedCodecs();
@@ -2716,23 +2717,22 @@ export class SparkRTC {
      * display stats in form of Graphs to Other webpage
      */
     sendStatsData = () => {
-        console.log('Sending stats...');
-        if (this.blobData) {
-            const url = `stats/index.html`;
-            const targetWindow = window.open(url, '_blank');
+        if (this.onReceiveStatsData) {
+            console.log('Sending stats...');
+            if (this.blobData) {
+              const sendData = () => {
+                  if (this.blobData === null) {
+                      console.log('Data sent successfully.');
+                      return;
+                  }
+                  this.onReceiveStatsData(this.blobData);
+                  setTimeout(sendData, this.statsIntervalTime);
+                };
 
-            const sendData = () => {
-                if (this.blobData === null) {
-                    console.log('Data sent successfully.');
-                    return;
-                }
-                targetWindow.postMessage(this.blobData);
-                setTimeout(sendData, this.statsIntervalTime);
-            };
-
-            sendData(); // Start the task
-        } else {
-            console.log('no blob data');
+                sendData(); // Start the task
+            } else {
+                console.log('no blob data');
+            }
         }
     };
 }

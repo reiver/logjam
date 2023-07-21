@@ -14,7 +14,10 @@ import { html } from 'htm';
 import { useEffect } from 'preact';
 import { isAttendeesOpen } from '../components/Attendees/index.js';
 import { Roles, createSparkRTC, getWsUrl } from '../lib/common.js';
+import { GraphGenerator } from '../stats/statsGraph.js';
 
+export const statsDataOpen = signal(false);
+export const statsData = signal('');
 export const sparkRTC = signal(null);
 export const meetingStatus = signal(true);
 export const broadcastIsInTheMeeting = signal(true);
@@ -25,6 +28,9 @@ export const raiseHandMaxLimitReached = computed(() => {
         raisedHandsCount.value === sparkRTC.value.maxRaisedHands
     );
 });
+
+const url = `stats/index.html`;
+var targetWindow = window.open(url, '_blank');
 export const currentUser = signal({
     showControllers: true,
     isHost: false,
@@ -360,8 +366,6 @@ const Meeting = () => {
                     log(`Connection Status: `, status);
                 },
                 updateUi: () => {
-                    //Todo Nariman
-                    //show original controllers i:e, rise hand, reload, mute meeting
                     updateUser({
                         showControllers: true,
                         isStreamming: false,
@@ -369,13 +373,20 @@ const Meeting = () => {
                     });
                 },
                 parentDcMessage: () => {
-                    // Todo Nariman
-                    // show message: You've Got disconnected
                     makeDialog('info', {
                         message: 'You’ve got disconnected',
                         icon: 'Close',
                         variant: 'danger',
                     });
+                },
+                onReceiveStatsData: (data) => {
+                    if (targetWindow) targetWindow.postMessage(data);
+                    if (statsDataOpen.value) {
+                        const graphGenerator = new GraphGenerator();
+                        graphGenerator.parseJSONData(data);
+                        graphGenerator.createGraph();
+                        graphGenerator.displayGraph();
+                    }
                 },
             });
 
