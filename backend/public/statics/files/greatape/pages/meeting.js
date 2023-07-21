@@ -150,7 +150,6 @@ const Meeting = () => {
         var role = queryParams.get('role');
         const room = queryParams.get('room');
         const host = queryParams.get('host');
-        const debug = queryParams.get('debug');
 
         if (role === null || role === '') {
             role = Roles.AUDIENCE; //by default set role to Audience
@@ -288,7 +287,12 @@ const Meeting = () => {
                 startAgain: async () => {
                     if (sparkRTC.value) {
                         //Init socket and start sparkRTC
-                        await setupSignalingSocket(host, name, room, debug);
+                        await setupSignalingSocket(
+                            host,
+                            name,
+                            room,
+                            isDebugMode.value
+                        );
                         await start();
                     }
                 },
@@ -399,7 +403,7 @@ const Meeting = () => {
 
             if (sparkRTC.value) {
                 //Init socket and start sparkRTC
-                await setupSignalingSocket(host, name, room, debug);
+                await setupSignalingSocket(host, name, room, isDebugMode.value);
                 await start();
             }
         };

@@ -661,6 +661,7 @@ export class SparkRTC {
             this.roomName = roomName || this.roomName;
             this.debug = debug || this.debug;
 
+            this.updateTheStatus('debugMode', this.debug);
             this.updateTheStatus(`[setupSignalingSocket] installing socket`);
             this.socketURL = url + '?room=' + this.roomName;
 
@@ -2592,6 +2593,7 @@ export class SparkRTC {
     };
 
     getStatsForPC = (peerConnection, userid) => {
+        this.updateTheStatus('debugMode Stats', this.debug);
         if (this.debug) {
             let timeout;
 
