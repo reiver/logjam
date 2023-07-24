@@ -10,12 +10,15 @@ type RestResponseHelper struct {
 }
 
 func (r *RestResponseHelper) Write(rw http.ResponseWriter, response any, statusCode int) error {
+	if response == nil {
+		response = struct{}{}
+	}
 	if strVersion, isStr := response.(string); isStr {
-
 		rw.Header().Add("Content-Type", "text/html")
 		rw.WriteHeader(statusCode)
 		_, _ = rw.Write([]byte(strVersion))
 	} else {
+		rw.WriteHeader(statusCode)
 		bytes, err := json.Marshal(response)
 		if err != nil {
 			return err

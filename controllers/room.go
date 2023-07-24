@@ -12,13 +12,15 @@ type RoomWSController struct {
 	logger    contracts.ILogger
 	socketSVC contracts.ISocketService
 	roomRepo  contracts.IRoomRepository
+	anRepo    contracts.IAuxiliaryNodeServiceRepository
 }
 
-func NewRoomWSController(socketSVC contracts.ISocketService, roomRepo contracts.IRoomRepository, logger contracts.ILogger) *RoomWSController {
+func NewRoomWSController(socketSVC contracts.ISocketService, roomRepo contracts.IRoomRepository, anRepo contracts.IAuxiliaryNodeServiceRepository, logger contracts.ILogger) *RoomWSController {
 	return &RoomWSController{
 		logger:    logger,
 		socketSVC: socketSVC,
 		roomRepo:  roomRepo,
+		anRepo:    anRepo,
 	}
 }
 
@@ -333,6 +335,48 @@ func (c *RoomWSController) ReconnectChildren(ctx *models.WSContext) {
 	_ = c.socketSVC.Send(event, childrenIdList...)
 }
 
+func (c *RoomWSController) SendOfferToAN(ctx *models.WSContext) {
+	msg := make(map[string]any)
+	err := json.Unmarshal(ctx.PureMessage, &msg)
+	if err != nil {
+		c.log(contracts.LError, err.Error())
+		return
+	}
+	err = c.anRepo.SendOffer(ctx.RoomId, ctx.SocketID, msg["sdp"])
+	if err != nil {
+		c.log(contracts.LError, err.Error())
+		return
+	}
+}
+
+func (c *RoomWSController) SendAnswerToAN(ctx *models.WSContext) {
+	msg := make(map[string]any)
+	err := json.Unmarshal(ctx.PureMessage, &msg)
+	if err != nil {
+		c.log(contracts.LError, err.Error())
+		return
+	}
+	err = c.anRepo.SendAnswer(ctx.RoomId, ctx.SocketID, msg["sdp"])
+	if err != nil {
+		c.log(contracts.LError, err.Error())
+		return
+	}
+}
+
+func (c *RoomWSController) SendICECandidateToAN(ctx *models.WSContext) {
+	msg := make(map[string]any)
+	err := json.Unmarshal(ctx.PureMessage, &msg)
+	if err != nil {
+		c.log(contracts.LError, err.Error())
+		return
+	}
+	err = c.anRepo.SendICECandidate(ctx.RoomId, ctx.SocketID, msg["candidate"])
+	if err != nil {
+		c.log(contracts.LError, err.Error())
+		return
+	}
+}
+
 func (c *RoomWSController) DefaultHandler(ctx *models.WSContext) {
 	id, err := strconv.Atoi(ctx.ParsedMessage.Target)
 	if err != nil {
@@ -370,5 +414,5 @@ func (c *RoomWSController) DefaultHandler(ctx *models.WSContext) {
 }
 
 func (c *RoomWSController) log(level contracts.TLogLevel, msg ...string) {
-	_ = c.logger.Log("room_ctrl", level, msg...)
+	_ = c.logger.Log("room_ws_ctrl", level, msg...)
 }

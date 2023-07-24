@@ -28,3 +28,11 @@ type IRoomRepository interface {
 	GetMembersList(roomId string) ([]dto.MemberDTO, error)
 	GetChildrenIdList(roomId string, id uint64) ([]uint64, error)
 }
+
+type IAuxiliaryNodeServiceRepository interface {
+	CreatePeer(roomId string, id uint64, canPublish bool, isCaller bool) error
+	SendICECandidate(roomId string, id uint64, iceCandidate any) error
+	SendAnswer(roomId string, peerId uint64, answer any) error
+	SendOffer(roomId string, peerId uint64, offer any) error
+	ClosePeer(roomId string, id uint64) error
+}

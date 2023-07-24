@@ -1,4 +1,4 @@
-package repositories
+package roomRepository
 
 import (
 	"errors"
@@ -204,6 +204,8 @@ func (r *roomRepository) InsertMemberToTree(roomId string, memberId uint64, isAu
 			Children:        []*models.PeerModel{},
 			IsAuxiliaryNode: false,
 		})
+		parentId = &(*r.rooms[roomId].AuxiliaryNode).ID
+		return parentId, nil
 	}
 	lastCheckedLevel := 0
 start:
@@ -240,56 +242,6 @@ start:
 	}
 	return parentId, nil
 }
-
-/*
-func (r *roomRepository) InsertMemberToTree(roomId string, memberId uint64, isAuxiliaryNode bool) (parentId *uint64, err error) {
-	r.Lock()
-	defer r.Unlock()
-	if !r.doesRoomExists(roomId) {
-		return nil, errors.New("room doesn't exists")
-	}
-	r.rooms[roomId].Lock()
-	defer r.rooms[roomId].Unlock()
-	lastCheckedLevel := 0
-start:
-	levelNodes, err := r.rooms[roomId].GetLevelMembers(uint(lastCheckedLevel), false)
-	if err != nil {
-		return nil, err
-	}
-	lastCheckedLevel++
-	if len(levelNodes) == 0 {
-		return nil, errors.New("no node to connect to")
-	}
-	found := false
-	for _, node := range levelNodes {
-		if (*node).Children[0] == nil {
-			(*node).Children[0] = &models.PeerModel{
-				ID:              memberId,
-				IsConnected:     true,
-				Children:        [2]*models.PeerModel{},
-				IsAuxiliaryNode: isAuxiliaryNode,
-			}
-			parentId = &(*node).ID
-			found = true
-		} else if (*node).Children[1] == nil {
-			(*node).Children[1] = &models.PeerModel{
-				ID:              memberId,
-				IsConnected:     true,
-				Children:        [2]*models.PeerModel{},
-				IsAuxiliaryNode: isAuxiliaryNode,
-			}
-			parentId = &(*node).ID
-			found = true
-		}
-		if found {
-			break
-		}
-	}
-	if !found {
-		goto start
-	}
-	return parentId, nil
-}*/
 
 func (r *roomRepository) UpdateTurnStatus(roomId string, id uint64, newState bool) error {
 	r.Lock()
@@ -431,21 +383,6 @@ func (r *roomRepository) RemoveMember(roomId string, memberId uint64) (wasBroadc
 	}()
 	r.rooms[roomId].Lock()
 	defer r.rooms[roomId].Unlock()
-
-	return false, nil, nil
-}
-
-/*func (r *roomRepository) RemoveMember(roomId string, memberId uint64) (wasBroadcaster bool, nodeChildrenIdList []uint64, err error) {
-	r.Lock()
-	defer r.Unlock()
-	if !r.doesRoomExists(roomId) {
-		return false, nil, errors.New("room doesn't exists")
-	}
-	defer func() {
-		delete(r.rooms[roomId].Members, memberId)
-	}()
-	r.rooms[roomId].Lock()
-	defer r.rooms[roomId].Unlock()
 	if r.rooms[roomId].PeersTree.ID == memberId {
 		if len(r.rooms[roomId].PeersTree.Children) > 0 {
 			nodeChildrenIdList = append(nodeChildrenIdList, r.rooms[roomId].PeersTree.Children[0].ID)
@@ -457,12 +394,10 @@ func (r *roomRepository) RemoveMember(roomId string, memberId uint64) (wasBroadc
 		return true, nodeChildrenIdList, nil
 	}
 	var lastNodesList []**models.PeerModel
-	var targetNode ***models.PeerModel
+	//var targetNode ***models.PeerModel
 	lastCheckedLevel := uint(0)
 
-	if !r.rooms[roomId].PeersTree.IsConnected {
-		lastCheckedLevel++
-	}
+	found := false
 start:
 	lastNodesList, err = r.rooms[roomId].GetLevelMembers(lastCheckedLevel, true)
 	if len(lastNodesList) == 0 {
@@ -470,25 +405,22 @@ start:
 	}
 	lastCheckedLevel++
 	for _, node := range lastNodesList {
-		if (*node).ID == memberId {
-			targetNode = &node
-			break
+		for i, nodeChild := range (*node).Children {
+			if nodeChild.ID == memberId {
+				for _, parentLostChild := range nodeChild.Children {
+					nodeChildrenIdList = append(nodeChildrenIdList, parentLostChild.ID)
+				}
+				(*node).Children = append((*node).Children[:i], (*node).Children[i+1:]...)
+				found = true
+				break
+			}
 		}
 	}
-
-	if targetNode != nil {
-		if len((*(*targetNode)).Children) > 0 {
-			nodeChildrenIdList = append(nodeChildrenIdList, (*(*targetNode)).Children[0].ID)
-		}
-		if len((*(*targetNode)).Children) > 1 {
-			nodeChildrenIdList = append(nodeChildrenIdList, (*(*targetNode)).Children[1].ID)
-		}
-		**targetNode = nil
-		return false, nodeChildrenIdList, nil
-	} else {
+	if !found {
 		goto start
 	}
-}*/
+	return false, nodeChildrenIdList, nil
+}
 
 func (r *roomRepository) GetChildrenIdList(roomId string, id uint64) ([]uint64, error) {
 	r.Lock()

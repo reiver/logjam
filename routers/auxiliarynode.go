@@ -21,5 +21,10 @@ func (r *auxiliaryNodeRouter) registerRoutes(router *mux.Router) {
 	router.HandleFunc(prefix+"/ice", r.ctrl.SendICECandidate).
 		Methods(http.MethodPost)
 	router.HandleFunc(prefix+"/join", r.ctrl.Join).
-		Methods(http.MethodGet)
+		Methods(http.MethodPost)
+	router.HandleFunc(prefix+"/offer", r.ctrl.SendOffer).
+		Methods(http.MethodPost)
+	router.HandleFunc(prefix+"/answer", r.ctrl.SendAnswer).
+		Methods(http.MethodPost)
+
 }

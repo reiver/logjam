@@ -8,18 +8,21 @@ import (
 	"github.com/sparkscience/logjam/models"
 	"github.com/sparkscience/logjam/models/contracts"
 	"net/http"
+	"strconv"
 )
 
 type roomWSRouter struct {
 	roomCtrl  *controllers.RoomWSController
+	roomRepo  contracts.IRoomRepository
 	upgrader  websocket.Upgrader
 	socketSVC contracts.ISocketService
 	logger    contracts.ILogger
 }
 
-func newRoomWSRouter(roomCtrl *controllers.RoomWSController, socketSVC contracts.ISocketService, logger contracts.ILogger) IRouteRegistrar {
+func newRoomWSRouter(roomCtrl *controllers.RoomWSController, roomRepo contracts.IRoomRepository, socketSVC contracts.ISocketService, logger contracts.ILogger) IRouteRegistrar {
 	return &roomWSRouter{
 		roomCtrl:  roomCtrl,
+		roomRepo:  roomRepo,
 		socketSVC: socketSVC,
 		logger:    logger,
 		upgrader: websocket.Upgrader{
@@ -91,7 +94,7 @@ func (r *roomWSRouter) handleEvent(ctx *models.WSContext) {
 	if ctx.ParsedMessage == nil || len(ctx.PureMessage) <= 2 {
 		return
 	}
-	_ = r.logger.Log("ws_router", contracts.LDebug, "event: "+ctx.ParsedMessage.Type)
+	_ = r.logger.Log("ws_router", contracts.LDebug, "ID["+strconv.FormatUint(ctx.SocketID, 10)+"] event: "+ctx.ParsedMessage.Type)
 	switch ctx.ParsedMessage.Type {
 	case "start":
 		{
@@ -154,7 +157,43 @@ func (r *roomWSRouter) handleEvent(ctx *models.WSContext) {
 		}
 	default:
 		{
-			r.roomCtrl.DefaultHandler(ctx)
+			room, err := r.roomRepo.GetRoom(ctx.RoomId)
+			if err != nil {
+				println(err.Error())
+			} else if room != nil {
+				if room.AuxiliaryNode != nil {
+					if ctx.ParsedMessage.Target == strconv.FormatUint(models.AuxiliaryNodeId, 10) {
+						switch ctx.ParsedMessage.Type {
+						case "video-answer":
+							{
+								r.roomCtrl.SendAnswerToAN(ctx)
+								break
+							}
+						case "video-offer":
+							{
+								r.roomCtrl.SendOfferToAN(ctx)
+								break
+							}
+						case "new-ice-candidate":
+							{
+								r.roomCtrl.SendICECandidateToAN(ctx)
+								break
+							}
+						default:
+							{
+								r.roomCtrl.DefaultHandler(ctx)
+								break
+							}
+						}
+					} else {
+						r.roomCtrl.DefaultHandler(ctx)
+					}
+				} else {
+					r.roomCtrl.DefaultHandler(ctx)
+				}
+			} else {
+				r.roomCtrl.DefaultHandler(ctx)
+			}
 			break
 		}
 	}

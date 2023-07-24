@@ -3,7 +3,8 @@ package main
 import (
 	"github.com/sparkscience/logjam/controllers"
 	"github.com/sparkscience/logjam/models/contracts"
-	"github.com/sparkscience/logjam/models/repositories"
+	"github.com/sparkscience/logjam/models/repositories/auxiliarynode"
+	roomRepository "github.com/sparkscience/logjam/models/repositories/room"
 	"github.com/sparkscience/logjam/routers"
 	"github.com/sparkscience/logjam/services"
 	"github.com/sparkscience/logjam/services/logger"
@@ -16,16 +17,18 @@ type App struct {
 	srcListenAddr string
 }
 
-func (app *App) Init(srcListenAddr string, prodMode bool) {
+func (app *App) Init(srcListenAddr string, prodMode bool, anSVCAddr string) {
 	app.Logger = logger.NewSTDOUTLogger(prodMode)
 	_ = app.Logger.Log("app", contracts.LInfo, "initializing logjam ..")
 	app.srcListenAddr = srcListenAddr
 
-	roomRepo := repositories.NewRoomRepository()
+	anSVCRepo := auxiliarynode.NewAuxiliaryNodeRepository(anSVCAddr)
+	roomRepo := roomRepository.NewRoomRepository()
 	socketSVC := services.NewSocketService(app.Logger)
-	roomWSCtrl := controllers.NewRoomWSController(socketSVC, roomRepo, app.Logger)
-	auxiliaryNodeCtrl := controllers.NewAuxiliaryNodeController(roomRepo, socketSVC, app.Logger)
-	app.Router = routers.NewRouter(roomWSCtrl, auxiliaryNodeCtrl, socketSVC, app.Logger)
+	roomWSCtrl := controllers.NewRoomWSController(socketSVC, roomRepo, anSVCRepo, app.Logger)
+	restHelper := &controllers.RestResponseHelper{}
+	auxiliaryNodeCtrl := controllers.NewAuxiliaryNodeController(roomRepo, anSVCRepo, socketSVC, restHelper, app.Logger)
+	app.Router = routers.NewRouter(roomWSCtrl, auxiliaryNodeCtrl, roomRepo, socketSVC, app.Logger)
 	panicIfErr(app.Router.RegisterRoutes())
 }
 

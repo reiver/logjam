@@ -5,13 +5,10 @@ import (
 	"os"
 )
 
-type S struct {
-	Name string
-}
-
 func main() {
 	src := flag.String("src", "0.0.0.0:8090", "source listen address")
 	prodMode := flag.Bool("prod", false, "enable production mode ( its in dev mode by default )")
+	anSVCAddr := flag.String("auxiliarynode-svc-addr", "http://example.com/", "auxiliary node service rest api address")
 	help := flag.Bool("h", false, "print help")
 	flag.Parse()
 
@@ -22,6 +19,6 @@ func main() {
 
 	app := App{}
 
-	app.Init(*src, *prodMode)
+	app.Init(*src, *prodMode, *anSVCAddr)
 	app.Run()
 }

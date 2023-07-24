@@ -1,4 +1,4 @@
-package repositories
+package roomRepository
 
 import (
 	"github.com/sparkscience/logjam/helpers"
