@@ -83,6 +83,14 @@ export class SparkRTC {
         window.RTCRtpTransceiver &&
         'setCodecPreferences' in window.RTCRtpTransceiver.prototype;
 
+    // Define global variables or an object to store the network measurement parameters
+    networkMeasurementData = {
+        rtt: [],
+        jitter: [],
+        packetsLost: [],
+        outgoingBitrate: [],
+    };
+
     // Enum for video settings
     VideoSettings = {
         VS_0_5Mbps_15FPS: {
@@ -2614,6 +2622,8 @@ export class SparkRTC {
                     .getStats()
                     .then((stats) => {
                         for (const report of stats) {
+                            this.analyzeStatsReport(report);
+
                             // Save stats to logs file
                             this.writeStatsFile(report, userid);
                         }
@@ -2708,6 +2718,151 @@ export class SparkRTC {
         }
     };
 
+    analyzeStatsReport = (report) => {
+        const packetLossThreshold = 0.1; // 10% packet loss
+        const lowBandwidthThreshold = 1000; // in kilobits per second
+        const latencyThreshold = 200; // in milliseconds
+        const jitterThreshold = 30; // in milliseconds (example threshold, adjust as needed)
+
+        const jsonData = report[1];
+        console.log('REPORT: ', jsonData);
+        const kind = jsonData.kind;
+        const type = jsonData.type;
+
+        // Extract properties based on the type of report
+        let rtt = type === 'candidate-pair' ? jsonData.totalRoundTripTime : 0;
+        let jitter = kind === 'video' ? jsonData.jitter : 0;
+        let packetsLost = kind === 'video' ? jsonData.packetsLost : 0;
+        let bitrate = jsonData.availableOutgoingBitrate || 0;
+
+        // Use destructuring to make the code more concise
+        // and directly access the properties we need.
+        // If the properties don't exist in the JSON data, they will be set to 0.
+        // This way, we avoid explicitly checking for each property existence.
+        // e.g., const { jitter = 0, packetsLost = 0, rtt = 0, bitrate = 0 } = jsonData;
+
+        // Save the parameters to the networkMeasurementData object
+        this.networkMeasurementData.rtt.push(rtt);
+        this.networkMeasurementData.jitter.push(jitter);
+        this.networkMeasurementData.packetsLost.push(packetsLost);
+        this.networkMeasurementData.outgoingBitrate.push(bitrate);
+
+        // Perform reconnection check after a few minutes
+        if (this.networkMeasurementData.rtt.length >= 10) {
+            const score = this.calculateNetworkScore();
+
+            // Adjust the reconnect decision threshold based on your requirements (e.g., 0.5)
+            const reconnectThreshold = 0.5;
+            if (score >= reconnectThreshold) {
+                console.log('Sending reconnect..');
+                // send message to children to reconnect again
+                if (this.checkSocketStatus()) {
+                    this.socket.send(
+                        JSON.stringify({
+                            type: 'reconnect-children',
+                        })
+                    );
+                }
+            }
+
+            // Clear the stored data after the reconnection check
+            this.resetNetworkMeasurementData();
+        }
+    };
+
+    // Function to calculate the weighted network score
+    // calculateNetworkScore = () => {
+    //     // Assign weights to the network parameters based on their importance
+    //     const weights = {
+    //         rtt: 0.3,
+    //         jitter: 0.3,
+    //         packetsLost: 0.2,
+    //         outgoingBitrate: 0.2,
+    //     };
+
+    //     let totalScore = 0;
+
+    //     // Calculate the weighted average for each parameter and sum the scores
+    //     for (const param in weights) {
+    //         if (this.networkMeasurementData[param].length > 0) {
+    //             const avgValue = this.calculateAverage(
+    //                 this.networkMeasurementData[param]
+    //             );
+    //             this.updateTheStatus(`${param} avg: ${avgValue}`)
+    //             totalScore += avgValue * weights[param];
+    //         }
+    //     }
+
+    //     // Combine the scores to calculate the overall network score
+    //     const overallScore =
+    //         totalScore /
+    //         Object.values(weights).reduce((sum, weight) => sum + weight, 0);
+
+    //     this.updateTheStatus(`score: ${overallScore}`)
+
+    //     return overallScore;
+    // };
+
+    calculateNetworkScore = () => {
+        // Assign weights to the network parameters based on their importance
+        const weights = {
+          rtt: 0.3,
+          jitter: 0.3,
+          packetsLost: 0.2,
+          outgoingBitrate: 0.2,
+        };
+      
+        let totalScore = 0;
+        let totalWeight = 0;
+      
+        // Normalize the maximum expected outgoingBitrate (e.g., 5000 kbps)
+        const maxOutgoingBitrate = 5000;
+      
+        // Calculate the weighted average for each parameter and sum the scores
+        for (const param in weights) {
+          if (this.networkMeasurementData[param].length > 0) {
+            let avgValue = this.calculateAverage(
+              this.networkMeasurementData[param]
+            );
+      
+            // Normalize outgoingBitrate
+            if (param === 'outgoingBitrate') {
+              avgValue /= maxOutgoingBitrate;
+            }
+      
+            totalScore += avgValue * weights[param];
+            totalWeight += weights[param];
+
+            this.updateTheStatus(`${param} avg: ${avgValue}`)
+
+          }
+        }
+      
+        // Combine the scores to calculate the overall network score
+        const overallScore =
+          totalWeight > 0 ? totalScore / totalWeight : 0;
+      
+        this.updateTheStatus(`score: ${overallScore}`);
+      
+        return overallScore;
+      };
+      
+      
+
+    // Function to calculate the average of an array of numbers
+    calculateAverage = (arr) => {
+        return arr.reduce((total, value) => total + value, 0) / arr.length;
+    };
+
+    // Function to reset the network measurement data
+    resetNetworkMeasurementData = () => {
+        this.networkMeasurementData = {
+            rtt: [],
+            jitter: [],
+            packetsLost: [],
+            outgoingBitrate: [],
+        };
+    };
     writeStatsFile = (data, userid) => {
         if (this.debug) {
             data.date = new Date().toLocaleTimeString();
