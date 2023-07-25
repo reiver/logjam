@@ -6,12 +6,24 @@ export class StatsAnalyzer {
             packetsLost: [],
             outgoingBitrate: [],
         };
-        this.packetLossThreshold = 50; // 10% packet loss
-        this.lowBandwidthThreshold = 300000; // in bits per second
-        this.latencyThreshold = 50; // in milliseconds
-        this.jitterThreshold = 10; // in milliseconds (example threshold, adjust as needed)
+        // this.packetLossThreshold = 50; // 10% packet loss
+        // this.lowBandwidthThreshold = 300000; // in bits per second
+        // this.latencyThreshold = 50; // in milliseconds
+        // this.jitterThreshold = 10; // in milliseconds (example threshold, adjust as needed)
         this.logsCallback = null;
         this.decisionCallback = null;
+        this.time = 0;
+
+        const queryParams = new URLSearchParams(window.location.search);
+        this.packetLossThreshold = queryParams.get('pcl');
+        this.lowBandwidthThreshold = queryParams.get('btr');
+        this.jitterThreshold = queryParams.get('jtr');
+        this.latencyThreshold = queryParams.get('rtt');
+
+        console.log('pcl: ', this.packetLossThreshold);
+        console.log('rtt: ', this.latencyThreshold);
+        console.log('jtr: ', this.jitterThreshold);
+        console.log('brt: ', this.lowBandwidthThreshold);
     }
 
     registerCallbacks(logsCallback, decisionCallback) {
@@ -52,31 +64,32 @@ export class StatsAnalyzer {
             this.networkMeasurementData.outgoingBitrate.push(bitrate);
         }
 
-        const arrayLimit = 60;
+        // const arrayLimit = 20;
         // Perform reconnection check after a few minutes
-        if (
-            (this.networkMeasurementData.rtt.length >= arrayLimit &&
-                this.networkMeasurementData.jitter.length >= arrayLimit &&
-                this.networkMeasurementData.outgoingBitrate.length >=
-                    arrayLimit) ||
-            this.networkMeasurementData.packetsLost.length >= arrayLimit
-        ) {
-            const avgRTT = this.calculateAverage(
-                this.networkMeasurementData.rtt
-            );
+        // if (
+        //     (this.networkMeasurementData.rtt.length >= arrayLimit &&
+        //         this.networkMeasurementData.jitter.length >= arrayLimit &&
+        //         this.networkMeasurementData.outgoingBitrate.length >=
+        //             arrayLimit) ||
+        //     this.networkMeasurementData.packetsLost.length >= arrayLimit
+        // )
+        if (this.time === 20) {
+            this.time = 0;
+
+            const avgRTT = this.findMedian(this.networkMeasurementData.rtt);
             this.logsCallback(`AvgRTT: `, avgRTT);
 
-            const avgJitter = this.calculateAverage(
+            const avgJitter = this.findMedian(
                 this.networkMeasurementData.jitter
             );
             this.logsCallback(`AvgJitter: `, avgJitter);
 
-            const avgPacketsLost = this.calculateAverage(
+            const avgPacketsLost = this.findMedian(
                 this.networkMeasurementData.packetsLost
             );
             this.logsCallback(`AvgPCLOss: `, avgPacketsLost);
 
-            const avgOutgoingBitrate = this.calculateAverage(
+            const avgOutgoingBitrate = this.findMedian(
                 this.networkMeasurementData.outgoingBitrate
             );
             this.logsCallback(`AvgBitrate: `, avgOutgoingBitrate);
@@ -96,12 +109,20 @@ export class StatsAnalyzer {
 
                 if (this.decisionCallback) {
                     this.decisionCallback();
-                } 
+                }
             }
 
             // Clear the stored data after the reconnection check
-            this.resetNetworkMeasurementData();
+            //this.resetNetworkMeasurementData();
         }
+    }
+
+    findMedian(arr) {
+        const sortedArr = arr.slice().sort((a, b) => a - b);
+        const mid = Math.floor(sortedArr.length / 2);
+        return sortedArr.length % 2 === 0
+            ? (sortedArr[mid - 1] + sortedArr[mid]) / 2
+            : sortedArr[mid];
     }
 
     // Function to calculate the average of an array of numbers

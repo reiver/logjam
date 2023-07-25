@@ -585,6 +585,9 @@ export class SparkRTC {
 
             case 'reconnect':
                 this.updateTheStatus(`need to reconnect with new parent`);
+                if (this.startProcedure) {
+                    this.startProcedure(true);
+                }
                 break;
 
             default:
@@ -1434,6 +1437,7 @@ export class SparkRTC {
         };
 
         peerConnection.ontrack = async (event) => {
+            this.updateTheStatus(`onTrackEvent`,event)
             this.updateTheStatus(
                 `Peer Connection track received for ${target} stream ids [${event.streams
                     .map((s) => s.id)
@@ -2644,6 +2648,7 @@ export class SparkRTC {
             peerConnection
                 .getStats()
                 .then((stats) => {
+                    statsAnalyzer.time++;
                     for (const report of stats) {
                         statsAnalyzer.analyzeStatsReport(report);
 
