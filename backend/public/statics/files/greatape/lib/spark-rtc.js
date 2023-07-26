@@ -1184,6 +1184,7 @@ export class SparkRTC {
 
         // Handle open event for DataChannel
         dataChannel.onopen = (e) => {
+            peerConnection.dc = dataChannel;
             this.onDataChannelOpened(dataChannel, peerConnection);
         };
 
@@ -1193,6 +1194,15 @@ export class SparkRTC {
             let displyedStream = false;
 
             receive.onmessage = (e) => {
+                const msg = JSON.parse(e.data);
+                this.updateTheStatus(`msg`, msg);
+                if (msg.type === 'muted') {
+                    this.updateTheStatus(`audio status `, msg.value);
+
+                    this.onAudioStatusChange(msg);
+
+                    return;
+                }
                 this.broadcastersMessage = e.data;
 
                 if (!displyedStream) {
@@ -1319,6 +1329,12 @@ export class SparkRTC {
             const stream = event.streams[0];
 
             if (stream && stream.active) {
+                const audioTrack = stream.getAudioTracks()[0];
+                if (audioTrack) {
+                    this.updateTheStatus(`got Audio`, audioTrack);
+                    this.detectAudioStatus(audioTrack);
+                }
+
                 this.updateTheStatus(`user-by-stream ${stream.id}`);
                 if (await this.checkSocketStatus())
                     this.socket.send(
@@ -1758,6 +1774,21 @@ export class SparkRTC {
         return peerConnection;
     };
 
+    detectAudioStatus = (audioTrack) => {
+        if (audioTrack.kind === 'audio') {
+            audioTrack.onmute = () => {
+                this.updateTheStatus(`Audio is muted`);
+            };
+
+            audioTrack.onunmute = () => {
+                this.updateTheStatus(`Audio is unmuted`);
+            };
+
+            audioTrack.onended = () => {
+                this.updateTheStatus(`Audio is ended`);
+            };
+        }
+    };
     checkBrowser() {
         // Get the user-agent string
         let userAgentString = navigator.userAgent;
@@ -1899,9 +1930,6 @@ export class SparkRTC {
 
         this.getLatestUserList(`inital request`);
     }
-
-    
-
 
     /**
      * Helper fucntion to iniiate select
@@ -2184,7 +2212,23 @@ export class SparkRTC {
             this.lastAudioState = enabled === true ? 'Enabled' : 'Disabled';
             this.localStream.getTracks().forEach((track) => {
                 if (track.kind === 'audio') track.enabled = enabled;
+                this.sendAudioStatus(enabled);
             });
+        }
+    };
+
+    sendAudioStatus = (enable) => {
+        for (const target in this.myPeerConnectionArray) {
+            let pc = this.myPeerConnectionArray[target];
+            if (pc.dc) {
+                const data = {
+                    type: 'muted',
+                    value: !enable,
+                    stream: this.localStream.id,
+                };
+
+                pc.dc.send(JSON.stringify(data));
+            }
         }
     };
 
@@ -2812,6 +2856,7 @@ export class SparkRTC {
         this.startAgain = options.startAgain;
         this.updateUi = options.updateUi;
         this.parentDcMessage = options.parentDcMessage;
+        this.onAudioStatusChange = options.onAudioStatusChange;
 
         this.checkBrowser(); //detect browser
         this.getSupportedCodecs();
