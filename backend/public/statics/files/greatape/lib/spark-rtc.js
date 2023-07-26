@@ -1195,7 +1195,6 @@ export class SparkRTC {
 
             receive.onmessage = (e) => {
                 const msg = JSON.parse(e.data);
-                this.updateTheStatus(`msg`, msg);
                 if (msg.type === 'muted') {
                     this.updateTheStatus(`audio status `, msg.value);
 
