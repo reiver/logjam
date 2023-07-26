@@ -1,5 +1,4 @@
 import { Queue } from './queue.js';
-import { StatsAnalyzer } from './statsAnalyzer.js';
 
 /** Your class description
  *
@@ -7,12 +6,6 @@ import { StatsAnalyzer } from './statsAnalyzer.js';
  *
  */
 export class SparkRTC {
-    blob = null; // Initialize blob as null
-    netBlob = null; // Initialize blob as null
-    statsFileLink = '';
-    netFileLink = '';
-    blobData = null;
-    netBlobData = null;
     started = false;
     maxRaisedHands = 2;
     myPeerConnectionConfig = {
@@ -83,14 +76,6 @@ export class SparkRTC {
     supportsSetCodecPreferences =
         window.RTCRtpTransceiver &&
         'setCodecPreferences' in window.RTCRtpTransceiver.prototype;
-
-    // Define global variables or an object to store the network measurement parameters
-    networkMeasurementData = {
-        rtt: [],
-        jitter: [],
-        packetsLost: [],
-        outgoingBitrate: [],
-    };
 
     // Enum for video settings
     VideoSettings = {
@@ -2250,9 +2235,6 @@ export class SparkRTC {
      * @returns
      */
     start = async (turn = true) => {
-        this.createStatsFile(); //logs file
-        this.createNetFile();
-
         this.checkNetworkSpeed();
 
         if (!turn) {
@@ -2562,9 +2544,6 @@ export class SparkRTC {
             //close websocket if not streaming anything
             if (this.socket) {
                 this.socket.onclose = () => {
-                    // this.downloadNetFile();
-                    // this.downloadStatsFile();
-
                     this.updateTheStatus(`socket is closed after leaveMeeting`);
                     this.resetVariables();
                 }; //empty on close callback
@@ -2583,9 +2562,6 @@ export class SparkRTC {
             //close websocket
             if (this.socket) {
                 this.socket.onclose = () => {
-                    // this.downloadNetFile();
-                    // this.downloadStatsFile();
-
                     this.updateTheStatus(`socket is closed after leaveMeeting`);
                     this.resetVariables();
                 }; //empty on close callback
@@ -2598,38 +2574,13 @@ export class SparkRTC {
 
         this.updateTheStatus(`left meeting`);
 
-        // this.downloadNetFile();
-        // this.downloadStatsFile();
-
         clearTimeout(this.networkSpeedInterval);
         clearInterval(this.pingInterval);
     };
 
-    logsCallback = (tag, msg) => {
-        this.updateTheStatus(tag, msg);
-    };
-
-    decisionCallbackForChildNodes = () => {
-        this.updateTheStatus(`Sending reconnect..`);
-        // send message to children to reconnect again
-        if (this.checkSocketStatus()) {
-            this.socket.send(
-                JSON.stringify({
-                    type: 'reconnect-children',
-                })
-            );
-        }
-    };
-
     getStatsForPC = (peerConnection, userid) => {
-        const statsAnalyzer = new StatsAnalyzer();
-        statsAnalyzer.registerCallbacks(
-            this.logsCallback,
-            this.decisionCallbackForChildNodes
-        );
-
         this.updateTheStatus('debugMode Stats', this.debug);
-        // if (this.debug) {
+        if (this.debug) {
         let timeout;
 
         const checkStats = () => {
@@ -2644,16 +2595,12 @@ export class SparkRTC {
                 return;
             }
 
-            console.log('-------------------------------------');
             peerConnection
                 .getStats()
                 .then((stats) => {
-                    statsAnalyzer.time++;
                     for (const report of stats) {
-                        statsAnalyzer.analyzeStatsReport(report);
+                        //TODO send stats to Backend
 
-                        // Save stats to logs file
-                        this.writeStatsFile(report, userid);
                     }
                 })
                 .catch((error) => {
@@ -2670,7 +2617,7 @@ export class SparkRTC {
 
         // Start the task
         checkStats();
-        // }
+        }
     };
 
     checkNetworkSpeed = () => {
@@ -2681,12 +2628,15 @@ export class SparkRTC {
                 navigator.webkitConnection;
 
             if (connection && navigator.onLine) {
+               //TODO Send network speed to Backend
+
+
                 const con = {
                     networkType: connection.effectiveType,
                     downlink: connection.downlink,
                     rtt: connection.rtt,
                 };
-                this.writeNetworkLogs(con);
+               
             } else {
                 this.updateTheStatus('Network information not available.');
             }
@@ -2696,97 +2646,6 @@ export class SparkRTC {
                 this.checkNetworkSpeed,
                 this.statsIntervalTime
             );
-        }
-    };
-
-    createStatsFile = () => {
-        if (this.debug) {
-            const name = this.role + '_' + this.myName;
-            // Create a link element
-            this.statsFileLink = document.createElement('a');
-            this.statsFileLink.download = name + '_stats.txt'; // File name
-        }
-    };
-
-    createNetFile = () => {
-        if (this.debug) {
-            const name = this.role + '_' + this.myName;
-            // Create a link element
-            this.netFileLink = document.createElement('a');
-            this.netFileLink.download = name + '_net.txt'; // File name
-        }
-    };
-
-    writeNetworkLogs = (data) => {
-        if (this.debug) {
-            data.date = new Date().toLocaleTimeString();
-
-            const jsonContent = JSON.stringify(data);
-            const separator = '\n\n****************\n\n';
-
-            if (this.netBlobData === null) {
-                this.netBlobData = JSON.stringify(data);
-            } else {
-                this.netBlobData = this.netBlobData + separator + jsonContent;
-            }
-
-            if (this.blobData === null) {
-                this.blobData = jsonContent;
-            } else {
-                this.blobData = this.blobData + '/n' + jsonContent;
-            }
-
-            // Create a new Blob object with the content
-            this.netBlob = new Blob([this.netBlobData], {
-                type: 'application/json',
-            });
-        }
-    };
-
-    writeStatsFile = (data, userid) => {
-        if (this.debug) {
-            data.date = new Date().toLocaleTimeString();
-
-            const jsonContent = JSON.stringify(data);
-
-            if (this.blobData === null) {
-                this.blobData = JSON.stringify(data);
-            } else {
-                if (userid) {
-                    this.blobData = this.blobData + '\n' + jsonContent;
-                }
-            }
-
-            // Create a new Blob object with the content
-            this.blob = new Blob([this.blobData], {
-                type: 'application/json',
-            });
-        }
-    };
-
-    downloadStatsFile = () => {
-        if (this.blob !== null && this.debug) {
-            // Set the href of the link to the URL of the Blob object
-            this.statsFileLink.href = URL.createObjectURL(this.blob);
-
-            // Programmatically trigger the download
-            this.statsFileLink.click();
-
-            // Cleanup the URL object after the download
-            URL.revokeObjectURL(this.statsFileLink.href);
-        }
-    };
-
-    downloadNetFile = () => {
-        if (this.netBlob !== null && this.debug) {
-            // Set the href of the link to the URL of the Blob object
-            this.netFileLink.href = URL.createObjectURL(this.netBlob);
-
-            // Programmatically trigger the download
-            this.netFileLink.click();
-
-            // Cleanup the URL object after the download
-            URL.revokeObjectURL(this.netFileLink.href);
         }
     };
 
@@ -2855,32 +2714,8 @@ export class SparkRTC {
         this.startAgain = options.startAgain;
         this.updateUi = options.updateUi;
         this.parentDcMessage = options.parentDcMessage;
-        this.onReceiveStatsData = options.onReceiveStatsData;
 
         this.checkBrowser(); //detect browser
         this.getSupportedCodecs();
     }
-
-    /**
-     * display stats in form of Graphs to Other webpage
-     */
-    sendStatsData = () => {
-        if (this.onReceiveStatsData && this.debug) {
-            console.log('Sending stats...');
-            if (this.blobData) {
-                const sendData = () => {
-                    if (this.blobData === null) {
-                        console.log('Data sent successfully.');
-                        return;
-                    }
-                    this.onReceiveStatsData(this.blobData);
-                    setTimeout(sendData, this.statsIntervalTime);
-                };
-
-                sendData(); // Start the task
-            } else {
-                console.log('no blob data');
-            }
-        }
-    };
 }

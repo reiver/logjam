@@ -21,58 +21,6 @@ import {
 export const isMoreOptionsOpen = signal(false);
 export const toggleMoreOptions = () =>
     (isMoreOptionsOpen.value = !isMoreOptionsOpen.value);
-
-export const toggleTroubleshooting = () => {
-    sparkRTC.value.sendStatsData();
-    statsDataOpen.value = true;
-    makeDialog(
-        'confirm',
-        {
-            message: `
-						<div class="flex flex-col gap-4">
-							<div>
-								<h2 class="text-gray-3 dark:text-white-f-9 text-regular-12">Download Speed(Mbps)</h2>
-								<div id="downlink"></div>
-							</div>
-
-							<div>
-								<h2 class="text-gray-3 dark:text-white-f-9 text-regular-12">Network Latency(ms)</h2>
-								<div id="rtt"></div>
-							</div>
-
-							<div>
-								<h2 class="text-gray-3 dark:text-white-f-9 text-regular-12">Jitter</h2>
-								<div id="jitter"></div>
-							</div>
-
-							<div>
-								<h2 class="text-gray-3 dark:text-white-f-9 text-regular-12">Frames Per Second</h2>
-								<div id="fps"></div>
-							</div>
-
-							<div>
-								<h2 class="text-gray-3 dark:text-white-f-9 text-regular-12">Packets Loss</h2>
-								<div id="packetLoss"></div>
-							</div>
-
-							<div>
-								<h2 class="text-gray-3 dark:text-white-f-9 text-regular-12">Outgoing Bitrate(MBs or KBs)</h2>
-								<div id="bitrate"></div>
-							</div>
-						</div>`,
-            title: 'Troubleshooting',
-        },
-        () => {},
-        () => {
-            statsDataOpen.value = false;
-        },
-        {
-            showButtons: false,
-            contentClassName: '!max-h-[60vh] sm:!max-h-[60vh] overflow-auto ',
-            className: 'sm:!w-[80vw] sm:!max-w-[1200px]',
-        }
-    );
-};
 export const Controllers = () => {
     const {
         isHost,
@@ -146,7 +94,6 @@ export const Controllers = () => {
         ${isDebugMode.value &&
         html`<${Tooltip} label="Troubleshoot">
             <${IconButton}
-                onClick=${toggleTroubleshooting}
                 class="hidden sm:flex"
             >
                 <${Icon} icon="Troubleshoot" />
@@ -269,7 +216,7 @@ export const MoreControllers = () => {
     return html`<div class="flex gap-5 py-5 justify-center">
         ${isDebugMode.value &&
         html`<${Tooltip} label="Troubleshoot">
-            <${IconButton} onClick=${toggleTroubleshooting}>
+            <${IconButton}>
                 <${Icon} icon="Troubleshoot" />
             <//>
         <//>`}

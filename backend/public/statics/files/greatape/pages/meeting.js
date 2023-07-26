@@ -14,7 +14,6 @@ import { html } from 'htm';
 import { useEffect } from 'preact';
 import { isAttendeesOpen } from '../components/Attendees/index.js';
 import { Roles, createSparkRTC, getWsUrl } from '../lib/common.js';
-import { GraphGenerator } from '../stats/statsGraph.js';
 
 export const isDebugMode = signal(
     (
@@ -389,15 +388,6 @@ const Meeting = () => {
                         icon: 'Close',
                         variant: 'danger',
                     });
-                },
-                onReceiveStatsData: (data) => {
-                    // if (targetWindow) targetWindow.postMessage(data);
-                    if (statsDataOpen.value) {
-                        const graphGenerator = new GraphGenerator();
-                        graphGenerator.parseJSONData(data);
-                        graphGenerator.createGraph();
-                        graphGenerator.displayGraph();
-                    }
                 },
             });
 
