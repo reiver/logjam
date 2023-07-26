@@ -1422,7 +1422,7 @@ export class SparkRTC {
         };
 
         peerConnection.ontrack = async (event) => {
-            this.updateTheStatus(`onTrackEvent`,event)
+            this.updateTheStatus(`onTrackEvent`, event);
             this.updateTheStatus(
                 `Peer Connection track received for ${target} stream ids [${event.streams
                     .map((s) => s.id)
@@ -2581,42 +2581,45 @@ export class SparkRTC {
     getStatsForPC = (peerConnection, userid) => {
         this.updateTheStatus('debugMode Stats', this.debug);
         if (this.debug) {
-        let timeout;
+            let timeout;
 
-        const checkStats = () => {
-            if (
-                peerConnection &&
-                (peerConnection.connectionState === 'closed' ||
-                    peerConnection.connectionState === 'disconnected')
-            ) {
-                this.updateTheStatus('clearing stats interval');
-                this.blobData = null;
-                clearTimeout(timeout); // Clear the timeout instead of the interval
-                return;
-            }
+            const checkStats = () => {
+                if (
+                    peerConnection &&
+                    (peerConnection.connectionState === 'closed' ||
+                        peerConnection.connectionState === 'disconnected')
+                ) {
+                    this.updateTheStatus('clearing stats interval');
+                    this.blobData = null;
+                    clearTimeout(timeout); // Clear the timeout instead of the interval
+                    return;
+                }
 
-            peerConnection
-                .getStats()
-                .then((stats) => {
-                    for (const report of stats) {
-                        //TODO send stats to Backend
+                peerConnection
+                    .getStats()
+                    .then((stats) => {
+                        for (const report of stats) {
+                            //TODO send stats to Backend
+                            this.updateTheStatus(`report`, report);
+                        }
+                    })
+                    .catch((error) => {
+                        console.error(
+                            `userid: ${userid} Error retrieving stats`,
+                            error
+                        );
+                    })
+                    .finally(() => {
+                        // Schedule the next check after the current task is completed
+                        timeout = setTimeout(
+                            checkStats,
+                            this.statsIntervalTime
+                        );
+                    });
+            };
 
-                    }
-                })
-                .catch((error) => {
-                    console.error(
-                        `userid: ${userid} Error retrieving stats`,
-                        error
-                    );
-                })
-                .finally(() => {
-                    // Schedule the next check after the current task is completed
-                    timeout = setTimeout(checkStats, this.statsIntervalTime);
-                });
-        };
-
-        // Start the task
-        checkStats();
+            // Start the task
+            checkStats();
         }
     };
 
@@ -2628,15 +2631,14 @@ export class SparkRTC {
                 navigator.webkitConnection;
 
             if (connection && navigator.onLine) {
-               //TODO Send network speed to Backend
-
+                //TODO Send network speed to Backend
 
                 const con = {
                     networkType: connection.effectiveType,
                     downlink: connection.downlink,
                     rtt: connection.rtt,
                 };
-               
+                this.updateTheStatus(`con`, con);
             } else {
                 this.updateTheStatus('Network information not available.');
             }
