@@ -1,6 +1,7 @@
 package binarytreesrv
 
 import (
+	"errors"
 	"strconv"
 	"sync"
 	"time"
@@ -13,15 +14,57 @@ var (
 	Map = binarytree.Default
 )
 
+type WSMessage struct {
+	Type    int
+	Message []byte
+}
+
+type WSWriter struct {
+	writeLocker *sync.Mutex
+	wsConn      *websocket.Conn
+	WriteCH     *chan interface{}
+}
+
+func (w *WSWriter) Close() {
+	w.writeLocker.Lock()
+	defer w.writeLocker.Unlock()
+	close(*w.WriteCH)
+	w.WriteCH = nil
+}
+
+func (w *WSWriter) WriteMessage(msgType int, data []byte) error {
+	w.writeLocker.Lock()
+	defer w.writeLocker.Unlock()
+	if w == nil || w.WriteCH == nil {
+		return errors.New("ws writeChannel is closed, can't write")
+	}
+	*w.WriteCH <- WSMessage{
+		Type:    msgType,
+		Message: data,
+	}
+	return nil
+}
+
+func (w *WSWriter) WriteJSON(data interface{}) error {
+	w.writeLocker.Lock()
+	defer w.writeLocker.Unlock()
+	if w == nil || w.WriteCH == nil {
+		return errors.New("ws writeChannel is closed, can't write")
+	}
+	*w.WriteCH <- data
+	return nil
+}
+
 type MySocket struct {
 	mutex            sync.Mutex
+	Writer           *WSWriter
 	Socket           *websocket.Conn
 	ID               uint64
 	IsBroadcaster    bool
 	Name             string
 	HasStream        bool
 	IsTURN           bool
-	ConnectedSockets map[*websocket.Conn]MySocket
+	ConnectedSockets map[*websocket.Conn]*MySocket
 	MetaData         map[string]string
 }
 
@@ -30,7 +73,7 @@ func (receiver *MySocket) Insert(node binarytree.SingleNode) {
 	defer receiver.mutex.Unlock()
 
 	socket := node.(*MySocket)
-	receiver.ConnectedSockets[socket.Socket] = *socket
+	receiver.ConnectedSockets[socket.Socket] = socket
 }
 
 func (receiver *MySocket) Delete(node interface{}) {
@@ -45,7 +88,7 @@ func (receiver *MySocket) Get(node interface{}) binarytree.SingleNode {
 	defer receiver.mutex.Unlock()
 
 	result := receiver.ConnectedSockets[node.(*websocket.Conn)]
-	return &result
+	return result
 }
 
 func (receiver *MySocket) Length() int {
@@ -76,9 +119,21 @@ func (receiver *MySocket) All() map[interface{}]binarytree.SingleNode {
 	var output map[interface{}]binarytree.SingleNode = make(map[interface{}]binarytree.SingleNode)
 	for indx := range receiver.ConnectedSockets {
 		result := receiver.ConnectedSockets[indx]
-		output[indx] = &result
+		output[indx] = result
 	}
 	return output
+}
+
+func (receiver *MySocket) GetConnectedSocketsList() []*MySocket {
+	list := []*MySocket{}
+	receiver.mutex.Lock()
+	defer receiver.mutex.Unlock()
+
+	for _, sock := range receiver.ConnectedSockets {
+		list = append(list, sock)
+	}
+
+	return list
 }
 
 func (receiver *MySocket) ToggleHead() {
@@ -125,13 +180,41 @@ func (receiver *MySocket) SetMetaData(metaData map[string]string) {
 
 func fillFunction(node interface{}, socketIndex uint64) binarytree.SingleNode {
 	conn := node.(*websocket.Conn)
+	writeCH := make(chan interface{}, 256) // queue limit is 256
 	result := MySocket{
-		Socket:           conn,
+		Socket: conn,
+		Writer: &WSWriter{
+			wsConn:      conn,
+			WriteCH:     &writeCH,
+			writeLocker: &sync.Mutex{},
+		},
 		ID:               socketIndex,
 		Name:             "Socket " + strconv.FormatUint(socketIndex, 10),
 		IsTURN:           true,
-		ConnectedSockets: make(map[*websocket.Conn]MySocket),
+		ConnectedSockets: make(map[*websocket.Conn]*MySocket),
+		MetaData:         make(map[string]string),
 	}
+	go func(w *WSWriter) {
+		hadError := false
+		for data := range *w.WriteCH {
+			if wsMsg, isItWSMessage := data.(WSMessage); isItWSMessage {
+				err := w.wsConn.WriteMessage(wsMsg.Type, wsMsg.Message)
+				if err != nil {
+					hadError = true
+					break
+				}
+			} else {
+				err := w.wsConn.WriteJSON(data)
+				if err != nil {
+					hadError = true
+					break
+				}
+			}
+		}
+		if hadError {
+			w.Close()
+		}
+	}(result.Writer)
 	return &result
 }
 
@@ -140,7 +223,7 @@ func GetMap() binarytree.Tree {
 	return Map
 }
 
-func InsertChild(socket *websocket.Conn, aMap binarytree.Tree) (binarytree.SingleNode, error) {
+func InsertChild(socket *websocket.Conn, aMap *binarytree.Tree) (binarytree.SingleNode, error) {
 	tryCount := 0
 	var result binarytree.SingleNode
 	var err error
@@ -159,7 +242,11 @@ type TreeGraphElement struct {
 	Children []TreeGraphElement `json:"children"`
 }
 
-func addSubSockets(socket MySocket, children *[]TreeGraphElement, aMap binarytree.Tree) {
+func addSubSockets(socket *MySocket, children *[]TreeGraphElement, aMap *binarytree.Tree, shouldLock bool) {
+	if shouldLock {
+		socket.mutex.Lock()
+		defer socket.mutex.Unlock()
+	}
 	for child := range socket.ConnectedSockets {
 		childSocket := aMap.Get(child).(*MySocket)
 		var turnState string = "no-TURN"
@@ -171,11 +258,11 @@ func addSubSockets(socket MySocket, children *[]TreeGraphElement, aMap binarytre
 			Parent:   "null",
 			Children: []TreeGraphElement{},
 		})
-		addSubSockets(*childSocket, &(*children)[len(*children)-1].Children, aMap)
+		addSubSockets(childSocket, &(*children)[len(*children)-1].Children, aMap, false)
 	}
 }
 
-func Tree(aMap binarytree.Tree) []TreeGraphElement {
+func Tree(aMap *binarytree.Tree) []TreeGraphElement {
 	treeData := []TreeGraphElement{}
 	broadcasterLevel := aMap.LevelNodes(1)
 	if len(broadcasterLevel) == 0 {
@@ -192,6 +279,6 @@ func Tree(aMap binarytree.Tree) []TreeGraphElement {
 		Parent:   "null",
 		Children: []TreeGraphElement{},
 	})
-	addSubSockets(*broadcaster, &treeData[0].Children, aMap)
+	addSubSockets(broadcaster, &treeData[0].Children, aMap, true)
 	return treeData
 }

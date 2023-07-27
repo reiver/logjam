@@ -519,7 +519,6 @@ function setSidebar(users) {
     for (const { name } of users) {
         const { name: userName, email } = (() => {
             try {
-                console.log(JSON.parse(name));
                 return JSON.parse(name);
             } catch (e) {
                 console.error(e);

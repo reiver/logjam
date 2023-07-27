@@ -3,6 +3,7 @@ package websockethandler
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/mmcomp/go-binarytree"
 	"net/http"
 	"os"
 	"strconv"
@@ -14,7 +15,6 @@ import (
 	binarytreesrv "github.com/sparkscience/logjam/backend/srv/binarytree"
 	roommapssrv "github.com/sparkscience/logjam/backend/srv/roommaps"
 
-	"github.com/mmcomp/go-binarytree"
 	logger "github.com/mmcomp/go-log"
 )
 
@@ -107,7 +107,7 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 		response.Data = strconv.FormatInt(int64(socket.ID), 10)
 		responseJSON, err := json.Marshal(response)
 		if err == nil {
-			socket.Socket.WriteMessage(messageType, responseJSON)
+			socket.Writer.WriteMessage(messageType, responseJSON)
 		} else {
 			return
 		}
@@ -174,7 +174,7 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 				if aerr != nil {
 					return
 				}
-				socket.Socket.WriteMessage(messageType, audianceResponseJSON)
+				socket.Writer.WriteMessage(messageType, audianceResponseJSON)
 				return
 			}
 			audianceResponse.Data = strconv.FormatInt(int64(broadcaster.ID), 10)
@@ -190,8 +190,8 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 			if err != nil {
 				return
 			}
-			broadcaster.Socket.WriteMessage(messageType, broadResponseJSON)
-			socket.Socket.WriteMessage(messageType, audianceResponseJSON)
+			broadcaster.Writer.WriteMessage(messageType, broadResponseJSON)
+			socket.Writer.WriteMessage(messageType, audianceResponseJSON)
 			receiver.emitUserEvent(roomName)
 			return
 		} else {
@@ -230,9 +230,9 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 					fmt.Fprintln(f, msg)
 
 					if err == nil {
-						targetSocketNode, e := binarytreesrv.InsertChild(socket.Socket, *Map.Room)
+						targetSocketNode, e := binarytreesrv.InsertChild(socket.Socket, Map.Room)
 						if e != nil {
-							socket.Socket.WriteMessage(messageType, []byte("{\"type\":\"error\",\"data\":\"Insert Child Error : "+e.Error()+" \"}"))
+							socket.Writer.WriteMessage(messageType, []byte("{\"type\":\"error\",\"data\":\"Insert Child Error : "+e.Error()+" \"}"))
 							return
 						}
 						targetSocket := targetSocketNode.(*binarytreesrv.MySocket)
@@ -243,7 +243,7 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 						if targetSocket.Socket != broadcaster.Socket {
 							broadResponse.Type = "add_broadcast_audience"
 						}
-						targetSocket.Socket.WriteMessage(messageType, broadResponseJSON)
+						targetSocket.Writer.WriteMessage(messageType, broadResponseJSON)
 					} else {
 						return
 					}
@@ -254,11 +254,28 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 		if err != nil {
 			return
 		}
-		socket.Socket.WriteMessage(messageType, responseJSON)
+		socket.Writer.WriteMessage(messageType, responseJSON)
 		receiver.emitUserEvent(roomName)
 		return
 	case "stream":
-		if !socket.CanConnect() {
+		var msgData map[string]string
+		err := json.Unmarshal(messageJSON, &msgData)
+		if err != nil {
+			println(err.Error())
+			return
+		}
+		newValue := true
+		if data, exists := msgData["data"]; exists {
+			if data == "true" {
+				newValue = true
+			} else {
+				newValue = false
+			}
+		}
+		if (newValue && socket.CanConnect()) || (!newValue && !socket.CanConnect()) {
+			return
+		}
+		if (newValue && !socket.CanConnect()) || (!newValue && socket.CanConnect()) {
 			Map.Room.ToggleCanConnect(socket.Socket)
 			{
 				err = roommapssrv.RoomMaps.Set(roomName, Map.Room)
@@ -279,9 +296,9 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 		msg := "Audiance " + socket.Name + " client log :\n    " + theMessage.Data
 		fmt.Fprintln(f, msg)
 	case "ping":
-		socket.Socket.WriteJSON(message.MessageContract{Type: "pong", Data: "pong"})
+		socket.Writer.WriteJSON(message.MessageContract{Type: "pong", Data: "pong"})
 	case "tree":
-		treeData := binarytreesrv.Tree(*Map.Room)
+		treeData := binarytreesrv.Tree(Map.Room)
 		j, e := json.Marshal(treeData)
 		if e != nil {
 			return
@@ -291,7 +308,7 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 		response.Data = output
 		responseJSON, err := json.Marshal(response)
 		if err == nil {
-			socket.Socket.WriteMessage(messageType, responseJSON)
+			socket.Writer.WriteMessage(messageType, responseJSON)
 		} else {
 			return
 		}
@@ -306,22 +323,21 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 			response.Data = theMessage.Data
 			responseJSON, err := json.Marshal(response)
 			if err == nil {
-				socket.Socket.WriteMessage(messageType, responseJSON)
+				socket.Writer.WriteMessage(messageType, responseJSON)
 			}
 		}
 
 		return
 	case "metadata-get":
 		// log.Alert("metadata-get")
-		metaData := Map.MetaData
-		metaDataJson, metaDataJsonError := json.Marshal(metaData)
+		metaDataJson, metaDataJsonError := roommapssrv.RoomMaps.GetMetaDataJson(roomName)
 		if metaDataJsonError == nil {
 			response.Type = "metadata-get"
-			response.Data = string(metaDataJson)
+			response.Data = *metaDataJson
 			responseJSON, err := json.Marshal(response)
 			if err == nil {
 				// log.Alert(responseJSON)
-				socket.Socket.WriteMessage(messageType, responseJSON)
+				socket.Writer.WriteMessage(messageType, responseJSON)
 			} else {
 				return
 			}
@@ -338,7 +354,7 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 			responseJSON, err := json.Marshal(response)
 			if err == nil {
 				// log.Alert(responseJSON)
-				socket.Socket.WriteMessage(messageType, responseJSON)
+				socket.Writer.WriteMessage(messageType, responseJSON)
 			} else {
 				return
 			}
@@ -357,7 +373,7 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 			response.Data = theMessage.Data
 			responseJSON, err := json.Marshal(response)
 			if err == nil {
-				socket.Socket.WriteMessage(messageType, responseJSON)
+				socket.Writer.WriteMessage(messageType, responseJSON)
 			}
 		}
 
@@ -376,7 +392,7 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 			response.Data = strconv.FormatInt(int64(user.ID), 10) + "," + user.Name + "," + theMessage.Data + "," + userRole
 			responseJSON, err := json.Marshal(response)
 			if err == nil {
-				socket.Socket.WriteMessage(messageType, responseJSON)
+				socket.Writer.WriteMessage(messageType, responseJSON)
 			}
 		}
 		return
@@ -392,17 +408,45 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 		responseJSON, err := json.Marshal(response)
 		if err == nil {
 			log.Alert("broadcaster-status sending ", string(responseJSON))
-			socket.Socket.WriteMessage(messageType, responseJSON)
+			socket.Writer.WriteMessage(messageType, responseJSON)
 		} else {
 			return
 		}
+
+	case "get-latest-user-list":
+		receiver.emitUserEvent(roomName)
+		return
+
+	case "reconnect-children":
+		connectedSocketsList := socket.GetConnectedSocketsList()
+		if len(connectedSocketsList) == 0 {
+			return
+		}
+		event := message.MessageContract{
+			Type: "reconnect",
+			Data: strconv.FormatUint(socket.ID, 10),
+		}
+		msgBytes, err := json.Marshal(event)
+		if err != nil {
+			return
+		}
+
+		for _, child := range connectedSocketsList {
+			_ = child.Writer.WriteMessage(1, msgBytes)
+		}
+		return
+	case "update-quality":
+		if len(theMessage.Data) > 0 {
+			socket.MetaData["quality"] = theMessage.Data
+		}
+		return
 
 	default:
 		ID, err := strconv.ParseUint(theMessage.Target, 10, 64)
 		if err != nil {
 			return
 		}
-		allSockets := Map.Room.All()
+		allSockets := Map.Room.Nodes()
 		var ok = false
 		var target *binarytreesrv.MySocket
 		for _, node := range allSockets {
@@ -432,7 +476,7 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 			if err != nil {
 				return
 			}
-			target.Socket.WriteMessage(messageType, messageJSON)
+			target.Writer.WriteMessage(messageType, messageJSON)
 		}
 	}
 }
@@ -450,8 +494,8 @@ func (receiver httpHandler) broadcastMessage(roomName string, messageType int, m
 		return
 	}
 
-	for _, s := range Map.Room.All() {
-		s.(*binarytreesrv.MySocket).Socket.WriteMessage(messageType, messageTxt)
+	for _, s := range Map.Room.Nodes() {
+		s.(*binarytreesrv.MySocket).Writer.WriteMessage(messageType, messageTxt)
 		log.Inform("[broadcastMessage] socket ", s.(*binarytreesrv.MySocket).Name, " SENT ", messageTxt)
 	}
 }
@@ -476,20 +520,21 @@ func (receiver httpHandler) deleteNode(conn *websocket.Conn, roomName string, me
 	theMessageTxt, _ := json.Marshal(response)
 	var chosenOne binarytree.SingleNode
 	if socket.IsBroadcaster {
-		for _, s := range Map.Room.All() {
+		for _, s := range Map.Room.Nodes() {
 			log.Inform("[deleteNode] checking socket ", s.(*binarytreesrv.MySocket).Name)
 			if chosenOne == nil {
 				chosenOne = s
-				s.(*binarytreesrv.MySocket).Socket.WriteMessage(1, messageTxt)
+				s.(*binarytreesrv.MySocket).Writer.WriteMessage(1, messageTxt)
 				log.Inform("[deleteNode] checking socket ", s.(*binarytreesrv.MySocket).Name, " SENT")
 			} else {
-				s.(*binarytreesrv.MySocket).Socket.WriteMessage(1, otherMessageTxt)
+				s.(*binarytreesrv.MySocket).Writer.WriteMessage(1, otherMessageTxt)
 				log.Inform("[deleteNode] checking other socket ", s.(*binarytreesrv.MySocket).Name, " SENT")
 			}
 		}
 	} else {
-		for _, s := range socket.ConnectedSockets {
-			s.Socket.WriteMessage(1, theMessageTxt)
+		connectedSocketsList := socket.GetConnectedSocketsList()
+		for _, sock := range connectedSocketsList {
+			sock.Writer.WriteMessage(1, theMessageTxt)
 		}
 	}
 	Map.Room.Delete(conn)
@@ -515,11 +560,9 @@ func (receiver httpHandler) reader(conn *websocket.Conn, userAgent string, roomN
 			if closedError || handshakeError {
 				socketId := receiver.deleteNode(conn, roomName, messageType)
 				{
-					Map, _ = roommapssrv.RoomMaps.Get(roomName)
-					metaData := Map.MetaData
-					if raiseHandsStr, exists := metaData["raiseHands"]; exists {
+					if raiseHandsStr, _ := roommapssrv.RoomMaps.GetFromMetaData(roomName, "raiseHands"); raiseHandsStr != nil {
 						var usernameList []string
-						err = json.Unmarshal([]byte(raiseHandsStr), &usernameList)
+						err = json.Unmarshal([]byte(*raiseHandsStr), &usernameList)
 						if err != nil {
 							log.Errorf("could not read room metaData: %s", err)
 						} else {
@@ -528,23 +571,17 @@ func (receiver httpHandler) reader(conn *websocket.Conn, userAgent string, roomN
 								if i >= 0 {
 									usernameList = append(usernameList[:i], usernameList[i+1:]...)
 									if len(usernameList) == 0 {
-										delete(metaData, "raiseHands")
-										roommapssrv.RoomMaps.SetMetData(roomName, metaData)
+										roommapssrv.RoomMaps.DelFromMetaData(roomName, "raiseHands")
 									} else {
 										jsonBytes, err := json.Marshal(usernameList)
 										if err != nil {
 											log.Errorf("%s", err)
 										}
-										metaData["raiseHands"] = string(jsonBytes)
-										roommapssrv.RoomMaps.SetMetData(roomName, metaData)
+										roommapssrv.RoomMaps.SetToMetaData(roomName, "raiseHands", string(jsonBytes))
 									}
 								}
 							}
 						}
-					}
-					err = roommapssrv.RoomMaps.Set(roomName, Map.Room)
-					if err != nil {
-						log.Errorf("could not set room in map: %s", err)
 					}
 				}
 			}
