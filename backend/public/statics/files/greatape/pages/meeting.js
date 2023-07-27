@@ -369,10 +369,8 @@ const Meeting = () => {
                     });
                 },
                 parentDcMessage: () => {
-                    // Todo Nariman
-                    // show message: You've Got disconnected
                     makeDialog('info', {
-                        message: 'You’ve got disconnected',
+                        message: `For some unexpected reason, you've gotten disconnected. please wait some seconds to reconnect again.`,
                         icon: 'Close',
                         variant: 'danger',
                     });
