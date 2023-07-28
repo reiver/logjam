@@ -1324,12 +1324,7 @@ export class SparkRTC {
             const stream = event.streams[0];
 
             if (stream && stream.active) {
-                const audioTrack = stream.getAudioTracks()[0];
-                if (audioTrack) {
-                    this.updateTheStatus(`got Audio`, audioTrack);
-                    this.detectAudioStatus(audioTrack);
-                }
-
+            
                 this.updateTheStatus(`user-by-stream ${stream.id}`);
                 if (await this.checkSocketStatus())
                     this.socket.send(
@@ -1767,22 +1762,6 @@ export class SparkRTC {
         }, 4000);
 
         return peerConnection;
-    };
-
-    detectAudioStatus = (audioTrack) => {
-        if (audioTrack.kind === 'audio') {
-            audioTrack.onmute = () => {
-                this.updateTheStatus(`Audio is muted`);
-            };
-
-            audioTrack.onunmute = () => {
-                this.updateTheStatus(`Audio is unmuted`);
-            };
-
-            audioTrack.onended = () => {
-                this.updateTheStatus(`Audio is ended`);
-            };
-        }
     };
     checkBrowser() {
         // Get the user-agent string
