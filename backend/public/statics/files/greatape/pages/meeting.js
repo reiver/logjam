@@ -155,9 +155,15 @@ const Meeting = () => {
 
             sparkRTC.value = createSparkRTC(role, {
                 onAudioStatusChange: (message) => {
-                    streamers.value[message.stream][message.type] =
-                        message.value;
-                    streamers.value = { ...streamers.value };
+                    log('audioStatus: ', message);
+                    if (
+                        message.stream != undefined &&
+                        message.type != undefined
+                    ) {
+                        streamers.value[message.stream][message.type] =
+                            message.value;
+                        streamers.value = { ...streamers.value };
+                    }
                 },
                 onUserInitialized: (userId) => {
                     currentUser.userId = userId;
