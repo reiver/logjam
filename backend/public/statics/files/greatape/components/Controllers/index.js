@@ -64,11 +64,26 @@ export const Controllers = () => {
     };
     const onRaiseHand = async () => {
         if (isStreamming) {
-            updateUser({
-                isStreamming: false,
-                ableToRaiseHand: true,
-            });
-            sparkRTC.value.lowerHand();
+            makeDialog(
+                'confirm',
+                {
+                    message: `Are you sure you want to leave the stage and get beck to the audience list?`,
+                    title: 'Leave The Stage',
+                },
+                () => {
+                    updateUser({
+                        isStreamming: false,
+                        ableToRaiseHand: true,
+                    });
+                    sparkRTC.value.lowerHand();
+                },
+                () => {},
+                {
+                    okText: 'Leave the stage',
+                    okButtonVariant: 'red',
+                    cancelText: 'Let me stay!',
+                }
+            );
         } else {
             updateUser({
                 isRaisingHand: true,
@@ -124,7 +139,7 @@ export const Controllers = () => {
             (isStreamming && !isHost)) &&
         html`<${Tooltip} label=${
             isStreamming
-                ? 'Put Hand Down'
+                ? 'Leave the stage'
                 : ableToRaiseHand
                 ? 'Raise Hand'
                 : 'Raise hand request has been sent'
@@ -135,7 +150,7 @@ export const Controllers = () => {
                 variant=${isStreamming && 'danger'}
                 disabled=${!ableToRaiseHand}
             >
-                <${Icon} icon="Hand" /> <//>
+                <${Icon} icon="${isStreamming ? `OffStage` : `Hand`}" /> <//>
 								<//>
 						</div>`}
         ${hasCamera &&
