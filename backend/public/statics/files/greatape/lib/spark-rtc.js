@@ -233,6 +233,9 @@ export class SparkRTC {
 
         let audiencePeerConnection;
         switch (msg.type) {
+            case 'muted':
+                this.onAudioStatusChange(msg);
+                break;
             case 'video-offer':
             case 'alt-video-offer':
                 this.updateTheStatus(
@@ -1194,14 +1197,7 @@ export class SparkRTC {
             let displyedStream = false;
 
             receive.onmessage = (e) => {
-                const msg = JSON.parse(e.data);
-                if (msg.type === 'muted') {
-                    this.updateTheStatus(`audio status `, msg.value);
 
-                    this.onAudioStatusChange(msg);
-
-                    return;
-                }
                 this.broadcastersMessage = e.data;
 
                 if (!displyedStream) {
@@ -2210,24 +2206,22 @@ export class SparkRTC {
         if (this.localStream) {
             this.lastAudioState = enabled === true ? 'Enabled' : 'Disabled';
             this.localStream.getTracks().forEach((track) => {
-                if (track.kind === 'audio') track.enabled = enabled;
-                this.sendAudioStatus(enabled);
+                if (track.kind === 'audio') {
+                    track.enabled = enabled;
+                    this.sendAudioStatus(enabled);
+                }
             });
         }
     };
 
     sendAudioStatus = (enable) => {
-        for (const target in this.myPeerConnectionArray) {
-            let pc = this.myPeerConnectionArray[target];
-            if (pc.dc) {
-                const data = {
-                    type: 'muted',
-                    value: !enable,
-                    stream: this.localStream.id,
-                };
-
-                pc.dc.send(JSON.stringify(data));
-            }
+        const data = {
+            type: 'muted',
+            value: !enable,
+            stream: this.localStream.id,
+        };
+        if (this.checkSocketStatus()) {
+            this.socket.send(JSON.stringify(data));
         }
     };
 
