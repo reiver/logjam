@@ -29,7 +29,7 @@ export const ConfirmDialog = ({
                 >
                 <${Icon}
                     icon="Close"
-                    class="absolute top-1/2 sm:right-5 sm:right-[unset] left-5 sm:left-[unset] transform -translate-y-1/2 cursor-pointer"
+                    class="absolute top-1/2 sm:right-5 right-[unset] left-5 sm:left-[unset] transform -translate-y-1/2 cursor-pointer"
                     onClick=${onClose}
                 />
             </div>

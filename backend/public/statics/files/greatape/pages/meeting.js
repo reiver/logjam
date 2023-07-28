@@ -154,8 +154,10 @@ const Meeting = () => {
             log(`Setup SparkRTC`);
 
             sparkRTC.value = createSparkRTC(role, {
-                onAudioStatusChange: (msg) => {
-                    console.log('AudioStatus: ', msg);
+                onAudioStatusChange: (message) => {
+                    streamers.value[message.stream][message.type] =
+                        message.value;
+                    streamers.value = { ...streamers.value };
                 },
                 onUserInitialized: (userId) => {
                     currentUser.userId = userId;
@@ -187,7 +189,7 @@ const Meeting = () => {
                             local = true;
                         }
                     }
-                    log(`[Remote Stream Callback] ${stream}`);
+                    log(`[Remote Stream Callback]`, stream);
                     log(`NameCallback: ${stream.name}`);
 
                     streamers.value = {
@@ -199,6 +201,9 @@ const Meeting = () => {
                             avatar: '',
                             raisedHand: false,
                             hasCamera: false,
+                            muted: streamers.value[stream.id]
+                                ? streamers.value[stream.id].muted
+                                : undefined,
                             stream,
                             isLocalStream: local,
                             isShareScreen: stream.isShareScreen || false,
@@ -363,8 +368,6 @@ const Meeting = () => {
                     log(`Connection Status: `, status);
                 },
                 updateUi: () => {
-                    //Todo Nariman
-                    //show original controllers i:e, rise hand, reload, mute meeting
                     updateUser({
                         showControllers: true,
                         isStreamming: false,
@@ -372,8 +375,6 @@ const Meeting = () => {
                     });
                 },
                 parentDcMessage: () => {
-                    // Todo Nariman
-                    // show message: You've Got disconnected
                     makeDialog('info', {
                         message: 'You’ve got disconnected',
                         icon: 'Close',
