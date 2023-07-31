@@ -195,6 +195,7 @@ export const Stage = () => {
                                   isUserMuted=${attendee.muted}
                                   name=${attendee.name}
                                   isHostStream=${attendee.isHost}
+                                  isShareScreen=${attendee.isShareScreen}
                               />
                           </div>`;
                       })}
@@ -207,7 +208,15 @@ export const Stage = () => {
 };
 
 export const Video = memo(
-    ({ stream, isMuted, isHostStream, name, userId, isUserMuted }) => {
+    ({
+        stream,
+        isMuted,
+        isHostStream,
+        name,
+        userId,
+        isUserMuted,
+        isShareScreen,
+    }) => {
         const [muted, setMuted] = useState(true);
         const { isHost } = currentUser.value;
         const menu = useRef();
@@ -291,7 +300,9 @@ export const Video = memo(
                     autoplay
                     playsinline
                     muted="${muted}"
-                    className="w-full h-full object-cover rounded-lg"
+                    className="w-full h-full ${!isShareScreen
+                        ? 'object-cover'
+                        : ''} rounded-lg"
                 />
                 <div
                     class="px-4 py-1 bg-black bg-opacity-50 text-white rounded-full absolute top-3 left-3 text-medium-12"
