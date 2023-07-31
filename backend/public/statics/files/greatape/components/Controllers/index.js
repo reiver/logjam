@@ -1,4 +1,5 @@
 import { signal } from '@preact/signals';
+import { useState } from 'preact';
 import {
     Icon,
     IconButton,
@@ -96,8 +97,17 @@ export const Controllers = () => {
             });
         }
     };
+
+    const [reconnectable, setReconnectable] = useState(true);
+
     const handleReload = () => {
-        sparkRTC.value.startProcedure(true);
+        if (reconnectable) {
+            setReconnectable(false);
+            sparkRTC.value.startProcedure(true);
+            setTimeout(() => {
+                setReconnectable(true);
+            }, 2500);
+        }
     };
 
     const toggleBottomSheet = () => {};
@@ -116,7 +126,7 @@ export const Controllers = () => {
 
         ${!isStreamming &&
         html` <${Tooltip} label="Reconnect">
-            <${IconButton} onClick=${handleReload}>
+            <${IconButton} onClick=${handleReload} disabled=${!reconnectable}>
                 <${Icon} icon="Reconnect" />
             <//>
         <//>`}
