@@ -97,7 +97,7 @@ func (ctrl *AuxiliaryNodeController) Join(rw http.ResponseWriter, req *http.Requ
 	if ctrl.helper.HandleIfErr(rw, err, 400) {
 		return
 	}
-	err = ctrl.roomRepo.AddMember(reqModel.RoomId, models.AuxiliaryNodeId, "auxiliary-node", "", "")
+	err = ctrl.roomRepo.AddMember(reqModel.RoomId, models.AuxiliaryNodeId, "{}", "", "")
 	if ctrl.helper.HandleIfErr(rw, err, 500) {
 		return
 	}

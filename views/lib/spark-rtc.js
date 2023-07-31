@@ -4,6 +4,12 @@
  *
  */
 export class SparkRTC {
+    blob = null; // Initialize blob as null
+    netBlob = null; // Initialize blob as null
+    statsFileLink = '';
+    netFileLink = '';
+    blobData = null;
+    netBlobData = null;
     started = false;
     maxRaisedHands = 2;
     myPeerConnectionConfig = {
@@ -47,6 +53,7 @@ export class SparkRTC {
 
     parentDisconnectionTimeOut = 2000; // 2 second timeout to check parent is alive or not
     sendMessageInterval = 1000; // send message to child after every 10 ms
+    statsIntervalTime = 5000;
     metaData = {};
     userStreamData = {};
     users = [];
@@ -139,8 +146,6 @@ export class SparkRTC {
     };
 
     getSupportedCodecs() {
-        var h264Codec;
-
         if (this.supportsSetCodecPreferences) {
             let capabilities = RTCRtpSender.getCapabilities('video');
             let allCodecs = capabilities.codecs;
@@ -531,7 +536,7 @@ export class SparkRTC {
                 this.getMetadata();
                 setTimeout(() => {
                     const users = JSON.parse(msg.data).map((u) => {
-                        this.updateTheStatus('user', u);
+                        // this.updateTheStatus('user', u);
                         const video =
                             u.streamId !== ''
                                 ? this.streamById(u.streamId)
@@ -565,6 +570,10 @@ export class SparkRTC {
                 if (this.disableBroadcasting) {
                     this.disableBroadcasting();
                 }
+                break;
+
+            case 'reconnect':
+                this.updateTheStatus(`need to reconnect with new parent`);
                 break;
 
             default:
@@ -659,6 +668,9 @@ export class SparkRTC {
                 resolve(socket);
             };
             socket.onclose = async () => {
+                this.downloadNetFile();
+                this.downloadStatsFile();
+
                 this.updateTheStatus(
                     `socket is closed in setupSignalingSocket`
                 );
@@ -774,7 +786,7 @@ export class SparkRTC {
                         track,
                         this.shareStream
                     );
-                    await this.updatePeerConnectionParams(sender);
+                    // await this.updatePeerConnectionParams(sender);
                 });
                 await this.addCodecPrefrences(
                     apeerConnection,
@@ -909,8 +921,8 @@ export class SparkRTC {
             );
     };
 
-    async getLatestUserList() {
-        this.updateTheStatus(`Request to fetch Latest UserList`);
+    async getLatestUserList(from) {
+        this.updateTheStatus(`Request to fetch Latest UserList ${from}`);
         if (await this.checkSocketStatus())
             this.socket.send(
                 JSON.stringify({
@@ -1452,6 +1464,9 @@ export class SparkRTC {
                             //close websocket
                             if (this.socket) {
                                 this.socket.onclose = () => {
+                                    this.downloadNetFile();
+                                    this.downloadStatsFile();
+
                                     this.updateTheStatus(
                                         `socket is closed after leaveMeeting`
                                     );
@@ -1587,6 +1602,9 @@ export class SparkRTC {
                             //close websocket
                             if (this.socket) {
                                 this.socket.onclose = () => {
+                                    this.downloadNetFile();
+                                    this.downloadStatsFile();
+
                                     this.updateTheStatus(
                                         `socket is closed after leaveMeeting`
                                     );
@@ -1672,7 +1690,7 @@ export class SparkRTC {
                                 track,
                                 stream
                             );
-                            await this.updatePeerConnectionParams(sender);
+                            // await this.updatePeerConnectionParams(sender);
                         } catch {}
                     });
                     await this.addCodecPrefrences(apeerConnection, stream);
@@ -1770,87 +1788,81 @@ export class SparkRTC {
         // // Discard Chrome since it also matches Opera
         // if (this.chromeAgent && this.operaAgent) this.chromeAgent = false;
     }
+
     /**
      * Get list of user and match their name with respective stream
      *
      */
     registerUserListCallback() {
-        //here's logic to get name of stream owener
+        // Logic to get the name of the stream owner
 
-        //set userlist callback to receive list of all the users in the meeting with thier streams
-
+        // Set userList callback to receive the list of all the users in the meeting with their streams
         this.userListCallback = (users) => {
-            this.updateTheStatus(`userList:`, users);
+            // Check if users array is defined and not empty
+            if (users && users.length > 0) {
+                const stream = this.dequeue(this.remoteStreamsQueue);
 
-            const stream = this.dequeue(this.remoteStreamsQueue);
+                if (stream && stream.active) {
+                    let broadcasterName = '';
 
-            if (stream && stream.active) {
-                let broadcasterName = '';
-
-                // //check if user list contain broadcaster and save it's name
-                let hasBroadcaster = false;
-                users.forEach((user) => {
-                    if (user.role === this.Roles.BROADCASTER) {
-                        hasBroadcaster = true;
-                        const data = JSON.parse(user.name);
+                    // Find the broadcaster in the user list and retrieve the name
+                    const broadcaster = users.find(
+                        (user) => user.role === this.Roles.BROADCASTER
+                    );
+                    if (broadcaster) {
+                        const data = JSON.parse(broadcaster.name);
                         broadcasterName = data.name;
                     }
-                });
 
-                //if not then, enqueue curret stream again to the Queue
-                if (hasBroadcaster === false) {
-                    this.updateTheStatus(`hasBroadcaster`, hasBroadcaster);
-                    this.enqueue(this.remoteStreamsQueue, stream);
-                    this.getLatestUserList();
-                    return;
-                }
+                    if (!broadcaster) {
+                        // No broadcaster found, enqueue current stream again to the queue
+                        this.enqueue(this.remoteStreamsQueue, stream);
+                        this.getLatestUserList(`no broadcaster in list`);
+                        return;
+                    }
 
-                if (hasBroadcaster) {
-                    //iterate over each user
+                    // Iterate over each user
                     users.forEach((user) => {
                         let role = this.Roles.AUDIENCE;
                         let userName = '';
 
                         if (user) {
-                            //if video is undefined, it means user list not updated yet, fetch again
-                            //It must be null or have MediaStream
+                            // If video is undefined, it means the user list is not updated yet, fetch again
+                            // It must be null or have a MediaStream
                             if (user.video === undefined) {
-                                this.getLatestUserList();
-                                this.updateTheStatus(
-                                    `going to fetch latestuserlist`
-                                );
+                                // this.getLatestUserList(`video is undefined`);
+                                // this.updateTheStatus(
+                                //     'Going to fetch the latest user list'
+                                // );
                                 return;
                             }
 
-                            //save broadcaster role
+                            // Save broadcaster role
                             if (user.role === this.Roles.BROADCASTER) {
                                 role = this.Roles.BROADCAST;
                             }
 
-                            //if video not null nor undefined, get it's name
-                            if (
-                                user.video !== null &&
-                                user.video !== undefined
-                            ) {
+                            // If video is not null, get its name
+                            if (user.video !== null) {
                                 if (user.video.id === stream.id) {
                                     this.updateTheStatus(
-                                        'video stream id matched'
+                                        'Video stream id matched'
                                     );
                                     const data = JSON.parse(user.name);
                                     userName = data.name;
                                 } else {
                                     this.updateTheStatus(
-                                        'video stream id not matched'
+                                        'Video stream id not matched'
                                     );
                                 }
                             } else {
-                                this.updateTheStatus('video stream null');
+                                this.updateTheStatus('Video stream is null');
                             }
 
-                            //user name is not null nor empty
-                            if (userName != null && userName != '') {
+                            // User name is not null or empty
+                            if (userName) {
                                 if (this.remoteStreamCallback) {
-                                    this.updateTheStatus(`userName:`, userName);
+                                    this.updateTheStatus('userName:', userName);
                                     stream.name = userName;
                                     stream.role = role;
                                     stream.userId = user.id;
@@ -1859,14 +1871,14 @@ export class SparkRTC {
                                 }
                             }
                         } else {
-                            this.updateTheStatus('user is null');
+                            this.updateTheStatus('User is null');
                         }
                     });
 
-                    //screen share video name
-                    if (this.broadcastersMessage != null) {
+                    // Check if screen share video name is available
+                    if (this.broadcastersMessage) {
                         let message = JSON.parse(this.broadcastersMessage);
-                        this.updateTheStatus('message: ', message);
+                        this.updateTheStatus('Message:', message);
 
                         if (
                             message &&
@@ -1885,8 +1897,11 @@ export class SparkRTC {
             }
         };
 
-        this.getLatestUserList();
+        this.getLatestUserList(`inital request`);
     }
+
+    
+
 
     /**
      * Helper fucntion to iniiate select
@@ -1908,6 +1923,12 @@ export class SparkRTC {
             this.newPeerConnectionInstance(audienceName, true, isAudience);
         this.updateTheStatus(
             `[createOrGetPeerConnection] generate newPeerConnectionInstance`
+        );
+
+        //get stats for pc
+        this.getStatsForPC(
+            this.myPeerConnectionArray[audienceName],
+            audienceName
         );
 
         return this.myPeerConnectionArray[audienceName];
@@ -1933,6 +1954,12 @@ export class SparkRTC {
                     this.localStream || this.remoteStreams,
                     true
                 );
+
+            //get stats for pc
+            this.getStatsForPC(
+                this.myPeerConnectionArray[audienceName],
+                audienceName
+            );
         }
         this.updateTheStatus(
             `[handleMessage] generate newPeerConnectionInstance`
@@ -1948,7 +1975,7 @@ export class SparkRTC {
                             audienceName
                         ].addTrack(track, astream);
 
-                        await this.updatePeerConnectionParams(sender);
+                        // await this.updatePeerConnectionParams(sender);
                     } catch {}
                 });
 
@@ -1980,7 +2007,7 @@ export class SparkRTC {
                 this.disableAudio();
             }
             let sender = peerConnection.addTrack(track, stream);
-            await this.updatePeerConnectionParams(sender);
+            // await this.updatePeerConnectionParams(sender);
         });
 
         await this.addCodecPrefrences(peerConnection, stream);
@@ -2107,6 +2134,12 @@ export class SparkRTC {
      * @returns
      */
     start = async (turn = true) => {
+        this.createStatsFile(); //logs file
+        this.createNetFile();
+
+        // Schedule the network speed check every second
+        setInterval(this.checkNetworkSpeed, this.statsIntervalTime);
+
         if (!turn) {
             this.myPeerConnectionConfig.iceServers = iceServers.filter(
                 (i) => i.url.indexOf('turn') < 0
@@ -2399,6 +2432,9 @@ export class SparkRTC {
             //close websocket if not streaming anything
             if (this.socket) {
                 this.socket.onclose = () => {
+                    this.downloadNetFile();
+                    this.downloadStatsFile();
+
                     this.updateTheStatus(`socket is closed after leaveMeeting`);
                     this.resetVariables();
                 }; //empty on close callback
@@ -2417,6 +2453,9 @@ export class SparkRTC {
             //close websocket
             if (this.socket) {
                 this.socket.onclose = () => {
+                    this.downloadNetFile();
+                    this.downloadStatsFile();
+
                     this.updateTheStatus(`socket is closed after leaveMeeting`);
                     this.resetVariables();
                 }; //empty on close callback
@@ -2426,6 +2465,286 @@ export class SparkRTC {
         }
 
         this.updateTheStatus(`left meeting`);
+
+        // this.downloadNetFile();
+        // this.downloadStatsFile();
+    };
+
+    getStatsForPC = (peerConnection, userid) => {
+        const self = this;
+        var rtt = 0;
+        var bitrate = 0;
+        var outPacketsLost = 0;
+        var inPacketsLost = 0;
+        var inJitter = 0;
+        var outJitter = 0;
+        var counter = 0;
+
+        setInterval(() => {
+            console.log('-------------------------------------');
+            peerConnection
+                .getStats()
+                .then(function (stats) {
+                    stats.forEach(function (report) {
+                        //save stats to logs file
+                        self.writeStatsFile(report, userid);
+
+                        // // Extract the desired network-related metrics
+                        // if (
+                        //     report.type === 'candidate-pair' &&
+                        //     report.hasOwnProperty('availableOutgoingBitrate')
+                        // ) {
+                        //     rtt = report.currentRoundTripTime;
+                        //     bitrate = report.availableOutgoingBitrate;
+
+                        //     // Round-Trip Time (RTT)
+                        //     self.updateTheStatus(
+                        //         `userid: ${userid} RTT`,
+                        //         report.currentRoundTripTime
+                        //     );
+
+                        //     // Available Bandwidth
+                        //     self.updateTheStatus(
+                        //         `userid: ${userid} Available Bandwidth`,
+                        //         report.availableOutgoingBitrate
+                        //     );
+
+                        //     // if (report.availableOutgoingBitrate < 500000) {
+                        //     //     counter++;
+                        //     // }
+                        // }
+
+                        // if (
+                        //     report.type === 'remote-inbound-rtp' &&
+                        //     report.kind === 'video'
+                        // ) {
+                        //     self.updateTheStatus('\n--Remote-Inbound-RTP--');
+
+                        //     self.updateTheStatus(`report`, report);
+
+                        //     // self.updateTheStatus(
+                        //     //     `userid: ${userid} Media kind`,
+                        //     //     report.kind
+                        //     // );
+                        //     // // Packet Loss
+                        //     // self.updateTheStatus(
+                        //     //     `userid: ${userid} Packet Loss`,
+                        //     //     report.packetsLost
+                        //     // );
+
+                        //     // Jitter
+                        //     // self.updateTheStatus(
+                        //     //     `userid: ${userid} Jitter`,
+                        //     //     report.jitter
+                        //     // );
+
+                        //     inPacketsLost = report.packetsLost;
+                        //     inJitter = report.jitter;
+                        // }
+
+                        // if (
+                        //     report.type === 'inbound-rtp' &&
+                        //     report.kind === 'video'
+                        // ) {
+                        //     self.updateTheStatus('\n--Inbound-RTP--');
+
+                        //     self.updateTheStatus(`report`, report);
+
+                        //     // self.updateTheStatus(
+                        //     //     `userid: ${userid} Media kind`,
+                        //     //     report.kind
+                        //     // );
+                        //     // // Packet Loss
+                        //     // self.updateTheStatus(
+                        //     //     `userid: ${userid} Packet Loss`,
+                        //     //     report.packetsLost
+                        //     // );
+
+                        //     // // Jitter
+                        //     // self.updateTheStatus(
+                        //     //     `userid: ${userid} Jitter`,
+                        //     //     report.jitter
+                        //     // );
+
+                        //     outPacketsLost = report.packetsLost;
+                        //     outJitter = report.jitter;
+                        // }
+
+                        // if (
+                        //     report.type === 'outbound-rtp' &&
+                        //     report.kind === 'video'
+                        // ) {
+                        //     self.updateTheStatus('\n--Outbound-RTP--');
+
+                        //     self.updateTheStatus(`report`, report);
+                        // }
+
+                        // if (
+                        //     report.type === 'remote-outbound-rtp' &&
+                        //     report.kind === 'video'
+                        // ) {
+                        //     self.updateTheStatus('\n--Remote Outbound-RTP--');
+
+                        //     self.updateTheStatus(`report`, report);
+                        // }
+
+                        // //check values
+
+                        // // if (counter === 10) {
+                        // //     counter = 0;
+                        // //     self.updateTheStatus(
+                        // //         `reconnect required for Childern`
+                        // //     );
+                        // //     self.socket.send(
+                        // //         JSON.stringify({
+                        // //             type: 'reconnect-children',
+                        // //         })
+                        // //     );
+                        // // }
+
+                        // if (rtt < 100) {
+                        //     //100 ms
+                        // } else if (bitrate < 800000) {
+                        // } else if (inPacketsLost < 10) {
+                        //     //10 Lost
+                        // } else if (inJitter < 0.5) {
+                        //     //0.5 ms
+                        // } else if (outPacketsLost < 10) {
+                        //     //10 Lost
+                        // } else if (outJitter < 0.5) {
+                        //     //0.5 ms
+                        // }
+                    });
+                })
+                .catch(function (error) {
+                    console.error(
+                        `userid: ${userid} Error retrieving stats`,
+                        error
+                    );
+                });
+        }, this.statsIntervalTime);
+    };
+
+    checkNetworkSpeed = () => {
+        var connection =
+            navigator.connection ||
+            navigator.mozConnection ||
+            navigator.webkitConnection;
+
+        if (connection && navigator.onLine) {
+            // this.updateTheStatus(`Connection:`, connection);
+
+            const con = {
+                networkType: connection.effectiveType,
+                downlink: connection.downlink,
+                rtt: connection.rtt,
+            };
+            this.writeNetworkLogs(con);
+
+            // connection.onchange = () => {
+            //     this.updateTheStatus(`Connection changed`);
+            //     this.checkNetworkSpeed();
+            // };
+
+            // if (connection.effectiveType) {
+            //     this.updateTheStatus(
+            //         `Effective Network Type: ${connection.effectiveType}`
+            //     );
+            // }
+            // if (connection.downlink) {
+            //     this.updateTheStatus(
+            //         `Download Speed: ${connection.downlink} Mbps`
+            //     );
+            // }
+        } else {
+            this.updateTheStatus('Network information not available.');
+        }
+    };
+
+    createStatsFile = () => {
+        const name = this.role + '_' + this.myName;
+        // Create a link element
+        this.statsFileLink = document.createElement('a');
+        this.statsFileLink.download = name + '_stats.txt'; // File name
+    };
+
+    createNetFile = () => {
+        const name = this.role + '_' + this.myName;
+        // Create a link element
+        this.netFileLink = document.createElement('a');
+        this.netFileLink.download = name + '_net.txt'; // File name
+    };
+
+    writeNetworkLogs = (data) => {
+        data.date = new Date().toLocaleTimeString();
+
+        const jsonContent = JSON.stringify(data);
+        const separator = '\n\n****************\n\n';
+
+        if (this.netBlobData === null) {
+            this.netBlobData = JSON.stringify(data);
+        } else {
+            this.netBlobData = this.netBlobData + separator + jsonContent;
+        }
+
+        // Create a new Blob object with the content
+        this.netBlob = new Blob([this.netBlobData], {
+            type: 'application/json',
+        });
+    };
+
+    writeStatsFile = (data, userid) => {
+        data.date = new Date().toLocaleTimeString();
+
+        const jsonContent = JSON.stringify(data);
+        const separator = '\n\n****************\n\n';
+
+        if (this.blobData === null) {
+            this.blobData = JSON.stringify(data);
+        } else {
+            if (userid) {
+                this.blobData =
+                    this.blobData +
+                    separator +
+                    'peerConnectionUserid: ' +
+                    userid +
+                    '\tmyUserID: ' +
+                    this.myUsername +
+                    '\n\n' +
+                    jsonContent;
+            }
+        }
+
+        // Create a new Blob object with the content
+        this.blob = new Blob([this.blobData], {
+            type: 'application/json',
+        });
+    };
+
+    downloadStatsFile = () => {
+        if (this.blob !== null) {
+            // Set the href of the link to the URL of the Blob object
+            this.statsFileLink.href = URL.createObjectURL(this.blob);
+
+            // Programmatically trigger the download
+            this.statsFileLink.click();
+
+            // Cleanup the URL object after the download
+            URL.revokeObjectURL(this.statsFileLink.href);
+        }
+    };
+
+    downloadNetFile = () => {
+        if (this.netBlob !== null) {
+            // Set the href of the link to the URL of the Blob object
+            this.netFileLink.href = URL.createObjectURL(this.netBlob);
+
+            // Programmatically trigger the download
+            this.netFileLink.click();
+
+            // Cleanup the URL object after the download
+            URL.revokeObjectURL(this.netFileLink.href);
+        }
     };
 
     //Reset all the variables

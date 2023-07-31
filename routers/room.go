@@ -94,7 +94,9 @@ func (r *roomWSRouter) handleEvent(ctx *models.WSContext) {
 	if ctx.ParsedMessage == nil || len(ctx.PureMessage) <= 2 {
 		return
 	}
-	_ = r.logger.Log("ws_router", contracts.LDebug, "ID["+strconv.FormatUint(ctx.SocketID, 10)+"] event: "+ctx.ParsedMessage.Type)
+	if ctx.ParsedMessage.Type != "tree" && ctx.ParsedMessage.Type != "ping" {
+		_ = r.logger.Log("ws_router", contracts.LDebug, "ID["+strconv.FormatUint(ctx.SocketID, 10)+"] event: "+ctx.ParsedMessage.Type)
+	}
 	switch ctx.ParsedMessage.Type {
 	case "start":
 		{

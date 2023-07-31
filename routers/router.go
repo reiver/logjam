@@ -6,8 +6,7 @@ import (
 	"github.com/sparkscience/logjam/controllers"
 	"github.com/sparkscience/logjam/models/contracts"
 	"net/http"
-	"strconv"
-	"time"
+	"strings"
 )
 
 type IRouteRegistrar interface {
@@ -31,33 +30,20 @@ func NewRouter(roomWSCtrl *controllers.RoomWSController, auxiliaryNodeCtrl *cont
 }
 
 func (r *Router) RegisterRoutes() error {
-	r.router.Use(func(handler http.Handler) http.Handler {
-		return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
-			request.Header.Add("startTime", strconv.FormatInt(time.Now().UnixMicro(), 10))
-			handler.ServeHTTP(writer, request)
-		})
-	})
 	r.roomWSRouter.registerRoutes(r.router)
 	r.auxiliaryNodeRouter.registerRoutes(r.router)
 
 	r.router.PathPrefix("/").Handler(http.FileServer(http.Dir("views/")))
 	r.router.Use(func(handler http.Handler) http.Handler {
 		return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
-			//startTime, err := strconv.ParseUint(request.Header.Get("startTime"), 10, 64)
-			//if err != nil {
-			//println(err.Error())
-			//return
-			//}
-			/*a := time.UnixMicro(int64(startTime))
-			b := time.Now()
-			diff := b.Sub(a)
-			println(diff.String())
-			r.logger.Log("HTTP", contracts.LDebug, fmt.Sprintf(`%ds %s`, diff.Milliseconds(), request.URL.Path))*/
-			r.logger.Log("HTTP", contracts.LDebug, fmt.Sprintf(`%s`, request.URL.Path))
+			ip := request.RemoteAddr
+			if strings.Index(ip, ":") > 0 {
+				ip = ip[:strings.Index(ip, ":")]
+			}
+			r.logger.Log("HTTP", contracts.LDebug, fmt.Sprintf(`%s | %s "%s"`, ip, request.Method, request.URL.Path))
 			handler.ServeHTTP(writer, request)
 		})
 	})
-	println("routes registered")
 	return nil
 }
 

@@ -185,10 +185,21 @@ func (c *RoomWSController) Role(ctx *models.WSContext) {
 			}, ctx.SocketID)
 			return
 		}
-		_ = c.socketSVC.Send(models.MessageContract{
-			Type: "add_audience",
-			Data: strconv.FormatUint(ctx.SocketID, 10),
-		}, *parentId)
+		if *parentId != models.AuxiliaryNodeId {
+			_ = c.socketSVC.Send(models.MessageContract{
+				Type: "add_audience",
+				Data: strconv.FormatUint(ctx.SocketID, 10),
+			}, *parentId)
+		} else {
+			err := c.anRepo.CreatePeer(ctx.RoomId, ctx.SocketID, true, false)
+			if err != nil {
+				_ = c.socketSVC.Send(models.MessageContract{
+					Type: "error",
+					Data: err.Error(),
+				}, ctx.SocketID)
+			}
+		}
+		go c.emitUserList(ctx.RoomId)
 	}
 }
 func (c *RoomWSController) Stream(ctx *models.WSContext) {
