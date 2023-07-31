@@ -411,9 +411,15 @@ start:
 					nodeChildrenIdList = append(nodeChildrenIdList, parentLostChild.ID)
 				}
 				(*node).Children = append((*node).Children[:i], (*node).Children[i+1:]...)
+				if memberId == models.AuxiliaryNodeId {
+					r.rooms[roomId].AuxiliaryNode = nil
+				}
 				found = true
 				break
 			}
+		}
+		if found {
+			break
 		}
 	}
 	if !found {

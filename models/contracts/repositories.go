@@ -30,6 +30,9 @@ type IRoomRepository interface {
 }
 
 type IAuxiliaryNodeServiceRepository interface {
+	Init(svcAddr string) error
+	Start() error
+	ResetRoom(roomId string) error
 	CreatePeer(roomId string, id uint64, canPublish bool, isCaller bool) error
 	SendICECandidate(roomId string, id uint64, iceCandidate any) error
 	SendAnswer(roomId string, peerId uint64, answer any) error

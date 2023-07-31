@@ -15,13 +15,18 @@ type auxiliaryNodeRepository struct {
 	svcAddr string
 }
 
-func NewAuxiliaryNodeRepository(svcAddr string) contracts.IAuxiliaryNodeServiceRepository {
+func NewAuxiliaryNodeRepository() contracts.IAuxiliaryNodeServiceRepository {
 	return &auxiliaryNodeRepository{
 		client: &http.Client{
 			Timeout: 8 * time.Second,
 		},
-		svcAddr: svcAddr,
+		svcAddr: "",
 	}
+}
+
+func (a *auxiliaryNodeRepository) Init(svcAddr string) error {
+	a.svcAddr = svcAddr
+	return nil
 }
 
 func (a *auxiliaryNodeRepository) CreatePeer(roomId string, id uint64, canPublish bool, isCaller bool) error {
@@ -124,6 +129,39 @@ func (a *auxiliaryNodeRepository) ClosePeer(roomId string, id uint64) error {
 		return err
 	}
 	resp, err := a.client.Do(req)
+	if err != nil {
+		return err
+	}
+	if resp.StatusCode > 204 {
+		return errors.New(resp.Status)
+	}
+	return nil
+}
+
+func (a *auxiliaryNodeRepository) ResetRoom(roomId string) error {
+	body, err := getReader(map[string]any{"roomId": roomId})
+	if err != nil {
+		return err
+	}
+	req, err := http.NewRequest(http.MethodDelete, a.svcAddr+"/room/", body)
+	if err != nil {
+		return err
+	}
+	resp, err := a.client.Do(req)
+	if err != nil {
+		return err
+	}
+	if resp.StatusCode > 204 {
+		return errors.New(resp.Status)
+	}
+	return nil
+}
+
+func (a *auxiliaryNodeRepository) Start() error {
+	if a.svcAddr == "" {
+		return errors.New("auxiliaryNodeRepository instance is not initialized yet(waiting for goldgorilla hook)...")
+	}
+	resp, err := a.client.Post(a.svcAddr+"/room/", "application/json", nil)
 	if err != nil {
 		return err
 	}

@@ -8,22 +8,25 @@ import (
 	"io"
 	"net/http"
 	"strconv"
+	"time"
 )
 
 type AuxiliaryNodeController struct {
 	roomRepo  contracts.IRoomRepository
 	anSVCRepo contracts.IAuxiliaryNodeServiceRepository
 	socketSVC contracts.ISocketService
+	conf      *models.ConfigModel
 	helper    *RestResponseHelper
 	logger    contracts.ILogger
 }
 
-func NewAuxiliaryNodeController(roomRepo contracts.IRoomRepository, anSVCRepo contracts.IAuxiliaryNodeServiceRepository, socketSVC contracts.ISocketService, helper *RestResponseHelper, logger contracts.ILogger) *AuxiliaryNodeController {
+func NewAuxiliaryNodeController(roomRepo contracts.IRoomRepository, anSVCRepo contracts.IAuxiliaryNodeServiceRepository, socketSVC contracts.ISocketService, conf *models.ConfigModel, helper *RestResponseHelper, logger contracts.ILogger) *AuxiliaryNodeController {
 	return &AuxiliaryNodeController{
 		roomRepo:  roomRepo,
 		socketSVC: socketSVC,
 		logger:    logger,
 		anSVCRepo: anSVCRepo,
+		conf:      conf,
 		helper:    helper,
 	}
 }
@@ -97,6 +100,8 @@ func (ctrl *AuxiliaryNodeController) Join(rw http.ResponseWriter, req *http.Requ
 	if ctrl.helper.HandleIfErr(rw, err, 400) {
 		return
 	}
+	ctrl.conf.AuxiliaryNodeSVCAddr = reqModel.ServiceAddr
+	ctrl.anSVCRepo.Init(reqModel.ServiceAddr)
 	err = ctrl.roomRepo.AddMember(reqModel.RoomId, models.AuxiliaryNodeId, "{}", "", "")
 	if ctrl.helper.HandleIfErr(rw, err, 500) {
 		return
@@ -118,4 +123,27 @@ func (ctrl *AuxiliaryNodeController) Join(rw http.ResponseWriter, req *http.Requ
 		return
 	}
 	ctrl.helper.Write(rw, nil, 204)
+	go func(roomId string, svcAddr string) {
+		for {
+			res, err := http.Get(svcAddr + "/healthcheck")
+			if err != nil {
+				break
+			}
+			if res.StatusCode > 204 {
+				break
+			}
+			time.Sleep(2 * time.Second)
+		}
+		_, childrenIdList, err := ctrl.roomRepo.RemoveMember(roomId, models.AuxiliaryNodeId)
+		if err != nil {
+			println(err.Error())
+			return
+		}
+		parentDCEvent := models.MessageContract{
+			Type: "event-parent-dc",
+			Data: strconv.FormatUint(models.AuxiliaryNodeId, 10),
+		}
+		_ = ctrl.socketSVC.Send(parentDCEvent, childrenIdList...)
+		println("deleted an from tree")
+	}(reqModel.RoomId, reqModel.ServiceAddr)
 }

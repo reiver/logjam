@@ -6,7 +6,8 @@ type RoomPeerDTO struct {
 }
 
 type JoinReqModel struct {
-	RoomId string `json:"roomId"`
+	RoomId      string `json:"roomId"`
+	ServiceAddr string `json:"svcAddr"`
 }
 
 type SendIceCandidateReqModel struct {

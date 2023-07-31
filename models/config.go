@@ -1,5 +1,6 @@
 package models
 
 type ConfigModel struct {
-	SrcListenPort int `json:"src"`
+	SrcListenAddr        string `json:"src"`
+	AuxiliaryNodeSVCAddr string `json:"anSVCAddr"`
 }
