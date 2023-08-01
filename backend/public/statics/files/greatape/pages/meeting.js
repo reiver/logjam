@@ -15,6 +15,13 @@ import { useEffect } from 'preact';
 import { isAttendeesOpen } from '../components/Attendees/index.js';
 import { Roles, createSparkRTC, getWsUrl } from '../lib/common.js';
 
+export const isDebugMode = signal(
+    (
+        new URLSearchParams(window.location.search).get('debug') || ''
+    ).toLowerCase() === 'true'
+);
+export const statsDataOpen = signal(false);
+export const statsData = signal('');
 export const sparkRTC = signal(null);
 export const meetingStatus = signal(true);
 export const broadcastIsInTheMeeting = signal(true);
@@ -25,6 +32,9 @@ export const raiseHandMaxLimitReached = computed(() => {
         raisedHandsCount.value === sparkRTC.value.maxRaisedHands
     );
 });
+
+// const url = `stats/index.html`;
+// var targetWindow = window.open(url, '_blank');
 export const currentUser = signal({
     showControllers: true,
     isHost: false,
@@ -96,11 +106,12 @@ const log = (tag, data) => {
         console.log('[', date, '] ', tag);
     }
 };
-const setupSignalingSocket = async (host, name, room) => {
+const setupSignalingSocket = async (host, name, room, debug) => {
     await sparkRTC.value.setupSignalingSocket(
         getWsUrl(host),
         JSON.stringify({ name, email: '' }),
-        room
+        room,
+        debug
     );
 };
 const start = async () => {
@@ -275,7 +286,12 @@ const Meeting = () => {
                 startAgain: async () => {
                     if (sparkRTC.value) {
                         //Init socket and start sparkRTC
-                        await setupSignalingSocket(host, name, room);
+                        await setupSignalingSocket(
+                            host,
+                            name,
+                            room,
+                            isDebugMode.value
+                        );
                         await start();
                     }
                 },
@@ -360,8 +376,6 @@ const Meeting = () => {
                     log(`Connection Status: `, status);
                 },
                 updateUi: () => {
-                    //Todo Nariman
-                    //show original controllers i:e, rise hand, reload, mute meeting
                     updateUser({
                         showControllers: true,
                         isStreamming: false,
@@ -369,8 +383,6 @@ const Meeting = () => {
                     });
                 },
                 parentDcMessage: () => {
-                    // Todo Nariman
-                    // show message: You've Got disconnected
                     makeDialog('info', {
                         message: 'You’ve got disconnected',
                         icon: 'Close',
@@ -381,7 +393,7 @@ const Meeting = () => {
 
             if (sparkRTC.value) {
                 //Init socket and start sparkRTC
-                await setupSignalingSocket(host, name, room);
+                await setupSignalingSocket(host, name, room, isDebugMode.value);
                 await start();
             }
         };
