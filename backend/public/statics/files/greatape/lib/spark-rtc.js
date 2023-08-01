@@ -683,9 +683,6 @@ export class SparkRTC {
                 resolve(socket);
             };
             socket.onclose = async () => {
-                // this.downloadNetFile();
-                // this.downloadStatsFile();
-
                 this.updateTheStatus(
                     `socket is closed in setupSignalingSocket`
                 );
@@ -1589,8 +1586,6 @@ export class SparkRTC {
                             //close websocket
                             if (this.socket) {
                                 this.socket.onclose = () => {
-                                    this.downloadNetFile();
-                                    this.downloadStatsFile();
 
                                     this.updateTheStatus(
                                         `socket is closed after leaveMeeting`
@@ -1726,8 +1721,6 @@ export class SparkRTC {
                             //close websocket
                             if (this.socket) {
                                 this.socket.onclose = () => {
-                                    // this.downloadNetFile();
-                                    // this.downloadStatsFile();
 
                                     this.updateTheStatus(
                                         `socket is closed after leaveMeeting`
@@ -1864,8 +1857,6 @@ export class SparkRTC {
                             //close websocket
                             if (this.socket) {
                                 this.socket.onclose = () => {
-                                    // this.downloadNetFile();
-                                    // this.downloadStatsFile();
 
                                     this.updateTheStatus(
                                         `socket is closed after leaveMeeting`
