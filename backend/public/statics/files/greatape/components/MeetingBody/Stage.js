@@ -305,13 +305,17 @@ export const Video = memo(
                         : ''} rounded-lg"
                 />
                 <div
-                    class="px-4 py-1 bg-black bg-opacity-50 text-white rounded-full absolute top-3 left-3 text-medium-12"
+                    class="absolute top-4 left-3 flex justify-center items-center"
                 >
-                    ${name} ${isHostStream && '(Host)'}
+                    <div
+                        class="px-4 py-1 bg-black bg-opacity-50 text-white rounded-full text-medium-12"
+                    >
+                        ${name} ${isHostStream && '(Host)'}
+                    </div>
                 </div>
                 <div
                     class=${clsx(
-                        'h-[48px] absolute top-3 right-3 gap-2 flex justify-center items-center'
+                        'h-[48px] absolute top-1 right-1 gap-2 flex justify-center items-center'
                     )}
                 >
                     ${isUserMuted &&
