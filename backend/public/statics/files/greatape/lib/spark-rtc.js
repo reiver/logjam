@@ -2757,7 +2757,7 @@ export class SparkRTC {
                     .then((stats) => {
                         for (const report of stats) {
                             //TODO send stats to Backend
-                            this.updateTheStatus(`report`, report);
+                            // this.updateTheStatus(`report`, report);
                         }
                     })
                     .catch((error) => {
@@ -2795,7 +2795,7 @@ export class SparkRTC {
                     downlink: connection.downlink,
                     rtt: connection.rtt,
                 };
-                this.updateTheStatus(`con`, con);
+                // this.updateTheStatus(`con`, con);
             } else {
                 this.updateTheStatus('Network information not available.');
             }
