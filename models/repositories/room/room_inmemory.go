@@ -51,6 +51,15 @@ func (r *roomRepository) CreateRoom(id string) error {
 	return nil
 }
 
+func (r *roomRepository) HadAuxiliaryNodeInTreeBefore(id string) bool {
+	r.Lock()
+	defer r.Unlock()
+	if !r.doesRoomExists(id) {
+		return false
+	}
+	return r.rooms[id].HadAuxiliaryNodeBefore
+}
+
 func (r *roomRepository) GetRoom(id string) (*models.RoomModel, error) {
 	r.Lock()
 	defer r.Unlock()
@@ -231,6 +240,7 @@ start:
 			found = true
 			if isAuxiliaryNode {
 				r.rooms[roomId].AuxiliaryNode = &newChild
+				r.rooms[roomId].HadAuxiliaryNodeBefore = true
 			}
 		}
 		if found {

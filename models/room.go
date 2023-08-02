@@ -29,11 +29,12 @@ type PeerModel struct {
 
 type RoomModel struct {
 	*sync.Mutex
-	Title         string
-	PeersTree     *PeerModel
-	Members       map[uint64]*MemberModel
-	MetaData      map[string]any
-	AuxiliaryNode **PeerModel
+	Title                  string
+	PeersTree              *PeerModel
+	Members                map[uint64]*MemberModel
+	MetaData               map[string]any
+	AuxiliaryNode          **PeerModel
+	HadAuxiliaryNodeBefore bool
 }
 
 func (r *RoomModel) GetBroadcaster() *MemberModel {

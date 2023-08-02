@@ -64,23 +64,27 @@ func (c *RoomWSController) OnDisconnect(ctx *models.WSContext) {
 		}
 		_ = c.socketSVC.Send(parentDCEvent, childrenIdList...)
 
-		for _, id := range childrenIdList {
-			if id == models.AuxiliaryNodeId {
-				err = c.anRepo.ResetRoom(ctx.RoomId)
-				if err != nil {
-					c.log(contracts.LError, err.Error())
-					return
-				}
-				c.roomRepo.RemoveMember(ctx.RoomId, models.AuxiliaryNodeId)
-				go func() {
-					err := c.anRepo.Start()
+		if c.roomRepo.HadAuxiliaryNodeInTreeBefore(ctx.RoomId) {
+			for _, id := range childrenIdList {
+				if id == models.AuxiliaryNodeId {
+					err = c.anRepo.ResetRoom(ctx.RoomId)
 					if err != nil {
 						c.log(contracts.LError, err.Error())
 						return
 					}
-				}()
-				break
+					c.roomRepo.RemoveMember(ctx.RoomId, models.AuxiliaryNodeId)
+					go func() {
+						err := c.anRepo.Start()
+						if err != nil {
+							c.log(contracts.LError, err.Error())
+							return
+						}
+					}()
+					break
+				}
 			}
+		} else {
+			println("\n\ndidn't\n\n")
 		}
 	}
 }
@@ -152,13 +156,18 @@ func (c *RoomWSController) Role(ctx *models.WSContext) {
 			c.log(contracts.LError, err.Error())
 		}
 		_ = c.socketSVC.Send(resultEvent, ctx.SocketID)
-		go func() {
-			err := c.anRepo.Start()
-			if err != nil {
-				println(err.Error())
-				return
-			}
-		}()
+		fuck := c.roomRepo.HadAuxiliaryNodeInTreeBefore(ctx.RoomId)
+		if fuck {
+			go func() {
+				err := c.anRepo.Start()
+				if err != nil {
+					println(err.Error())
+					return
+				}
+			}()
+		} else {
+			println("\n\ndidn't2\n\n")
+		}
 	} else if ctx.ParsedMessage.Data == "alt-broadcast" {
 		broadcaster, err := c.roomRepo.GetBroadcaster(ctx.RoomId)
 		if err != nil {

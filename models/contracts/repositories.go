@@ -27,6 +27,7 @@ type IRoomRepository interface {
 	IsBroadcaster(roomId string, id uint64) (bool, error)
 	GetMembersList(roomId string) ([]dto.MemberDTO, error)
 	GetChildrenIdList(roomId string, id uint64) ([]uint64, error)
+	HadAuxiliaryNodeInTreeBefore(id string) bool
 }
 
 type IAuxiliaryNodeServiceRepository interface {

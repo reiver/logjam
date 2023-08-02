@@ -61,7 +61,7 @@ func (ctrl *AuxiliaryNodeController) SendOffer(rw http.ResponseWriter, req *http
 	if ctrl.helper.HandleIfErr(rw, err, 400) {
 		return
 	}
-	ctrl.socketSVC.Send(map[string]any{
+	_ = ctrl.socketSVC.Send(map[string]any{
 		"type":   "video-offer",
 		"target": strconv.FormatUint(reqModel.ID, 10),
 		"name":   strconv.FormatUint(models.AuxiliaryNodeId, 10),
