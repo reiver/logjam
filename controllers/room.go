@@ -83,8 +83,6 @@ func (c *RoomWSController) OnDisconnect(ctx *models.WSContext) {
 					break
 				}
 			}
-		} else {
-			println("\n\ndidn't\n\n")
 		}
 	}
 }
@@ -165,8 +163,6 @@ func (c *RoomWSController) Role(ctx *models.WSContext) {
 					return
 				}
 			}()
-		} else {
-			println("\n\ndidn't2\n\n")
 		}
 	} else if ctx.ParsedMessage.Data == "alt-broadcast" {
 		broadcaster, err := c.roomRepo.GetBroadcaster(ctx.RoomId)

@@ -81,7 +81,7 @@ func (ctrl *AuxiliaryNodeController) SendICECandidate(rw http.ResponseWriter, re
 	if ctrl.helper.HandleIfErr(rw, err, 400) {
 		return
 	}
-	ctrl.socketSVC.Send(map[string]any{
+	_ = ctrl.socketSVC.Send(map[string]any{
 		"Type":      "new-ice-candidate",
 		"Target":    strconv.FormatUint(reqModel.ID, 10),
 		"candidate": reqModel.ICECandidate,
@@ -101,7 +101,7 @@ func (ctrl *AuxiliaryNodeController) Join(rw http.ResponseWriter, req *http.Requ
 		return
 	}
 	ctrl.conf.AuxiliaryNodeSVCAddr = reqModel.ServiceAddr
-	ctrl.anSVCRepo.Init(reqModel.ServiceAddr)
+	_ = ctrl.anSVCRepo.Init(reqModel.ServiceAddr)
 	err = ctrl.roomRepo.AddMember(reqModel.RoomId, models.AuxiliaryNodeId, "{}", "", "")
 	if ctrl.helper.HandleIfErr(rw, err, 500) {
 		return
@@ -122,7 +122,7 @@ func (ctrl *AuxiliaryNodeController) Join(rw http.ResponseWriter, req *http.Requ
 	if ctrl.helper.HandleIfErr(rw, err, 503) {
 		return
 	}
-	ctrl.helper.Write(rw, nil, 204)
+	_ = ctrl.helper.Write(rw, nil, 204)
 	go func(roomId string, svcAddr string) {
 		for {
 			res, err := http.Get(svcAddr + "/healthcheck")
