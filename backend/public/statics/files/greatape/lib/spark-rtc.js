@@ -1376,6 +1376,12 @@ export class SparkRTC {
             }
         };
 
+        peerConnection.onicecandidateerror = async (event) => {
+            this.updateTheStatus(
+                `Peer Connection ice candidate error ${event}`
+            );
+        };
+
         peerConnection.onicecandidate = async (event) => {
             this.updateTheStatus(
                 `Peer Connection ice candidate arrived for ${target}: event.candidate='${JSON.stringify(
@@ -1463,15 +1469,12 @@ export class SparkRTC {
                 }
 
                 const videoTrack = stream.getVideoTracks()[0];
-                videoTrack.onended = (event)=>{
-                    this.updateTheStatus('track Ended',event);
+                videoTrack.onended = (event) => {
+                    this.updateTheStatus('track Ended', event);
 
                     if (this.firefoxAgent || this.safariAgent) {
                         this.updateTheStatus(`onremovetrack `, event);
-                        this.updateTheStatus(
-                            `currentTarget `,
-                            stream
-                        );
+                        this.updateTheStatus(`currentTarget `, stream);
 
                         this.updateTheStatus(
                             `[newPeerConnectionInstance] stream.oninactive ${JSON.stringify(
@@ -1598,7 +1601,7 @@ export class SparkRTC {
                             }
                         }
                     }
-                }
+                };
                 //callback to detect stream inactive status for Chrome, Edge
                 stream.oninactive = (event) => {
                     this.updateTheStatus(`oninactive called`);
@@ -1875,7 +1878,6 @@ export class SparkRTC {
                     }
                 }; //end of on removeTrack
 
-            
                 stream.name = ''; // currently we don't know name so it's empty
 
                 this.updateTheStatus(`ReceivedStream:`, stream);
