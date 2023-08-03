@@ -1377,9 +1377,7 @@ export class SparkRTC {
         };
 
         peerConnection.onicecandidateerror = async (event) => {
-            this.updateTheStatus(
-                `Peer Connection ice candidate error ${event}`
-            );
+            this.updateTheStatus(`Peer Connection ice candidate error`, event);
         };
 
         peerConnection.onicecandidate = async (event) => {
