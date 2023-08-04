@@ -1394,7 +1394,8 @@ export class SparkRTC {
             }
         };
 
-        peerConnection.onnegotiationneeded = async () => {
+        peerConnection.onnegotiationneeded = async (e) => {
+            console.log("nnneeded",e)
             this.updateTheStatus(
                 `Peer Connection negotiation needed for ${target} preparing video offer`
             );
@@ -1583,8 +1584,8 @@ export class SparkRTC {
                             //close websocket
                             if (this.socket) {
                                 this.socket.onclose = () => {
-                                    this.downloadNetFile();
-                                    this.downloadStatsFile();
+                                    // this.downloadNetFile();
+                                    // this.downloadStatsFile();
 
                                     this.updateTheStatus(
                                         `socket is closed after leaveMeeting`
@@ -1882,7 +1883,7 @@ export class SparkRTC {
 
                 //print remote stream array
                 if (this.remoteStreams.length > 0) {
-                    for (var i = 0; i < this.remoteStreams.length; i++) {
+                    for (let i = 0; i < this.remoteStreams.length; i++) {
                         this.updateTheStatus(
                             `RemoteStreamsList-2:`,
                             this.remoteStreams[i]

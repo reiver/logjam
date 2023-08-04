@@ -426,10 +426,13 @@ func (c *RoomWSController) SendICECandidateToAN(ctx *models.WSContext) {
 }
 
 func (c *RoomWSController) DefaultHandler(ctx *models.WSContext) {
-	id, err := strconv.Atoi(ctx.ParsedMessage.Target)
+	id, err := strconv.ParseUint(ctx.ParsedMessage.Target, 10, 64)
 	if err != nil {
 		c.log(contracts.LError, err.Error())
 		return
+	}
+	if id == models.AuxiliaryNodeId {
+		return // as there is no auxiliarynode in tree, we ignore messages that targets it
 	}
 	targetMember, err := c.roomRepo.GetMember(ctx.RoomId, uint64(id))
 	if err != nil {
