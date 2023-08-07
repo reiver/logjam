@@ -228,6 +228,9 @@ export class SparkRTC {
 
         let audiencePeerConnection;
         switch (msg.type) {
+            case 'muted':
+                this.onAudioStatusChange(msg);
+                break;
             case 'video-offer':
             case 'alt-video-offer':
                 this.updateTheStatus(
@@ -680,9 +683,6 @@ export class SparkRTC {
                 resolve(socket);
             };
             socket.onclose = async () => {
-                // this.downloadNetFile();
-                // this.downloadStatsFile();
-
                 this.updateTheStatus(
                     `socket is closed in setupSignalingSocket`
                 );
@@ -1300,6 +1300,7 @@ export class SparkRTC {
 
         // Handle open event for DataChannel
         dataChannel.onopen = (e) => {
+            peerConnection.dc = dataChannel;
             this.onDataChannelOpened(dataChannel, peerConnection);
         };
 
@@ -1309,6 +1310,7 @@ export class SparkRTC {
             let displyedStream = false;
 
             receive.onmessage = (e) => {
+
                 this.broadcastersMessage = e.data;
 
                 if (!displyedStream) {
@@ -1444,6 +1446,7 @@ export class SparkRTC {
             const stream = event.streams[0];
 
             if (stream && stream.active) {
+            
                 this.updateTheStatus(`user-by-stream ${stream.id}`);
                 if (await this.checkSocketStatus())
                     this.socket.send(
@@ -1586,8 +1589,6 @@ export class SparkRTC {
                             //close websocket
                             if (this.socket) {
                                 this.socket.onclose = () => {
-                                    this.downloadNetFile();
-                                    this.downloadStatsFile();
 
                                     this.updateTheStatus(
                                         `socket is closed after leaveMeeting`
@@ -1723,8 +1724,6 @@ export class SparkRTC {
                             //close websocket
                             if (this.socket) {
                                 this.socket.onclose = () => {
-                                    // this.downloadNetFile();
-                                    // this.downloadStatsFile();
 
                                     this.updateTheStatus(
                                         `socket is closed after leaveMeeting`
@@ -1861,8 +1860,6 @@ export class SparkRTC {
                             //close websocket
                             if (this.socket) {
                                 this.socket.onclose = () => {
-                                    // this.downloadNetFile();
-                                    // this.downloadStatsFile();
 
                                     this.updateTheStatus(
                                         `socket is closed after leaveMeeting`
@@ -2016,7 +2013,6 @@ export class SparkRTC {
 
         return peerConnection;
     };
-
     checkBrowser() {
         // Get the user-agent string
         const userAgentString = navigator.userAgent;
@@ -2420,8 +2416,22 @@ export class SparkRTC {
         if (this.localStream) {
             this.lastAudioState = enabled === true ? 'Enabled' : 'Disabled';
             this.localStream.getTracks().forEach((track) => {
-                if (track.kind === 'audio') track.enabled = enabled;
+                if (track.kind === 'audio') {
+                    track.enabled = enabled;
+                    this.sendAudioStatus(enabled);
+                }
             });
+        }
+    };
+
+    sendAudioStatus = (enable) => {
+        const data = {
+            type: 'muted',
+            value: !enable,
+            stream: this.localStream.id,
+        };
+        if (this.checkSocketStatus()) {
+            this.socket.send(JSON.stringify(data));
         }
     };
 
@@ -2740,7 +2750,7 @@ export class SparkRTC {
                     .then((stats) => {
                         for (const report of stats) {
                             //TODO send stats to Backend
-                            this.updateTheStatus(`report`, report);
+                            // this.updateTheStatus(`report`, report);
                         }
                     })
                     .catch((error) => {
@@ -2778,7 +2788,7 @@ export class SparkRTC {
                     downlink: connection.downlink,
                     rtt: connection.rtt,
                 };
-                this.updateTheStatus(`con`, con);
+                // this.updateTheStatus(`con`, con);
             } else {
                 this.updateTheStatus('Network information not available.');
             }
@@ -2856,6 +2866,7 @@ export class SparkRTC {
         this.startAgain = options.startAgain;
         this.updateUi = options.updateUi;
         this.parentDcMessage = options.parentDcMessage;
+        this.onAudioStatusChange = options.onAudioStatusChange;
 
         this.checkBrowser(); //detect browser
         this.getSupportedCodecs();

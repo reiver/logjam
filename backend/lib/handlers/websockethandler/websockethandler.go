@@ -3,11 +3,12 @@ package websockethandler
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/mmcomp/go-binarytree"
 	"net/http"
 	"os"
 	"strconv"
 	"time"
+
+	"github.com/mmcomp/go-binarytree"
 
 	"github.com/gorilla/websocket"
 
@@ -438,6 +439,15 @@ func (receiver httpHandler) parseMessage(socket *binarytreesrv.MySocket, message
 	case "update-quality":
 		if len(theMessage.Data) > 0 {
 			socket.MetaData["quality"] = theMessage.Data
+		}
+		return
+
+	case "muted":
+		allSockets := Map.Room.Nodes()
+		var target *binarytreesrv.MySocket
+		for _, node := range allSockets {
+			target = node.(*binarytreesrv.MySocket)
+			target.Writer.WriteMessage(messageType, messageJSON)
 		}
 		return
 
