@@ -192,8 +192,10 @@ export const Stage = () => {
                                   stream=${attendee.stream}
                                   userId=${attendee.userId}
                                   isMuted=${muted}
+                                  isUserMuted=${attendee.muted}
                                   name=${attendee.name}
                                   isHostStream=${attendee.isHost}
+                                  isShareScreen=${attendee.isShareScreen}
                               />
                           </div>`;
                       })}
@@ -205,148 +207,179 @@ export const Stage = () => {
     </div>`;
 };
 
-export const Video = memo(({ stream, isMuted, isHostStream, name, userId }) => {
-    const [muted, setMuted] = useState(true);
-    const { isHost } = currentUser.value;
-    const menu = useRef();
-    const videoRef = useRef();
-    const [menuOpen, setMenuOpen] = useState(false);
-    const toggleFullScreen = (e) => {
-        if (fullScreenedStream.value === stream.id) {
-            fullScreenedStream.value = null;
-        } else fullScreenedStream.value = stream.id;
+export const Video = memo(
+    ({
+        stream,
+        isMuted,
+        isHostStream,
+        name,
+        userId,
+        isUserMuted,
+        isShareScreen,
+    }) => {
+        const [muted, setMuted] = useState(true);
+        const { isHost } = currentUser.value;
+        const menu = useRef();
+        const videoRef = useRef();
+        const [menuOpen, setMenuOpen] = useState(false);
+        const toggleFullScreen = (e) => {
+            if (fullScreenedStream.value === stream.id) {
+                fullScreenedStream.value = null;
+            } else fullScreenedStream.value = stream.id;
 
-        e.stopPropagation();
-    };
-    useEffect(() => {
-        videoRef.current.srcObject = stream;
-    }, [stream]);
-
-    useEffect(() => {
-        if (userInteractedWithDom.value) {
-            setMuted(isMuted);
-        }
-    }, [userInteractedWithDom.value, isMuted]);
-    useEffect(() => {
-        videoRef.current.play();
-    }, []);
-    const handleRemoveStream = () => {
-        makeDialog(
-            'confirm',
-            {
-                message: `Are you sure you want to kick "<strong>${name}</strong>" off the stage?`,
-                title: 'Kick Audience Off The Stage',
-            },
-            () => {
-                sparkRTC.value.disableAudienceBroadcast(String(userId));
-            },
-            () => {},
-            {
-                okText: 'Kick',
-                okButtonVariant: 'red',
-                cancelText: 'Let them stay!',
-            }
-        );
-    };
-    const handleOpenMenu = (e) => {
-        e.stopPropagation();
-        setMenuOpen(!menuOpen);
-    };
-    const [isHover, setHover] = useState(false);
-
-    const handleOnClick = () => {
-        setHover(!isHover);
-    };
-    useEffect(() => {
-        if (
-            (!bottomBarVisible.value && isHover) ||
-            (!hasFullScreenedStream.value && isHover)
-        ) {
-            setHover(false);
-        }
-    }, [bottomBarVisible.value, hasFullScreenedStream.value]);
-    useEffect(() => {
-        function handleClickOutside(event) {
-            if (
-                menuOpen &&
-                menu.current &&
-                !menu.current.base.contains(event.target)
-            ) {
-                setMenuOpen(false);
-            }
-        }
-        if (menuOpen)
-            document.addEventListener('mousedown', handleClickOutside);
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
+            e.stopPropagation();
         };
-    }, [menu, menuOpen]);
+        useEffect(() => {
+            videoRef.current.srcObject = stream;
+        }, [stream]);
 
-    return html`
-        <div onClick=${handleOnClick} className="w-full h-full rounded-lg">
-            <video
-                ref=${videoRef}
-                autoplay
-                playsinline
-                muted="${muted}"
-                className="w-full h-full object-cover rounded-lg"
-            />
-            <div
-                class="px-4 py-1 bg-black bg-opacity-50 text-white rounded-full absolute top-3 left-3 text-medium-12"
-            >
-                ${name} ${isHostStream && '(Host)'}
-            </div>
-            <div
-                class=${clsx(
-                    'absolute top-3 sm:group-hover:flex right-3 sm:hidden gap-2',
-                    {
-                        'group-hover:flex': isHover && bottomBarVisible.value,
-                        hidden: !(isHover && bottomBarVisible.value),
-                        flex: menuOpen || isHover,
-                    }
-                )}
-            >
-                <${IconButton} variant="ghost" onClick=${toggleFullScreen}>
-                    <${Icon}
-                        icon=${fullScreenedStream.value === stream.id
-                            ? 'ScreenNormal'
-                            : 'ScreenFull'}
-                        width="20px"
-                        height="20px"
-                    />
-                <//>
-                ${isHost &&
-                !isHostStream &&
-                html`
-                    <${IconButton}
-                        variant="ghost"
-                        onClick=${handleOpenMenu}
-                        ref=${menu}
+        useEffect(() => {
+            if (userInteractedWithDom.value) {
+                setMuted(isMuted);
+            }
+        }, [userInteractedWithDom.value, isMuted]);
+        useEffect(() => {
+            videoRef.current.play();
+        }, []);
+        const handleRemoveStream = () => {
+            makeDialog(
+                'confirm',
+                {
+                    message: `Are you sure you want to kick "<strong>${name}</strong>" off the stage?`,
+                    title: 'Kick Audience Off The Stage',
+                },
+                () => {
+                    sparkRTC.value.disableAudienceBroadcast(String(userId));
+                },
+                () => {},
+                {
+                    okText: 'Kick',
+                    okButtonVariant: 'red',
+                    cancelText: 'Let them stay!',
+                }
+            );
+        };
+        const handleOpenMenu = (e) => {
+            e.stopPropagation();
+            setMenuOpen(!menuOpen);
+        };
+        const [isHover, setHover] = useState(false);
+
+        const handleOnClick = () => {
+            setHover(!isHover);
+        };
+        useEffect(() => {
+            if (
+                (!bottomBarVisible.value && isHover) ||
+                (!hasFullScreenedStream.value && isHover)
+            ) {
+                setHover(false);
+            }
+        }, [bottomBarVisible.value, hasFullScreenedStream.value]);
+        useEffect(() => {
+            function handleClickOutside(event) {
+                if (
+                    menuOpen &&
+                    menu.current &&
+                    !menu.current.base.contains(event.target)
+                ) {
+                    setMenuOpen(false);
+                }
+            }
+            if (menuOpen)
+                document.addEventListener('mousedown', handleClickOutside);
+            return () => {
+                document.removeEventListener('mousedown', handleClickOutside);
+            };
+        }, [menu, menuOpen]);
+
+        return html`
+            <div onClick=${handleOnClick} className="w-full h-full rounded-lg">
+                <video
+                    ref=${videoRef}
+                    autoplay
+                    playsinline
+                    muted="${muted}"
+                    className="w-full h-full ${!isShareScreen
+                        ? 'object-cover'
+                        : ''} rounded-lg"
+                />
+                <div
+                    class="absolute top-4 left-3 flex justify-center items-center"
+                >
+                    <div
+                        class="px-4 py-1 bg-black bg-opacity-50 text-white rounded-full text-medium-12"
                     >
+                        ${name} ${isHostStream && '(Host)'}
+                    </div>
+                </div>
+                <div
+                    class=${clsx(
+                        'h-[48px] absolute top-1 right-1 gap-2 flex justify-center items-center'
+                    )}
+                >
+                    ${isUserMuted &&
+                    html` <div className="pr-2">
                         <${Icon}
-                            icon="verticalDots"
+                            icon="MicrophoneOff"
                             width="20px"
                             height="20px"
                         />
-
-                        ${menuOpen &&
-                        html`<div
-                            class="absolute top-full right-0 h-full w-full"
+                    </div>`}
+                    <div
+                        className=${clsx('sm:group-hover:flex sm:hidden', {
+                            'group-hover:flex':
+                                isHover && bottomBarVisible.value,
+                            hidden: !(isHover && bottomBarVisible.value),
+                            flex: menuOpen || isHover,
+                        })}
+                    >
+                        <${IconButton}
+                            variant="ghost"
+                            onClick=${toggleFullScreen}
                         >
-                            <ul
-                                class="bg-white absolute top-0 right-0 mt-1 -ml-2 text-black rounded-sm p-1"
+                            <${Icon}
+                                icon=${fullScreenedStream.value === stream.id
+                                    ? 'ScreenNormal'
+                                    : 'ScreenFull'}
+                                width="20px"
+                                height="20px"
+                            />
+                        <//>
+                        ${isHost &&
+                        !isHostStream &&
+                        html`
+                            <${IconButton}
+                                variant="ghost"
+                                onClick=${handleOpenMenu}
+                                ref=${menu}
                             >
-                                <li
-                                    class="w-full whitespace-nowrap px-4 py-1 rounded-sm bg-black bg-opacity-0 hover:bg-opacity-10"
-                                    onClick=${handleRemoveStream}
+                                <${Icon}
+                                    icon="verticalDots"
+                                    width="20px"
+                                    height="20px"
+                                />
+
+                                ${menuOpen &&
+                                html`<div
+                                    class="absolute top-full right-0 h-full w-full"
                                 >
-                                    Stop broadcast
-                                </li>
-                            </ul>
-                        </div>`}
-                    <//>
-                `}
+                                    <ul
+                                        class="bg-white absolute top-0 right-0 mt-1 -ml-2 text-black rounded-sm p-1"
+                                    >
+                                        <li
+                                            class="w-full whitespace-nowrap px-4 py-1 rounded-sm bg-black bg-opacity-0 hover:bg-opacity-10"
+                                            onClick=${handleRemoveStream}
+                                        >
+                                            Stop broadcast
+                                        </li>
+                                    </ul>
+                                </div>`}
+                            <//>
+                        `}
+                    </div>
+                </div>
             </div>
-        </div>
-    `;
-});
+        `;
+    }
+);

@@ -165,6 +165,17 @@ const Meeting = () => {
             log(`Setup SparkRTC`);
 
             sparkRTC.value = createSparkRTC(role, {
+                onAudioStatusChange: (message) => {
+                    log('audioStatus: ', message);
+                    if (
+                        message.stream != undefined &&
+                        message.type != undefined
+                    ) {
+                        streamers.value[message.stream][message.type] =
+                            message.value;
+                        streamers.value = { ...streamers.value };
+                    }
+                },
                 onUserInitialized: (userId) => {
                     currentUser.userId = userId;
                 },
@@ -195,7 +206,7 @@ const Meeting = () => {
                             local = true;
                         }
                     }
-                    log(`[Remote Stream Callback] ${stream}`);
+                    log(`[Remote Stream Callback]`, stream);
                     log(`NameCallback: ${stream.name}`);
 
                     streamers.value = {
@@ -207,6 +218,9 @@ const Meeting = () => {
                             avatar: '',
                             raisedHand: false,
                             hasCamera: false,
+                            muted: streamers.value[stream.id]
+                                ? streamers.value[stream.id].muted
+                                : undefined,
                             stream,
                             isLocalStream: local,
                             isShareScreen: stream.isShareScreen || false,
