@@ -171,6 +171,14 @@ export class SparkRTC {
             msg.name
         );
 
+        if(broadcasterPeerConnection.signalingState!=="stable"){
+            try{
+                console.log("received offer when sigstate is ",broadcasterPeerConnection.signalingState," rolling localDescription back")
+                await broadcasterPeerConnection.setLocalDescription({ type: "rollback", sdp: "" })
+            }catch(e){
+                console.error("[ignorable]",e)
+            }
+        }
         try {
             await broadcasterPeerConnection.setRemoteDescription(
                 new RTCSessionDescription(msg.sdp)
@@ -1401,6 +1409,8 @@ export class SparkRTC {
                     );
             }
         };
+
+        peerConnection.onsignalingstatechange=ev => console.log("sigstat",peerConnection.signalingState)
 
         peerConnection.onnegotiationneeded = async () => {
             this.updateTheStatus(
