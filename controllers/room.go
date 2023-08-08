@@ -368,14 +368,14 @@ func (c *RoomWSController) emitUserList(roomId string) {
 		return
 	}
 	index := -1
-	for i, v := range roomMembersIdList {
-		if v == models.AuxiliaryNodeId {
+	for i, v := range list {
+		if v.Id == models.AuxiliaryNodeId {
 			index = i
 			break
 		}
 	}
 	if index > -1 {
-		roomMembersIdList = append(roomMembersIdList[:index], roomMembersIdList[index+1:]...)
+		list = append(list[:index], list[index+1:]...)
 	}
 	buffer, err := json.Marshal(list)
 	if err != nil {
