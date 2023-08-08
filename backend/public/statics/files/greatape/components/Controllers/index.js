@@ -1,5 +1,4 @@
 import { signal } from '@preact/signals';
-import { useState } from 'preact';
 import {
     Icon,
     IconButton,
@@ -8,6 +7,7 @@ import {
     makeDialog,
 } from 'components';
 import { html } from 'htm';
+import { useState } from 'preact';
 import {
     currentUser,
     isDebugMode,
@@ -15,7 +15,6 @@ import {
     onStopShareScreen,
     raiseHandMaxLimitReached,
     sparkRTC,
-    statsDataOpen,
     updateUser,
 } from '../../pages/meeting.js';
 
@@ -118,9 +117,7 @@ export const Controllers = () => {
     return html`<div class="flex gap-5 py-3 pt-0">
         ${isDebugMode.value &&
         html`<${Tooltip} label="Troubleshoot">
-            <${IconButton}
-                class="hidden sm:flex"
-            >
+            <${IconButton} class="hidden sm:flex">
                 <${Icon} icon="Troubleshoot" />
             <//>
         <//>`}
@@ -158,22 +155,24 @@ export const Controllers = () => {
         <//>`}
         ${((!raiseHandMaxLimitReached.value && !isStreamming) ||
             (isStreamming && !isHost)) &&
-        html`<${Tooltip} label=${
-            isStreamming
+        html`<${Tooltip}
+            label=${isStreamming
                 ? 'Leave the stage'
                 : ableToRaiseHand
                 ? 'Raise Hand'
-                : 'Raise hand request has been sent'
-        }>
+                : 'Raise hand request has been sent'}
+        >
             <div>
-						<${IconButton}
-                onClick=${onRaiseHand}
-                variant=${isStreamming && 'danger'}
-                disabled=${!ableToRaiseHand}
-            >
-                <${Icon} icon="${isStreamming ? `OffStage` : `Hand`}" /> <//>
-								<//>
-						</div>`}
+                <${IconButton}
+                    key=${isStreamming ? 'hand' : 'lower-hand'}
+                    onClick=${onRaiseHand}
+                    variant="${isStreamming && 'danger'}"
+                    disabled=${!ableToRaiseHand}
+                >
+                    <${Icon} icon="${isStreamming ? 'OffStage' : 'Hand'}" />
+                <//>
+            </div>
+        <//> `}
         ${hasCamera &&
         isStreamming &&
         html` <${Tooltip}
