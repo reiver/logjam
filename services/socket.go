@@ -46,10 +46,16 @@ func (s *socketService) GetSocketId(conn *websocket.Conn) (*uint64, error) {
 }
 
 func (s *socketService) Send(data any, receiverIds ...uint64) error {
-	jsonData, err := json.Marshal(data)
-	if err != nil {
-		println(err.Error())
-		return err
+	var jsonData []byte
+	var err error
+	if b, isByte := data.([]byte); isByte {
+		jsonData = b
+	} else {
+		jsonData, err = json.Marshal(data)
+		if err != nil {
+			println(err.Error())
+			return err
+		}
 	}
 	s.Lock()
 	defer s.Unlock()

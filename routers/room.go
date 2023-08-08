@@ -146,6 +146,11 @@ func (r *roomWSRouter) handleEvent(ctx *models.WSContext) {
 			break
 		}
 
+	case "muted":
+		{
+			r.roomCtrl.Muted(ctx)
+			break
+		}
 	case "get-latest-user-list":
 		{
 			r.roomCtrl.GetLatestUserList(ctx)

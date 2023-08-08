@@ -347,6 +347,15 @@ func (c *RoomWSController) GetLatestUserList(ctx *models.WSContext) {
 	c.emitUserList(ctx.RoomId)
 }
 
+func (c *RoomWSController) Muted(ctx *models.WSContext) {
+	list, err := c.roomRepo.GetAllMembersId(ctx.RoomId, false)
+	if err != nil {
+		c.log(contracts.LError, err.Error())
+		return
+	}
+	err = c.socketSVC.Send(ctx.PureMessage, list...)
+}
+
 func (c *RoomWSController) emitUserList(roomId string) {
 	list, err := c.roomRepo.GetMembersList(roomId)
 	if err != nil {
@@ -357,6 +366,16 @@ func (c *RoomWSController) emitUserList(roomId string) {
 	if err != nil {
 		c.log(contracts.LError, err.Error())
 		return
+	}
+	index := -1
+	for i, v := range roomMembersIdList {
+		if v == models.AuxiliaryNodeId {
+			index = i
+			break
+		}
+	}
+	if index > -1 {
+		roomMembersIdList = append(roomMembersIdList[:index], roomMembersIdList[index+1:]...)
 	}
 	buffer, err := json.Marshal(list)
 	if err != nil {
@@ -434,7 +453,7 @@ func (c *RoomWSController) DefaultHandler(ctx *models.WSContext) {
 	if id == models.AuxiliaryNodeId {
 		return // as there is no auxiliarynode in tree, we ignore messages that targets it
 	}
-	targetMember, err := c.roomRepo.GetMember(ctx.RoomId, uint64(id))
+	targetMember, err := c.roomRepo.GetMember(ctx.RoomId, id)
 	if err != nil {
 		c.log(contracts.LError, err.Error())
 		return
