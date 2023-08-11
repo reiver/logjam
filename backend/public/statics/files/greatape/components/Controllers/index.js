@@ -122,7 +122,10 @@ export const Controllers = () => {
             <//>
         <//>`}
 
-        <${Tooltip} label=${isMeetingMuted ? 'Listen' : 'Deafen'}>
+        <${Tooltip}
+            key=${isMeetingMuted ? 'Listen' : 'Deafen'}
+            label=${isMeetingMuted ? 'Listen' : 'Deafen'}
+        >
             <${IconButton}
                 variant=${isMeetingMuted && 'danger'}
                 onClick=${toggleMuteMeeting}
@@ -141,6 +144,7 @@ export const Controllers = () => {
         ${isStreamming &&
         isHost &&
         html` <${Tooltip}
+            key=${sharingScreenStream ? 'ShareOff' : 'Share'}
             label="${!sharingScreenStream
                 ? 'Share Screen'
                 : 'Stop Sharing Screen'}"
@@ -156,6 +160,7 @@ export const Controllers = () => {
         ${((!raiseHandMaxLimitReached.value && !isStreamming) ||
             (isStreamming && !isHost)) &&
         html`<${Tooltip}
+            key="${isStreamming ? 'OffStage' : 'Hand'}"
             label=${isStreamming
                 ? 'Leave the stage'
                 : ableToRaiseHand
@@ -176,6 +181,7 @@ export const Controllers = () => {
         ${hasCamera &&
         isStreamming &&
         html` <${Tooltip}
+            key=${!isCameraOn ? 'CameraOff' : 'Camera'}
             label=${!isCameraOn ? 'Turn Camera On' : 'Turn Camera Off'}
         >
             <${IconButton}
@@ -188,6 +194,7 @@ export const Controllers = () => {
         isStreamming &&
         html`
             <${Tooltip}
+                key="${!isMicrophoneOn ? 'MicrophoneOff' : 'Microphone'}"
                 label=${!isMicrophoneOn
                     ? 'Turn Microphone On'
                     : 'Turn Microphone Off'}
@@ -244,7 +251,10 @@ export const MoreControllers = () => {
                 <${Icon} icon="Troubleshoot" />
             <//>
         <//>`}
-        <${Tooltip} label=${isMeetingMuted ? 'Listen' : 'Deafen'}>
+        <${Tooltip}
+            key="${isMeetingMuted ? 'VolumeOff' : 'Volume'}"
+            label=${isMeetingMuted ? 'Listen' : 'Deafen'}
+        >
             <${IconButton}
                 variant=${isMeetingMuted && 'danger'}
                 onClick=${toggleMuteMeeting}
@@ -255,6 +265,7 @@ export const MoreControllers = () => {
         ${isStreamming &&
         isHost &&
         html` <${Tooltip}
+            key="${sharingScreenStream ? 'ShareOff' : 'Share'}"
             label="${!sharingScreenStream
                 ? 'Share Screen'
                 : 'Stop Sharing Screen'}"
