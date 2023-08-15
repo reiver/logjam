@@ -971,7 +971,7 @@ export class SparkRTC {
         }
     };
 
-   
+
     /**
      * Function to restart the Negotiation and finding a new Parent
      *
@@ -1317,6 +1317,21 @@ export class SparkRTC {
                 )}`
             );
             const stream = event.streams[0];
+
+            //set track status detection 
+            const remoteVideoTracks = stream.getVideoTracks()
+            remoteVideoTracks.forEach((track) => {
+                track.inactive = 0;
+                track.onmute = () => {
+                    track.inactive++;
+                    if (track.inactive === 5) {
+                        this.updateTheStatus(`Track is inactive`);
+                        track.inactive = 0;
+                    }
+
+                }
+            })
+
 
             if (stream && stream.active) {
 
