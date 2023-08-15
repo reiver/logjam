@@ -1,4 +1,5 @@
 import { signal } from '@preact/signals';
+import clsx from 'clsx';
 import {
     Icon,
     IconButton,
