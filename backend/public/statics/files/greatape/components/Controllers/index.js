@@ -1,6 +1,5 @@
 import { signal } from '@preact/signals';
-import { useState } from 'preact';
-import { clsx } from 'clsx'
+import { clsx } from 'clsx';
 import {
     Icon,
     IconButton,
@@ -9,6 +8,7 @@ import {
     makeDialog,
 } from 'components';
 import { html } from 'htm';
+import { useState } from 'preact';
 import {
     currentUser,
     isDebugMode,
@@ -16,7 +16,6 @@ import {
     onStopShareScreen,
     raiseHandMaxLimitReached,
     sparkRTC,
-    statsDataOpen,
     updateUser,
 } from '../../pages/meeting.js';
 
@@ -81,7 +80,7 @@ export const Controllers = () => {
                     });
                     sparkRTC.value.lowerHand();
                 },
-                () => { },
+                () => {},
                 {
                     okText: 'Leave the stage',
                     okButtonVariant: 'red',
@@ -113,15 +112,13 @@ export const Controllers = () => {
         }
     };
 
-    const toggleBottomSheet = () => { };
+    const toggleBottomSheet = () => {};
 
     if (!showControllers) return null;
     return html`<div class="flex gap-5 py-3 pt-0">
         ${isDebugMode.value &&
         html`<${Tooltip} label="Troubleshoot">
-            <${IconButton}
-                class="hidden sm:flex"
-            >
+            <${IconButton} class="hidden sm:flex">
                 <${Icon} icon="Troubleshoot" />
             <//>
         <//>`}
@@ -159,12 +156,13 @@ export const Controllers = () => {
         <//>`}
         ${((!raiseHandMaxLimitReached.value && !isStreamming) ||
             (isStreamming && !isHost)) &&
-        html`<${Tooltip} label=${isStreamming
-            ? 'Leave the stage'
-            : ableToRaiseHand
+        html`<${Tooltip} label=${
+            isStreamming
+                ? 'Leave the stage'
+                : ableToRaiseHand
                 ? 'Raise Hand'
                 : 'Raise hand request has been sent'
-            }>
+        }>
             <div>
 						<${IconButton}
                 onClick=${onRaiseHand}
@@ -190,8 +188,8 @@ export const Controllers = () => {
         html`
             <${Tooltip}
                 label=${!isMicrophoneOn
-                ? 'Turn Microphone On'
-                : 'Turn Microphone Off'}
+                    ? 'Turn Microphone On'
+                    : 'Turn Microphone Off'}
             >
                 <${IconButton}
                     variant=${!isMicrophoneOn && 'danger'}
@@ -209,7 +207,7 @@ export const Controllers = () => {
             >
                 <${Icon} icon="KebabMenuVertical" />
                 ${attendeesBadge.value &&
-        html`<span
+                html`<span
                     class="absolute z-10 top-[0px] right-[0px] w-[10px] h-[10px] rounded-full bg-red-distructive border dark:border-secondary-1-a border-white-f-9"
                 ></span>`}
             <//>
@@ -227,9 +225,8 @@ export const MoreControllers = () => {
     };
 
     const isMobile = async () => {
-        return ((window.innerWidth <= 800) && (window.innerHeight <= 600));
-    }
-
+        return window.innerWidth <= 800 && window.innerHeight <= 600;
+    };
 
     const handleShareScreen = async () => {
         if (!sharingScreenStream) {
@@ -269,8 +266,8 @@ export const MoreControllers = () => {
                 variant=${sharingScreenStream && 'danger'}
                 onClick=${handleShareScreen}
                 class=${clsx({
-                    "hidden sm:flex": !isMobile(),
-                    "hidden": isMobile(),
+                    'hidden sm:flex': !isMobile(),
+                    hidden: isMobile(),
                 })}
             >
                 <${Icon} icon="Share${sharingScreenStream ? 'Off' : ''}" />
