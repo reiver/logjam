@@ -13,8 +13,8 @@ import {
 import { html } from 'htm';
 import { useEffect } from 'preact';
 import { isAttendeesOpen } from '../components/Attendees/index.js';
-import { Roles, createSparkRTC, getWsUrl } from '../lib/common.js';
 import { makePreviewDialog } from '../components/Dialog/index.js';
+import { Roles, createSparkRTC, getWsUrl } from '../lib/common.js';
 
 export const isDebugMode = signal(
     (
@@ -259,7 +259,7 @@ const Meeting = () => {
                 onRaiseHand: (user) => {
                     log(`[On Raise Hand Request]`, user);
 
-                    let raiseHandCallback = () => { };
+                    let raiseHandCallback = () => {};
                     const handler = new Promise((resolve, reject) => {
                         raiseHandCallback = resolve;
                     });
@@ -311,7 +311,6 @@ const Meeting = () => {
                     }
                 },
                 altBroadcastApprove: async (isStreamming, data) => {
-                    updateUser({ isStreamming, ableToRaiseHand: true });
                     if (!isStreamming) {
                         sparkRTC.value.onRaiseHandRejected();
                         makeDialog('info', {
@@ -320,20 +319,24 @@ const Meeting = () => {
                             variant: 'danger',
                         });
                     } else {
-
-                        const localStream = await sparkRTC.value.getAccessToLocalStream();
+                        const localStream =
+                            await sparkRTC.value.getAccessToLocalStream();
 
                         makePreviewDialog(
                             'preview',
                             localStream,
                             {
-                                message: 'Set the default state of your “Video” and “Audio” before joining the stage please',
+                                message:
+                                    'Set the default state of your “Video” and “Audio” before joining the stage please',
                                 title: 'Join The Stage',
                             },
                             () => {
                                 //onOk
+                                updateUser({
+                                    isStreamming,
+                                    ableToRaiseHand: true,
+                                });
                                 sparkRTC.value.joinStage(data);
-
                                 makeDialog('info', {
                                     message: 'You’ve been added to the stage',
                                     icon: 'Check',
@@ -341,11 +344,12 @@ const Meeting = () => {
                             },
                             () => {
                                 //onClose
-                                sparkRTC.value.onRaiseHandRejected()
-
+                                updateUser({
+                                    ableToRaiseHand: true,
+                                });
+                                sparkRTC.value.onRaiseHandRejected();
                             }
                         );
-
                     }
                 },
                 disableBroadcasting: () => {
