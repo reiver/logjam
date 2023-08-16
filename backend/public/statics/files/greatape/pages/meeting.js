@@ -323,19 +323,29 @@ const Meeting = () => {
 
                         const localStream = await sparkRTC.value.getAccessToLocalStream();
 
-                        //display preview
-                        // makePreviewDialog('preview', {
-                        //     videoStream: localStream,
-                        // })
+                        makePreviewDialog(
+                            'preview',
+                            localStream,
+                            {
+                                message: 'Set the default state of your “Video” and “Audio” before joining the stage please',
+                                title: 'Join The Stage',
+                            },
+                            () => {
+                                //onOk
+                                sparkRTC.value.joinStage(data);
 
+                                makeDialog('info', {
+                                    message: 'You’ve been added to the stage',
+                                    icon: 'Check',
+                                });
+                            },
+                            () => {
+                                //onClose
+                                sparkRTC.value.onRaiseHandRejected()
 
-                        //need to call below function when audience approves to join the stage
-                        await sparkRTC.value.joinStage(data);
+                            }
+                        );
 
-                        makeDialog('info', {
-                            message: 'You’ve been added to the stage',
-                            icon: 'Check',
-                        });
                     }
                 },
                 disableBroadcasting: () => {

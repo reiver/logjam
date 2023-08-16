@@ -796,25 +796,25 @@ export class SparkRTC {
     //Get Local Stream
 
     getAccessToLocalStream = async () => {
-        if (!this.localStream) {
-            this.updateTheStatus(`Trying to get local stream`);
-            if (!this.constraints.audio && !this.constraints.video) {
-                this.updateTheStatus(`No media device available`);
-                throw new Error('No media device available');
-            }
-            this.localStream = await navigator.mediaDevices.getUserMedia(
-                this.constraints
-            );
 
-            //add hint to content type
-            await this.addHintToTrack(this.localStream);
-
-            await this.setResolution(this.localStream);
-
-            this.updateTheStatus(`Local stream loaded`);
-            this.updateTheStatus(`[startBroadcasting] local stream loaded`);
-            this.remoteStreams.push(this.localStream);
+        this.updateTheStatus(`Trying to get local stream`);
+        if (!this.constraints.audio && !this.constraints.video) {
+            this.updateTheStatus(`No media device available`);
+            throw new Error('No media device available');
         }
+        this.localStream = await navigator.mediaDevices.getUserMedia(
+            this.constraints
+        );
+
+        //add hint to content type
+        await this.addHintToTrack(this.localStream);
+
+        await this.setResolution(this.localStream);
+
+        this.updateTheStatus(`Local stream loaded`);
+        this.updateTheStatus(`[startBroadcasting] local stream loaded`);
+        this.remoteStreams.push(this.localStream);
+
 
         return this.localStream;
     }
@@ -828,26 +828,10 @@ export class SparkRTC {
     startBroadcasting = async (data = this.Roles.BROADCAST) => {
         this.updateTheStatus(`[startBroadcasting]`, data);
         try {
-            await this.getAccessToLocalStream();
-            // if (!this.localStream) {
-            //     this.updateTheStatus(`Trying to get local stream`);
-            //     if (!this.constraints.audio && !this.constraints.video) {
-            //         this.updateTheStatus(`No media device available`);
-            //         throw new Error('No media device available');
-            //     }
-            //     this.localStream = await navigator.mediaDevices.getUserMedia(
-            //         this.constraints
-            //     );
+            if (!this.localStream) {
+                await this.getAccessToLocalStream();
+            }
 
-            //     //add hint to content type
-            //     await this.addHintToTrack(this.localStream);
-
-            //     await this.setResolution(this.localStream);
-
-            //     this.updateTheStatus(`Local stream loaded`);
-            //     this.updateTheStatus(`[startBroadcasting] local stream loaded`);
-            //     this.remoteStreams.push(this.localStream);
-            // }
             this.updateTheStatus(`Request Broadcast Role`);
 
             if (await this.checkSocketStatus())
