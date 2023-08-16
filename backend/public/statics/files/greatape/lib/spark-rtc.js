@@ -209,7 +209,8 @@ export class SparkRTC {
     };
 
     joinStage = async (data) => {
-        // if (msg.result == true) {
+        this.startBroadcasting('alt-broadcast');
+
         this.lastBroadcasterId = data;
         if (this.localStream) {
             this.socket.send(
@@ -221,7 +222,6 @@ export class SparkRTC {
             );
             this.sendStreamTo(data, this.localStream);
         }
-        // }
     };
 
     /**
@@ -493,7 +493,7 @@ export class SparkRTC {
                 try {
                     if (this.remoteStreamDCCallback)
                         this.remoteStreamDCCallback('no-stream');
-                } catch {}
+                } catch { }
                 this.localStream?.getTracks()?.forEach((track) => track.stop());
                 this.localStream = null;
                 this.startedRaiseHand = false;
@@ -553,10 +553,11 @@ export class SparkRTC {
                         this.updateTheStatus(`No Callback registered`);
                     }
 
+                    this.updateTheStatus("Userlist: ", users);
                     if (this.userListUpdated) {
                         try {
                             this.userListUpdated(users);
-                        } catch {}
+                        } catch { }
                     }
                 }, 1000);
                 break;
@@ -1166,7 +1167,7 @@ export class SparkRTC {
                 this.remoteStreams.forEach((strm) => {
                     try {
                         this.remoteStreamDCCallback(strm);
-                    } catch {}
+                    } catch { }
                 });
             }
             this.parentStreamId = undefined;
@@ -1179,7 +1180,7 @@ export class SparkRTC {
             if (this.remoteStreamDCCallback && remoteStream) {
                 this.remoteStreamDCCallback(remoteStream);
             }
-        } catch {}
+        } catch { }
 
         // Perform additional actions if conditions are met
         if (
@@ -1460,7 +1461,7 @@ export class SparkRTC {
                         if (this.remoteStreamDCCallback) {
                             try {
                                 this.remoteStreamDCCallback(stream);
-                            } catch {}
+                            } catch { }
                         }
                         if (
                             this.role === this.Roles.BROADCAST &&
@@ -1594,7 +1595,7 @@ export class SparkRTC {
                         if (this.remoteStreamDCCallback) {
                             try {
                                 this.remoteStreamDCCallback(event.target);
-                            } catch {}
+                            } catch { }
                         }
                         if (
                             this.role === this.Roles.BROADCAST &&
@@ -1729,7 +1730,7 @@ export class SparkRTC {
                         if (this.remoteStreamDCCallback) {
                             try {
                                 this.remoteStreamDCCallback(event.target);
-                            } catch {}
+                            } catch { }
                         }
                         if (
                             this.role === this.Roles.BROADCAST &&
@@ -1815,8 +1816,7 @@ export class SparkRTC {
                 for (const userId in this.myPeerConnectionArray) {
                     const apeerConnection = this.myPeerConnectionArray[userId];
                     this.updateTheStatus(
-                        `check Sending the stream [${
-                            stream.id
+                        `check Sending the stream [${stream.id
                         }] tracks to ${userId} ${apeerConnection.isAdience.toString()}`
                     );
                     if (!apeerConnection.isAdience) continue;
@@ -1832,7 +1832,7 @@ export class SparkRTC {
                                 stream
                             );
                             // await this.updatePeerConnectionParams(sender);
-                        } catch {}
+                        } catch { }
                     });
                     await this.addCodecPrefrences(apeerConnection, stream);
                 }
@@ -1846,8 +1846,7 @@ export class SparkRTC {
         let connectedOnce = false;
         peerConnection.oniceconnectionstatechange = (event) => {
             this.updateTheStatus(
-                `[newPeerConnectionInstance] oniceconnectionstatechange peerConnection.iceConnectionState = ${
-                    peerConnection.iceConnectionState
+                `[newPeerConnectionInstance] oniceconnectionstatechange peerConnection.iceConnectionState = ${peerConnection.iceConnectionState
                 } event = ${JSON.stringify(event)}`
             );
             switch (peerConnection.iceConnectionState) {
@@ -2089,7 +2088,7 @@ export class SparkRTC {
                         ].addTrack(track, astream);
 
                         // await this.updatePeerConnectionParams(sender);
-                    } catch {}
+                    } catch { }
                 });
 
                 await this.addCodecPrefrences(
@@ -2430,6 +2429,7 @@ export class SparkRTC {
             track.stop();
         });
         this.startedRaiseHand = false;
+
     };
 
     /**

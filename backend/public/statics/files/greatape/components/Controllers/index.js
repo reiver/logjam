@@ -77,6 +77,8 @@ export const Controllers = () => {
                     updateUser({
                         isStreamming: false,
                         ableToRaiseHand: true,
+                        isMicrophoneOn: true,
+                        isCameraOn: true,
                     });
                     sparkRTC.value.lowerHand();
                 },

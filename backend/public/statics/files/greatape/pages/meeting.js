@@ -318,6 +318,9 @@ const Meeting = () => {
                             icon: 'Close',
                             variant: 'danger',
                         });
+                        updateUser({
+                            ableToRaiseHand: true,
+                        });
                     } else {
                         const localStream =
                             await sparkRTC.value.getAccessToLocalStream();
