@@ -6,6 +6,13 @@ import { v4 as uuidv4 } from 'uuid';
 
 const dialogs = signal([]);
 
+
+export const PreviewDialog = ({
+
+}) => {
+
+}
+
 export const ConfirmDialog = ({
     onOk,
     onClose,
@@ -25,9 +32,9 @@ export const ConfirmDialog = ({
         />
         <div
             class=${clsx(
-                className,
-                'absolute -translate-y-full z-20 top-full left-0 right-0 sm:right-unset sm:top-1/2 sm:left-1/2 transform sm:-translate-x-1/2 sm:-translate-y-1/2 dark:bg-gray-3 dark:text-gray-0 bg-white text-gray-2 sm:rounded-lg rounded-t-lg w-full w-full sm:max-w-[400px] sm:border dark:border-gray-1 border-gray-0'
-            )}
+        className,
+        'absolute -translate-y-full z-20 top-full left-0 right-0 sm:right-unset sm:top-1/2 sm:left-1/2 transform sm:-translate-x-1/2 sm:-translate-y-1/2 dark:bg-gray-3 dark:text-gray-0 bg-white text-gray-2 sm:rounded-lg rounded-t-lg w-full w-full sm:max-w-[400px] sm:border dark:border-gray-1 border-gray-0'
+    )}
         >
             <div class="flex justify-center items-center p-5 relative">
                 <span class="dark:text-white text-black text-bold-12"
@@ -42,21 +49,21 @@ export const ConfirmDialog = ({
             <hr class="dark:border-gray-2 border-gray-0 sm:block hidden" />
             <div
                 class=${clsx(
-                    contentClassName,
-                    'text-left text-bold-12 sm:py-8 py-5 p-5'
-                )}
+        contentClassName,
+        'text-left text-bold-12 sm:py-8 py-5 p-5'
+    )}
                 dangerouslySetInnerHTML=${{ __html: message }}
             ></div>
             ${showButtons &&
-            html`<div class="flex justify-end gap-2 p-5 pt-0">
+        html`<div class="flex justify-end gap-2 p-5 pt-0">
                 <${Button}
                     size="lg"
                     variant="outline"
                     class="w-full flex-grow-1"
                     onClick=${() => {
-                        onReject && onReject();
-                        onClose();
-                    }}
+                onReject && onReject();
+                onClose();
+            }}
                     >${cancelText}<//
                 >
                 <${Button}
@@ -79,14 +86,14 @@ export const InfoDialog = ({
 }) => {
     return html`<div
         class=${clsx(
-            'select-none py-4 px-6 flex justify-between items-center text-medium-12 min-w-full sm:min-w-[350px] rounded-md',
-            {
-                'cursor-pointer': pointer,
-                'bg-red-distructive text-white-f-9': variant === 'danger',
-                'dark:bg-white-f-9 dark:text-gray-3 bg-gray-3 text-white-f-9 border dark:border-gray-1 border-gray-0':
-                    !variant,
-            }
-        )}
+        'select-none py-4 px-6 flex justify-between items-center text-medium-12 min-w-full sm:min-w-[350px] rounded-md',
+        {
+            'cursor-pointer': pointer,
+            'bg-red-distructive text-white-f-9': variant === 'danger',
+            'dark:bg-white-f-9 dark:text-gray-3 bg-gray-3 text-white-f-9 border dark:border-gray-1 border-gray-0':
+                !variant,
+        }
+    )}
         onClick=${onClose}
     >
         <div
@@ -102,15 +109,15 @@ export const DialogPool = () => {
             className="absolute right-0 left-0 md:left-[unset] md:right-10 bottom-[5.5rem] flex flex-col justify-end gap-2 px-4 sm:px-0"
         >
             ${Object.values(dialogs.value).map((dialog) => {
-                if (dialog.type === 'info')
-                    return html`<${InfoDialog} ...${dialog} />`;
-            })}
+        if (dialog.type === 'info')
+            return html`<${InfoDialog} ...${dialog} />`;
+    })}
         </div>
 
         ${Object.values(dialogs.value).map((dialog) => {
-            if (dialog.type === 'confirm')
-                return html`<${ConfirmDialog} ...${dialog} />`;
-        })}`;
+        if (dialog.type === 'confirm')
+            return html`<${ConfirmDialog} ...${dialog} />`;
+    })}`;
 };
 
 export const makeDialog = (type, message, onOk, onClose, options = {}) => {
@@ -128,6 +135,37 @@ export const makeDialog = (type, message, onOk, onClose, options = {}) => {
         [id]: {
             id,
             type,
+            message,
+            pointer: !!onClose,
+            onOk: () => {
+                onOk && onOk();
+                destroy();
+            },
+            onClose: () => {
+                onClose && onClose();
+                destroy();
+            },
+            ...options,
+        },
+    };
+};
+
+export const makePreviewDialog = (type, videoStream, message, onOk, onClose, options = {}) => {
+    const id = uuidv4();
+    // const destroy = () => {
+    //     const dialogsTmp = { ...dialogs.value };
+    //     delete dialogsTmp[id];
+    //     dialogs.value = dialogsTmp;
+    // };
+    // if (type !== 'confirm') {
+    //     setTimeout(destroy, 4000);
+    // }
+    dialogs.value = {
+        ...dialogs.value,
+        [id]: {
+            id,
+            type,
+            videoStream,
             message,
             pointer: !!onClose,
             onOk: () => {

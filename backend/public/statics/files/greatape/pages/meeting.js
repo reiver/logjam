@@ -14,6 +14,7 @@ import { html } from 'htm';
 import { useEffect } from 'preact';
 import { isAttendeesOpen } from '../components/Attendees/index.js';
 import { Roles, createSparkRTC, getWsUrl } from '../lib/common.js';
+import { makePreviewDialog } from '../components/Dialog/index.js';
 
 export const isDebugMode = signal(
     (
@@ -258,7 +259,7 @@ const Meeting = () => {
                 onRaiseHand: (user) => {
                     log(`[On Raise Hand Request]`, user);
 
-                    let raiseHandCallback = () => {};
+                    let raiseHandCallback = () => { };
                     const handler = new Promise((resolve, reject) => {
                         raiseHandCallback = resolve;
                     });
@@ -309,7 +310,7 @@ const Meeting = () => {
                         await start();
                     }
                 },
-                altBroadcastApprove: (isStreamming) => {
+                altBroadcastApprove: async (isStreamming, data) => {
                     updateUser({ isStreamming, ableToRaiseHand: true });
                     if (!isStreamming) {
                         sparkRTC.value.onRaiseHandRejected();
@@ -319,6 +320,18 @@ const Meeting = () => {
                             variant: 'danger',
                         });
                     } else {
+
+                        const localStream = await sparkRTC.value.getAccessToLocalStream();
+
+                        //display preview
+                        // makePreviewDialog('preview', {
+                        //     videoStream: localStream,
+                        // })
+
+
+                        //need to call below function when audience approves to join the stage
+                        await sparkRTC.value.joinStage(data);
+
                         makeDialog('info', {
                             message: 'You’ve been added to the stage',
                             icon: 'Check',

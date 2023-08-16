@@ -208,6 +208,17 @@ export class SparkRTC {
         }
     };
 
+
+    joinStage = async (data) => {
+        // if (msg.result == true) {
+        await this.startBroadcasting('alt-broadcast');
+        this.lastBroadcasterId = data;
+        if (this.localStream) {
+            this.sendStreamTo(data, this.localStream);
+        }
+        // }
+    }
+
     /**
      * A socket handler to receive, message on webSocket,
      *
@@ -384,18 +395,9 @@ export class SparkRTC {
                     }
                 } else {
                     this.broadcastingApproved = true;
-
-                    if (msg.result == true) {
-                        this.localStream = null;
-                        await this.startBroadcasting('alt-broadcast');
-                        this.lastBroadcasterId = msg.data;
-                        if (this.localStream) {
-                            this.sendStreamTo(msg.data, this.localStream);
-                        }
-                    }
-
+                    //show preview
                     if (this.altBroadcastApprove) {
-                        this.altBroadcastApprove(msg.result);
+                        this.altBroadcastApprove(msg.result, msg.data);
                     }
                 }
                 break;
@@ -791,6 +793,32 @@ export class SparkRTC {
         }
     };
 
+    //Get Local Stream
+
+    getAccessToLocalStream = async () => {
+        if (!this.localStream) {
+            this.updateTheStatus(`Trying to get local stream`);
+            if (!this.constraints.audio && !this.constraints.video) {
+                this.updateTheStatus(`No media device available`);
+                throw new Error('No media device available');
+            }
+            this.localStream = await navigator.mediaDevices.getUserMedia(
+                this.constraints
+            );
+
+            //add hint to content type
+            await this.addHintToTrack(this.localStream);
+
+            await this.setResolution(this.localStream);
+
+            this.updateTheStatus(`Local stream loaded`);
+            this.updateTheStatus(`[startBroadcasting] local stream loaded`);
+            this.remoteStreams.push(this.localStream);
+        }
+
+        return this.localStream;
+    }
+
     /**
      * Function to initiate Video Broadcasting
      *
@@ -800,25 +828,26 @@ export class SparkRTC {
     startBroadcasting = async (data = this.Roles.BROADCAST) => {
         this.updateTheStatus(`[startBroadcasting]`, data);
         try {
-            if (!this.localStream) {
-                this.updateTheStatus(`Trying to get local stream`);
-                if (!this.constraints.audio && !this.constraints.video) {
-                    this.updateTheStatus(`No media device available`);
-                    throw new Error('No media device available');
-                }
-                this.localStream = await navigator.mediaDevices.getUserMedia(
-                    this.constraints
-                );
+            await this.getAccessToLocalStream();
+            // if (!this.localStream) {
+            //     this.updateTheStatus(`Trying to get local stream`);
+            //     if (!this.constraints.audio && !this.constraints.video) {
+            //         this.updateTheStatus(`No media device available`);
+            //         throw new Error('No media device available');
+            //     }
+            //     this.localStream = await navigator.mediaDevices.getUserMedia(
+            //         this.constraints
+            //     );
 
-                //add hint to content type
-                await this.addHintToTrack(this.localStream);
+            //     //add hint to content type
+            //     await this.addHintToTrack(this.localStream);
 
-                await this.setResolution(this.localStream);
+            //     await this.setResolution(this.localStream);
 
-                this.updateTheStatus(`Local stream loaded`);
-                this.updateTheStatus(`[startBroadcasting] local stream loaded`);
-                this.remoteStreams.push(this.localStream);
-            }
+            //     this.updateTheStatus(`Local stream loaded`);
+            //     this.updateTheStatus(`[startBroadcasting] local stream loaded`);
+            //     this.remoteStreams.push(this.localStream);
+            // }
             this.updateTheStatus(`Request Broadcast Role`);
 
             if (await this.checkSocketStatus())
@@ -971,7 +1000,7 @@ export class SparkRTC {
         }
     };
 
-   
+
     /**
      * Function to restart the Negotiation and finding a new Parent
      *
