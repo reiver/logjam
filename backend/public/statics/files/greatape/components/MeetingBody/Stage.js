@@ -239,7 +239,8 @@ export const Video = memo(
             }
         }, [userInteractedWithDom.value, isMuted]);
         useEffect(() => {
-            videoRef.current.play();
+            videoRef.current.playsInline = true;
+            // videoRef.current.play();
         }, []);
         const handleRemoveStream = () => {
             makeDialog(

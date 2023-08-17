@@ -30,7 +30,8 @@ export const PreviewDialog = ({
     }, [videoStream]);
 
     useEffect(() => {
-        videoRef.current.play();
+        videoRef.current.playsInline = true;
+        // videoRef.current.play();
     }, []);
 
     const toggleCamera = () => {
