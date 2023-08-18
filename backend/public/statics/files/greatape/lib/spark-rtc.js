@@ -208,6 +208,19 @@ export class SparkRTC {
         }
     };
 
+    cancelJoinStage = async (data) => {
+
+        this.lastBroadcasterId = data;
+        this.socket.send(
+            JSON.stringify({
+                type: 'audience-broadcasting',
+                data: this.myUsername,
+                target: this.lastBroadcasterId,
+                joinedStage: false,
+            })
+        );
+    }
+
     joinStage = async (data) => {
         this.startBroadcasting('alt-broadcast');
 
@@ -218,6 +231,7 @@ export class SparkRTC {
                     type: 'audience-broadcasting',
                     data: this.myUsername,
                     target: this.lastBroadcasterId,
+                    joinedStage: true,
                 })
             );
             this.sendStreamTo(data, this.localStream);
@@ -450,10 +464,21 @@ export class SparkRTC {
 
                         if (result !== true) return;
 
+                        this.getLatestUserList();
+                        this.raiseHands.push(msg.data);
                         this.updateTheStatus(
                             `[handleMessage] ${msg.type} approving raised hand`,
                             msg.data
                         );
+                        this.getMetadata();
+                        setTimeout(() => {
+                            const metaData = this.metaData;
+                            metaData.raiseHands = JSON.stringify(
+                                this.raiseHands
+                            );
+                            this.setMetadata(metaData);
+                        }, 1000);
+
                     } else {
                         this.updateTheStatus(`else of this.raiseHands`);
                     }
@@ -578,13 +603,23 @@ export class SparkRTC {
                 break;
 
             case 'audience-broadcasting':
-                this.getMetadata();
-                this.raiseHands.push(msg.data);
-                setTimeout(() => {
-                    const metaData = this.metaData;
-                    metaData.raiseHands = JSON.stringify(this.raiseHands);
-                    this.setMetadata(metaData);
-                }, 1000);
+
+                this.getLatestUserList();
+
+                if (msg.joinedStage === false) {
+                    //remove the user id from raisehands
+
+                    if (
+                        this.role === this.Roles.BROADCAST &&
+                        this.raiseHands.includes(msg.data)
+                    ) {
+                        var index = this.raiseHands.indexOf(msg.data);
+                        if (index > -1) {
+                            this.raiseHands.splice(index, 1);
+                        }
+                    }
+
+                }
                 break;
 
             default:
@@ -1135,15 +1170,15 @@ export class SparkRTC {
 
         //override getRemotestreams for Iphone safari support
         if (!peerConnection.getRemoteStreams) {
-            peerConnection.getRemoteStreams = function() {
+            peerConnection.getRemoteStreams = function () {
                 var stream = new MediaStream();
-                peerConnection.getReceivers().forEach(function(receiver) {
+                peerConnection.getReceivers().forEach(function (receiver) {
                     stream.addTrack(receiver.track);
                 });
                 return [stream];
             };
         }
-        
+
         // Get all remote streams from the PeerConnection
         const allStreams = peerConnection.getRemoteStreams();
         this.updateTheStatus(`All Remote streams of PC`, { allStreams });

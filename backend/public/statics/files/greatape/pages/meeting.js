@@ -259,7 +259,7 @@ const Meeting = () => {
                 onRaiseHand: (user) => {
                     log(`[On Raise Hand Request]`, user);
 
-                    let raiseHandCallback = () => {};
+                    let raiseHandCallback = () => { };
                     const handler = new Promise((resolve, reject) => {
                         raiseHandCallback = resolve;
                     });
@@ -350,6 +350,7 @@ const Meeting = () => {
                                 updateUser({
                                     ableToRaiseHand: true,
                                 });
+                                sparkRTC.value.cancelJoinStage(data);
                                 sparkRTC.value.onRaiseHandRejected();
                             }
                         );
@@ -389,14 +390,8 @@ const Meeting = () => {
                             video,
                         };
                     }
-                    raisedHandsCount.value = Object.values(usersTmp).reduce(
-                        (prev, user) => {
-                            if (!user.isHost && user.video) return prev + 1;
-                            return prev;
-                        },
-                        0
-                    );
-
+                    //get latest raise hand count from sparkRTC
+                    raisedHandsCount.value = sparkRTC.value.raiseHands.length;
                     attendees.value = usersTmp;
                 },
                 constraintResults: (constraints) => {
