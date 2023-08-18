@@ -1133,6 +1133,17 @@ export class SparkRTC {
             }
         }
 
+        //override getRemotestreams for Iphone safari support
+        if (!peerConnection.getRemoteStreams) {
+            peerConnection.getRemoteStreams = function() {
+                var stream = new MediaStream();
+                peerConnection.getReceivers().forEach(function(receiver) {
+                    stream.addTrack(receiver.track);
+                });
+                return [stream];
+            };
+        }
+        
         // Get all remote streams from the PeerConnection
         const allStreams = peerConnection.getRemoteStreams();
         this.updateTheStatus(`All Remote streams of PC`, { allStreams });
