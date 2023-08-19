@@ -2,11 +2,13 @@ package roomRepository
 
 import (
 	"errors"
+	"fmt"
+	"strconv"
+	"sync"
+
 	"github.com/sparkscience/logjam/models"
 	"github.com/sparkscience/logjam/models/contracts"
 	"github.com/sparkscience/logjam/models/dto"
-	"strconv"
-	"sync"
 )
 
 type roomRepository struct {
@@ -112,6 +114,7 @@ func (r *roomRepository) ClearBroadcasterSeat(roomId string) error {
 }
 
 func (r *roomRepository) AddMember(roomId string, id uint64, name, email, streamId string) error {
+	fmt.Println("AddMember start:", id)
 	r.Lock()
 	defer r.Unlock()
 	if !r.doesRoomExists(roomId) {
@@ -126,6 +129,7 @@ func (r *roomRepository) AddMember(roomId string, id uint64, name, email, stream
 		MetaData:       map[string]any{"streamId": streamId},
 		CanAcceptChild: false,
 	}
+	fmt.Println("AddMember done:", id)
 	return nil
 }
 

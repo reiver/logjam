@@ -2,10 +2,12 @@ package controllers
 
 import (
 	"encoding/json"
-	"github.com/sparkscience/logjam/models"
-	"github.com/sparkscience/logjam/models/contracts"
+	"fmt"
 	"strconv"
 	"time"
+
+	"github.com/sparkscience/logjam/models"
+	"github.com/sparkscience/logjam/models/contracts"
 )
 
 type RoomWSController struct {
@@ -208,6 +210,7 @@ func (c *RoomWSController) Role(ctx *models.WSContext) {
 		}
 		tryCount := 0
 	start:
+		fmt.Println("InsertMemberToTree start roomId", ctx.RoomId)
 		parentId, err := c.roomRepo.InsertMemberToTree(ctx.RoomId, ctx.SocketID, false)
 		if err != nil && tryCount <= 20 {
 			time.Sleep(500 * time.Millisecond)
@@ -229,6 +232,7 @@ func (c *RoomWSController) Role(ctx *models.WSContext) {
 			}, *parentId)
 		} else {
 			err := c.anRepo.CreatePeer(ctx.RoomId, ctx.SocketID, true, false)
+			fmt.Println("InsertMemberToTree create peer err: ", err)
 			if err != nil {
 				_ = c.socketSVC.Send(models.MessageContract{
 					Type: "error",
@@ -236,6 +240,7 @@ func (c *RoomWSController) Role(ctx *models.WSContext) {
 				}, ctx.SocketID)
 			}
 		}
+		fmt.Println("InsertMemberToTree end roomId", ctx.RoomId)
 		go c.emitUserList(ctx.RoomId)
 	}
 }
