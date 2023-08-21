@@ -144,6 +144,6 @@ func (ctrl *AuxiliaryNodeController) Join(rw http.ResponseWriter, req *http.Requ
 			Data: strconv.FormatUint(models.AuxiliaryNodeId, 10),
 		}
 		_ = ctrl.socketSVC.Send(parentDCEvent, childrenIdList...)
-		println("deleted an from tree")
+		println("deleted goldgorilla from tree")
 	}(reqModel.RoomId, reqModel.ServiceAddr)
 }

@@ -154,8 +154,8 @@ func (c *RoomWSController) Role(ctx *models.WSContext) {
 			c.log(contracts.LError, err.Error())
 		}
 		_ = c.socketSVC.Send(resultEvent, ctx.SocketID)
-		fuck := c.roomRepo.HadAuxiliaryNodeInTreeBefore(ctx.RoomId)
-		if fuck {
+		hadAuxiliaryNodeInTreeBefore := c.roomRepo.HadAuxiliaryNodeInTreeBefore(ctx.RoomId)
+		if hadAuxiliaryNodeInTreeBefore {
 			go func() {
 				err := c.anRepo.Start()
 				if err != nil {
