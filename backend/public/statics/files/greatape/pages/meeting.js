@@ -13,7 +13,7 @@ import {
 import { html } from 'htm';
 import { useEffect } from 'preact';
 import { isAttendeesOpen } from '../components/Attendees/index.js';
-import { makePreviewDialog } from '../components/Dialog/index.js';
+import { PreviewDialog, destroyDialog, makePreviewDialog } from '../components/Dialog/index.js';
 import { Roles, createSparkRTC, getWsUrl } from '../lib/common.js';
 
 export const isDebugMode = signal(
@@ -151,6 +151,8 @@ const Meeting = () => {
         const room = queryParams.get('room');
         const host = queryParams.get('host');
 
+        var previewDialogId = null;
+
         if (role === null || role === '') {
             role = Roles.AUDIENCE; //by default set role to Audience
         }
@@ -247,6 +249,11 @@ const Meeting = () => {
                             sparkRTC.value.broadcasterDC ||
                             stream === 'no-stream'
                         ) {
+                            //destroy preview Dialog
+                            if (previewDialogId !== null) {
+                                destroyDialog(previewDialogId)
+                            }
+
                             broadcastIsInTheMeeting.value = false;
                             updateUser({
                                 isStreamming: false,
@@ -325,7 +332,7 @@ const Meeting = () => {
                         const localStream =
                             await sparkRTC.value.getAccessToLocalStream();
 
-                        makePreviewDialog(
+                        previewDialogId = makePreviewDialog(
                             'preview',
                             localStream,
                             {
