@@ -349,6 +349,8 @@ const Meeting = () => {
                                 //onClose
                                 updateUser({
                                     ableToRaiseHand: true,
+                                    isMicrophoneOn: true,
+                                    isCameraOn: true,
                                 });
                                 sparkRTC.value.cancelJoinStage(data);
                                 sparkRTC.value.onRaiseHandRejected();
@@ -367,6 +369,12 @@ const Meeting = () => {
                 },
                 maxLimitReached: (message) => {
                     makeDialog('info', { message, icon: 'Close' });
+                    updateUser({
+                        isStreamming: false,
+                        ableToRaiseHand: true,
+                        isMicrophoneOn: true,
+                        isCameraOn: true,
+                    });
                 },
                 onUserListUpdate: (users) => {
                     // log(`[On Users List Update]`, users);

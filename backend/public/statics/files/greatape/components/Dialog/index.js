@@ -82,7 +82,7 @@ export const PreviewDialog = ({
                     autoplay
                     playsinline
                     muted="true"
-                    className="w-full h-full object-cover rounded-lg"
+                    className="aspect-video object-cover rounded-lg"
                 />
                 <div
                     class=${clsx(
