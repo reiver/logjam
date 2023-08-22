@@ -55,12 +55,18 @@ export class SparkRTC {
     userStreamData = {};
     users = [];
 
+
+    LastState = {
+        ENABLED: 'Enabled',
+        DISABLED: 'Disabled',
+    }
+
     /**@type {{[trackId:string]: string}}*/
     trackToStreamMap = {};
     /**@type {"Enabled" | "Disabled"}*/
-    lastVideoState = 'Enabled';
+    lastVideoState = this.LastState.ENABLED;
     /**@type {"Enabled" | "Disabled"}*/
-    lastAudioState = 'Enabled';
+    lastAudioState = this.LastState.ENABLED;
 
     broadcastersMessage = null;
 
@@ -2321,7 +2327,7 @@ export class SparkRTC {
      */
     disableVideo = (enabled = false) => {
         if (this.localStream) {
-            this.lastVideoState = enabled === true ? 'Enabled' : 'Disabled';
+            this.lastVideoState = enabled === true ? this.LastState.ENABLED : this.LastState.DISABLED;
             this.localStream.getTracks().forEach((track) => {
                 if (track.kind === 'video') track.enabled = enabled;
             });
@@ -2335,7 +2341,7 @@ export class SparkRTC {
      */
     disableAudio = (enabled = false) => {
         if (this.localStream) {
-            this.lastAudioState = enabled === true ? 'Enabled' : 'Disabled';
+            this.lastAudioState = enabled === true ? this.LastState.ENABLED : this.LastState.DISABLED;
             this.localStream.getTracks().forEach((track) => {
                 if (track.kind === 'audio') {
                     track.enabled = enabled;
@@ -2758,8 +2764,8 @@ export class SparkRTC {
         this.userStreamData = {};
         this.users = [];
         this.trackToStreamMap = {};
-        this.lastVideoState = 'Enabled';
-        this.lastAudioState = 'Enabled';
+        this.lastVideoState = this.LastState.ENABLED;
+        this.lastAudioState = this.LastState.ENABLED;
     };
 
     /**

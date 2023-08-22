@@ -351,6 +351,13 @@ const Meeting = () => {
                                     message: 'You’ve been added to the stage',
                                     icon: 'Check',
                                 });
+
+                                //send user mute status to everyone to update the Ui
+                                setTimeout(() => {
+                                    if (sparkRTC.value.lastAudioState === sparkRTC.value.LastState.DISABLED) {
+                                        sparkRTC.value.sendAudioStatus(false)
+                                    }
+                                }, 1000);
                             },
                             () => {
                                 //onClose
