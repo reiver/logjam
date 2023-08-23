@@ -258,7 +258,10 @@ const Meeting = () => {
                             updateUser({
                                 isStreamming: false,
                                 ableToRaiseHand: true,
+                                isMicrophoneOn: true,
+                                isCameraOn: true,
                             });
+                            sparkRTC.value.resetAudioVideoState();
                             log(`broadcasterDC...`);
                         }
                     }
@@ -366,6 +369,8 @@ const Meeting = () => {
                                     isMicrophoneOn: true,
                                     isCameraOn: true,
                                 });
+
+                                sparkRTC.value.resetAudioVideoState();
                                 sparkRTC.value.cancelJoinStage(data);
                                 sparkRTC.value.onRaiseHandRejected();
                             }
@@ -373,12 +378,18 @@ const Meeting = () => {
                     }
                 },
                 disableBroadcasting: () => {
-                    updateUser({ isStreamming: false });
+                    updateUser({
+                        isStreamming: false,
+                        ableToRaiseHand: true,
+                        isMicrophoneOn: true,
+                        isCameraOn: true,
+                    });
                     makeDialog('info', {
                         message: 'You just removed from stage',
                         icon: 'Close',
                         variant: 'danger',
                     });
+                    sparkRTC.value.resetAudioVideoState();
                     sparkRTC.value.onRaiseHandRejected();
                 },
                 maxLimitReached: (message) => {
@@ -389,6 +400,7 @@ const Meeting = () => {
                         isMicrophoneOn: true,
                         isCameraOn: true,
                     });
+                    sparkRTC.value.resetAudioVideoState();
                 },
                 onUserListUpdate: (users) => {
                     // log(`[On Users List Update]`, users);

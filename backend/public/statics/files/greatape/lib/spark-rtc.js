@@ -2729,6 +2729,11 @@ export class SparkRTC {
         }
     };
 
+    resetAudioVideoState = () => {
+        this.lastVideoState = this.LastState.ENABLED;
+        this.lastAudioState = this.LastState.ENABLED;
+    }
+
     //Reset all the variables
     resetVariables = (resetAll = false) => {
         if (resetAll) {
