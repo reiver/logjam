@@ -137,6 +137,7 @@ export const onUserRaisedHand = (userId, raisedHand, acceptRaiseHand) => {
         },
     };
     console.log('LOWER HAND', userId, raisedHand);
+    sparkRTC.value.getLatestUserList();
 };
 
 export const getUserRaiseHandStatus = (userId) => {
@@ -274,20 +275,24 @@ const Meeting = () => {
                         raiseHandCallback = resolve;
                     });
 
-                    attendeesBadge.value = true;
+                    //only show message when limit is not reached
+                    if (sparkRTC.value.raiseHands.length < sparkRTC.value.maxRaisedHands) {
+                        attendeesBadge.value = true;
 
-                    makeDialog(
-                        'info',
-                        {
-                            message: 'Someone has raised their hand!',
-                            icon: 'Clock',
-                        },
-                        null,
-                        () => {
-                            isAttendeesOpen.value = true;
-                            attendeesBadge.value = false;
-                        }
-                    );
+                        makeDialog(
+                            'info',
+                            {
+                                message: 'Someone has raised their hand!',
+                                icon: 'Clock',
+                            },
+                            null,
+                            () => {
+                                isAttendeesOpen.value = true;
+                                attendeesBadge.value = false;
+                            }
+                        );
+                    }
+
                     onUserRaisedHand(
                         user.userId,
                         new Date(),
@@ -425,7 +430,18 @@ const Meeting = () => {
                         };
                     }
                     //get latest raise hand count from sparkRTC
-                    raisedHandsCount.value = sparkRTC.value.raiseHands.length;
+                    if (sparkRTC.value.role === sparkRTC.value.Roles.BROADCAST) {
+                        raisedHandsCount.value = sparkRTC.value.raiseHands.length;
+                    } else {
+                        raisedHandsCount.value = Object.values(usersTmp).reduce(
+                            (prev, user) => {
+                                if (!user.isHost && user.video) return prev + 1;
+                                return prev;
+                            },
+                            0
+                        );
+                    }
+
                     attendees.value = usersTmp;
                 },
                 constraintResults: (constraints) => {

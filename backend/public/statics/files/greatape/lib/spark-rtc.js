@@ -431,14 +431,14 @@ export class SparkRTC {
                 if (this.role === this.Roles.BROADCAST) {
                     var limitReached = false;
 
-                    if (this.raiseHands.length >= this.maxRaisedHands) {
-                        limitReached = true;
-                    }
+                    // if (this.raiseHands.length >= this.maxRaisedHands) {
+                    //     limitReached = true;
+                    // }
                     this.updateTheStatus(`My ID: ${this.myUsername}`);
 
                     if (this.raiseHands.indexOf(msg.data) === -1) {
                         var result = false;
-                        if (this.raiseHandConfirmation && !limitReached) {
+                        if (this.raiseHandConfirmation /*&& !limitReached*/) {
                             try {
                                 const data = JSON.parse(msg.name);
                                 const name = data.name;
@@ -464,7 +464,7 @@ export class SparkRTC {
                                     type: 'alt-broadcast-approve',
                                     target: msg.data,
                                     result,
-                                    maxLimitReached: limitReached,
+                                    maxLimitReached: false,//limitReached,
                                 })
                             );
 
@@ -860,7 +860,6 @@ export class SparkRTC {
 
         this.updateTheStatus(`Local stream loaded`);
         this.updateTheStatus(`[startBroadcasting] local stream loaded`);
-        this.remoteStreams.push(this.localStream);
 
         return this.localStream;
     };
@@ -877,6 +876,8 @@ export class SparkRTC {
             if (!this.localStream) {
                 await this.getAccessToLocalStream();
             }
+
+            this.remoteStreams.push(this.localStream);
 
             this.updateTheStatus(`Request Broadcast Role`);
 
