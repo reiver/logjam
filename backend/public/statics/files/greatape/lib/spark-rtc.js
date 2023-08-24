@@ -2451,11 +2451,11 @@ export class SparkRTC {
      *
      * @returns
      */
-    lowerHand = async () => {
+    leaveStage = async () => {
 
         this.resetAudioVideoState();
 
-        this.updateTheStatus('[lowerHand] start');
+        this.updateTheStatus('[leaveStage] start');
         if (!this.localStream) return;
         let apeerConnection;
         for (const id in this.myPeerConnectionArray) {
@@ -2465,15 +2465,15 @@ export class SparkRTC {
         const trackIds = this.localStream
             .getTracks()
             .map((receiver) => receiver.id);
-        this.updateTheStatus('[lowerHand] trackIds', trackIds);
+        this.updateTheStatus('[leaveStage] trackIds', trackIds);
         const allSenders = apeerConnection.getSenders();
-        this.updateTheStatus(`[lowerHand] allSenders`, allSenders);
+        this.updateTheStatus(`[leaveStage] allSenders`, allSenders);
         for (const trackId of trackIds)
             for (const sender of allSenders) {
-                this.updateTheStatus(`[lowerHand] sender`, sender);
+                this.updateTheStatus(`[leaveStage] sender`, sender);
                 if (!sender.track) continue;
                 if (sender.track.id === trackId) {
-                    this.updateTheStatus(`[lowerHand] DC sender`);
+                    this.updateTheStatus(`[leaveStage] DC sender`);
                     try {
                         apeerConnection.removeTrack(sender);
                     } catch (e) {
@@ -2620,7 +2620,7 @@ export class SparkRTC {
             if (this.role === this.Roles.BROADCAST) {
                 await this.closeCamera();
             } else {
-                await this.lowerHand();
+                await this.leaveStage();
             }
         } else {
             //close websocket if not streaming anything

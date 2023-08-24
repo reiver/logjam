@@ -80,7 +80,7 @@ export const Controllers = () => {
                         isMicrophoneOn: true,
                         isCameraOn: true,
                     });
-                    sparkRTC.value.lowerHand();
+                    sparkRTC.value.leaveStage();
     
                 },
                 () => {},
