@@ -621,15 +621,7 @@ export class SparkRTC {
                 if (msg.joinedStage === false) {
                     //remove the user id from raisehands
 
-                    if (
-                        this.role === this.Roles.BROADCAST &&
-                        this.raiseHands.includes(msg.data)
-                    ) {
-                        var index = this.raiseHands.indexOf(msg.data);
-                        if (index > -1) {
-                            this.raiseHands.splice(index, 1);
-                        }
-                    }
+                    this.removeFromRaiseHandList(msg.data);
 
                 }
                 break;
@@ -667,18 +659,24 @@ export class SparkRTC {
                 console.log("RaiseHandID: User not in Meeting:", foundUser);
 
                 if (!foundUser) {
-                    if (this.raiseHands.includes(id)
-                    ) {
-                        var index = this.raiseHands.indexOf(id);
-                        if (index > -1) {
-                            this.raiseHands.splice(index, 1);
-                        }
-                    }
-
-                    this.getLatestUserList();
+                    this.removeFromRaiseHandList(id)
                 }
             });
         }
+    }
+
+    removeFromRaiseHandList = (data) => {
+        if (this.raiseHands.includes(data)
+            && this.role === this.Roles.BROADCAST
+        ) {
+            var index = this.raiseHands.indexOf(data);
+            if (index > -1) {
+                this.raiseHands.splice(index, 1);
+            }
+        }
+
+        //update the user list
+        this.getLatestUserList()
     }
 
     /**
@@ -1547,15 +1545,8 @@ export class SparkRTC {
                                 this.remoteStreamDCCallback(stream);
                             } catch { }
                         }
-                        if (
-                            this.role === this.Roles.BROADCAST &&
-                            this.raiseHands.includes(target)
-                        ) {
-                            var index = this.raiseHands.indexOf(target);
-                            if (index > -1) {
-                                this.raiseHands.splice(index, 1);
-                            }
-                        }
+
+                        this.removeFromRaiseHandList(target);
 
                         //check meeting status and close socket
                         if (this.leftMeeting) {
@@ -1681,15 +1672,9 @@ export class SparkRTC {
                                 this.remoteStreamDCCallback(event.target);
                             } catch { }
                         }
-                        if (
-                            this.role === this.Roles.BROADCAST &&
-                            this.raiseHands.includes(target)
-                        ) {
-                            var index = this.raiseHands.indexOf(target);
-                            if (index > -1) {
-                                this.raiseHands.splice(index, 1);
-                            }
-                        }
+
+                        this.removeFromRaiseHandList(target);
+
 
                         //check meeting status and close socket
                         if (this.leftMeeting) {
@@ -1816,15 +1801,8 @@ export class SparkRTC {
                                 this.remoteStreamDCCallback(event.target);
                             } catch { }
                         }
-                        if (
-                            this.role === this.Roles.BROADCAST &&
-                            this.raiseHands.includes(target)
-                        ) {
-                            var index = this.raiseHands.indexOf(target);
-                            if (index > -1) {
-                                this.raiseHands.splice(index, 1);
-                            }
-                        }
+
+                        this.removeFromRaiseHandList(target);
 
                         //check meeting status and close socket
                         if (this.leftMeeting) {
@@ -1948,15 +1926,8 @@ export class SparkRTC {
                 peerConnection.iceConnectionState === 'failed' ||
                 peerConnection.iceConnectionState === 'closed'
             ) {
-                if (
-                    this.role === this.Roles.BROADCAST &&
-                    this.raiseHands.includes(target)
-                ) {
-                    var index = this.raiseHands.indexOf(target);
-                    if (index > -1) {
-                        this.raiseHands.splice(index, 1);
-                    }
-                }
+                this.removeFromRaiseHandList(target);
+
                 if (!this.parentDC && !connectedOnce) {
                     setTimeout(() => {
                         this.updateTheStatus('restarting ice');
