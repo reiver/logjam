@@ -172,11 +172,12 @@ export class SparkRTC {
         );
 
         try {
-            if(broadcasterPeerConnection.signalingState === "stable"){
+            if(broadcasterPeerConnection.signalingState !== "stable"){
                 try{
+                    console.log("received offer when sigstate is ",broadcasterPeerConnection.signalingState," rolling localDescription back")
                     await broadcasterPeerConnection.setLocalDescription({ type: "rollback", sdp: "" })
                 }catch(e){
-                    console.error("rollback sdp: ",e)
+                    console.error("[ignorable] rollback sdp: ",e)
                 }
             }
             await broadcasterPeerConnection.setRemoteDescription(
