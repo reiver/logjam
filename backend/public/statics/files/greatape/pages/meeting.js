@@ -173,11 +173,14 @@ const Meeting = () => {
                     log('audioStatus: ', message);
                     if (
                         message.stream != undefined &&
-                        message.type != undefined
+                        message.type != undefined &&
+                        streamers.value != undefined
                     ) {
-                        streamers.value[message.stream][message.type] =
-                            message.value;
-                        streamers.value = { ...streamers.value };
+                        if (streamers.value[message.stream] != undefined) {
+                            streamers.value[message.stream][message.type] =
+                                message.value;
+                            streamers.value = { ...streamers.value };
+                        }
                     }
                 },
                 onUserInitialized: (userId) => {
@@ -364,8 +367,10 @@ const Meeting = () => {
                                 setTimeout(() => {
                                     if (sparkRTC.value.lastAudioState === sparkRTC.value.LastState.DISABLED) {
                                         sparkRTC.value.sendAudioStatus(false)
+                                    } else {
+                                        sparkRTC.value.sendAudioStatus(true)
                                     }
-                                }, 1000);
+                                }, 2000);
                             },
                             () => {
                                 //onClose

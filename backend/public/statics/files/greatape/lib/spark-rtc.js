@@ -2452,6 +2452,9 @@ export class SparkRTC {
      * @returns
      */
     lowerHand = async () => {
+
+        this.resetAudioVideoState();
+
         this.updateTheStatus('[lowerHand] start');
         if (!this.localStream) return;
         let apeerConnection;
