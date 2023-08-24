@@ -243,7 +243,7 @@ const Meeting = () => {
                 },
                 remoteStreamDCCallback: (stream) => {
                     sparkRTC.value.getLatestUserList(`remote stream DC`);
-
+                    
                     log(`remoteStreamDCCallback`, stream);
 
                     onStopStream(stream);
@@ -413,7 +413,7 @@ const Meeting = () => {
                     sparkRTC.value.resetAudioVideoState();
                 },
                 onUserListUpdate: (users) => {
-                    // log(`[On Users List Update]`, users);
+                    // log(`[On Users List Update]`, users);                    
                     const usersTmp = {};
                     for (const {
                         name: userInfo,

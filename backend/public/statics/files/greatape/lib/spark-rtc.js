@@ -590,6 +590,28 @@ export class SparkRTC {
                             this.userListUpdated(users);
                         } catch { }
                     }
+
+
+                    //check if raisehands user id is not in users list
+                    if (this.role === this.Roles.BROADCAST) {
+                        this.raiseHands.forEach(id => {
+                            const raiseHandId = Number(id);
+                            const foundUser = users.some(user => {
+                                return user.id === raiseHandId
+                            });
+                            console.log("RaiseHandID: User not in Meeting:", foundUser);
+
+                            if (!foundUser) {
+                                if (this.raiseHands.includes(id)
+                                ) {
+                                    var index = this.raiseHands.indexOf(id);
+                                    if (index > -1) {
+                                        this.raiseHands.splice(index, 1);
+                                    }
+                                }
+                            }
+                        });
+                    }
                 }, 1000);
                 break;
 
