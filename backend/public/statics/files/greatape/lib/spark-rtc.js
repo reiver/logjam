@@ -224,8 +224,7 @@ export class SparkRTC {
     };
 
     cancelJoinStage = async (data) => {
-
-        this.lastBroadcasterId = data;
+        this.lastBroadcasterId = data.toString();
         this.socket.send(
             JSON.stringify({
                 type: 'audience-broadcasting',
@@ -625,13 +624,18 @@ export class SparkRTC {
 
             case 'audience-broadcasting':
 
+                console.log("audience-broadcasting", msg);
+
                 this.getLatestUserList();
 
                 if (msg.joinedStage === false) {
                     //remove the user id from raisehands
 
                     this.removeFromRaiseHandList(msg.data);
-
+                    console.log("userLoweredHand: ", this.userLoweredHand);
+                    if (this.userLoweredHand) {
+                        this.userLoweredHand(msg.data);
+                    }
                 }
                 break;
 
@@ -2000,6 +2004,8 @@ export class SparkRTC {
                     if (broadcaster) {
                         const data = JSON.parse(broadcaster.name);
                         broadcasterName = data.name;
+                        this.lastBroadcasterId = broadcaster.id;
+                        console.log("broadcasterId: ", this.lastBroadcasterId)
                     }
 
                     if (!broadcaster) {
@@ -2457,8 +2463,13 @@ export class SparkRTC {
         }
     };
 
+    lowerHand = async () => {
+        this.resetAudioVideoState();
+        this.cancelJoinStage(this.lastBroadcasterId)
+        this.onRaiseHandRejected();
+    }
     /**
-     * Function to lower hand and take request(to broadcast) back, if sharing already stop sharing
+     * Function to leave the stage stop sharing
      *
      * @returns
      */
@@ -2815,6 +2826,7 @@ export class SparkRTC {
         this.updateUi = options.updateUi;
         this.parentDcMessage = options.parentDcMessage;
         this.onAudioStatusChange = options.onAudioStatusChange;
+        this.userLoweredHand = options.userLoweredHand;
 
         this.checkBrowser(); //detect browser
         this.getSupportedCodecs();

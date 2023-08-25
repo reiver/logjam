@@ -14,6 +14,7 @@ import {
     isDebugMode,
     onStartShareScreen,
     onStopShareScreen,
+    onUserRaisedHand,
     raiseHandMaxLimitReached,
     sparkRTC,
     updateUser,
@@ -81,9 +82,9 @@ export const Controllers = () => {
                         isCameraOn: true,
                     });
                     sparkRTC.value.leaveStage();
-    
+
                 },
-                () => {},
+                () => { },
                 {
                     okText: 'Leave the stage',
                     okButtonVariant: 'red',
@@ -91,16 +92,29 @@ export const Controllers = () => {
                 }
             );
         } else {
-            updateUser({
-                isRaisingHand: true,
-                ableToRaiseHand: false,
-            });
-            sparkRTC.value.raiseHand();
-            makeDialog('info', {
-                message: 'Raise hand request has been sent.',
-                icon: 'Check',
-            });
+            if (ableToRaiseHand) {
+                updateUser({
+                    isRaisingHand: true,
+                    ableToRaiseHand: false,
+                });
+                sparkRTC.value.raiseHand();
+                makeDialog('info', {
+                    message: 'Raise hand request has been sent.',
+                    icon: 'Check',
+                });
+            } else {
+                //lower hand
+                updateUser({
+                    isRaisingHand: false,
+                    ableToRaiseHand: true,
+                    ableToRaiseHand: true,
+                    isMicrophoneOn: true,
+                    isCameraOn: true,
+                });
+                sparkRTC.value.lowerHand();
+            }
         }
+
     };
 
     const [reconnectable, setReconnectable] = useState(true);
@@ -115,7 +129,7 @@ export const Controllers = () => {
         }
     };
 
-    const toggleBottomSheet = () => {};
+    const toggleBottomSheet = () => { };
 
     if (!showControllers) return null;
     return html`<div class="flex gap-5 py-3 pt-0">
@@ -168,15 +182,14 @@ export const Controllers = () => {
             label=${isStreamming
                 ? 'Leave the stage'
                 : ableToRaiseHand
-                ? 'Raise Hand'
-                : 'Raise hand request has been sent'}
+                    ? 'Raise Hand'
+                    : 'Lower Hand'}
         >
             <div>
                 <${IconButton}
                     key=${isStreamming ? 'hand' : 'lower-hand'}
                     onClick=${onRaiseHand}
-                    variant="${isStreamming && 'danger'}"
-                    disabled=${!ableToRaiseHand}
+                    variant="${(isStreamming || !ableToRaiseHand) && 'danger'}"
                 >
                     <${Icon} icon="${isStreamming ? 'OffStage' : 'Hand'}" />
                 <//>
@@ -200,8 +213,8 @@ export const Controllers = () => {
             <${Tooltip}
                 key="${!isMicrophoneOn ? 'MicrophoneOff' : 'Microphone'}"
                 label=${!isMicrophoneOn
-                    ? 'Turn Microphone On'
-                    : 'Turn Microphone Off'}
+                ? 'Turn Microphone On'
+                : 'Turn Microphone Off'}
             >
                 <${IconButton}
                     variant=${!isMicrophoneOn && 'danger'}
@@ -219,7 +232,7 @@ export const Controllers = () => {
             >
                 <${Icon} icon="KebabMenuVertical" />
                 ${attendeesBadge.value &&
-                html`<span
+        html`<span
                     class="absolute z-10 top-[0px] right-[0px] w-[10px] h-[10px] rounded-full bg-red-distructive border dark:border-secondary-1-a border-white-f-9"
                 ></span>`}
             <//>

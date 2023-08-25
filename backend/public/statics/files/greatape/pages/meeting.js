@@ -243,7 +243,7 @@ const Meeting = () => {
                 },
                 remoteStreamDCCallback: (stream) => {
                     sparkRTC.value.getLatestUserList(`remote stream DC`);
-                    
+
                     log(`remoteStreamDCCallback`, stream);
 
                     onStopStream(stream);
@@ -483,6 +483,11 @@ const Meeting = () => {
                         variant: 'danger',
                     });
                 },
+                userLoweredHand: (data) => {
+                    onUserRaisedHand(data, false);
+                    log("userLoweredHand: ", data);
+                    sparkRTC.value.getLatestUserList();
+                }
             });
 
             if (sparkRTC.value) {
