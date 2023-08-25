@@ -55,12 +55,18 @@ export class SparkRTC {
     userStreamData = {};
     users = [];
 
+
+    LastState = {
+        ENABLED: 'Enabled',
+        DISABLED: 'Disabled',
+    }
+
     /**@type {{[trackId:string]: string}}*/
     trackToStreamMap = {};
     /**@type {"Enabled" | "Disabled"}*/
-    lastVideoState = 'Enabled';
+    lastVideoState = this.LastState.ENABLED;
     /**@type {"Enabled" | "Disabled"}*/
-    lastAudioState = 'Enabled';
+    lastAudioState = this.LastState.ENABLED;
 
     broadcastersMessage = null;
 
@@ -172,6 +178,15 @@ export class SparkRTC {
         );
 
         try {
+
+            if (broadcasterPeerConnection.signalingState === "stable") {
+                try {
+                    await broadcasterPeerConnection.setLocalDescription({ type: "rollback", sdp: "" })
+                } catch (e) {
+                    console.error("rollback sdp: ", e)
+                }
+            }
+
             await broadcasterPeerConnection.setRemoteDescription(
                 new RTCSessionDescription(msg.sdp)
             );
@@ -205,6 +220,36 @@ export class SparkRTC {
             );
         } catch (error) {
             console.error('[handleVideoOfferMsg] Error:', error);
+        }
+    };
+
+    cancelJoinStage = async (data) => {
+
+        this.lastBroadcasterId = data;
+        this.socket.send(
+            JSON.stringify({
+                type: 'audience-broadcasting',
+                data: this.myUsername,
+                target: this.lastBroadcasterId,
+                joinedStage: false,
+            })
+        );
+    }
+
+    joinStage = async (data) => {
+        this.startBroadcasting('alt-broadcast');
+
+        this.lastBroadcasterId = data;
+        if (this.localStream) {
+            this.socket.send(
+                JSON.stringify({
+                    type: 'audience-broadcasting',
+                    data: this.myUsername,
+                    target: this.lastBroadcasterId,
+                    joinedStage: true,
+                })
+            );
+            this.sendStreamTo(data, this.localStream);
         }
     };
 
@@ -384,18 +429,9 @@ export class SparkRTC {
                     }
                 } else {
                     this.broadcastingApproved = true;
-
-                    if (msg.result == true) {
-                        this.localStream = null;
-                        await this.startBroadcasting('alt-broadcast');
-                        this.lastBroadcasterId = msg.data;
-                        if (this.localStream) {
-                            this.sendStreamTo(msg.data, this.localStream);
-                        }
-                    }
-
+                    //show preview
                     if (this.altBroadcastApprove) {
-                        this.altBroadcastApprove(msg.result);
+                        this.altBroadcastApprove(msg.result, msg.data);
                     }
                 }
                 break;
@@ -404,14 +440,14 @@ export class SparkRTC {
                 if (this.role === this.Roles.BROADCAST) {
                     var limitReached = false;
 
-                    if (this.raiseHands.length >= this.maxRaisedHands) {
-                        limitReached = true;
-                    }
+                    // if (this.raiseHands.length >= this.maxRaisedHands) {
+                    //     limitReached = true;
+                    // }
                     this.updateTheStatus(`My ID: ${this.myUsername}`);
 
                     if (this.raiseHands.indexOf(msg.data) === -1) {
                         var result = false;
-                        if (this.raiseHandConfirmation && !limitReached) {
+                        if (this.raiseHandConfirmation /*&& !limitReached*/) {
                             try {
                                 const data = JSON.parse(msg.name);
                                 const name = data.name;
@@ -437,12 +473,13 @@ export class SparkRTC {
                                     type: 'alt-broadcast-approve',
                                     target: msg.data,
                                     result,
-                                    maxLimitReached: limitReached,
+                                    maxLimitReached: false,//limitReached,
                                 })
                             );
 
                         if (result !== true) return;
 
+                        this.getLatestUserList();
                         this.raiseHands.push(msg.data);
                         this.updateTheStatus(
                             `[handleMessage] ${msg.type} approving raised hand`,
@@ -456,6 +493,7 @@ export class SparkRTC {
                             );
                             this.setMetadata(metaData);
                         }, 1000);
+
                     } else {
                         this.updateTheStatus(`else of this.raiseHands`);
                     }
@@ -555,11 +593,18 @@ export class SparkRTC {
                         this.updateTheStatus(`No Callback registered`);
                     }
 
+                    this.updateTheStatus("Userlist: ", users);
                     if (this.userListUpdated) {
                         try {
                             this.userListUpdated(users);
                         } catch { }
                     }
+
+
+                    //check if raisehands user id is not in users list
+                    this.updateRaiseHandList(users)
+
+
                 }, 1000);
                 break;
 
@@ -575,6 +620,18 @@ export class SparkRTC {
                 this.updateTheStatus(`need to reconnect with new parent`);
                 if (this.startProcedure) {
                     this.startProcedure(true);
+                }
+                break;
+
+            case 'audience-broadcasting':
+
+                this.getLatestUserList();
+
+                if (msg.joinedStage === false) {
+                    //remove the user id from raisehands
+
+                    this.removeFromRaiseHandList(msg.data);
+
                 }
                 break;
 
@@ -599,6 +656,37 @@ export class SparkRTC {
         }
         return null;
     };
+
+
+    updateRaiseHandList = (users) => {
+        if (this.role === this.Roles.BROADCAST) {
+            this.raiseHands.forEach(id => {
+                const raiseHandId = Number(id);
+                const foundUser = users.some(user => {
+                    return user.id === raiseHandId
+                });
+                console.log("RaiseHandID: User not in Meeting:", foundUser);
+
+                if (!foundUser) {
+                    this.removeFromRaiseHandList(id)
+                }
+            });
+        }
+    }
+
+    removeFromRaiseHandList = (data) => {
+        if (this.raiseHands.includes(data)
+            && this.role === this.Roles.BROADCAST
+        ) {
+            var index = this.raiseHands.indexOf(data);
+            if (index > -1) {
+                this.raiseHands.splice(index, 1);
+            }
+        }
+
+        //update the user list
+        this.getLatestUserList()
+    }
 
     /**
      * Ping function to, request Tree
@@ -791,6 +879,29 @@ export class SparkRTC {
         }
     };
 
+    //Get Local Stream
+
+    getAccessToLocalStream = async () => {
+        this.updateTheStatus(`Trying to get local stream`);
+        if (!this.constraints.audio && !this.constraints.video) {
+            this.updateTheStatus(`No media device available`);
+            throw new Error('No media device available');
+        }
+        this.localStream = await navigator.mediaDevices.getUserMedia(
+            this.constraints
+        );
+
+        //add hint to content type
+        await this.addHintToTrack(this.localStream);
+
+        await this.setResolution(this.localStream);
+
+        this.updateTheStatus(`Local stream loaded`);
+        this.updateTheStatus(`[startBroadcasting] local stream loaded`);
+
+        return this.localStream;
+    };
+
     /**
      * Function to initiate Video Broadcasting
      *
@@ -801,24 +912,11 @@ export class SparkRTC {
         this.updateTheStatus(`[startBroadcasting]`, data);
         try {
             if (!this.localStream) {
-                this.updateTheStatus(`Trying to get local stream`);
-                if (!this.constraints.audio && !this.constraints.video) {
-                    this.updateTheStatus(`No media device available`);
-                    throw new Error('No media device available');
-                }
-                this.localStream = await navigator.mediaDevices.getUserMedia(
-                    this.constraints
-                );
-
-                //add hint to content type
-                await this.addHintToTrack(this.localStream);
-
-                await this.setResolution(this.localStream);
-
-                this.updateTheStatus(`Local stream loaded`);
-                this.updateTheStatus(`[startBroadcasting] local stream loaded`);
-                this.remoteStreams.push(this.localStream);
+                await this.getAccessToLocalStream();
             }
+
+            this.remoteStreams.push(this.localStream);
+
             this.updateTheStatus(`Request Broadcast Role`);
 
             if (await this.checkSocketStatus())
@@ -971,7 +1069,6 @@ export class SparkRTC {
         }
     };
 
-   
     /**
      * Function to restart the Negotiation and finding a new Parent
      *
@@ -1114,6 +1211,17 @@ export class SparkRTC {
                     }
                 }
             }
+        }
+
+        //override getRemotestreams for Iphone safari support
+        if (!peerConnection.getRemoteStreams) {
+            peerConnection.getRemoteStreams = function () {
+                var stream = new MediaStream();
+                peerConnection.getReceivers().forEach(function (receiver) {
+                    stream.addTrack(receiver.track);
+                });
+                return [stream];
+            };
         }
 
         // Get all remote streams from the PeerConnection
@@ -1319,7 +1427,6 @@ export class SparkRTC {
             const stream = event.streams[0];
 
             if (stream && stream.active) {
-
                 this.updateTheStatus(`user-by-stream ${stream.id}`);
                 if (await this.checkSocketStatus())
                     this.socket.send(
@@ -1447,22 +1554,14 @@ export class SparkRTC {
                                 this.remoteStreamDCCallback(stream);
                             } catch { }
                         }
-                        if (
-                            this.role === this.Roles.BROADCAST &&
-                            this.raiseHands.includes(target)
-                        ) {
-                            var index = this.raiseHands.indexOf(target);
-                            if (index > -1) {
-                                this.raiseHands.splice(index, 1);
-                            }
-                        }
+
+                        this.removeFromRaiseHandList(target);
 
                         //check meeting status and close socket
                         if (this.leftMeeting) {
                             //close websocket
                             if (this.socket) {
                                 this.socket.onclose = () => {
-
                                     this.updateTheStatus(
                                         `socket is closed after leaveMeeting`
                                     );
@@ -1582,22 +1681,15 @@ export class SparkRTC {
                                 this.remoteStreamDCCallback(event.target);
                             } catch { }
                         }
-                        if (
-                            this.role === this.Roles.BROADCAST &&
-                            this.raiseHands.includes(target)
-                        ) {
-                            var index = this.raiseHands.indexOf(target);
-                            if (index > -1) {
-                                this.raiseHands.splice(index, 1);
-                            }
-                        }
+
+                        this.removeFromRaiseHandList(target);
+
 
                         //check meeting status and close socket
                         if (this.leftMeeting) {
                             //close websocket
                             if (this.socket) {
                                 this.socket.onclose = () => {
-
                                     this.updateTheStatus(
                                         `socket is closed after leaveMeeting`
                                     );
@@ -1718,22 +1810,14 @@ export class SparkRTC {
                                 this.remoteStreamDCCallback(event.target);
                             } catch { }
                         }
-                        if (
-                            this.role === this.Roles.BROADCAST &&
-                            this.raiseHands.includes(target)
-                        ) {
-                            var index = this.raiseHands.indexOf(target);
-                            if (index > -1) {
-                                this.raiseHands.splice(index, 1);
-                            }
-                        }
+
+                        this.removeFromRaiseHandList(target);
 
                         //check meeting status and close socket
                         if (this.leftMeeting) {
                             //close websocket
                             if (this.socket) {
                                 this.socket.onclose = () => {
-
                                     this.updateTheStatus(
                                         `socket is closed after leaveMeeting`
                                     );
@@ -1851,15 +1935,8 @@ export class SparkRTC {
                 peerConnection.iceConnectionState === 'failed' ||
                 peerConnection.iceConnectionState === 'closed'
             ) {
-                if (
-                    this.role === this.Roles.BROADCAST &&
-                    this.raiseHands.includes(target)
-                ) {
-                    var index = this.raiseHands.indexOf(target);
-                    if (index > -1) {
-                        this.raiseHands.splice(index, 1);
-                    }
-                }
+                this.removeFromRaiseHandList(target);
+
                 if (!this.parentDC && !connectedOnce) {
                     setTimeout(() => {
                         this.updateTheStatus('restarting ice');
@@ -1935,7 +2012,7 @@ export class SparkRTC {
                     //check if stream is in user list or not
                     const streamExists = users.find(
                         (user) => user?.video?.id === stream.id
-                    )
+                    );
 
                     if (!streamExists) {
                         //its screen share stream
@@ -1943,7 +2020,7 @@ export class SparkRTC {
                         stream.role = this.Roles.BROADCAST;
                         stream.isShareScreen = true;
 
-                        this.updateTheStatus(`screen share stream: `, stream)
+                        this.updateTheStatus(`screen share stream: `, stream);
                         if (this.remoteStreamCallback) {
                             this.remoteStreamCallback(stream);
                             return;
@@ -2262,7 +2339,7 @@ export class SparkRTC {
      */
     disableVideo = (enabled = false) => {
         if (this.localStream) {
-            this.lastVideoState = enabled === true ? 'Enabled' : 'Disabled';
+            this.lastVideoState = enabled === true ? this.LastState.ENABLED : this.LastState.DISABLED;
             this.localStream.getTracks().forEach((track) => {
                 if (track.kind === 'video') track.enabled = enabled;
             });
@@ -2276,7 +2353,7 @@ export class SparkRTC {
      */
     disableAudio = (enabled = false) => {
         if (this.localStream) {
-            this.lastAudioState = enabled === true ? 'Enabled' : 'Disabled';
+            this.lastAudioState = enabled === true ? this.LastState.ENABLED : this.LastState.DISABLED;
             this.localStream.getTracks().forEach((track) => {
                 if (track.kind === 'audio') {
                     track.enabled = enabled;
@@ -2385,8 +2462,11 @@ export class SparkRTC {
      *
      * @returns
      */
-    lowerHand = async () => {
-        this.updateTheStatus('[lowerHand] start');
+    leaveStage = async () => {
+
+        this.resetAudioVideoState();
+
+        this.updateTheStatus('[leaveStage] start');
         if (!this.localStream) return;
         let apeerConnection;
         for (const id in this.myPeerConnectionArray) {
@@ -2396,15 +2476,15 @@ export class SparkRTC {
         const trackIds = this.localStream
             .getTracks()
             .map((receiver) => receiver.id);
-        this.updateTheStatus('[lowerHand] trackIds', trackIds);
+        this.updateTheStatus('[leaveStage] trackIds', trackIds);
         const allSenders = apeerConnection.getSenders();
-        this.updateTheStatus(`[lowerHand] allSenders`, allSenders);
+        this.updateTheStatus(`[leaveStage] allSenders`, allSenders);
         for (const trackId of trackIds)
             for (const sender of allSenders) {
-                this.updateTheStatus(`[lowerHand] sender`, sender);
+                this.updateTheStatus(`[leaveStage] sender`, sender);
                 if (!sender.track) continue;
                 if (sender.track.id === trackId) {
-                    this.updateTheStatus(`[lowerHand] DC sender`);
+                    this.updateTheStatus(`[leaveStage] DC sender`);
                     try {
                         apeerConnection.removeTrack(sender);
                     } catch (e) {
@@ -2416,6 +2496,7 @@ export class SparkRTC {
             track.stop();
         });
         this.startedRaiseHand = false;
+
     };
 
     /**
@@ -2550,7 +2631,7 @@ export class SparkRTC {
             if (this.role === this.Roles.BROADCAST) {
                 await this.closeCamera();
             } else {
-                await this.lowerHand();
+                await this.leaveStage();
             }
         } else {
             //close websocket if not streaming anything
@@ -2663,6 +2744,11 @@ export class SparkRTC {
         }
     };
 
+    resetAudioVideoState = () => {
+        this.lastVideoState = this.LastState.ENABLED;
+        this.lastAudioState = this.LastState.ENABLED;
+    }
+
     //Reset all the variables
     resetVariables = (resetAll = false) => {
         if (resetAll) {
@@ -2698,8 +2784,8 @@ export class SparkRTC {
         this.userStreamData = {};
         this.users = [];
         this.trackToStreamMap = {};
-        this.lastVideoState = 'Enabled';
-        this.lastAudioState = 'Enabled';
+        this.lastVideoState = this.LastState.ENABLED;
+        this.lastAudioState = this.LastState.ENABLED;
     };
 
     /**

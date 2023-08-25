@@ -6,6 +6,7 @@ import {
     currentUser,
     onUserRaisedHand,
     raiseHandMaxLimitReached,
+    sparkRTC,
 } from '../../pages/meeting.js';
 import { deviceSize } from '../MeetingBody/Stage.js';
 export const attendees = signal(
@@ -38,41 +39,44 @@ export const attendeesWidth = computed(() => {
 
 export const Participant = ({ participant }) => {
     const handleRaiseHand = () => {
-        makeDialog(
-            'confirm',
-            {
-                message: `"<strong>${participant.name}</strong>" has raised their hand, do you want to add them to the stage?`,
-                title: 'Accept Raised Hand',
-            },
-            () => {
-                participant.acceptRaiseHand(true);
-                onUserRaisedHand(participant.userId, false);
-            },
-            () => {},
-            {
-                onReject: () => {
-                    participant.acceptRaiseHand(false);
+        if (sparkRTC.value.raiseHands.length < sparkRTC.value.maxRaisedHands) {
+            makeDialog(
+                'confirm',
+                {
+                    message: `"<strong>${participant.name}</strong>" has raised their hand, do you want to add them to the stage?`,
+                    title: 'Accept Raised Hand',
+                },
+                () => {
+                    participant.acceptRaiseHand(true);
                     onUserRaisedHand(participant.userId, false);
                 },
-            }
-        );
+                () => { },
+                {
+                    onReject: () => {
+                        participant.acceptRaiseHand(false);
+                        onUserRaisedHand(participant.userId, false);
+                    },
+                }
+            );
+        }
+
     };
 
     const raisedHand =
         participant.raisedHand && !raiseHandMaxLimitReached.value;
     return html` <div
         class=${clsx(
-            'flex w-full justify-between items-center rounded-md px-2 py-1',
-            'cursor-pointer hover:dark:bg-white hover:dark:bg-opacity-10 hover:bg-gray-500 hover:bg-opacity-10 transition-all'
-        )}
+        'flex w-full justify-between items-center rounded-md px-2 py-1',
+        'cursor-pointer hover:dark:bg-white hover:dark:bg-opacity-10 hover:bg-gray-500 hover:bg-opacity-10 transition-all'
+    )}
     >
         <div class="flex items-center gap-2">
             ${participant.avatar
-                ? html`<img
+            ? html`<img
                       src="${participant.avatar}"
                       class="w-9 h-9 rounded-full object-cover"
                   />`
-                : html`<div
+            : html`<div
                       class="dark:bg-gray-300 dark:bg-opacity-30 bg-opacity-30 bg-gray-400 rounded-full w-9 h-9 flex justify-center items-center"
                   >
                       <${Icon} icon="Avatar" width="20px" height="20px" />
@@ -86,7 +90,7 @@ export const Participant = ({ participant }) => {
                     ${participant.userId == currentUser.userId ? ' (You)' : ''}
                 </span>
                 ${participant.isHost &&
-                html`<span class="text-gray-1 dark:text-gray-0 text-regular-12"
+        html`<span class="text-gray-1 dark:text-gray-0 text-regular-12"
                     >Host</span
                 >`}
             </div>
@@ -110,19 +114,19 @@ export const Attendees = () => {
     return html`
         <div
             class="${clsx(
-                'h-auto min-w-[350px] border rounded-lg p-2 pb-0',
-                'bg-white-f border-gray-0 text-secondary-1-a',
-                'dark:bg-gray-3 dark:border-0 dark:text-white-f-9',
-                'absolute top-4 bottom-4',
-                'transition-all ease-in-out',
-                'lg:right-10 right-4',
-                {
-                    'translate-x-[100%] lg:-mr-10 -mr-4':
-                        !isAttendeesOpen.value,
-                    'translate-x-[100%]': !isAttendeesOpen.value,
-                },
-                'hidden sm:block'
-            )}"
+        'h-auto min-w-[350px] border rounded-lg p-2 pb-0',
+        'bg-white-f border-gray-0 text-secondary-1-a',
+        'dark:bg-gray-3 dark:border-0 dark:text-white-f-9',
+        'absolute top-4 bottom-4',
+        'transition-all ease-in-out',
+        'lg:right-10 right-4',
+        {
+            'translate-x-[100%] lg:-mr-10 -mr-4':
+                !isAttendeesOpen.value,
+            'translate-x-[100%]': !isAttendeesOpen.value,
+        },
+        'hidden sm:block'
+    )}"
             onClick=${() => (attendeesBadge.value = false)}
         >
             <div class="flex flex-col pt-2 gap-2 max-h-full">
@@ -135,48 +139,48 @@ export const Attendees = () => {
                 </div>
                 <div class="flex flex-col gap-2 w-full mt-4 pt-2 overflow-auto">
                     ${Object.values(attendees.value)
-                        .sort((a, b) => {
-                            let aScore = 0;
-                            let bScore = 0;
+            .sort((a, b) => {
+                let aScore = 0;
+                let bScore = 0;
 
-                            if (a.isHost) aScore += 1000;
-                            if (a.hasCamera) aScore += 500;
-                            if (a.raisedHand) {
-                                if (b.raisedHand) {
-                                    aScore +=
-                                        a.raisedHand.getTime() -
-                                            b.raisedHand.getTime() >
-                                        0
-                                            ? -1
-                                            : 1;
-                                } else {
-                                    aScore += 1;
-                                }
-                            }
+                if (a.isHost) aScore += 1000;
+                if (a.hasCamera) aScore += 500;
+                if (a.raisedHand) {
+                    if (b.raisedHand) {
+                        aScore +=
+                            a.raisedHand.getTime() -
+                                b.raisedHand.getTime() >
+                                0
+                                ? -1
+                                : 1;
+                    } else {
+                        aScore += 1;
+                    }
+                }
 
-                            if (b.isHost) bScore += 1000;
-                            if (b.hasCamera) bScore += 500;
-                            if (b.raisedHand) {
-                                if (a.raisedHand) {
-                                    bScore +=
-                                        b.raisedHand.getTime() -
-                                            a.raisedHand.getTime() >
-                                        0
-                                            ? -1
-                                            : 1;
-                                } else {
-                                    bScore += 1;
-                                }
-                            }
+                if (b.isHost) bScore += 1000;
+                if (b.hasCamera) bScore += 500;
+                if (b.raisedHand) {
+                    if (a.raisedHand) {
+                        bScore +=
+                            b.raisedHand.getTime() -
+                                a.raisedHand.getTime() >
+                                0
+                                ? -1
+                                : 1;
+                    } else {
+                        bScore += 1;
+                    }
+                }
 
-                            return bScore - aScore;
-                        })
-                        .map((attendee, i) => {
-                            return html`<${Participant}
+                return bScore - aScore;
+            })
+            .map((attendee, i) => {
+                return html`<${Participant}
                                 key=${attendee.userId}
                                 participant=${attendee}
                             />`;
-                        })}
+            })}
                 </div>
             </div>
         </div>
@@ -193,26 +197,26 @@ export const AttendeesBottomSheet = () => {
         <div class="w-full h-full flex gap-3 pb-6 flex-col">
             <div class="flex flex-col gap-2 w-full mt-4 pt-2 overflow-auto">
                 ${Object.values(attendees.value)
-                    .sort((a, b) => {
-                        let aScore = 0;
-                        let bScore = 0;
+            .sort((a, b) => {
+                let aScore = 0;
+                let bScore = 0;
 
-                        if (a.isHost) aScore += 10;
-                        if (a.hasCamera) aScore += 5;
-                        if (a.raisedHand) aScore += 1;
+                if (a.isHost) aScore += 10;
+                if (a.hasCamera) aScore += 5;
+                if (a.raisedHand) aScore += 1;
 
-                        if (b.isHost) bScore += 10;
-                        if (b.hasCamera) bScore += 5;
-                        if (b.raisedHand) bScore += 1;
+                if (b.isHost) bScore += 10;
+                if (b.hasCamera) bScore += 5;
+                if (b.raisedHand) bScore += 1;
 
-                        return bScore - aScore;
-                    })
-                    .map((attendee, i) => {
-                        return html`<${Participant}
+                return bScore - aScore;
+            })
+            .map((attendee, i) => {
+                return html`<${Participant}
                             key=${attendee.userId}
                             participant=${attendee}
                         />`;
-                    })}
+            })}
             </div>
         </div>
     <//>`;

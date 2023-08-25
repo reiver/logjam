@@ -80,9 +80,8 @@ export const getVideoWidth = (attendee, index) => {
             let rowHeight = availableHeight / lines;
             const columns = streamersLength.value - 1 > 1 && lines >= 1 ? 2 : 1;
 
-            return `calc(${100 / columns}% - ${
-                columns > 1 ? '8px' : '0px'
-            }); height: ${rowHeight}px`;
+            return `calc(${100 / columns}% - ${columns > 1 ? '8px' : '0px'
+                }); height: ${rowHeight}px`;
         }
     }
     let availableHeight = windowHeight.value - topBarBottomBarHeight();
@@ -149,44 +148,44 @@ export const Stage = () => {
         ${broadcastIsInTheMeeting.value
             ? html`<div
                   class=${clsx(
-                      'flex flex-wrap justify-start sm:justify-center items-center h-full transition-all',
-                      {
-                          'gap-4': !hasFullScreenedStream.value,
-                          'gap-0': hasFullScreenedStream.value,
-                      }
-                  )}
+                'flex flex-wrap justify-start sm:justify-center items-center h-full transition-all',
+                {
+                    'gap-4': !hasFullScreenedStream.value,
+                    'gap-0': hasFullScreenedStream.value,
+                }
+            )}
               >
                   ${Object.values(streamers.value)
-                      .sort((a, b) => {
-                          let aScore = 0;
-                          let bScore = 0;
-                          if (a.isHost) aScore += 10;
-                          if (a.isShareScreen) aScore += 20;
-                          if (b.isHost) bScore += 10;
-                          if (b.isShareScreen) bScore += 20;
-                          return bScore - aScore;
-                      })
-                      .map((attendee, i) => {
-                          let muted = false;
+                    .sort((a, b) => {
+                        let aScore = 0;
+                        let bScore = 0;
+                        if (a.isHost) aScore += 10;
+                        if (a.isShareScreen) aScore += 20;
+                        if (b.isHost) bScore += 10;
+                        if (b.isShareScreen) bScore += 20;
+                        return bScore - aScore;
+                    })
+                    .map((attendee, i) => {
+                        let muted = false;
 
-                          //mute the stream if it's my local stream
-                          if (attendee.isLocalStream === true) {
-                              muted = true;
-                          } else {
-                              //mute it based on meeting status
-                              muted = currentUser.value.isMeetingMuted;
-                          }
+                        //mute the stream if it's my local stream
+                        if (attendee.isLocalStream === true) {
+                            muted = true;
+                        } else {
+                            //mute it based on meeting status
+                            muted = currentUser.value.isMeetingMuted;
+                        }
 
-                          return html`<div
+                        return html`<div
                               key=${i}
                               style="width: ${getVideoWidth(attendee, i)}"
                               class=${clsx(
-                                  'group transition-all aspect-video relative max-w-full text-white-f-9',
-                                  'bg-gray-1 rounded-lg min-w-10',
-                                  'dark:bg-gray-3 overflow-hidden'
-                              )}
+                            'group transition-all aspect-video relative max-w-full text-white-f-9',
+                            'bg-gray-1 rounded-lg min-w-10',
+                            'dark:bg-gray-3 overflow-hidden'
+                        )}
                               onClick=${(e) =>
-                                  handleOnClick(e, attendee.stream.id)}
+                                handleOnClick(e, attendee.stream.id)}
                           >
                               <${Video}
                                   stream=${attendee.stream}
@@ -198,7 +197,7 @@ export const Stage = () => {
                                   isShareScreen=${attendee.isShareScreen}
                               />
                           </div>`;
-                      })}
+                    })}
               </div>`
             : html`<span class="inline-block w-full text-center">
                   The broadcaster is not in the meeting, please wait until the
@@ -239,7 +238,8 @@ export const Video = memo(
             }
         }, [userInteractedWithDom.value, isMuted]);
         useEffect(() => {
-            videoRef.current.play();
+            videoRef.current.playsInline = true;
+            // videoRef.current.play();
         }, []);
         const handleRemoveStream = () => {
             makeDialog(
@@ -251,7 +251,7 @@ export const Video = memo(
                 () => {
                     sparkRTC.value.disableAudienceBroadcast(String(userId));
                 },
-                () => {},
+                () => { },
                 {
                     okText: 'Kick',
                     okButtonVariant: 'red',
@@ -301,8 +301,8 @@ export const Video = memo(
                     playsinline
                     muted="${muted}"
                     className="w-full h-full ${!isShareScreen
-                        ? 'object-cover'
-                        : ''} rounded-lg"
+                ? 'object-cover'
+                : ''} rounded-lg"
                 />
                 <div
                     class="absolute top-4 left-3 flex justify-center items-center"
@@ -315,11 +315,11 @@ export const Video = memo(
                 </div>
                 <div
                     class=${clsx(
-                        'h-[48px] absolute top-1 right-1 gap-2 flex justify-center items-center'
-                    )}
+                    'h-[48px] absolute top-1 right-1 gap-2 flex justify-center items-center'
+                )}
                 >
                     ${isUserMuted &&
-                    html` <div className="pr-2">
+            html` <div className="pr-2">
                         <${Icon}
                             icon="MicrophoneOff"
                             width="20px"
@@ -328,11 +328,11 @@ export const Video = memo(
                     </div>`}
                     <div
                         className=${clsx('sm:group-hover:flex sm:hidden', {
-                            'group-hover:flex':
-                                isHover && bottomBarVisible.value,
-                            hidden: !(isHover && bottomBarVisible.value),
-                            flex: menuOpen || isHover,
-                        })}
+                'group-hover:flex':
+                    isHover && bottomBarVisible.value,
+                hidden: !(isHover && bottomBarVisible.value),
+                flex: menuOpen || isHover,
+            })}
                     >
                         <${IconButton}
                             variant="ghost"
@@ -340,15 +340,15 @@ export const Video = memo(
                         >
                             <${Icon}
                                 icon=${fullScreenedStream.value === stream.id
-                                    ? 'ScreenNormal'
-                                    : 'ScreenFull'}
+                ? 'ScreenNormal'
+                : 'ScreenFull'}
                                 width="20px"
                                 height="20px"
                             />
                         <//>
                         ${isHost &&
-                        !isHostStream &&
-                        html`
+            !isHostStream &&
+            html`
                             <${IconButton}
                                 variant="ghost"
                                 onClick=${handleOpenMenu}
@@ -361,7 +361,7 @@ export const Video = memo(
                                 />
 
                                 ${menuOpen &&
-                                html`<div
+                html`<div
                                     class="absolute top-full right-0 h-full w-full"
                                 >
                                     <ul
