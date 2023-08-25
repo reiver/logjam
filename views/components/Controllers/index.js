@@ -83,7 +83,7 @@ export const Controllers = () => {
                     sparkRTC.value.leaveStage();
     
                 },
-                () => {},
+                () => { },
                 {
                     okText: 'Leave the stage',
                     okButtonVariant: 'red',
@@ -115,7 +115,7 @@ export const Controllers = () => {
         }
     };
 
-    const toggleBottomSheet = () => {};
+    const toggleBottomSheet = () => { };
 
     if (!showControllers) return null;
     return html`<div class="flex gap-5 py-3 pt-0">
@@ -200,8 +200,8 @@ export const Controllers = () => {
             <${Tooltip}
                 key="${!isMicrophoneOn ? 'MicrophoneOff' : 'Microphone'}"
                 label=${!isMicrophoneOn
-                    ? 'Turn Microphone On'
-                    : 'Turn Microphone Off'}
+                ? 'Turn Microphone On'
+                : 'Turn Microphone Off'}
             >
                 <${IconButton}
                     variant=${!isMicrophoneOn && 'danger'}
@@ -219,7 +219,7 @@ export const Controllers = () => {
             >
                 <${Icon} icon="KebabMenuVertical" />
                 ${attendeesBadge.value &&
-                html`<span
+        html`<span
                     class="absolute z-10 top-[0px] right-[0px] w-[10px] h-[10px] rounded-full bg-red-distructive border dark:border-secondary-1-a border-white-f-9"
                 ></span>`}
             <//>

@@ -1388,6 +1388,9 @@ export class SparkRTC {
                 `Peer Connection negotiation needed for ${target} preparing video offer`
             );
             try {
+                if(peerConnection.signalingState !== "stable"){
+                    return;
+                }
                 await peerConnection.setLocalDescription(
                     await peerConnection.createOffer()
                 );
@@ -1954,9 +1957,21 @@ export class SparkRTC {
         };
 
         setTimeout(() => {
+            console.log("ice not connected yet, restarting ice");
             if (!peerConnection._iceIsConnected) {
                 peerConnection.restartIce();
             }
+            setTimeout(()=>{
+                if(peerConnection.iceConnectionState==="new"){
+                    console.log("iceConnectionState is new after 8 seconds. restarting everything ..")
+                    this.updateTheStatus(
+                        'closing the peer connection: ' + target
+                    );
+                    peerConnection.close();
+                    delete this.myPeerConnectionArray[target];
+                    this.restartEverything(peerConnection, target, isAudience);
+                }
+            },4000)
         }, 4000);
 
         return peerConnection;
