@@ -178,6 +178,15 @@ export class SparkRTC {
         );
 
         try {
+
+            if (broadcasterPeerConnection.signalingState === "stable") {
+                try {
+                    await broadcasterPeerConnection.setLocalDescription({ type: "rollback", sdp: "" })
+                } catch (e) {
+                    console.error("rollback sdp: ", e)
+                }
+            }
+
             await broadcasterPeerConnection.setRemoteDescription(
                 new RTCSessionDescription(msg.sdp)
             );
