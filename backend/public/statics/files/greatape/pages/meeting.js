@@ -504,7 +504,8 @@ const Meeting = () => {
                     //get raise hand count from attendees list
                     const rC = Object.values(attendees.value).reduce(
                         (prev, user) => {
-                            if (!user.isHost && user.video) return prev + 1;
+                            if (!user.isHost && user.raisedHand)
+                                return prev + 1;
                             return prev;
                         },
                         0
