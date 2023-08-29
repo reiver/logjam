@@ -1,5 +1,6 @@
 import { signal } from '@preact/signals';
 import { clsx } from 'clsx';
+import { isMobile } from '../../lib/common.js';
 import {
     Icon,
     IconButton,
@@ -245,10 +246,6 @@ export const MoreControllers = () => {
         updateUser({
             isMeetingMuted: !isMeetingMuted,
         });
-    };
-
-    const isMobile = async () => {
-        return window.innerWidth <= 800 && window.innerHeight <= 600;
     };
 
     const handleShareScreen = async () => {

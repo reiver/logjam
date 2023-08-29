@@ -31,7 +31,14 @@ export const PreviewDialog = ({
 
     useEffect(() => {
         videoRef.current.playsInline = true;
-        // videoRef.current.play();
+
+        const isMobile =
+            window.parent.outerWidth <= 400 && window.parent.outerHeight <= 850;
+        if (isMobile) {
+            //set style
+            videoRef.current.style =
+                'width: 100%; height: 56.25vw; max-height: 100%;';
+        }
     }, []);
 
     const toggleCamera = () => {
@@ -49,14 +56,12 @@ export const PreviewDialog = ({
     };
 
     return html` <div class="absolute top-0 left-0 w-full h-full">
-        <div
-            class="z-10 absolute w-full h-full bg-black bg-opacity-60"
-        />
+        <div class="z-10 absolute w-full h-full bg-black bg-opacity-60" />
         <div
             class=${clsx(
-        className,
-        'absolute -translate-y-full z-20 top-full left-0 right-0 sm:right-unset sm:top-1/2 sm:left-1/2 transform sm:-translate-x-1/2 sm:-translate-y-1/2 dark:bg-gray-3 dark:text-gray-0 bg-white text-gray-2 sm:rounded-lg rounded-t-lg w-full w-full sm:max-w-[40%] sm:border dark:border-gray-1 border-gray-0'
-    )}
+                className,
+                'absolute -translate-y-full z-20 top-full left-0 right-0 sm:right-unset sm:top-1/2 sm:left-1/2 transform sm:-translate-x-1/2 sm:-translate-y-1/2 dark:bg-gray-3 dark:text-gray-0 bg-white text-gray-2 sm:rounded-lg rounded-t-lg w-full w-full sm:max-w-[40%] sm:border dark:border-gray-1 border-gray-0'
+            )}
         >
             <div class="flex justify-center items-center p-5 relative">
                 <span class="dark:text-white text-black text-bold-12"
@@ -71,9 +76,9 @@ export const PreviewDialog = ({
             <hr class="dark:border-gray-2 border-gray-0 sm:block hidden" />
             <div
                 class=${clsx(
-        contentClassName,
-        'text-left text-bold-12 sm:py-8 py-5 p-5'
-    )}
+                    contentClassName,
+                    'text-left text-bold-12 sm:py-8 py-5 p-5'
+                )}
                 dangerouslySetInnerHTML=${{ __html: message }}
             ></div>
             <div class="px-5 relative">
@@ -86,11 +91,11 @@ export const PreviewDialog = ({
                 />
                 <div
                     class=${clsx(
-        'h-[48px] absolute top-1 right-6 gap-2 flex justify-center items-center'
-    )}
+                        'h-[48px] absolute top-1 right-6 gap-2 flex justify-center items-center'
+                    )}
                 >
                     ${!isMicrophoneOn &&
-        html` <div className="pr-2">
+                    html` <div className="pr-2">
                         <${Icon}
                             icon="MicrophoneOff"
                             width="20px"
@@ -101,7 +106,7 @@ export const PreviewDialog = ({
             </div>
             <div class="py-4 px-5 flex gap-3 justify-center">
                 ${hasCamera &&
-        html` <${Tooltip}
+                html` <${Tooltip}
                     key="Camera${!isCameraOn ? 'Off' : ''}"
                     label=${!isCameraOn ? 'Turn Camera On' : 'Turn Camera Off'}
                 >
@@ -112,12 +117,12 @@ export const PreviewDialog = ({
                         <${Icon} icon="Camera${!isCameraOn ? 'Off' : ''}" /> <//
                 ><//>`}
                 ${hasMic &&
-        html`
+                html`
                     <${Tooltip}
                         key="Microphone${!isMicrophoneOn ? 'Off' : ''}"
                         label=${!isMicrophoneOn
-                ? 'Turn Microphone On'
-                : 'Turn Microphone Off'}
+                            ? 'Turn Microphone On'
+                            : 'Turn Microphone Off'}
                     >
                         <${IconButton}
                             variant=${!isMicrophoneOn && 'danger'}
@@ -132,15 +137,15 @@ export const PreviewDialog = ({
             </div>
 
             ${showButtons &&
-        html`<div class="flex justify-end gap-2 p-5 pt-0">
+            html`<div class="flex justify-end gap-2 p-5 pt-0">
                 <${Button}
                     size="lg"
                     variant="outline"
                     class="w-full flex-grow-1"
                     onClick=${() => {
-                onReject && onReject();
-                onClose();
-            }}
+                        onReject && onReject();
+                        onClose();
+                    }}
                     >${cancelText}<//
                 >
                 <${Button}
@@ -174,9 +179,9 @@ export const ConfirmDialog = ({
         />
         <div
             class=${clsx(
-        className,
-        'absolute -translate-y-full z-20 top-full left-0 right-0 sm:right-unset sm:top-1/2 sm:left-1/2 transform sm:-translate-x-1/2 sm:-translate-y-1/2 dark:bg-gray-3 dark:text-gray-0 bg-white text-gray-2 sm:rounded-lg rounded-t-lg w-full w-full sm:max-w-[400px] sm:border dark:border-gray-1 border-gray-0'
-    )}
+                className,
+                'absolute -translate-y-full z-20 top-full left-0 right-0 sm:right-unset sm:top-1/2 sm:left-1/2 transform sm:-translate-x-1/2 sm:-translate-y-1/2 dark:bg-gray-3 dark:text-gray-0 bg-white text-gray-2 sm:rounded-lg rounded-t-lg w-full w-full sm:max-w-[400px] sm:border dark:border-gray-1 border-gray-0'
+            )}
         >
             <div class="flex justify-center items-center p-5 relative">
                 <span class="dark:text-white text-black text-bold-12"
@@ -191,21 +196,21 @@ export const ConfirmDialog = ({
             <hr class="dark:border-gray-2 border-gray-0 sm:block hidden" />
             <div
                 class=${clsx(
-        contentClassName,
-        'text-left text-bold-12 sm:py-8 py-5 p-5'
-    )}
+                    contentClassName,
+                    'text-left text-bold-12 sm:py-8 py-5 p-5'
+                )}
                 dangerouslySetInnerHTML=${{ __html: message }}
             ></div>
             ${showButtons &&
-        html`<div class="flex justify-end gap-2 p-5 pt-0">
+            html`<div class="flex justify-end gap-2 p-5 pt-0">
                 <${Button}
                     size="lg"
                     variant="outline"
                     class="w-full flex-grow-1"
                     onClick=${() => {
-                onReject && onReject();
-                onClose();
-            }}
+                        onReject && onReject();
+                        onClose();
+                    }}
                     >${cancelText}<//
                 >
                 <${Button}
@@ -228,14 +233,14 @@ export const InfoDialog = ({
 }) => {
     return html`<div
         class=${clsx(
-        'select-none py-4 px-6 flex justify-between items-center text-medium-12 min-w-full sm:min-w-[350px] rounded-md',
-        {
-            'cursor-pointer': pointer,
-            'bg-red-distructive text-white-f-9': variant === 'danger',
-            'dark:bg-white-f-9 dark:text-gray-3 bg-gray-3 text-white-f-9 border dark:border-gray-1 border-gray-0':
-                !variant,
-        }
-    )}
+            'select-none py-4 px-6 flex justify-between items-center text-medium-12 min-w-full sm:min-w-[350px] rounded-md',
+            {
+                'cursor-pointer': pointer,
+                'bg-red-distructive text-white-f-9': variant === 'danger',
+                'dark:bg-white-f-9 dark:text-gray-3 bg-gray-3 text-white-f-9 border dark:border-gray-1 border-gray-0':
+                    !variant,
+            }
+        )}
         onClick=${onClose}
     >
         <div
@@ -251,17 +256,17 @@ export const DialogPool = () => {
             className="absolute right-0 left-0 md:left-[unset] md:right-10 bottom-[5.5rem] flex flex-col justify-end gap-2 px-4 sm:px-0"
         >
             ${Object.values(dialogs.value).map((dialog) => {
-        if (dialog.type === 'info')
-            return html`<${InfoDialog} ...${dialog} />`;
-    })}
+                if (dialog.type === 'info')
+                    return html`<${InfoDialog} ...${dialog} />`;
+            })}
         </div>
 
         ${Object.values(dialogs.value).map((dialog) => {
-        if (dialog.type === 'confirm')
-            return html`<${ConfirmDialog} ...${dialog} />`;
-        else if (dialog.type === 'preview')
-            return html`<${PreviewDialog} ...${dialog} />`;
-    })}`;
+            if (dialog.type === 'confirm')
+                return html`<${ConfirmDialog} ...${dialog} />`;
+            else if (dialog.type === 'preview')
+                return html`<${PreviewDialog} ...${dialog} />`;
+        })}`;
 };
 
 export const makeDialog = (type, message, onOk, onClose, options = {}) => {
@@ -298,7 +303,7 @@ export const destroyDialog = (id) => {
     const dialogsTmp = { ...dialogs.value };
     delete dialogsTmp[id];
     dialogs.value = dialogsTmp;
-}
+};
 
 export const makePreviewDialog = (
     type,

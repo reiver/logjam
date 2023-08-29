@@ -7,6 +7,10 @@ export const Roles = {
     BROADCASTER: 'broadcaster',
 };
 
+export const isMobile = async () => {
+    return window.innerWidth <= 800 && window.innerHeight <= 600;
+};
+
 // TODO: set base url
 export function getWsUrl(host = null) {
     let baseUrl = null;
