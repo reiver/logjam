@@ -13,7 +13,11 @@ import {
 import { html } from 'htm';
 import { useEffect } from 'preact';
 import { isAttendeesOpen } from '../components/Attendees/index.js';
-import { PreviewDialog, destroyDialog, makePreviewDialog } from '../components/Dialog/index.js';
+import {
+    PreviewDialog,
+    destroyDialog,
+    makePreviewDialog,
+} from '../components/Dialog/index.js';
 import { Roles, createSparkRTC, getWsUrl } from '../lib/common.js';
 
 export const isDebugMode = signal(
@@ -255,7 +259,7 @@ const Meeting = () => {
                         ) {
                             //destroy preview Dialog
                             if (previewDialogId !== null) {
-                                destroyDialog(previewDialogId)
+                                destroyDialog(previewDialogId);
                             }
 
                             broadcastIsInTheMeeting.value = false;
@@ -273,13 +277,16 @@ const Meeting = () => {
                 onRaiseHand: (user) => {
                     log(`[On Raise Hand Request]`, user);
 
-                    let raiseHandCallback = () => { };
+                    let raiseHandCallback = () => {};
                     const handler = new Promise((resolve, reject) => {
                         raiseHandCallback = resolve;
                     });
 
                     //only show message when limit is not reached
-                    if (sparkRTC.value.raiseHands.length < sparkRTC.value.maxRaisedHands) {
+                    if (
+                        sparkRTC.value.raiseHands.length <
+                        sparkRTC.value.maxRaisedHands
+                    ) {
                         attendeesBadge.value = true;
 
                         makeDialog(
@@ -365,10 +372,13 @@ const Meeting = () => {
 
                                 //send user mute status to everyone to update the Ui
                                 setTimeout(() => {
-                                    if (sparkRTC.value.lastAudioState === sparkRTC.value.LastState.DISABLED) {
-                                        sparkRTC.value.sendAudioStatus(false)
+                                    if (
+                                        sparkRTC.value.lastAudioState ===
+                                        sparkRTC.value.LastState.DISABLED
+                                    ) {
+                                        sparkRTC.value.sendAudioStatus(false);
                                     } else {
-                                        sparkRTC.value.sendAudioStatus(true)
+                                        sparkRTC.value.sendAudioStatus(true);
                                     }
                                 }, 2000);
                             },
@@ -413,7 +423,7 @@ const Meeting = () => {
                     sparkRTC.value.resetAudioVideoState();
                 },
                 onUserListUpdate: (users) => {
-                    // log(`[On Users List Update]`, users);                    
+                    // log(`[On Users List Update]`, users);
                     const usersTmp = {};
                     for (const {
                         name: userInfo,
@@ -435,8 +445,11 @@ const Meeting = () => {
                         };
                     }
                     //get latest raise hand count from sparkRTC
-                    if (sparkRTC.value.role === sparkRTC.value.Roles.BROADCAST) {
-                        raisedHandsCount.value = sparkRTC.value.raiseHands.length;
+                    if (
+                        sparkRTC.value.role === sparkRTC.value.Roles.BROADCAST
+                    ) {
+                        raisedHandsCount.value =
+                            sparkRTC.value.raiseHands.length;
                     } else {
                         raisedHandsCount.value = Object.values(usersTmp).reduce(
                             (prev, user) => {
@@ -485,9 +498,23 @@ const Meeting = () => {
                 },
                 userLoweredHand: (data) => {
                     onUserRaisedHand(data, false);
-                    log("userLoweredHand: ", data);
+                    log('userLoweredHand: ', data);
                     sparkRTC.value.getLatestUserList();
-                }
+
+                    //get raise hand count from attendees list
+                    const rC = Object.values(attendees.value).reduce(
+                        (prev, user) => {
+                            if (!user.isHost && user.video) return prev + 1;
+                            return prev;
+                        },
+                        0
+                    );
+                    console.log('raiseHandCount:', rC);
+
+                    if (rC === 0) {
+                        attendeesBadge.value = false;
+                    }
+                },
             });
 
             if (sparkRTC.value) {
