@@ -2051,6 +2051,7 @@ export class SparkRTC {
                     const user = entry[1];
 
                     stream.isShareScreen = false;
+                    stream.userId = user.id;
 
                     const name = JSON.parse(user.name);
                     stream.name = name.name;
