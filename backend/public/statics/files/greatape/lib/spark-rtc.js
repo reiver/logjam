@@ -46,7 +46,7 @@ export class SparkRTC {
     leftMeeting = false;
 
     userListCallback = null;
-    remoteStreamsQueue = new Queue();
+    // remoteStreamsQueue = new Queue();
 
     parentDisconnectionTimeOut = 2000; // 2 second timeout to check parent is alive or not
     sendMessageInterval = 1000; // send message to child after every 10 ms
@@ -1858,19 +1858,20 @@ export class SparkRTC {
                     this.remoteStreamCallback(stream);
                 }
 
-                await this.remoteStreamsQueue.enqueue(stream);
+                this.remoteStreams.push(stream);
 
-                this.registerUserListCallback(); //calback to get user list with streams, to identify username of stream
+                // await this.remoteStreamsQueue.enqueue(stream);
+
+                this.registerUserListCallback2(); //calback to get user list with streams, to identify username of stream
 
                 //wait for 10 seconds and fetch names again
                 setTimeout(() => {
-                    this.remoteStreams.forEach(async (str) => {
-                        await this.remoteStreamsQueue.enqueue(str);
-                    });
-                    this.registerUserListCallback(); //calback to get user list with streams, to identify username of stream
+                    // this.remoteStreams.forEach(async (str) => {
+                    //     await this.remoteStreamsQueue.enqueue(str);
+                    // });
+                    this.registerUserListCallback2(); //calback to get user list with streams, to identify username of stream
                 }, 10000);
 
-                this.remoteStreams.push(stream);
                 stream.getTracks().forEach((t) => {
                     this.trackToStreamMap[t.id] = stream.id;
                 });
@@ -2007,108 +2008,215 @@ export class SparkRTC {
     }
 
     /**
-     * Get list of user and match their name with respective stream
-     *
+     * alternative logic to display names on screen
      */
-    registerUserListCallback() {
-        // Logic to get the name of the stream owner
-
-        // Set userList callback to receive the list of all the users in the meeting with their streams
+    registerUserListCallback2() {
         this.userListCallback = async (users) => {
-            // Check if users array is defined and not empty
             if (users && users.length > 0) {
-                const stream = await this.remoteStreamsQueue.dequeue();
+                const matchedStreamMap = new Map();
+                const unmatchedStreams = [];
+                let broadcasterName = '';
 
-                if (stream && stream.active) {
-                    let broadcasterName = '';
+                // Find the broadcaster in the user list and retrieve the name
+                const broadcaster = users.find(
+                    (user) => user.role === this.Roles.BROADCASTER
+                );
+                if (broadcaster) {
+                    const data = JSON.parse(broadcaster.name);
+                    broadcasterName = data.name;
+                    this.lastBroadcasterId = broadcaster.id;
+                }
 
-                    // Find the broadcaster in the user list and retrieve the name
-                    const broadcaster = users.find(
-                        (user) => user.role === this.Roles.BROADCASTER
-                    );
-                    if (broadcaster) {
-                        const data = JSON.parse(broadcaster.name);
-                        broadcasterName = data.name;
-                        this.lastBroadcasterId = broadcaster.id;
-                        console.log('broadcasterId: ', this.lastBroadcasterId);
-                    }
+                // console.log('broadcasterName: ', broadcasterName);
 
-                    if (!broadcaster) {
-                        // No broadcaster found, enqueue current stream again to the queue
-                        await this.remoteStreamsQueue.enqueue(stream);
-                        this.getLatestUserList(`no broadcaster in list`);
-                        return;
-                    }
-
-                    //check if stream is in user list or not
-                    const streamExists = users.find(
+                this.remoteStreams.forEach((stream) => {
+                    console.log('remotestream: ', stream);
+                    const user = users.find(
                         (user) => user?.video?.id === stream.id
                     );
 
-                    if (streamExists === undefined) {
-                        //its screen share stream
-                        stream.name = broadcasterName;
-                        stream.role = this.Roles.BROADCAST;
-                        stream.isShareScreen = true;
+                    if (user != undefined) {
+                        matchedStreamMap.set(stream, user);
+                    } else {
+                        unmatchedStreams.push(stream);
+                    }
+                });
 
-                        this.updateTheStatus(`screen share stream: `, stream);
-                        if (this.remoteStreamCallback) {
-                            this.remoteStreamCallback(stream);
-                            return;
-                        }
+                // console.log('matchedStreams: ', matchedStreamMap);
+                // console.log('unmatchedStreams: ', unmatchedStreams);
+
+                //set name to stream and display
+                for (const entry of matchedStreamMap) {
+                    const stream = entry[0];
+                    const user = entry[1];
+
+                    stream.isShareScreen = false;
+
+                    const name = JSON.parse(user.name);
+                    stream.name = name.name;
+
+                    if (user.role === this.Roles.BROADCASTER) {
+                        stream.role = this.Roles.BROADCAST;
+                    } else {
+                        stream.role = this.Roles.AUDIENCE;
                     }
 
-                    // Iterate over each user
-                    users.forEach((user) => {
-                        let role = this.Roles.AUDIENCE;
-                        let userName = '';
-
-                        if (user) {
-                            // If video is undefined, it means the user list is not updated yet, fetch again
-                            // It must be null or have a MediaStream
-                            if (user.video === undefined) {
-                                return;
-                            }
-
-                            // Save broadcaster role
-                            if (user.role === this.Roles.BROADCASTER) {
-                                role = this.Roles.BROADCAST;
-                            }
-
-                            // If video is not null, get its name
-                            if (user.video !== null) {
-                                if (user.video.id === stream.id) {
-                                    this.updateTheStatus(
-                                        'Video stream id matched'
-                                    );
-                                    const data = JSON.parse(user.name);
-                                    userName = data.name;
-                                }
-                            } else {
-                                this.updateTheStatus('Video stream is null');
-                            }
-
-                            // User name is not null or empty
-                            if (userName) {
-                                if (this.remoteStreamCallback) {
-                                    this.updateTheStatus('userName:', userName);
-                                    stream.name = userName;
-                                    stream.role = role;
-                                    stream.userId = user.id;
-                                    this.remoteStreamCallback(stream);
-                                    return;
-                                }
-                            }
-                        } else {
-                            this.updateTheStatus('User is null');
-                        }
-                    });
+                    if (this.remoteStreamCallback) {
+                        this.remoteStreamCallback(stream);
+                    }
                 }
+
+                //display unmatched stream .a.k.a Screen share stream
+                unmatchedStreams.forEach((stream) => {
+                    stream.role = this.Roles.BROADCAST;
+                    stream.name = broadcasterName;
+                    stream.isShareScreen = true;
+
+                    if (this.remoteStreamCallback) {
+                        this.remoteStreamCallback(stream);
+                    }
+                });
             }
         };
 
         this.getLatestUserList(`inital request`);
     }
+    /**
+     * Get list of user and match their name with respective stream
+     *
+     */
+    // registerUserListCallback() {
+    //     // Logic to get the name of the stream owner
+
+    //     // Set userList callback to receive the list of all the users in the meeting with their streams
+    //     this.userListCallback = async (users) => {
+    //         // Check if users array is defined and not empty
+    //         if (users && users.length > 0) {
+    //             while (!this.remoteStreamsQueue.isEmpty()) {
+    //                 const stream = await this.remoteStreamsQueue.dequeue();
+
+    //                 if (stream && stream.active) {
+    //                     let broadcasterName = '';
+
+    //                     // Find the broadcaster in the user list and retrieve the name
+    //                     const broadcaster = users.find(
+    //                         (user) => user.role === this.Roles.BROADCASTER
+    //                     );
+    //                     if (broadcaster) {
+    //                         const data = JSON.parse(broadcaster.name);
+    //                         broadcasterName = data.name;
+    //                         this.lastBroadcasterId = broadcaster.id;
+    //                         console.log(
+    //                             'broadcasterId: ',
+    //                             this.lastBroadcasterId
+    //                         );
+    //                     }
+
+    //                     if (!broadcaster) {
+    //                         // No broadcaster found, enqueue current stream again to the queue
+    //                         await this.remoteStreamsQueue.enqueue(stream);
+    //                         this.getLatestUserList(`no broadcaster in list`);
+    //                         return;
+    //                     }
+
+    //                     const validUsersWithVideo = users.filter(
+    //                         (user) =>
+    //                             user?.video?.id !== null &&
+    //                             user?.video?.id !== undefined
+    //                     );
+
+    //                     //check if stream is in user list or not
+    //                     if (
+    //                         this.remoteStreams.length >=
+    //                             validUsersWithVideo.length &&
+    //                         validUsersWithVideo.length > 0
+    //                     ) {
+    //                         this.updateTheStatus(
+    //                             `hasUndefinedVideo remote: ${this.remoteStreams.length} valid: ${validUsersWithVideo.length}`
+    //                         );
+    //                         const streamExists = users.find(
+    //                             (user) => user?.video?.id === stream.id
+    //                         );
+
+    //                         if (streamExists === undefined) {
+    //                             //its screen share stream
+    //                             stream.name = broadcasterName;
+    //                             stream.role = this.Roles.BROADCAST;
+    //                             stream.isShareScreen = true;
+
+    //                             this.updateTheStatus(
+    //                                 'hasUndefinedVideo: screen share stream: ',
+    //                                 stream
+    //                             );
+
+    //                             if (this.remoteStreamCallback) {
+    //                                 this.remoteStreamCallback(stream);
+    //                                 return;
+    //                             }
+    //                         }
+    //                     } else {
+    //                         this.updateTheStatus(
+    //                             'hasUndefinedVideo count error'
+    //                         );
+    //                     }
+
+    //                     // Iterate over each user
+    //                     users.forEach((user) => {
+    //                         let role = this.Roles.AUDIENCE;
+    //                         let userName = '';
+
+    //                         if (user) {
+    //                             // If video is undefined, it means the user list is not updated yet, fetch again
+    //                             // It must be null or have a MediaStream
+    //                             if (user.video === undefined) {
+    //                                 return;
+    //                             }
+
+    //                             // Save broadcaster role
+    //                             if (user.role === this.Roles.BROADCASTER) {
+    //                                 role = this.Roles.BROADCAST;
+    //                             }
+
+    //                             // If video is not null, get its name
+    //                             if (user.video !== null) {
+    //                                 if (user.video.id === stream.id) {
+    //                                     this.updateTheStatus(
+    //                                         'Video stream id matched'
+    //                                     );
+    //                                     const data = JSON.parse(user.name);
+    //                                     userName = data.name;
+    //                                 }
+    //                             } else {
+    //                                 this.updateTheStatus(
+    //                                     'Video stream is null'
+    //                                 );
+    //                             }
+
+    //                             // User name is not null or empty
+    //                             if (userName) {
+    //                                 if (this.remoteStreamCallback) {
+    //                                     this.updateTheStatus(
+    //                                         'userName:',
+    //                                         userName
+    //                                     );
+    //                                     stream.name = userName;
+    //                                     stream.role = role;
+    //                                     stream.userId = user.id;
+    //                                     this.remoteStreamCallback(stream);
+    //                                     return;
+    //                                 }
+    //                             }
+    //                         } else {
+    //                             this.updateTheStatus('User is null');
+    //                         }
+    //                     });
+    //                 }
+    //             }
+    //         }
+    //     };
+
+    //     this.getLatestUserList(`inital request`);
+    // }
 
     /**
      * Helper fucntion to iniiate select
@@ -2819,7 +2927,7 @@ export class SparkRTC {
         this.parentDC = true;
         this.broadcasterDC = true;
         this.userListCallback = null;
-        this.remoteStreamsQueue = new Queue();
+        // this.remoteStreamsQueue = new Queue();
         this.metaData = {};
         this.userStreamData = {};
         this.users = [];
