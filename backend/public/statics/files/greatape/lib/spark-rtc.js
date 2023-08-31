@@ -484,7 +484,7 @@ export class SparkRTC {
 
                         if (result !== true) return;
 
-                        this.getLatestUserList();
+                        this.getLatestUserList("alt-broadcast");
                         this.raiseHands.push(msg.data);
                         this.updateTheStatus(
                             `[handleMessage] ${msg.type} approving raised hand`,
@@ -627,7 +627,7 @@ export class SparkRTC {
             case 'audience-broadcasting':
                 console.log('audience-broadcasting', msg);
 
-                this.getLatestUserList();
+                this.getLatestUserList("audience-broadcasting");
 
                 if (msg.joinedStage === false) {
                     //remove the user id from raisehands
@@ -687,10 +687,10 @@ export class SparkRTC {
             if (index > -1) {
                 this.raiseHands.splice(index, 1);
             }
-        }
 
-        //update the user list
-        this.getLatestUserList();
+            //update the user list
+            this.getLatestUserList("removeFromRaisehandList");
+        }
     };
 
     /**

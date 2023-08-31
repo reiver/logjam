@@ -86,7 +86,43 @@ export const onStartShareScreen = (stream) => {
     };
 };
 
-export const onStopStream = (stream) => {
+const displayStream = async (stream, toggleFull = false) => {
+    console.log(
+        `toggleFullScreen displayStream: ${toggleFull} stream: `,
+        stream
+    );
+    let local = false;
+    if (sparkRTC.value.localStream) {
+        if (sparkRTC.value.localStream.id === stream.id) {
+            local = true;
+        }
+    }
+
+    streamers.value = {
+        ...streamers.value,
+        [stream.id]: {
+            name: stream.name,
+            userId: stream.userId,
+            isHost: stream.role === Roles.BROADCAST,
+            avatar: '',
+            raisedHand: false,
+            hasCamera: false,
+            muted: streamers.value[stream.id]
+                ? streamers.value[stream.id].muted
+                : undefined,
+            stream,
+            isLocalStream: local,
+            isShareScreen: stream.isShareScreen || false,
+            toggleScreenId: toggleFull ? stream.id : null,
+        },
+    };
+};
+
+const toggleFullScreen = async (stream) => {
+    await displayStream(stream, true);
+};
+
+export const onStopStream = async (stream) => {
     const streamersTmp = { ...streamers.value };
     delete streamersTmp[stream.id];
     streamers.value = streamersTmp;
@@ -141,7 +177,7 @@ export const onUserRaisedHand = (userId, raisedHand, acceptRaiseHand) => {
         },
     };
     console.log('LOWER HAND', userId, raisedHand);
-    sparkRTC.value.getLatestUserList();
+    sparkRTC.value.getLatestUserList('onUserRaiseHand');
 };
 
 export const getUserRaiseHandStatus = (userId) => {
@@ -206,37 +242,11 @@ const Meeting = () => {
                         },
                     };
                 },
-                remoteStreamCallback: (stream) => {
+                remoteStreamCallback: async (stream) => {
                     log(`remoteStreamCallback`, stream);
                     log(`remoteStreamCallback-Name`, stream.name);
 
-                    //if receive my localStream then mute it for me
-                    let local = false;
-                    if (sparkRTC.value.localStream) {
-                        if (sparkRTC.value.localStream.id === stream.id) {
-                            local = true;
-                        }
-                    }
-                    log(`[Remote Stream Callback]`, stream);
-                    log(`NameCallback: ${stream.name}`);
-
-                    streamers.value = {
-                        ...streamers.value,
-                        [stream.id]: {
-                            name: stream.name,
-                            userId: stream.userId,
-                            isHost: stream.role === Roles.BROADCAST,
-                            avatar: '',
-                            raisedHand: false,
-                            hasCamera: false,
-                            muted: streamers.value[stream.id]
-                                ? streamers.value[stream.id].muted
-                                : undefined,
-                            stream,
-                            isLocalStream: local,
-                            isShareScreen: stream.isShareScreen || false,
-                        },
-                    };
+                    await displayStream(stream);
 
                     if (
                         !sparkRTC.value.broadcasterDC &&
@@ -245,11 +255,12 @@ const Meeting = () => {
                         broadcastIsInTheMeeting.value = true;
                     }
                 },
-                remoteStreamDCCallback: (stream) => {
+                remoteStreamDCCallback: async (stream) => {
                     sparkRTC.value.getLatestUserList(`remote stream DC`);
 
                     log(`remoteStreamDCCallback`, stream);
 
+                    await toggleFullScreen(stream);
                     onStopStream(stream);
 
                     if (role === Roles.AUDIENCE) {
@@ -499,7 +510,7 @@ const Meeting = () => {
                 userLoweredHand: (data) => {
                     onUserRaisedHand(data, false);
                     log('userLoweredHand: ', data);
-                    sparkRTC.value.getLatestUserList();
+                    sparkRTC.value.getLatestUserList('UserLowerHand');
 
                     //get raise hand count from attendees list
                     const rC = Object.values(attendees.value).reduce(
