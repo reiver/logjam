@@ -125,7 +125,7 @@ func (ctrl *AuxiliaryNodeController) Join(rw http.ResponseWriter, req *http.Requ
 	_ = ctrl.helper.Write(rw, nil, 204)
 	go func(roomId string, svcAddr string) {
 		for {
-			res, err := http.Get(svcAddr + "/healthcheck")
+			res, err := http.Get(svcAddr + "/healthcheck?roomId=" + roomId)
 			if err != nil {
 				break
 			}
