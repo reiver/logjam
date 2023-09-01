@@ -484,7 +484,7 @@ export class SparkRTC {
 
                         if (result !== true) return;
 
-                        this.getLatestUserList("alt-broadcast");
+                        this.getLatestUserList('alt-broadcast');
                         this.raiseHands.push(msg.data);
                         this.updateTheStatus(
                             `[handleMessage] ${msg.type} approving raised hand`,
@@ -515,6 +515,7 @@ export class SparkRTC {
                 this.broadcasterDC = false;
                 this.updateTheStatus(`[handleMessage] ${msg.type}`);
                 this.startProcedure(true);
+                window.location.reload();
                 break;
             case 'event-reconnect':
             case 'event-broadcaster-disconnected':
@@ -627,7 +628,7 @@ export class SparkRTC {
             case 'audience-broadcasting':
                 console.log('audience-broadcasting', msg);
 
-                this.getLatestUserList("audience-broadcasting");
+                this.getLatestUserList('audience-broadcasting');
 
                 if (msg.joinedStage === false) {
                     //remove the user id from raisehands
@@ -689,7 +690,7 @@ export class SparkRTC {
             }
 
             //update the user list
-            this.getLatestUserList("removeFromRaisehandList");
+            this.getLatestUserList('removeFromRaisehandList');
         }
     };
 

@@ -224,6 +224,10 @@ export const Video = memo(
         isShareScreen,
         toggleScreen,
     }) => {
+        console.log(
+            `toggleFullScreen toggle: ${toggleScreen}: hasFullScreen: ${fullScreenedStream.value}, stream: `,
+            stream
+        );
         const [muted, setMuted] = useState(true);
         const { isHost } = currentUser.value;
         const menu = useRef();
@@ -239,12 +243,13 @@ export const Video = memo(
             }
         };
 
-        useEffect((event) => {
-            if (toggleScreen && hasFullScreenedStream.value) {
-                toggleFullScreen(event);
-                toggleScreen = null;
-            }
-        });
+        //toggle screen back to normal mode, when stream is stopped
+        if (toggleScreen && hasFullScreenedStream.value) {
+            console.log('toggleFullScreen finally');
+            toggleFullScreen();
+            toggleScreen = null;
+        }
+
         useEffect(() => {
             videoRef.current.srcObject = stream;
         }, [stream]);

@@ -123,6 +123,8 @@ const toggleFullScreen = async (stream) => {
 };
 
 export const onStopStream = async (stream) => {
+    await toggleFullScreen(stream);
+
     const streamersTmp = { ...streamers.value };
     delete streamersTmp[stream.id];
     streamers.value = streamersTmp;
@@ -260,8 +262,9 @@ const Meeting = () => {
 
                     log(`remoteStreamDCCallback`, stream);
 
-                    await toggleFullScreen(stream);
-                    onStopStream(stream);
+                    if (stream != 'no-stream') {
+                        onStopStream(stream);
+                    }
 
                     if (role === Roles.AUDIENCE) {
                         if (
