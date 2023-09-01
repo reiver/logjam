@@ -14,24 +14,24 @@ type IRouteRegistrar interface {
 }
 
 type Router struct {
-	router              *mux.Router
-	roomWSRouter        IRouteRegistrar
-	auxiliaryNodeRouter IRouteRegistrar
-	logger              contracts.ILogger
+	router            *mux.Router
+	roomWSRouter      IRouteRegistrar
+	GoldGorillaRouter IRouteRegistrar
+	logger            contracts.ILogger
 }
 
-func NewRouter(roomWSCtrl *controllers.RoomWSController, auxiliaryNodeCtrl *controllers.AuxiliaryNodeController, roomRepo contracts.IRoomRepository, socketSVC contracts.ISocketService, logger contracts.ILogger) *Router {
+func NewRouter(roomWSCtrl *controllers.RoomWSController, GoldGorillaCtrl *controllers.GoldGorillaController, roomRepo contracts.IRoomRepository, socketSVC contracts.ISocketService, logger contracts.ILogger) *Router {
 	return &Router{
-		router:              mux.NewRouter(),
-		roomWSRouter:        newRoomWSRouter(roomWSCtrl, roomRepo, socketSVC, logger),
-		auxiliaryNodeRouter: newAuxiliaryNodeRouter(auxiliaryNodeCtrl),
-		logger:              logger,
+		router:            mux.NewRouter(),
+		roomWSRouter:      newRoomWSRouter(roomWSCtrl, roomRepo, socketSVC, logger),
+		GoldGorillaRouter: newGoldGorillaRouter(GoldGorillaCtrl),
+		logger:            logger,
 	}
 }
 
 func (r *Router) RegisterRoutes() error {
 	r.roomWSRouter.registerRoutes(r.router)
-	r.auxiliaryNodeRouter.registerRoutes(r.router)
+	r.GoldGorillaRouter.registerRoutes(r.router)
 
 	r.router.PathPrefix("/").Handler(http.FileServer(http.Dir("views/")))
 	r.router.Use(func(handler http.Handler) http.Handler {

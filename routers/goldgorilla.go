@@ -6,21 +6,23 @@ import (
 	"net/http"
 )
 
-type auxiliaryNodeRouter struct {
-	ctrl *controllers.AuxiliaryNodeController
+type GoldGorillaRouter struct {
+	ctrl *controllers.GoldGorillaController
 }
 
-func newAuxiliaryNodeRouter(ctrl *controllers.AuxiliaryNodeController) IRouteRegistrar {
-	return &auxiliaryNodeRouter{
+func newGoldGorillaRouter(ctrl *controllers.GoldGorillaController) IRouteRegistrar {
+	return &GoldGorillaRouter{
 		ctrl: ctrl,
 	}
 }
 
-func (r *auxiliaryNodeRouter) registerRoutes(router *mux.Router) {
+func (r *GoldGorillaRouter) registerRoutes(router *mux.Router) {
 	prefix := "/auxiliary-node"
 	router.HandleFunc(prefix+"/ice", r.ctrl.SendICECandidate).
 		Methods(http.MethodPost)
 	router.HandleFunc(prefix+"/join", r.ctrl.Join).
+		Methods(http.MethodPost)
+	router.HandleFunc(prefix+"/rejoin", r.ctrl.RejoinGoldGorilla).
 		Methods(http.MethodPost)
 	router.HandleFunc(prefix+"/offer", r.ctrl.SendOffer).
 		Methods(http.MethodPost)

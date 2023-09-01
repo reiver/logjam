@@ -94,7 +94,7 @@ func (r *roomWSRouter) handleEvent(ctx *models.WSContext) {
 	if ctx.ParsedMessage == nil || len(ctx.PureMessage) <= 2 {
 		return
 	}
-	if ctx.ParsedMessage.Type != "tree" && ctx.ParsedMessage.Type != "ping" {
+	if ctx.ParsedMessage.Type != "tree" && ctx.ParsedMessage.Type != "ping" && ctx.ParsedMessage.Type != "metadata-get" {
 		_ = r.logger.Log("ws_router", contracts.LDebug, "ID["+strconv.FormatUint(ctx.SocketID, 10)+"] event: "+ctx.ParsedMessage.Type)
 	}
 	switch ctx.ParsedMessage.Type {
@@ -168,8 +168,8 @@ func (r *roomWSRouter) handleEvent(ctx *models.WSContext) {
 			if err != nil {
 				println(err.Error())
 			} else if room != nil {
-				if room.AuxiliaryNode != nil {
-					if ctx.ParsedMessage.Target == strconv.FormatUint(models.AuxiliaryNodeId, 10) {
+				if room.GoldGorilla != nil {
+					if ctx.ParsedMessage.Target == strconv.FormatUint(models.GoldGorillaId, 10) {
 						switch ctx.ParsedMessage.Type {
 						case "video-answer":
 							{

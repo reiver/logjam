@@ -12,15 +12,15 @@ type RoomWSController struct {
 	logger    contracts.ILogger
 	socketSVC contracts.ISocketService
 	roomRepo  contracts.IRoomRepository
-	anRepo    contracts.IAuxiliaryNodeServiceRepository
+	ggRepo    contracts.IGoldGorillaServiceRepository
 }
 
-func NewRoomWSController(socketSVC contracts.ISocketService, roomRepo contracts.IRoomRepository, anRepo contracts.IAuxiliaryNodeServiceRepository, logger contracts.ILogger) *RoomWSController {
+func NewRoomWSController(socketSVC contracts.ISocketService, roomRepo contracts.IRoomRepository, ggRepo contracts.IGoldGorillaServiceRepository, logger contracts.ILogger) *RoomWSController {
 	return &RoomWSController{
 		logger:    logger,
 		socketSVC: socketSVC,
 		roomRepo:  roomRepo,
-		anRepo:    anRepo,
+		ggRepo:    ggRepo,
 	}
 }
 
@@ -51,12 +51,12 @@ func (c *RoomWSController) OnDisconnect(ctx *models.WSContext) {
 			Data: strconv.FormatUint(ctx.SocketID, 10),
 		}
 		_ = c.socketSVC.Send(brDCEvent, membersIdList...)
-		err = c.anRepo.ResetRoom(ctx.RoomId)
+		err = c.ggRepo.ResetRoom(ctx.RoomId)
 		if err != nil {
 			c.log(contracts.LError, err.Error())
 			return
 		}
-		c.roomRepo.RemoveMember(ctx.RoomId, models.AuxiliaryNodeId)
+		c.roomRepo.RemoveMember(ctx.RoomId, models.GoldGorillaId)
 	} else {
 		parentDCEvent := models.MessageContract{
 			Type: "event-parent-dc",
@@ -64,17 +64,17 @@ func (c *RoomWSController) OnDisconnect(ctx *models.WSContext) {
 		}
 		_ = c.socketSVC.Send(parentDCEvent, childrenIdList...)
 
-		if c.roomRepo.HadAuxiliaryNodeInTreeBefore(ctx.RoomId) {
+		if c.roomRepo.HadGoldGorillaInTreeBefore(ctx.RoomId) {
 			for _, id := range childrenIdList {
-				if id == models.AuxiliaryNodeId {
-					err = c.anRepo.ResetRoom(ctx.RoomId)
+				if id == models.GoldGorillaId {
+					err = c.ggRepo.ResetRoom(ctx.RoomId)
 					if err != nil {
 						c.log(contracts.LError, err.Error())
 						return
 					}
-					c.roomRepo.RemoveMember(ctx.RoomId, models.AuxiliaryNodeId)
+					c.roomRepo.RemoveMember(ctx.RoomId, models.GoldGorillaId)
 					go func() {
-						err := c.anRepo.Start()
+						err := c.ggRepo.Start()
 						if err != nil {
 							c.log(contracts.LError, err.Error())
 							return
@@ -154,10 +154,10 @@ func (c *RoomWSController) Role(ctx *models.WSContext) {
 			c.log(contracts.LError, err.Error())
 		}
 		_ = c.socketSVC.Send(resultEvent, ctx.SocketID)
-		hadAuxiliaryNodeInTreeBefore := c.roomRepo.HadAuxiliaryNodeInTreeBefore(ctx.RoomId)
-		if hadAuxiliaryNodeInTreeBefore {
+		hadGoldGorillaInTreeBefore := c.roomRepo.HadGoldGorillaInTreeBefore(ctx.RoomId)
+		if hadGoldGorillaInTreeBefore {
 			go func() {
-				err := c.anRepo.Start()
+				err := c.ggRepo.Start()
 				if err != nil {
 					println(err.Error())
 					return
@@ -222,13 +222,13 @@ func (c *RoomWSController) Role(ctx *models.WSContext) {
 			}, ctx.SocketID)
 			return
 		}
-		if *parentId != models.AuxiliaryNodeId {
+		if *parentId != models.GoldGorillaId {
 			_ = c.socketSVC.Send(models.MessageContract{
 				Type: "add_audience",
 				Data: strconv.FormatUint(ctx.SocketID, 10),
 			}, *parentId)
 		} else {
-			err := c.anRepo.CreatePeer(ctx.RoomId, ctx.SocketID, true, false)
+			err := c.ggRepo.CreatePeer(ctx.RoomId, ctx.SocketID, true, false)
 			if err != nil {
 				_ = c.socketSVC.Send(models.MessageContract{
 					Type: "error",
@@ -369,7 +369,7 @@ func (c *RoomWSController) emitUserList(roomId string) {
 	}
 	index := -1
 	for i, v := range list {
-		if v.Id == models.AuxiliaryNodeId {
+		if v.Id == models.GoldGorillaId {
 			index = i
 			break
 		}
@@ -409,7 +409,7 @@ func (c *RoomWSController) SendOfferToAN(ctx *models.WSContext) {
 		c.log(contracts.LError, err.Error())
 		return
 	}
-	err = c.anRepo.SendOffer(ctx.RoomId, ctx.SocketID, msg["sdp"])
+	err = c.ggRepo.SendOffer(ctx.RoomId, ctx.SocketID, msg["sdp"])
 	if err != nil {
 		c.log(contracts.LError, err.Error())
 		return
@@ -423,7 +423,7 @@ func (c *RoomWSController) SendAnswerToAN(ctx *models.WSContext) {
 		c.log(contracts.LError, err.Error())
 		return
 	}
-	err = c.anRepo.SendAnswer(ctx.RoomId, ctx.SocketID, msg["sdp"])
+	err = c.ggRepo.SendAnswer(ctx.RoomId, ctx.SocketID, msg["sdp"])
 	if err != nil {
 		c.log(contracts.LError, err.Error())
 		return
@@ -437,7 +437,7 @@ func (c *RoomWSController) SendICECandidateToAN(ctx *models.WSContext) {
 		c.log(contracts.LError, err.Error())
 		return
 	}
-	err = c.anRepo.SendICECandidate(ctx.RoomId, ctx.SocketID, msg["candidate"])
+	err = c.ggRepo.SendICECandidate(ctx.RoomId, ctx.SocketID, msg["candidate"])
 	if err != nil {
 		c.log(contracts.LError, err.Error())
 		return
@@ -450,8 +450,8 @@ func (c *RoomWSController) DefaultHandler(ctx *models.WSContext) {
 		c.log(contracts.LError, err.Error())
 		return
 	}
-	if id == models.AuxiliaryNodeId {
-		return // as there is no auxiliarynode in tree, we ignore messages that targets it
+	if id == models.GoldGorillaId {
+		return // as there is no GoldGorilla in tree, we ignore messages that targets it
 	}
 	targetMember, err := c.roomRepo.GetMember(ctx.RoomId, id)
 	if err != nil {

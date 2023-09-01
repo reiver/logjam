@@ -1,4 +1,4 @@
-package auxiliarynode
+package GoldGorilla
 
 import (
 	"bytes"
@@ -10,13 +10,13 @@ import (
 	"time"
 )
 
-type auxiliaryNodeRepository struct {
+type GoldGorillaRepository struct {
 	client  *http.Client
 	svcAddr string
 }
 
-func NewAuxiliaryNodeRepository() contracts.IAuxiliaryNodeServiceRepository {
-	return &auxiliaryNodeRepository{
+func NewGoldGorillaRepository() contracts.IGoldGorillaServiceRepository {
+	return &GoldGorillaRepository{
 		client: &http.Client{
 			Timeout: 8 * time.Second,
 		},
@@ -24,12 +24,12 @@ func NewAuxiliaryNodeRepository() contracts.IAuxiliaryNodeServiceRepository {
 	}
 }
 
-func (a *auxiliaryNodeRepository) Init(svcAddr string) error {
+func (a *GoldGorillaRepository) Init(svcAddr string) error {
 	a.svcAddr = svcAddr
 	return nil
 }
 
-func (a *auxiliaryNodeRepository) CreatePeer(roomId string, id uint64, canPublish bool, isCaller bool) error {
+func (a *GoldGorillaRepository) CreatePeer(roomId string, id uint64, canPublish bool, isCaller bool) error {
 	body, err := getReader(
 		dto.CreatePeerRPCModel{
 			RoomPeerDTO: dto.RoomPeerDTO{
@@ -52,7 +52,7 @@ func (a *auxiliaryNodeRepository) CreatePeer(roomId string, id uint64, canPublis
 	return nil
 }
 
-func (a *auxiliaryNodeRepository) SendICECandidate(roomId string, id uint64, iceCandidate any) error {
+func (a *GoldGorillaRepository) SendICECandidate(roomId string, id uint64, iceCandidate any) error {
 	body, err := getReader(
 		dto.SendIceCandidateReqModel{
 			RoomPeerDTO: dto.RoomPeerDTO{
@@ -74,7 +74,7 @@ func (a *auxiliaryNodeRepository) SendICECandidate(roomId string, id uint64, ice
 	return nil
 }
 
-func (a *auxiliaryNodeRepository) SendAnswer(roomId string, peerId uint64, answer any) error {
+func (a *GoldGorillaRepository) SendAnswer(roomId string, peerId uint64, answer any) error {
 	body, err := getReader(dto.SetSDPRPCModel{
 		RoomPeerDTO: dto.RoomPeerDTO{
 			RoomId: roomId,
@@ -95,7 +95,7 @@ func (a *auxiliaryNodeRepository) SendAnswer(roomId string, peerId uint64, answe
 	return nil
 }
 
-func (a *auxiliaryNodeRepository) SendOffer(roomId string, peerId uint64, offer any) error {
+func (a *GoldGorillaRepository) SendOffer(roomId string, peerId uint64, offer any) error {
 	body, err := getReader(dto.SetSDPRPCModel{
 		RoomPeerDTO: dto.RoomPeerDTO{
 			RoomId: roomId,
@@ -116,7 +116,7 @@ func (a *auxiliaryNodeRepository) SendOffer(roomId string, peerId uint64, offer 
 	return nil
 }
 
-func (a *auxiliaryNodeRepository) ClosePeer(roomId string, id uint64) error {
+func (a *GoldGorillaRepository) ClosePeer(roomId string, id uint64) error {
 	body, err := getReader(dto.RoomPeerDTO{
 		RoomId: roomId,
 		ID:     id,
@@ -138,7 +138,7 @@ func (a *auxiliaryNodeRepository) ClosePeer(roomId string, id uint64) error {
 	return nil
 }
 
-func (a *auxiliaryNodeRepository) ResetRoom(roomId string) error {
+func (a *GoldGorillaRepository) ResetRoom(roomId string) error {
 	body, err := getReader(map[string]any{"roomId": roomId})
 	if err != nil {
 		return err
@@ -157,9 +157,9 @@ func (a *auxiliaryNodeRepository) ResetRoom(roomId string) error {
 	return nil
 }
 
-func (a *auxiliaryNodeRepository) Start() error {
+func (a *GoldGorillaRepository) Start() error {
 	if a.svcAddr == "" {
-		return errors.New("auxiliaryNodeRepository instance is not initialized yet(waiting for goldgorilla hook)...")
+		return errors.New("GoldGorillaRepository instance is not initialized yet(waiting for goldgorilla hook)...")
 	}
 	resp, err := a.client.Post(a.svcAddr+"/room/", "application/json", nil)
 	if err != nil {

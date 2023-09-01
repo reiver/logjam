@@ -51,13 +51,13 @@ func (r *roomRepository) CreateRoom(id string) error {
 	return nil
 }
 
-func (r *roomRepository) HadAuxiliaryNodeInTreeBefore(id string) bool {
+func (r *roomRepository) HadGoldGorillaInTreeBefore(id string) bool {
 	r.Lock()
 	defer r.Unlock()
 	if !r.doesRoomExists(id) {
 		return false
 	}
-	return r.rooms[id].HadAuxiliaryNodeBefore
+	return r.rooms[id].HadGoldGorillaBefore
 }
 
 func (r *roomRepository) GetRoom(id string) (*models.RoomModel, error) {
@@ -198,7 +198,7 @@ func (r *roomRepository) UpdateCanConnect(roomId string, id uint64, newState boo
 	return nil
 }
 
-func (r *roomRepository) InsertMemberToTree(roomId string, memberId uint64, isAuxiliaryNode bool) (parentId *uint64, err error) {
+func (r *roomRepository) InsertMemberToTree(roomId string, memberId uint64, isGoldGorilla bool) (parentId *uint64, err error) {
 	r.Lock()
 	defer r.Unlock()
 	if !r.doesRoomExists(roomId) {
@@ -206,19 +206,22 @@ func (r *roomRepository) InsertMemberToTree(roomId string, memberId uint64, isAu
 	}
 	r.rooms[roomId].Lock()
 	defer r.rooms[roomId].Unlock()
-	if r.rooms[roomId].AuxiliaryNode != nil {
-		(*r.rooms[roomId].AuxiliaryNode).Children = append((*r.rooms[roomId].AuxiliaryNode).Children, &models.PeerModel{
-			ID:              memberId,
-			IsConnected:     true,
-			Children:        []*models.PeerModel{},
-			IsAuxiliaryNode: false,
+	if r.rooms[roomId].GoldGorilla != nil && isGoldGorilla {
+		panic("man .. do something ...")
+	}
+	if r.rooms[roomId].GoldGorilla != nil {
+		(*r.rooms[roomId].GoldGorilla).Children = append((*r.rooms[roomId].GoldGorilla).Children, &models.PeerModel{
+			ID:            memberId,
+			IsConnected:   true,
+			Children:      []*models.PeerModel{},
+			IsGoldGorilla: false,
 		})
-		parentId = &(*r.rooms[roomId].AuxiliaryNode).ID
+		parentId = &(*r.rooms[roomId].GoldGorilla).ID
 		return parentId, nil
 	}
-	lastCheckedLevel := 0
+	lastCheckedLevel := uint(0)
 start:
-	levelNodes, err := r.rooms[roomId].GetLevelMembers(uint(lastCheckedLevel), false)
+	levelNodes, err := r.rooms[roomId].GetLevelMembers(lastCheckedLevel, false)
 	if err != nil {
 		return nil, err
 	}
@@ -230,17 +233,17 @@ start:
 	for _, node := range levelNodes {
 		if len((*node).Children) < 2 {
 			newChild := &models.PeerModel{
-				ID:              memberId,
-				IsConnected:     true,
-				Children:        []*models.PeerModel{},
-				IsAuxiliaryNode: isAuxiliaryNode,
+				ID:            memberId,
+				IsConnected:   true,
+				Children:      []*models.PeerModel{},
+				IsGoldGorilla: isGoldGorilla,
 			}
 			(*node).Children = append((*node).Children, newChild)
 			parentId = &(*node).ID
 			found = true
-			if isAuxiliaryNode {
-				r.rooms[roomId].AuxiliaryNode = &newChild
-				r.rooms[roomId].HadAuxiliaryNodeBefore = true
+			if isGoldGorilla {
+				r.rooms[roomId].GoldGorilla = &newChild
+				r.rooms[roomId].HadGoldGorillaBefore = true
 			}
 		}
 		if found {
@@ -421,8 +424,8 @@ start:
 					nodeChildrenIdList = append(nodeChildrenIdList, parentLostChild.ID)
 				}
 				(*node).Children = append((*node).Children[:i], (*node).Children[i+1:]...)
-				if memberId == models.AuxiliaryNodeId {
-					r.rooms[roomId].AuxiliaryNode = nil
+				if memberId == models.GoldGorillaId {
+					r.rooms[roomId].GoldGorilla = nil
 				}
 				found = true
 				break

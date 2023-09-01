@@ -1,5 +1,7 @@
 package models
 
-const (
-	AuxiliaryNodeId uint64 = 18446744073709551615
+var (
+	GoldGorillaId uint64 = 18446744073709551615
 )
+
+const ()

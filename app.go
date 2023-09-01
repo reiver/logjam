@@ -4,7 +4,7 @@ import (
 	"github.com/sparkscience/logjam/controllers"
 	"github.com/sparkscience/logjam/models"
 	"github.com/sparkscience/logjam/models/contracts"
-	"github.com/sparkscience/logjam/models/repositories/auxiliarynode"
+	"github.com/sparkscience/logjam/models/repositories/goldgorilla"
 	roomRepository "github.com/sparkscience/logjam/models/repositories/room"
 	"github.com/sparkscience/logjam/routers"
 	"github.com/sparkscience/logjam/services"
@@ -22,16 +22,16 @@ func (app *App) Init(srcListenAddr string, prodMode bool) {
 	app.Logger = logger.NewSTDOUTLogger(prodMode)
 	_ = app.Logger.Log("app", contracts.LInfo, "initializing logjam ..")
 	app.config = &models.ConfigModel{
-		AuxiliaryNodeSVCAddr: "",
-		SrcListenAddr:        srcListenAddr,
+		GoldGorillaSVCAddr: "",
+		SrcListenAddr:      srcListenAddr,
 	}
-	anSVCRepo := auxiliarynode.NewAuxiliaryNodeRepository()
+	ggSVCRepo := GoldGorilla.NewGoldGorillaRepository()
 	roomRepo := roomRepository.NewRoomRepository()
 	socketSVC := services.NewSocketService(app.Logger)
-	roomWSCtrl := controllers.NewRoomWSController(socketSVC, roomRepo, anSVCRepo, app.Logger)
+	roomWSCtrl := controllers.NewRoomWSController(socketSVC, roomRepo, ggSVCRepo, app.Logger)
 	restHelper := &controllers.RestResponseHelper{}
-	auxiliaryNodeCtrl := controllers.NewAuxiliaryNodeController(roomRepo, anSVCRepo, socketSVC, app.config, restHelper, app.Logger)
-	app.Router = routers.NewRouter(roomWSCtrl, auxiliaryNodeCtrl, roomRepo, socketSVC, app.Logger)
+	goldGorillaCtrl := controllers.NewGoldGorillaController(roomRepo, ggSVCRepo, socketSVC, app.config, restHelper, app.Logger)
+	app.Router = routers.NewRouter(roomWSCtrl, goldGorillaCtrl, roomRepo, socketSVC, app.Logger)
 	panicIfErr(app.Router.RegisterRoutes())
 }
 

@@ -20,21 +20,21 @@ type PeerTreeModel struct {
 }
 
 type PeerModel struct {
-	ID              uint64
-	IsConnected     bool
-	IsAuxiliaryNode bool
+	ID            uint64
+	IsConnected   bool
+	IsGoldGorilla bool
 	//Children        [2]*PeerModel
 	Children []*PeerModel
 }
 
 type RoomModel struct {
 	*sync.Mutex
-	Title                  string
-	PeersTree              *PeerModel
-	Members                map[uint64]*MemberModel
-	MetaData               map[string]any
-	AuxiliaryNode          **PeerModel
-	HadAuxiliaryNodeBefore bool
+	Title                string
+	PeersTree            *PeerModel
+	Members              map[uint64]*MemberModel
+	MetaData             map[string]any
+	GoldGorilla          **PeerModel
+	HadGoldGorillaBefore bool
 }
 
 func (r *RoomModel) GetBroadcaster() *MemberModel {
