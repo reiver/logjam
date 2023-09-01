@@ -130,7 +130,10 @@ export const onStopStream = async (stream) => {
     streamers.value = streamersTmp;
 };
 
-export const onStopShareScreen = (stream) => {
+export const onStopShareScreen = async (stream) => {
+
+    await onStopStream(stream);
+
     stream.getTracks().forEach((track) => track.stop());
     updateUser({
         sharingScreenStream: null,
