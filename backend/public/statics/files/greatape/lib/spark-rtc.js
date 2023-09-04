@@ -515,7 +515,6 @@ export class SparkRTC {
                 this.broadcasterDC = false;
                 this.updateTheStatus(`[handleMessage] ${msg.type}`);
                 this.startProcedure(true);
-                window.location.reload();
                 break;
             case 'event-reconnect':
             case 'event-broadcaster-disconnected':
@@ -534,7 +533,6 @@ export class SparkRTC {
                     this.myPeerConnectionArray[u].close();
                 }
                 this.myPeerConnectionArray = {};
-                this.remoteStreams = [];
                 try {
                     if (this.remoteStreamDCCallback)
                         this.remoteStreamDCCallback('no-stream');

@@ -131,7 +131,6 @@ export const onStopStream = async (stream) => {
 };
 
 export const onStopShareScreen = async (stream) => {
-
     await onStopStream(stream);
 
     stream.getTracks().forEach((track) => track.stop());
@@ -267,29 +266,40 @@ const Meeting = () => {
 
                     if (stream != 'no-stream') {
                         onStopStream(stream);
+                    } else {
+                        //get all remote streams and stop them
+                        const streams = sparkRTC.value.remoteStreams;
+                        streams.forEach((str) => {
+                            onStopStream(str);
+                        });
+
+                        sparkRTC.value.remoteStreams = [];
                     }
 
-                    if (role === Roles.AUDIENCE) {
-                        if (
-                            sparkRTC.value.broadcasterDC ||
-                            stream === 'no-stream'
-                        ) {
-                            //destroy preview Dialog
-                            if (previewDialogId !== null) {
-                                destroyDialog(previewDialogId);
+                    //display broadcaster not in the meeting message after 1 sec, to avoid any issues
+                    setTimeout(() => {
+                        if (role === Roles.AUDIENCE) {
+                            if (
+                                sparkRTC.value.broadcasterDC ||
+                                stream === 'no-stream'
+                            ) {
+                                //destroy preview Dialog
+                                if (previewDialogId !== null) {
+                                    destroyDialog(previewDialogId);
+                                }
+
+                                broadcastIsInTheMeeting.value = false;
+                                updateUser({
+                                    isStreamming: false,
+                                    ableToRaiseHand: true,
+                                    isMicrophoneOn: true,
+                                    isCameraOn: true,
+                                });
+                                sparkRTC.value.resetAudioVideoState();
+                                log(`broadcasterDC...`);
                             }
-
-                            broadcastIsInTheMeeting.value = false;
-                            updateUser({
-                                isStreamming: false,
-                                ableToRaiseHand: true,
-                                isMicrophoneOn: true,
-                                isCameraOn: true,
-                            });
-                            sparkRTC.value.resetAudioVideoState();
-                            log(`broadcasterDC...`);
                         }
-                    }
+                    }, 1000);
                 },
                 onRaiseHand: (user) => {
                     log(`[On Raise Hand Request]`, user);
