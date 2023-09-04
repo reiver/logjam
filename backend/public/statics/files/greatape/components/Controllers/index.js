@@ -1,6 +1,5 @@
 import { signal } from '@preact/signals';
 import { clsx } from 'clsx';
-import { isMobile } from '../../lib/common.js';
 import {
     Icon,
     IconButton,
@@ -10,12 +9,12 @@ import {
 } from 'components';
 import { html } from 'htm';
 import { useState } from 'preact';
+import { isMobile } from '../../lib/common.js';
 import {
     currentUser,
     isDebugMode,
     onStartShareScreen,
     onStopShareScreen,
-    onUserRaisedHand,
     raiseHandMaxLimitReached,
     sparkRTC,
     updateUser,

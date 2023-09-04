@@ -14,7 +14,6 @@ import { html } from 'htm';
 import { useEffect } from 'preact';
 import { isAttendeesOpen } from '../components/Attendees/index.js';
 import {
-    PreviewDialog,
     destroyDialog,
     makePreviewDialog,
 } from '../components/Dialog/index.js';

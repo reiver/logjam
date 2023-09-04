@@ -244,7 +244,11 @@ export const Video = memo(
         };
 
         //toggle screen back to normal mode, when stream is stopped
-        if (toggleScreen && hasFullScreenedStream.value) {
+        if (
+            toggleScreen &&
+            hasFullScreenedStream.value &&
+            fullScreenedStream.value === stream.id
+        ) {
             console.log('toggleFullScreen finally');
             toggleFullScreen();
             toggleScreen = null;
