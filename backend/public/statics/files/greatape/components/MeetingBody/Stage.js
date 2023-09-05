@@ -319,6 +319,9 @@ export const Video = memo(
             };
         }, [menu, menuOpen]);
 
+        const isMobile =
+            window.parent.outerWidth <= 400 && window.parent.outerHeight <= 850;
+
         return html`
             <div onClick=${handleOnClick} className="w-full h-full rounded-lg">
                 <video
@@ -336,7 +339,10 @@ export const Video = memo(
                     <div
                         class="px-4 py-1 bg-black bg-opacity-50 text-white rounded-full text-medium-12"
                     >
-                        ${name} ${isHostStream && '(Host)'}
+                        ${name.length > 3 && isMobile
+                            ? name.substring(0, 3) + '...'
+                            : name}
+                        ${isHostStream && ' (Host)'}
                     </div>
                 </div>
                 <div
@@ -360,10 +366,7 @@ export const Video = memo(
                             flex: menuOpen || isHover,
                         })}
                     >
-                        <${IconButton}
-                            variant="ghost"
-                            onClick=${toggleFullScreen}
-                        >
+                        <${IconButton} variant="nothing" onClick=${toggleFullScreen}>
                             <${Icon}
                                 icon=${stream &&
                                 fullScreenedStream.value === stream.id
