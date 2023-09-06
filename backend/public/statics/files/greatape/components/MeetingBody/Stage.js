@@ -319,9 +319,6 @@ export const Video = memo(
             };
         }, [menu, menuOpen]);
 
-        const isMobile =
-            window.parent.outerWidth <= 400 && window.parent.outerHeight <= 850;
-
         return html`
             <div onClick=${handleOnClick} className="w-full h-full rounded-lg">
                 <video
@@ -339,10 +336,24 @@ export const Video = memo(
                     <div
                         class="px-4 py-1 bg-black bg-opacity-50 text-white rounded-full text-medium-12"
                     >
-                        ${name.length > 3 && isMobile
-                            ? name.substring(0, 3) + '...'
+                        ${name.length > 4 &&
+                        getDeviceConfig(window.innerWidth) === 'xs' &&
+                        !isShareScreen
+                            ? streamersLength > 2 //trim name only if more then 2 videos on screen
+                                ? name.substring(0, 4) + '..'
+                                : name
                             : name}
-                        ${isHostStream && ' (Host)'}
+                        ${getDeviceConfig(window.innerWidth) === 'xs' //mobile view
+                            ? streamersLength > 2
+                                ? isShareScreen //display host only for screen share video
+                                    ? ' (Host)'
+                                    : ''
+                                : isHostStream //display host, Host video
+                                ? ' (Host)'
+                                : ''
+                            : isHostStream //not mobile view, defualt state
+                            ? ' (Host)'
+                            : ''}
                     </div>
                 </div>
                 <div
@@ -351,7 +362,7 @@ export const Video = memo(
                     )}
                 >
                     ${isUserMuted &&
-                    html` <div className="pr-2">
+                    html` <div>
                         <${Icon}
                             icon="MicrophoneOff"
                             width="20px"
@@ -366,7 +377,10 @@ export const Video = memo(
                             flex: menuOpen || isHover,
                         })}
                     >
-                        <${IconButton} variant="nothing" onClick=${toggleFullScreen}>
+                        <${IconButton}
+                            variant="nothing"
+                            onClick=${toggleFullScreen}
+                        >
                             <${Icon}
                                 icon=${stream &&
                                 fullScreenedStream.value === stream.id
