@@ -337,24 +337,7 @@ export const Video = memo(
                         <div
                             class="px-4 py-1 bg-black bg-opacity-50 text-white rounded-full text-medium-12 truncate"
                         >
-                            ${name.length > 4 &&
-                            getDeviceConfig(window.innerWidth) === 'xs' &&
-                            !isShareScreen
-                                ? streamersLength > 2 //trim name only if more then 2 videos on screen
-                                    ? name
-                                    : name
-                                : name}
-                            ${getDeviceConfig(window.innerWidth) === 'xs' //mobile view
-                                ? streamersLength > 2
-                                    ? isShareScreen //display host only for screen share video
-                                        ? ' (Host)'
-                                        : ''
-                                    : isHostStream //display host, Host video
-                                    ? ' (Host)'
-                                    : ''
-                                : isHostStream //not mobile view, defualt state
-                                ? ' (Host)'
-                                : ''}
+                            ${name} ${isHostStream ? ' (Host)' : ''}
                         </div>
                     </div>
                     <div
@@ -394,6 +377,10 @@ export const Video = memo(
                                     onClick=${toggleFullScreen}
                                 >
                                     <${Icon}
+                                        key=${stream &&
+                                        fullScreenedStream.value === stream.id
+                                            ? 'ScreenNormal'
+                                            : 'ScreenFull'}
                                         icon=${stream &&
                                         fullScreenedStream.value === stream.id
                                             ? 'ScreenNormal'
@@ -406,7 +393,8 @@ export const Video = memo(
                                 !isHostStream &&
                                 html`
                                     <${IconButton}
-                                        variant="ghost"
+                                        variant="nothing"
+                                        class="w-[30px] h-[30px] p-0"
                                         onClick=${handleOpenMenu}
                                         ref=${menu}
                                     >
