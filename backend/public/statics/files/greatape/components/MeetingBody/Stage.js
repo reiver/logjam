@@ -393,10 +393,10 @@ export const Video = memo(
                                 !isHostStream &&
                                 html`
                                     <${IconButton}
-                                        variant="nothing"
-                                        class="w-[30px] h-[30px] p-0"
                                         onClick=${handleOpenMenu}
                                         ref=${menu}
+                                        variant="nothing"
+                                        class="w-[30px] h-[30px] p-0"
                                     >
                                         <${Icon}
                                             icon="verticalDots"
