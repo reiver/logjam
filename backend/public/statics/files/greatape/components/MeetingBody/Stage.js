@@ -358,11 +358,11 @@ export const Video = memo(
                 </div>
                 <div
                     class=${clsx(
-                        'h-[48px] absolute top-1 right-1 gap-2 flex justify-center items-center'
+                        'h-[48px] absolute top-1 right-1 gap-0 flex justify-center items-center'
                     )}
                 >
                     ${isUserMuted &&
-                    html` <div>
+                    html` <div class="pr-2">
                         <${Icon}
                             icon="MicrophoneOff"
                             width="20px"
@@ -378,10 +378,15 @@ export const Video = memo(
                         })}
                     >
                         <${IconButton}
+                            class="w-[40px] h-[40px] p-0"
                             variant="nothing"
                             onClick=${toggleFullScreen}
                         >
                             <${Icon}
+                                key=${stream &&
+                                fullScreenedStream.value === stream.id
+                                    ? 'ScreenNormal'
+                                    : 'ScreenFull'}
                                 icon=${stream &&
                                 fullScreenedStream.value === stream.id
                                     ? 'ScreenNormal'
