@@ -331,101 +331,110 @@ export const Video = memo(
                         : ''} rounded-lg"
                 />
                 <div
-                    class="absolute top-4 left-3 flex justify-center items-center"
+                    class="absolute top-0 left-0 flex justify-between w-full px-2 gap-2"
                 >
-                    <div
-                        class="px-4 py-1 bg-black bg-opacity-50 text-white rounded-full text-medium-12"
-                    >
-                        ${name.length > 4 &&
-                        getDeviceConfig(window.innerWidth) === 'xs' &&
-                        !isShareScreen
-                            ? streamersLength > 2 //trim name only if more then 2 videos on screen
-                                ? name.substring(0, 4) + '..'
-                                : name
-                            : name}
-                        ${getDeviceConfig(window.innerWidth) === 'xs' //mobile view
-                            ? streamersLength > 2
-                                ? isShareScreen //display host only for screen share video
+                    <div class="flex truncate justify-center items-center">
+                        <div
+                            class="px-4 py-1 bg-black bg-opacity-50 text-white rounded-full text-medium-12 truncate"
+                        >
+                            ${name.length > 4 &&
+                            getDeviceConfig(window.innerWidth) === 'xs' &&
+                            !isShareScreen
+                                ? streamersLength > 2 //trim name only if more then 2 videos on screen
+                                    ? name
+                                    : name
+                                : name}
+                            ${getDeviceConfig(window.innerWidth) === 'xs' //mobile view
+                                ? streamersLength > 2
+                                    ? isShareScreen //display host only for screen share video
+                                        ? ' (Host)'
+                                        : ''
+                                    : isHostStream //display host, Host video
                                     ? ' (Host)'
                                     : ''
-                                : isHostStream //display host, Host video
+                                : isHostStream //not mobile view, defualt state
                                 ? ' (Host)'
-                                : ''
-                            : isHostStream //not mobile view, defualt state
-                            ? ' (Host)'
-                            : ''}
+                                : ''}
+                        </div>
                     </div>
-                </div>
-                <div
-                    class=${clsx(
-                        'h-[48px] absolute top-1 right-1 gap-0 flex justify-center items-center'
-                    )}
-                >
-                    ${isUserMuted &&
-                    html` <div class="pr-2">
-                        <${Icon}
-                            icon="MicrophoneOff"
-                            width="20px"
-                            height="20px"
-                        />
-                    </div>`}
                     <div
-                        className=${clsx('sm:group-hover:flex sm:hidden', {
-                            'group-hover:flex':
-                                isHover && bottomBarVisible.value,
-                            hidden: !(isHover && bottomBarVisible.value),
-                            flex: menuOpen || isHover,
-                        })}
+                        class=${clsx(
+                            'h-[48px] gap-0 flex justify-center items-center'
+                        )}
                     >
-                        <${IconButton}
-                            class="w-[40px] h-[40px] p-0"
-                            variant="nothing"
-                            onClick=${toggleFullScreen}
-                        >
+                        ${isUserMuted &&
+                        html` <div class="pr-2">
                             <${Icon}
-                                key=${stream &&
-                                fullScreenedStream.value === stream.id
-                                    ? 'ScreenNormal'
-                                    : 'ScreenFull'}
-                                icon=${stream &&
-                                fullScreenedStream.value === stream.id
-                                    ? 'ScreenNormal'
-                                    : 'ScreenFull'}
+                                icon="MicrophoneOff"
                                 width="20px"
                                 height="20px"
                             />
-                        <//>
-                        ${isHost &&
-                        !isHostStream &&
-                        html`
-                            <${IconButton}
-                                variant="ghost"
-                                onClick=${handleOpenMenu}
-                                ref=${menu}
+                        </div>`}
+                        <div
+                            class=${clsx(
+                                'h-[48px] gap-0 flex justify-end items-center flex-grow'
+                            )}
+                        >
+                            <div
+                                className=${clsx(
+                                    'sm:group-hover:flex sm:hidden',
+                                    {
+                                        'group-hover:flex':
+                                            isHover && bottomBarVisible.value,
+                                        hidden: !(
+                                            isHover && bottomBarVisible.value
+                                        ),
+                                        flex: menuOpen || isHover,
+                                    }
+                                )}
                             >
-                                <${Icon}
-                                    icon="verticalDots"
-                                    width="20px"
-                                    height="20px"
-                                />
-
-                                ${menuOpen &&
-                                html`<div
-                                    class="absolute top-full right-0 h-full w-full"
+                                <${IconButton}
+                                    variant="nothing"
+                                    class="w-[30px] h-[30px] p-0"
+                                    onClick=${toggleFullScreen}
                                 >
-                                    <ul
-                                        class="bg-white absolute top-0 right-0 mt-1 -ml-2 text-black rounded-sm p-1"
+                                    <${Icon}
+                                        icon=${stream &&
+                                        fullScreenedStream.value === stream.id
+                                            ? 'ScreenNormal'
+                                            : 'ScreenFull'}
+                                        width="20px"
+                                        height="20px"
+                                    />
+                                <//>
+                                ${isHost &&
+                                !isHostStream &&
+                                html`
+                                    <${IconButton}
+                                        variant="ghost"
+                                        onClick=${handleOpenMenu}
+                                        ref=${menu}
                                     >
-                                        <li
-                                            class="w-full whitespace-nowrap px-4 py-1 rounded-sm bg-black bg-opacity-0 hover:bg-opacity-10"
-                                            onClick=${handleRemoveStream}
+                                        <${Icon}
+                                            icon="verticalDots"
+                                            width="20px"
+                                            height="20px"
+                                        />
+
+                                        ${menuOpen &&
+                                        html`<div
+                                            class="absolute top-full right-0 h-full w-full"
                                         >
-                                            Stop broadcast
-                                        </li>
-                                    </ul>
-                                </div>`}
-                            <//>
-                        `}
+                                            <ul
+                                                class="bg-white absolute top-0 right-0 mt-1 -ml-2 text-black rounded-sm p-1"
+                                            >
+                                                <li
+                                                    class="w-full whitespace-nowrap px-4 py-1 rounded-sm bg-black bg-opacity-0 hover:bg-opacity-10"
+                                                    onClick=${handleRemoveStream}
+                                                >
+                                                    Stop broadcast
+                                                </li>
+                                            </ul>
+                                        </div>`}
+                                    <//>
+                                `}
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
