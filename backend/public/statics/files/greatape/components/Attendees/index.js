@@ -86,12 +86,23 @@ export const Participant = ({ participant }) => {
                     ><span class="text-bold-12 text-gray-3 dark:text-white-f-9"
                         >${participant.name}</span
                     >
-                    ${participant.userId == currentUser.userId ? ' (You)' : ''}
                 </span>
-                ${participant.isHost &&
-                html`<span class="text-gray-1 dark:text-gray-0 text-regular-12"
-                    >Host</span
-                >`}
+                ${participant.userId == currentUser.userId && participant.isHost
+                    ? html`<span
+                          class="text-gray-1 dark:text-gray-0 text-regular-12"
+                          >Host (You)</span
+                      >`
+                    : participant.isHost
+                    ? html`<span
+                          class="text-gray-1 dark:text-gray-0 text-regular-12"
+                          >Host</span
+                      >`
+                    : participant.userId == currentUser.userId
+                    ? html`<span
+                          class="text-gray-1 dark:text-gray-0 text-regular-12"
+                          >You</span
+                      >`
+                    : ''}
             </div>
         </div>
         ${(raisedHand || participant.hasCamera) &&
