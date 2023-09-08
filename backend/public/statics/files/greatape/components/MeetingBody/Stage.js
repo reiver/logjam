@@ -327,9 +327,7 @@ export const Video = memo(
                     playsinline
                     muted="${muted}"
                     className="w-full h-full 
-                    ${isShareScreen && fullScreenedStream.value === stream.id
-                        ? ''
-                        : 'object-cover'}
+                    ${isShareScreen ? '' : 'object-cover'}
                          rounded-lg"
                 />
                 <div
