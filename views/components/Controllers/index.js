@@ -1,6 +1,5 @@
 import { signal } from '@preact/signals';
-import { useState } from 'preact';
-import { clsx } from 'clsx'
+import { clsx } from 'clsx';
 import {
     Icon,
     IconButton,
@@ -9,6 +8,8 @@ import {
     makeDialog,
 } from 'components';
 import { html } from 'htm';
+import { useState } from 'preact';
+import { isMobile } from '../../lib/common.js';
 import {
     currentUser,
     isDebugMode,
@@ -16,7 +17,6 @@ import {
     onStopShareScreen,
     raiseHandMaxLimitReached,
     sparkRTC,
-    statsDataOpen,
     updateUser,
 } from '../../pages/meeting.js';
 
@@ -78,10 +78,12 @@ export const Controllers = () => {
                     updateUser({
                         isStreamming: false,
                         ableToRaiseHand: true,
+                        isMicrophoneOn: true,
+                        isCameraOn: true,
                     });
-                    sparkRTC.value.lowerHand();
+                    sparkRTC.value.leaveStage();
                 },
-                () => { },
+                () => {},
                 {
                     okText: 'Leave the stage',
                     okButtonVariant: 'red',
@@ -89,15 +91,27 @@ export const Controllers = () => {
                 }
             );
         } else {
-            updateUser({
-                isRaisingHand: true,
-                ableToRaiseHand: false,
-            });
-            sparkRTC.value.raiseHand();
-            makeDialog('info', {
-                message: 'Raise hand request has been sent.',
-                icon: 'Check',
-            });
+            if (ableToRaiseHand) {
+                updateUser({
+                    isRaisingHand: true,
+                    ableToRaiseHand: false,
+                });
+                sparkRTC.value.raiseHand();
+                makeDialog('info', {
+                    message: 'Raise hand request has been sent.',
+                    icon: 'Check',
+                });
+            } else {
+                //lower hand
+                updateUser({
+                    isRaisingHand: false,
+                    ableToRaiseHand: true,
+                    ableToRaiseHand: true,
+                    isMicrophoneOn: true,
+                    isCameraOn: true,
+                });
+                sparkRTC.value.lowerHand();
+            }
         }
     };
 
@@ -113,20 +127,21 @@ export const Controllers = () => {
         }
     };
 
-    const toggleBottomSheet = () => { };
+    const toggleBottomSheet = () => {};
 
     if (!showControllers) return null;
     return html`<div class="flex gap-5 py-3 pt-0">
         ${isDebugMode.value &&
         html`<${Tooltip} label="Troubleshoot">
-            <${IconButton}
-                class="hidden sm:flex"
-            >
+            <${IconButton} class="hidden sm:flex">
                 <${Icon} icon="Troubleshoot" />
             <//>
         <//>`}
 
-        <${Tooltip} label=${isMeetingMuted ? 'Listen' : 'Deafen'}>
+        <${Tooltip}
+            key=${isMeetingMuted ? 'Listen' : 'Deafen'}
+            label=${isMeetingMuted ? 'Listen' : 'Deafen'}
+        >
             <${IconButton}
                 variant=${isMeetingMuted && 'danger'}
                 onClick=${toggleMuteMeeting}
@@ -145,6 +160,7 @@ export const Controllers = () => {
         ${isStreamming &&
         isHost &&
         html` <${Tooltip}
+            key=${sharingScreenStream ? 'ShareOff' : 'Share'}
             label="${!sharingScreenStream
                 ? 'Share Screen'
                 : 'Stop Sharing Screen'}"
@@ -159,24 +175,28 @@ export const Controllers = () => {
         <//>`}
         ${((!raiseHandMaxLimitReached.value && !isStreamming) ||
             (isStreamming && !isHost)) &&
-        html`<${Tooltip} label=${isStreamming
-            ? 'Leave the stage'
-            : ableToRaiseHand
+        html`<${Tooltip}
+            key="${isStreamming ? 'OffStage' : 'Hand'}"
+            label=${isStreamming
+                ? 'Leave the stage'
+                : ableToRaiseHand
                 ? 'Raise Hand'
-                : 'Raise hand request has been sent'
-            }>
+                : 'Put Hand Down'}
+        >
             <div>
-						<${IconButton}
-                onClick=${onRaiseHand}
-                variant=${isStreamming && 'danger'}
-                disabled=${!ableToRaiseHand}
-            >
-                <${Icon} icon="${isStreamming ? `OffStage` : `Hand`}" /> <//>
-								<//>
-						</div>`}
+                <${IconButton}
+                    key=${isStreamming ? 'hand' : 'lower-hand'}
+                    onClick=${onRaiseHand}
+                    variant="${(isStreamming || !ableToRaiseHand) && 'danger'}"
+                >
+                    <${Icon} icon="${isStreamming ? 'OffStage' : 'Hand'}" />
+                <//>
+            </div>
+        <//> `}
         ${hasCamera &&
         isStreamming &&
         html` <${Tooltip}
+            key=${!isCameraOn ? 'CameraOff' : 'Camera'}
             label=${!isCameraOn ? 'Turn Camera On' : 'Turn Camera Off'}
         >
             <${IconButton}
@@ -189,9 +209,10 @@ export const Controllers = () => {
         isStreamming &&
         html`
             <${Tooltip}
+                key="${!isMicrophoneOn ? 'MicrophoneOff' : 'Microphone'}"
                 label=${!isMicrophoneOn
-                ? 'Turn Microphone On'
-                : 'Turn Microphone Off'}
+                    ? 'Turn Microphone On'
+                    : 'Turn Microphone Off'}
             >
                 <${IconButton}
                     variant=${!isMicrophoneOn && 'danger'}
@@ -209,7 +230,7 @@ export const Controllers = () => {
             >
                 <${Icon} icon="KebabMenuVertical" />
                 ${attendeesBadge.value &&
-        html`<span
+                html`<span
                     class="absolute z-10 top-[0px] right-[0px] w-[10px] h-[10px] rounded-full bg-red-distructive border dark:border-secondary-1-a border-white-f-9"
                 ></span>`}
             <//>
@@ -225,11 +246,6 @@ export const MoreControllers = () => {
             isMeetingMuted: !isMeetingMuted,
         });
     };
-
-    const isMobile = async () => {
-        return ((window.innerWidth <= 800) && (window.innerHeight <= 600));
-    }
-
 
     const handleShareScreen = async () => {
         if (!sharingScreenStream) {
@@ -250,7 +266,10 @@ export const MoreControllers = () => {
                 <${Icon} icon="Troubleshoot" />
             <//>
         <//>`}
-        <${Tooltip} label=${isMeetingMuted ? 'Listen' : 'Deafen'}>
+        <${Tooltip}
+            key="${isMeetingMuted ? 'VolumeOff' : 'Volume'}"
+            label=${isMeetingMuted ? 'Listen' : 'Deafen'}
+        >
             <${IconButton}
                 variant=${isMeetingMuted && 'danger'}
                 onClick=${toggleMuteMeeting}
@@ -261,6 +280,7 @@ export const MoreControllers = () => {
         ${isStreamming &&
         isHost &&
         html` <${Tooltip}
+            key="${sharingScreenStream ? 'ShareOff' : 'Share'}"
             label="${!sharingScreenStream
                 ? 'Share Screen'
                 : 'Stop Sharing Screen'}"
@@ -269,8 +289,8 @@ export const MoreControllers = () => {
                 variant=${sharingScreenStream && 'danger'}
                 onClick=${handleShareScreen}
                 class=${clsx({
-                    "hidden sm:flex": !isMobile(),
-                    "hidden": isMobile(),
+                    'hidden sm:flex': !isMobile(),
+                    hidden: isMobile(),
                 })}
             >
                 <${Icon} icon="Share${sharingScreenStream ? 'Off' : ''}" />

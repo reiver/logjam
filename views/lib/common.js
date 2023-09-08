@@ -7,6 +7,10 @@ export const Roles = {
     BROADCASTER: 'broadcaster',
 };
 
+export const isMobile = async () => {
+    return window.innerWidth <= 800 && window.innerHeight <= 600;
+};
+
 // TODO: set base url
 export function getWsUrl(host = null) {
     let baseUrl = null;
@@ -47,7 +51,8 @@ export const createBroadcastSpartRTC = (role, props) => {
         startAgain: props.startAgain,
         updateUi: props.updateUi,
         parentDcMessage: props.parentDcMessage,
-        onAudioStatusChange:props.onAudioStatusChange,
+        onAudioStatusChange: props.onAudioStatusChange,
+        userLoweredHand: props.userLoweredHand,
     });
 };
 
@@ -66,6 +71,6 @@ export const createAudienceSpartRTC = (role, props) => {
         startAgain: props.startAgain,
         updateUi: props.updateUi,
         parentDcMessage: props.parentDcMessage,
-        onAudioStatusChange:props.onAudioStatusChange,
+        onAudioStatusChange: props.onAudioStatusChange,
     });
 };
