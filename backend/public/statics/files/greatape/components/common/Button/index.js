@@ -15,7 +15,7 @@ export const Button = ({
             break;
         case 'outline':
             variantClasses =
-                'border dark:border-gray-1 border-secondary-1-a border-inset bg-black bg-opacity-0 hover:bg-opacity-5';
+                'border dark:border-gray-1 border-secondary-1-a border-inset bg-black bg-opacity-0 hover:bg-opacity-5 text-black dark:text-white';
             break;
         case 'solid':
             variantClasses =

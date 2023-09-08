@@ -5,13 +5,38 @@ import App from './App.js';
 
 export const userInteractedWithDom = signal(false);
 
+const events = [
+    'mousedown',
+    'click',
+    'mouseup',
+    'keydown',
+    'keypress',
+    'scroll',
+    'touchstart',
+    'touchend',
+    'touchmove',
+];
+const onInteract = () => {
+    userInteractedWithDom.value = true;
+    events.forEach((event) => {
+        document.removeEventListener(event, onInteract);
+    });
+    if (interval) clearInterval(interval);
+};
+
 const interval = setInterval(() => {
+    if (!navigator.userActivation) {
+        events.forEach((event) => {
+            document.addEventListener(event, onInteract);
+        });
+        clearInterval(interval);
+        return;
+    }
     if (
         navigator.userActivation.isActive &&
         navigator.userActivation.hasBeenActive
     ) {
-        userInteractedWithDom.value = true;
-        clearInterval(interval);
+        onInteract();
     }
 }, 500);
 
