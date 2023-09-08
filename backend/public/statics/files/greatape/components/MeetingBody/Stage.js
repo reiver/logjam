@@ -326,9 +326,11 @@ export const Video = memo(
                     autoplay
                     playsinline
                     muted="${muted}"
-                    className="w-full h-full ${!isShareScreen
-                        ? 'object-cover'
-                        : ''} rounded-lg"
+                    className="w-full h-full 
+                    ${isShareScreen && fullScreenedStream.value === stream.id
+                        ? ''
+                        : 'object-cover'}
+                         rounded-lg"
                 />
                 <div
                     class="absolute top-0 left-0 flex justify-between w-full px-2 gap-2"
