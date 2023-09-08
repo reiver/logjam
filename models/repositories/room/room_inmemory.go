@@ -207,7 +207,9 @@ func (r *roomRepository) InsertMemberToTree(roomId string, memberId uint64, isGo
 	r.rooms[roomId].Lock()
 	defer r.rooms[roomId].Unlock()
 	if r.rooms[roomId].GoldGorilla != nil && isGoldGorilla {
-		panic("man .. do something ...")
+		gid := (*r.rooms[roomId].GoldGorilla).ID
+		go r.RemoveMember(roomId, gid)
+		r.rooms[roomId].GoldGorilla = nil
 	}
 	if r.rooms[roomId].GoldGorilla != nil {
 		(*r.rooms[roomId].GoldGorilla).Children = append((*r.rooms[roomId].GoldGorilla).Children, &models.PeerModel{

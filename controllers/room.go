@@ -54,7 +54,7 @@ func (c *RoomWSController) OnDisconnect(ctx *models.WSContext) {
 		err = c.ggRepo.ResetRoom(ctx.RoomId)
 		if err != nil {
 			c.log(contracts.LError, err.Error())
-			return
+			//return
 		}
 		c.roomRepo.RemoveMember(ctx.RoomId, models.GoldGorillaId)
 	} else {
@@ -70,7 +70,7 @@ func (c *RoomWSController) OnDisconnect(ctx *models.WSContext) {
 					err = c.ggRepo.ResetRoom(ctx.RoomId)
 					if err != nil {
 						c.log(contracts.LError, err.Error())
-						return
+						//return
 					}
 					c.roomRepo.RemoveMember(ctx.RoomId, models.GoldGorillaId)
 					go func() {
