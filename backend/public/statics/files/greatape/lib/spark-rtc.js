@@ -1,4 +1,4 @@
-import { Queue } from './queue.js';
+import { IODevices } from './io-devices.js';
 
 /** Your class description
  *
@@ -891,6 +891,14 @@ export class SparkRTC {
             this.updateTheStatus(`No media device available`);
             throw new Error('No media device available');
         }
+
+        //list
+        const devices = new IODevices();
+        await devices.initDevices();
+        console.log('Audio Input Devices: ', devices.getAudioInputDevices());
+        console.log('Video Input Devices: ', devices.getVideoInputDevices());
+        console.log('Audio Output Devices: ', devices.getAudioOutputDevices());
+
         this.localStream = await navigator.mediaDevices.getUserMedia(
             this.constraints
         );
