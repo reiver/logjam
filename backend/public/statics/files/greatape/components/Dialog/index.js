@@ -31,14 +31,42 @@ export const IOSettingsDialog = ({
                 message: 'Please choose your "Audio output":',
                 title: 'Audio',
             },
-            devices
+            devices,
+            'speaker'
+        );
+    };
+
+    const selectAudioInputDevice = async () => {
+        const io = new IODevices();
+        await io.initDevices();
+        const devices = io.getAudioInputDevices();
+        makeIODevicesDialog(
+            'io-devices',
+            {
+                message: 'Please choose your "Audio input"-Microphone:',
+                title: 'Microphone',
+            },
+            devices,
+            'microphone'
+        );
+    };
+
+    const selectVideoInputDevice = async () => {
+        const io = new IODevices();
+        await io.initDevices();
+        const devices = io.getVideoInputDevices();
+        makeIODevicesDialog(
+            'io-devices',
+            {
+                message: 'Please choose your "Video input":',
+                title: 'Video',
+            },
+            devices,
+            'camera'
         );
     };
     return html` <div class="absolute top-0 left-0 w-full h-full">
-        <div
-            class="z-10 absolute w-full h-full bg-black bg-opacity-60"
-            onClick=${onClose}
-        />
+        <div class="z-10 absolute w-full h-full bg-black bg-opacity-60" />
         <div
             class=${clsx(
                 className,
@@ -57,26 +85,34 @@ export const IOSettingsDialog = ({
             </div>
             <hr class="dark:border-gray-2 border-gray-0 sm:block hidden" />
 
-            <div class="sm:py-4 sm:pt-8 pt:4 py-2 flex pt-4">
+            <div
+                class="sm:py-4 sm:pt-8 pt:4 py-2 flex pt-4 cursor-pointer"
+                onClick=${selectAudioOutputDevice}
+            >
                 <div class="text-left text-bold-12 px-5 flex-1">
                     Audio Output
                 </div>
                 <div
-                    class="text-right text-bold-12 px-5 flex-1 text-gray-1"
-                    onClick=${selectAudioOutputDevice}
+                    class="text-right text-bold-12 px-5 flex-1 text-gray-1 cursor-pointer"
                 >
                     Built-in
                 </div>
             </div>
 
-            <div class="sm:py-4 py-2 flex">
+            <div
+                class="sm:py-4 py-2 flex cursor-pointer"
+                onClick=${selectAudioInputDevice}
+            >
                 <div class="text-left text-bold-12 px-5 flex-1">Microphone</div>
                 <div class="text-right text-bold-12 px-5 flex-1 text-gray-1">
                     Built-in
                 </div>
             </div>
 
-            <div class="sm:py-4 sm:pb-8 py-2 flex pb-4">
+            <div
+                class="sm:py-4 sm:pb-8 py-2 flex pb-4 cursor-pointer"
+                onClick=${selectVideoInputDevice}
+            >
                 <div class="text-left text-bold-12 px-5 flex-1">
                     Video Input
                 </div>
@@ -113,14 +149,30 @@ export const IODevicesDialog = ({
     onClose,
     message: { message, title },
     devices,
+    deviceType,
     className,
     contentClassName,
 }) => {
+    let selectedDeviceIndex = -1;
+    const handleDeviceClick = (index) => {
+        // Check if the clicked device is already selected
+        if (selectedDeviceIndex === index) {
+            // If it's already selected, deselect it by setting the selectedDeviceIndex to -1
+            selectedDeviceIndex = -1;
+        } else {
+            // If it's not selected, select it by setting the selectedDeviceIndex to the clicked index
+            selectedDeviceIndex = index;
+        }
+
+        // Update the radio button's checked attribute based on the selectedDeviceIndex
+        const radioInput = document.getElementById(`device${index}`);
+        if (radioInput) {
+            radioInput.checked = selectedDeviceIndex === index;
+        }
+    };
+
     return html` <div class="absolute top-0 left-0 w-full h-full">
-        <div
-            class="z-10 absolute w-full h-full bg-black bg-opacity-60"
-            onClick=${onClose}
-        />
+        <div class="z-10 absolute w-full h-full bg-black bg-opacity-60" />
         <div
             class=${clsx(
                 className,
@@ -141,21 +193,37 @@ export const IODevicesDialog = ({
             <div
                 class=${clsx(
                     contentClassName,
-                    'text-left text-bold-12 sm:py-8 py-5 p-5'
+                    'text-left text-bold-12 sm:pt-8 pt-5 p-5'
                 )}
                 dangerouslySetInnerHTML=${{ __html: message }}
             ></div>
 
             <form>
-                <div class="sm:py-4 py-2">
+                <div class="sm:pb-4 pb-2">
                     ${devices.map(
-                        (device) => html`
-                            <div class="sm:py-4 py-2 flex">
-                                <div class="text-left text-bold-12 px-5 flex-1">
+                        (device, index) => html`
+                            <div
+                                class="sm:py-4 py-2 flex items-center cursor-pointer"
+                                onClick=${() => handleDeviceClick(index)}
+                            >
+                                <${Icon}
+                                    icon="${(deviceType === 'microphone' &&
+                                        'Microphone') ||
+                                    (deviceType === 'camera' && 'Camera') ||
+                                    (deviceType === 'speaker' && 'Headphone')}"
+                                    class="ml-5"
+                                    width="20px"
+                                    height="20px"
+                                />
+                                <div class="text-left px-2 text-bold-12 flex-1">
                                     ${device.label}
                                 </div>
                                 <label class="flex items-right px-5 flex-0">
-                                    <input type="radio" name="devices" />
+                                    <input
+                                        type="radio"
+                                        name="devices"
+                                        id=${`device${index}`}
+                                    />
                                 </label>
                             </div>
                         `
@@ -525,7 +593,13 @@ export const makePreviewDialog = (
     return id;
 };
 
-export const makeIODevicesDialog = (type, message, devices, options = {}) => {
+export const makeIODevicesDialog = (
+    type,
+    message,
+    devices,
+    deviceType,
+    options = {}
+) => {
     const id = uuidv4();
     const destroy = () => {
         const dialogsTmp = { ...dialogs.value };
@@ -540,6 +614,7 @@ export const makeIODevicesDialog = (type, message, devices, options = {}) => {
             type,
             message,
             devices,
+            deviceType,
             onOk: () => {
                 // onOk && onOk();
                 destroy();
