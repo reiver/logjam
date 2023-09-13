@@ -168,6 +168,7 @@ export const IODevicesDialog = ({
         const radioInput = document.getElementById(`device${index}`);
         if (radioInput) {
             radioInput.checked = selectedDeviceIndex === index;
+            radioInput.style.accentColor = 'black';
         }
     };
 
