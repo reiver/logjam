@@ -12,6 +12,7 @@ import {
     currentUser,
     sparkRTC,
 } from '../../pages/meeting.js';
+import { IODevices } from '../../lib/io-devices.js';
 let timeOut;
 export const bottomBarVisible = signal(true);
 export const fullScreenedStream = signal(null);
@@ -254,8 +255,17 @@ export const Video = memo(
             toggleScreen = null;
         }
 
-        useEffect(() => {
+        useEffect(() => {  
             videoRef.current.srcObject = stream;
+            //set default speaker
+            if (sparkRTC.value.defaultSpeaker) {
+                console.log('Changing speaker');
+                var io = new IODevices();
+                io.attachSinkId(
+                    videoRef.current,
+                    sparkRTC.value.defaultSpeaker
+                );
+            }
         }, [stream]);
 
         useEffect(() => {

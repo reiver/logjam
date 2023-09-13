@@ -9,6 +9,9 @@ import { currentUser, sparkRTC, updateUser } from '../../pages/meeting.js';
 import { IODevices } from '../../lib/io-devices.js';
 
 const dialogs = signal([]);
+var selectedMic = null;
+var selectedSpeaker = null;
+var selectedCamera = null;
 
 export const IOSettingsDialog = ({
     onOk,
@@ -25,6 +28,7 @@ export const IOSettingsDialog = ({
         const io = new IODevices();
         await io.initDevices();
         const devices = io.getAudioOutputDevices();
+        console.log('Devices: ', devices);
         makeIODevicesDialog(
             'io-devices',
             {
@@ -32,7 +36,14 @@ export const IOSettingsDialog = ({
                 title: 'Audio',
             },
             devices,
-            'speaker'
+            'speaker',
+            (device) => {
+                console.log('Audio Device', device);
+                selectedSpeaker = device;
+                const elem = document.getElementById('selectedSpeaker');
+                console.log('selectedSpeaker elem: ', elem);
+                elem.innerHTML = device.label;
+            } //on close
         );
     };
 
@@ -47,7 +58,14 @@ export const IOSettingsDialog = ({
                 title: 'Microphone',
             },
             devices,
-            'microphone'
+            'microphone',
+            (device) => {
+                console.log('Mic Device', device);
+                const elem = document.getElementById('selectedMic');
+                console.log('selectedCamera elem: ', elem);
+                elem.innerHTML = device.label;
+                selectedMic = device;
+            } //on close
         );
     };
 
@@ -62,9 +80,17 @@ export const IOSettingsDialog = ({
                 title: 'Video',
             },
             devices,
-            'camera'
+            'camera',
+            (device) => {
+                console.log('Video Device', device);
+                selectedCamera = device;
+                const elem = document.getElementById('selectedCamera');
+                console.log('selectedCamera elem: ', elem);
+                elem.innerHTML = device.label;
+            } //on close
         );
     };
+
     return html` <div class="absolute top-0 left-0 w-full h-full">
         <div class="z-10 absolute w-full h-full bg-black bg-opacity-60" />
         <div
@@ -93,6 +119,7 @@ export const IOSettingsDialog = ({
                     Audio Output
                 </div>
                 <div
+                    id="selectedSpeaker"
                     class="text-right text-bold-12 px-5 flex-1 text-gray-1 cursor-pointer"
                 >
                     Built-in
@@ -104,7 +131,10 @@ export const IOSettingsDialog = ({
                 onClick=${selectAudioInputDevice}
             >
                 <div class="text-left text-bold-12 px-5 flex-1">Microphone</div>
-                <div class="text-right text-bold-12 px-5 flex-1 text-gray-1">
+                <div
+                    id="selectedMic"
+                    class="text-right text-bold-12 px-5 flex-1 text-gray-1"
+                >
                     Built-in
                 </div>
             </div>
@@ -116,7 +146,10 @@ export const IOSettingsDialog = ({
                 <div class="text-left text-bold-12 px-5 flex-1">
                     Video Input
                 </div>
-                <div class="text-right text-bold-12 px-5 flex-1 text-gray-1">
+                <div
+                    id="selectedCamera"
+                    class="text-right text-bold-12 px-5 flex-1 text-gray-1"
+                >
                     Built-in
                 </div>
             </div>
@@ -137,7 +170,9 @@ export const IOSettingsDialog = ({
                     size="lg"
                     variant="${okButtonVariant}"
                     class="w-full flex-grow-1"
-                    onClick=${onOk}
+                    onClick=${() => {
+                        onOk(selectedMic, selectedCamera, selectedSpeaker);
+                    }}
                     >${okText}<//
                 >
             </div>`}
@@ -169,6 +204,10 @@ export const IODevicesDialog = ({
         if (radioInput) {
             radioInput.checked = selectedDeviceIndex === index;
             radioInput.style.accentColor = 'black';
+            setTimeout(() => {
+                console.log('Selected Device: ', devices[selectedDeviceIndex]);
+                onClose(devices[selectedDeviceIndex]);
+            }, 200);
         }
     };
 
@@ -224,6 +263,7 @@ export const IODevicesDialog = ({
                                         type="radio"
                                         name="devices"
                                         id=${`device${index}`}
+                                        device=${device}
                                     />
                                 </label>
                             </div>
@@ -248,6 +288,9 @@ export const PreviewDialog = ({
     className,
     contentClassName,
 }) => {
+    selectedCamera = null;
+    selectedMic = null;
+    selectedSpeaker = null;
     const videoRef = useRef();
     const { hasCamera, hasMic, isCameraOn, isMicrophoneOn } = currentUser.value;
 
@@ -288,8 +331,25 @@ export const PreviewDialog = ({
                 message: '',
                 title: 'Input and Output Settings',
             },
-            () => {},
-            () => {}
+            async (mic, cam, speaker) => {
+                console.log('mic: ', mic, 'cam: ', cam, 'speaker: ', speaker);
+
+                //now change the Audio, Video and Speaker devices
+                const stream = await sparkRTC.value.changeIODevices(
+                    mic,
+                    cam,
+                    speaker
+                );
+
+                console.log('New Stream: ', stream);
+                videoStream = stream;
+                if (videoRef.current) {
+                    videoRef.current.srcObject = stream;
+                } else {
+                    console.log('No video ref');
+                }
+            }, //ok
+            () => {} //close
         );
     };
 
@@ -599,6 +659,7 @@ export const makeIODevicesDialog = (
     message,
     devices,
     deviceType,
+    onClose,
     options = {}
 ) => {
     const id = uuidv4();
@@ -617,11 +678,10 @@ export const makeIODevicesDialog = (
             devices,
             deviceType,
             onOk: () => {
-                // onOk && onOk();
                 destroy();
             },
-            onClose: () => {
-                // onClose && onClose();
+            onClose: (device) => {
+                onClose && onClose(device);
                 destroy();
             },
             ...options,
@@ -652,8 +712,8 @@ export const makeIOSettingsDialog = (
             type,
             message,
             pointer: !!onClose,
-            onOk: () => {
-                onOk && onOk();
+            onOk: (mic, cam, speaker) => {
+                onOk && onOk(mic, cam, speaker);
                 destroy();
             },
             onClose: () => {
