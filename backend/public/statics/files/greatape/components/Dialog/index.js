@@ -92,7 +92,7 @@ export const IOSettingsDialog = ({
     };
 
     return html` <div class="absolute top-0 left-0 w-full h-full">
-        <div class="z-10 absolute w-full h-full bg-black bg-opacity-60" />
+        <div class="z-20 absolute w-full h-full bg-black bg-opacity-60" />
         <div
             class=${clsx(
                 className,
@@ -212,7 +212,7 @@ export const IODevicesDialog = ({
     };
 
     return html` <div class="absolute top-0 left-0 w-full h-full">
-        <div class="z-10 absolute w-full h-full bg-black bg-opacity-60" />
+        <div class="z-20 absolute w-full h-full bg-black bg-opacity-60" />
         <div
             class=${clsx(
                 className,
