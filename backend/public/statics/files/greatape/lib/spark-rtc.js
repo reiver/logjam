@@ -2481,11 +2481,13 @@ export class SparkRTC {
     getUserMediaWithDevices = async (mic, cam) => {
         try {
             const audioConstraints = {
-                deviceId: mic && mic.deviceId ? { exact: mic.deviceId } : true,
+                deviceId:
+                    mic && mic.deviceId ? { exact: mic.deviceId } : undefined,
             };
 
             const videoConstraints = {
-                deviceId: cam && cam.deviceId ? { exact: cam.deviceId } : true,
+                deviceId:
+                    cam && cam.deviceId ? { exact: cam.deviceId } : undefined,
             };
 
             //close the original stream
