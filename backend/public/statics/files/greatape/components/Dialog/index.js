@@ -38,11 +38,14 @@ export const IOSettingsDialog = ({
             devices,
             'speaker',
             (device) => {
-                console.log('Audio Device', device);
-                selectedSpeaker = device;
-                const elem = document.getElementById('selectedSpeaker');
-                console.log('selectedSpeaker elem: ', elem);
-                elem.innerHTML = device.label;
+                if (device && device.label) {
+                    console.log('Audio Device', device);
+                    selectedSpeaker = device;
+                    const elem = document.getElementById('selectedSpeaker');
+                    console.log('selectedSpeaker elem: ', elem);
+                    elem.innerHTML = '';
+                    elem.innerHTML = device.label;
+                }
             } //on close
         );
     };
@@ -60,11 +63,14 @@ export const IOSettingsDialog = ({
             devices,
             'microphone',
             (device) => {
-                console.log('Mic Device', device);
-                const elem = document.getElementById('selectedMic');
-                console.log('selectedCamera elem: ', elem);
-                elem.innerHTML = device.label;
-                selectedMic = device;
+                if (device && device.label) {
+                    console.log('Mic Device', device);
+                    const elem = document.getElementById('selectedMic');
+                    console.log('selectedCamera elem: ', elem);
+                    elem.innerHTML = '';
+                    elem.innerHTML = device.label;
+                    selectedMic = device;
+                }
             } //on close
         );
     };
@@ -82,11 +88,14 @@ export const IOSettingsDialog = ({
             devices,
             'camera',
             (device) => {
-                console.log('Video Device', device);
-                selectedCamera = device;
-                const elem = document.getElementById('selectedCamera');
-                console.log('selectedCamera elem: ', elem);
-                elem.innerHTML = device.label;
+                if (device && device.label) {
+                    console.log('Video Device', device);
+                    selectedCamera = device;
+                    const elem = document.getElementById('selectedCamera');
+                    console.log('selectedCamera elem: ', elem);
+                    elem.innerHTML = '';
+                    elem.innerHTML = device.label;
+                }
             } //on close
         );
     };
@@ -122,7 +131,30 @@ export const IOSettingsDialog = ({
                     id="selectedSpeaker"
                     class="text-right text-bold-12 px-5 flex-1 text-gray-1 cursor-pointer"
                 >
-                    Built-in
+                    ${(() => {
+                        const elem = document.getElementById('selectedSpeaker');
+
+                        if (elem && elem.innerHTML !== '') {
+                            // innerHTML exists and is not empty or just whitespace
+                            console.log('innerHTML exists:', elem.innerHTML);
+                            if (elem.innerHTML === 'Built-in') {
+                                return elem.innerHTML;
+                            }
+                        } else {
+                            // innerHTML does not exist or is empty/whitespace
+                            console.log(
+                                'innerHTML does not exist or is empty.'
+                            );
+
+                            console.log(
+                                'selectedSpeaker-default: ',
+                                selectedSpeaker
+                            );
+                            return selectedSpeaker && selectedSpeaker.label
+                                ? selectedSpeaker.label
+                                : 'Built-in';
+                        }
+                    })()}
                 </div>
             </div>
 
@@ -135,7 +167,27 @@ export const IOSettingsDialog = ({
                     id="selectedMic"
                     class="text-right text-bold-12 px-5 flex-1 text-gray-1"
                 >
-                    Built-in
+                    ${(() => {
+                        const elem = document.getElementById('selectedMic');
+
+                        if (elem && elem.innerHTML !== '') {
+                            // innerHTML exists and is not empty or just whitespace
+                            console.log('innerHTML exists:', elem.innerHTML);
+                            if (elem.innerHTML === 'Built-in') {
+                                return elem.innerHTML;
+                            }
+                        } else {
+                            // innerHTML does not exist or is empty/whitespace
+                            console.log(
+                                'innerHTML does not exist or is empty.'
+                            );
+
+                            console.log('selectedMic-default: ', selectedMic);
+                            return selectedMic && selectedMic.label
+                                ? selectedMic.label
+                                : 'Built-in';
+                        }
+                    })()}
                 </div>
             </div>
 
@@ -150,7 +202,30 @@ export const IOSettingsDialog = ({
                     id="selectedCamera"
                     class="text-right text-bold-12 px-5 flex-1 text-gray-1"
                 >
-                    Built-in
+                    ${(() => {
+                        const elem = document.getElementById('selectedCamera');
+
+                        if (elem && elem.innerHTML !== '') {
+                            // innerHTML exists and is not empty or just whitespace
+                            console.log('innerHTML exists:', elem.innerHTML);
+                            if (elem.innerHTML === 'Built-in') {
+                                return elem.innerHTML;
+                            }
+                        } else {
+                            // innerHTML does not exist or is empty/whitespace
+                            console.log(
+                                'innerHTML does not exist or is empty.'
+                            );
+
+                            console.log(
+                                'selectedCamera-default: ',
+                                selectedCamera
+                            );
+                            return selectedCamera && selectedCamera.label
+                                ? selectedCamera.label
+                                : 'Built-in';
+                        }
+                    })()}
                 </div>
             </div>
 
@@ -717,6 +792,9 @@ export const makeIOSettingsDialog = (
                 destroy();
             },
             onClose: () => {
+                // selectedCamera = null;
+                // selectedMic = null;
+                // selectedSpeaker = null;
                 onClose && onClose();
                 destroy();
             },
