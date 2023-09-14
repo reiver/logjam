@@ -59,6 +59,12 @@ const itemsWidth = computed(() => {
     return width;
 });
 
+// navigator.mediaDevices.addEventListener('devicechange', function (event) {
+//     navigator.mediaDevices.enumerateDevices().then((devices) => {
+//         sparkRTC.value.onMediaDevicesChange(devices);
+//     });
+// });
+
 export const getVideoWidth = (attendee, index) => {
     if (deviceSize.value === 'xs') {
         let availableHeight = windowHeight.value - topBarBottomBarHeight();
@@ -255,7 +261,7 @@ export const Video = memo(
             toggleScreen = null;
         }
 
-        useEffect(() => {  
+        useEffect(() => {
             videoRef.current.srcObject = stream;
             //set default speaker
             if (sparkRTC.value.defaultSpeaker) {

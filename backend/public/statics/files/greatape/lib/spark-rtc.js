@@ -46,6 +46,8 @@ export class SparkRTC {
     leftMeeting = false;
 
     defaultSpeaker = null;
+    defaultCam = null;
+    defaultMic = null;
 
     userListCallback = null;
     // remoteStreamsQueue = new Queue();
@@ -2512,7 +2514,60 @@ export class SparkRTC {
         if (speaker) {
             this.defaultSpeaker = speaker.deviceId;
         }
+        if (mic) {
+            this.defaultMic = mic;
+        }
+        if (cam) {
+            this.defaultCam = cam;
+        }
         return await this.getUserMediaWithDevices(mic, cam);
+    };
+
+    onMediaDevicesChange = async (devices) => {
+        if (devices) {
+            const audioOutputDevices = devices.filter(
+                (device) => device.kind === 'audiooutput'
+            );
+            const audioInputDevices = devices.filter(
+                (device) => device.kind === 'audioinput'
+            );
+            const videoInputDevices = devices.filter(
+                (device) => device.kind === 'videoinput'
+            );
+
+            //find default Speaker
+            if (audioOutputDevices.length > 0) {
+                const deviceWithDefaultLabel = audioOutputDevices.find(
+                    (device) =>
+                        device.deviceId.toLowerCase().includes('default')
+                );
+                if (deviceWithDefaultLabel) {
+                    this.defaultSpeaker = deviceWithDefaultLabel.deviceId;
+                }
+            }
+
+            //find default MIC
+            if (audioInputDevices.length > 0) {
+                const deviceWithDefaultLabel = audioInputDevices.find(
+                    (device) =>
+                        device.deviceId.toLowerCase().includes('default')
+                );
+                if (deviceWithDefaultLabel) {
+                    this.defaultMic = deviceWithDefaultLabel;
+                }
+            }
+
+            //find default Cam
+            if (videoInputDevices.length > 0) {
+                const deviceWithDefaultLabel = videoInputDevices.find(
+                    (device) =>
+                        device.label.toLowerCase().includes('integrated')
+                );
+                if (deviceWithDefaultLabel) {
+                    this.defaultCam = deviceWithDefaultLabel;
+                }
+            }
+        }
     };
 
     /**
