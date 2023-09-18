@@ -12,6 +12,8 @@ const dialogs = signal([]);
 var selectedMic = null;
 var selectedSpeaker = null;
 var selectedCamera = null;
+const builtInLabel = 'Built-in';
+const builtInThisDevice = 'Built-in (This Device)';
 
 export const IOSettingsDialog = ({
     onOk,
@@ -49,7 +51,7 @@ export const IOSettingsDialog = ({
                             device.label.toLowerCase().includes('integrated')
                         ) {
                             console.log('Setting inner HTML Built in');
-                            elem.innerHTML = 'Built-in';
+                            elem.innerHTML = builtInLabel;
                         } else {
                             console.log('Setting inner HTML Devuice lable');
 
@@ -86,7 +88,7 @@ export const IOSettingsDialog = ({
                             device.label.toLowerCase().includes('default') ||
                             device.label.toLowerCase().includes('integrated')
                         ) {
-                            elem.innerHTML = 'Built-in';
+                            elem.innerHTML = builtInLabel;
                         } else {
                             elem.innerHTML = device.label;
                         }
@@ -120,7 +122,7 @@ export const IOSettingsDialog = ({
                             device.label.toLowerCase().includes('default') ||
                             device.label.toLowerCase().includes('integrated')
                         ) {
-                            elem.innerHTML = 'Built-in';
+                            elem.innerHTML = builtInLabel;
                         } else {
                             elem.innerHTML = device.label;
                         }
@@ -175,8 +177,8 @@ export const IOSettingsDialog = ({
                                     'innerHTML exists:',
                                     elem.innerHTML
                                 );
-                                if (elem.innerHTML === 'Built-in') {
-                                    return 'Built-in';
+                                if (elem.innerHTML === builtInLabel) {
+                                    return builtInLabel;
                                 }
                             }
                         } else {
@@ -199,13 +201,13 @@ export const IOSettingsDialog = ({
                                     labelLowerCase.includes('integrated')
                                 ) {
                                     console.log('returning built in 1');
-                                    return 'Built-in';
+                                    return builtInLabel;
                                 } else {
                                     return selectedSpeaker.label;
                                 }
                             }
                             console.log('returning built in 2');
-                            return 'Built-in';
+                            return builtInLabel;
                         }
                     })()}
                 </div>
@@ -226,7 +228,7 @@ export const IOSettingsDialog = ({
                         if (elem && elem.innerHTML !== '') {
                             // innerHTML exists and is not empty or just whitespace
                             console.log('innerHTML exists:', elem.innerHTML);
-                            if (elem.innerHTML === 'Built-in') {
+                            if (elem.innerHTML === builtInLabel) {
                                 return elem.innerHTML;
                             }
                         } else {
@@ -245,12 +247,12 @@ export const IOSettingsDialog = ({
                                     labelLowerCase.includes('default') ||
                                     labelLowerCase.includes('integrated')
                                 ) {
-                                    return 'Built-in';
+                                    return builtInLabel;
                                 } else {
                                     return selectedMic.label;
                                 }
                             }
-                            return 'Built-in';
+                            return builtInLabel;
                         }
                     })()}
                 </div>
@@ -273,7 +275,7 @@ export const IOSettingsDialog = ({
                         if (elem && elem.innerHTML !== '') {
                             // innerHTML exists and is not empty or just whitespace
                             console.log('innerHTML exists:', elem.innerHTML);
-                            if (elem.innerHTML === 'Built-in') {
+                            if (elem.innerHTML === builtInLabel) {
                                 return elem.innerHTML;
                             }
                         } else {
@@ -295,12 +297,12 @@ export const IOSettingsDialog = ({
                                     labelLowerCase.includes('default') ||
                                     labelLowerCase.includes('integrated')
                                 ) {
-                                    return 'Built-in';
+                                    return builtInLabel;
                                 } else {
                                     return selectedCamera.label;
                                 }
                             }
-                            return 'Built-in';
+                            return builtInLabel;
                         }
                     })()}
                 </div>
@@ -509,7 +511,7 @@ export const IODevicesDialog = ({
                                                 .toLowerCase()
                                                 .includes('integrated')
                                         ) {
-                                            deviceName = 'Built-in';
+                                            deviceName = builtInThisDevice;
                                         } else {
                                             deviceName = device.label;
                                         }
