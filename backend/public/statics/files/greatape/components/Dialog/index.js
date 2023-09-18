@@ -38,14 +38,27 @@ export const IOSettingsDialog = ({
             devices,
             'speaker',
             (device) => {
-                if (device && device.label) {
-                    console.log('Audio Device', device);
-                    selectedSpeaker = device;
-                    const elem = document.getElementById('selectedSpeaker');
-                    console.log('selectedSpeaker elem: ', elem);
-                    elem.innerHTML = '';
-                    elem.innerHTML = device.label;
-                }
+                setTimeout(() => {
+                    if (device && device.label) {
+                        console.log('Audio Device', device);
+                        var elem = document.getElementById('selectedSpeaker');
+                        elem.innerHTML = '';
+                        console.log('selectedSpeaker elem: ', elem);
+                        if (
+                            device.label.toLowerCase().includes('default') ||
+                            device.label.toLowerCase().includes('integrated')
+                        ) {
+                            console.log('Setting inner HTML Built in');
+                            elem.innerHTML = 'Built-in';
+                        } else {
+                            console.log('Setting inner HTML Devuice lable');
+
+                            elem.innerHTML = device.label;
+                        }
+
+                        selectedSpeaker = device;
+                    }
+                }, 50);
             } //on close
         );
     };
@@ -63,14 +76,23 @@ export const IOSettingsDialog = ({
             devices,
             'microphone',
             (device) => {
-                if (device && device.label) {
-                    console.log('Mic Device', device);
-                    const elem = document.getElementById('selectedMic');
-                    console.log('selectedCamera elem: ', elem);
-                    elem.innerHTML = '';
-                    elem.innerHTML = device.label;
-                    selectedMic = device;
-                }
+                setTimeout(() => {
+                    if (device && device.label) {
+                        console.log('Mic Device', device);
+                        const elem = document.getElementById('selectedMic');
+                        console.log('selectedCamera elem: ', elem);
+                        elem.innerHTML = '';
+                        if (
+                            device.label.toLowerCase().includes('default') ||
+                            device.label.toLowerCase().includes('integrated')
+                        ) {
+                            elem.innerHTML = 'Built-in';
+                        } else {
+                            elem.innerHTML = device.label;
+                        }
+                        selectedMic = device;
+                    }
+                }, 50);
             } //on close
         );
     };
@@ -88,17 +110,29 @@ export const IOSettingsDialog = ({
             devices,
             'camera',
             (device) => {
-                if (device && device.label) {
-                    console.log('Video Device', device);
-                    selectedCamera = device;
-                    const elem = document.getElementById('selectedCamera');
-                    console.log('selectedCamera elem: ', elem);
-                    elem.innerHTML = '';
-                    elem.innerHTML = device.label;
-                }
+                setTimeout(() => {
+                    if (device && device.label) {
+                        console.log('Video Device', device);
+                        const elem = document.getElementById('selectedCamera');
+                        console.log('selectedCamera elem: ', elem);
+                        elem.innerHTML = '';
+                        if (
+                            device.label.toLowerCase().includes('default') ||
+                            device.label.toLowerCase().includes('integrated')
+                        ) {
+                            elem.innerHTML = 'Built-in';
+                        } else {
+                            elem.innerHTML = device.label;
+                        }
+
+                        selectedCamera = device;
+                    }
+                }, 50);
             } //on close
         );
     };
+
+    console.log('Resetting..');
 
     return html` <div class="absolute top-0 left-0 w-full h-full">
         <div class="z-20 absolute w-full h-full bg-black bg-opacity-60" />
@@ -134,11 +168,16 @@ export const IOSettingsDialog = ({
                     ${(() => {
                         const elem = document.getElementById('selectedSpeaker');
 
-                        if (elem && elem.innerHTML !== '') {
-                            // innerHTML exists and is not empty or just whitespace
-                            console.log('innerHTML exists:', elem.innerHTML);
-                            if (elem.innerHTML === 'Built-in') {
-                                return elem.innerHTML;
+                        if (elem) {
+                            if (elem.innerHTML !== '') {
+                                // innerHTML exists and is not empty or just whitespace
+                                console.log(
+                                    'innerHTML exists:',
+                                    elem.innerHTML
+                                );
+                                if (elem.innerHTML === 'Built-in') {
+                                    return 'Built-in';
+                                }
                             }
                         } else {
                             // innerHTML does not exist or is empty/whitespace
@@ -150,9 +189,23 @@ export const IOSettingsDialog = ({
                                 'selectedSpeaker-default: ',
                                 selectedSpeaker
                             );
-                            return selectedSpeaker && selectedSpeaker.label
-                                ? selectedSpeaker.label
-                                : 'Built-in';
+
+                            //return device name
+                            if (selectedSpeaker && selectedSpeaker.label) {
+                                const labelLowerCase =
+                                    selectedSpeaker.label.toLowerCase();
+                                if (
+                                    labelLowerCase.includes('default') ||
+                                    labelLowerCase.includes('integrated')
+                                ) {
+                                    console.log('returning built in 1');
+                                    return 'Built-in';
+                                } else {
+                                    return selectedSpeaker.label;
+                                }
+                            }
+                            console.log('returning built in 2');
+                            return 'Built-in';
                         }
                     })()}
                 </div>
@@ -183,9 +236,21 @@ export const IOSettingsDialog = ({
                             );
 
                             console.log('selectedMic-default: ', selectedMic);
-                            return selectedMic && selectedMic.label
-                                ? selectedMic.label
-                                : 'Built-in';
+
+                            //return device name
+                            if (selectedMic && selectedMic.label) {
+                                const labelLowerCase =
+                                    selectedMic.label.toLowerCase();
+                                if (
+                                    labelLowerCase.includes('default') ||
+                                    labelLowerCase.includes('integrated')
+                                ) {
+                                    return 'Built-in';
+                                } else {
+                                    return selectedMic.label;
+                                }
+                            }
+                            return 'Built-in';
                         }
                     })()}
                 </div>
@@ -221,9 +286,21 @@ export const IOSettingsDialog = ({
                                 'selectedCamera-default: ',
                                 selectedCamera
                             );
-                            return selectedCamera && selectedCamera.label
-                                ? selectedCamera.label
-                                : 'Built-in';
+
+                            //return device name
+                            if (selectedCamera && selectedCamera.label) {
+                                const labelLowerCase =
+                                    selectedCamera.label.toLowerCase();
+                                if (
+                                    labelLowerCase.includes('default') ||
+                                    labelLowerCase.includes('integrated')
+                                ) {
+                                    return 'Built-in';
+                                } else {
+                                    return selectedCamera.label;
+                                }
+                            }
+                            return 'Built-in';
                         }
                     })()}
                 </div>
@@ -264,7 +341,35 @@ export const IODevicesDialog = ({
     contentClassName,
 }) => {
     let selectedDeviceIndex = -1;
-    const handleDeviceClick = (index, vanish = true) => {
+    const handleDeviceClick = (index = -1, vanish = true) => {
+        //mark built-in / default devices checked already
+
+        if (index === -1) {
+            devices.forEach((elem, _index) => {
+                if (
+                    deviceType === 'microphone' &&
+                    elem.kind === 'audioinput' &&
+                    elem.label.toLowerCase().includes('default')
+                ) {
+                    index = _index;
+                } else if (
+                    deviceType === 'speaker' &&
+                    elem.kind === 'audiooutput' &&
+                    elem.label.toLowerCase().includes('default')
+                ) {
+                    index = _index;
+                } else if (
+                    deviceType === 'camera' &&
+                    elem.kind === 'videoinput' &&
+                    elem.label.toLowerCase().includes('default')
+                ) {
+                    index = _index;
+                }
+            });
+        }
+
+        // Now, the 'index' variable will contain the index of the matching device (or -1 if none found).
+
         // Check if the clicked device is already selected
         if (selectedDeviceIndex === index) {
             // If it's already selected, deselect it by setting the selectedDeviceIndex to -1
@@ -366,16 +471,51 @@ export const IODevicesDialog = ({
                                 onClick=${() => handleDeviceClick(index)}
                             >
                                 <${Icon}
-                                    icon="${(deviceType === 'microphone' &&
-                                        'Microphone') ||
-                                    (deviceType === 'camera' && 'Camera') ||
-                                    (deviceType === 'speaker' && 'Headphone')}"
+                                    icon="${(() => {
+                                        //return defualt builtin
+                                        if (
+                                            device.label
+                                                .toLowerCase()
+                                                .includes('default') ||
+                                            device.label
+                                                .toLowerCase()
+                                                .includes('integrated')
+                                        ) {
+                                            return 'Smartphone';
+                                        }
+
+                                        //select other then default
+                                        if (deviceType === 'microphone') {
+                                            return 'MicrophoneLight';
+                                        } else if (deviceType === 'camera') {
+                                            return 'CameraLight';
+                                        } else if (deviceType === 'speaker') {
+                                            return 'Headphone';
+                                        }
+                                    })()}"
                                     class="ml-5"
                                     width="20px"
                                     height="20px"
                                 />
                                 <div class="text-left px-2 text-bold-12 flex-1">
-                                    ${device.label}
+                                    ${(() => {
+                                        var deviceName = '';
+
+                                        if (
+                                            device.label
+                                                .toLowerCase()
+                                                .includes('default') ||
+                                            device.label
+                                                .toLowerCase()
+                                                .includes('integrated')
+                                        ) {
+                                            deviceName = 'Built-in';
+                                        } else {
+                                            deviceName = device.label;
+                                        }
+
+                                        return deviceName;
+                                    })()}
                                 </div>
                                 <label class="flex items-right px-5 flex-0">
                                     <input
