@@ -264,7 +264,7 @@ export const IODevicesDialog = ({
     contentClassName,
 }) => {
     let selectedDeviceIndex = -1;
-    const handleDeviceClick = (index) => {
+    const handleDeviceClick = (index, vanish = true) => {
         // Check if the clicked device is already selected
         if (selectedDeviceIndex === index) {
             // If it's already selected, deselect it by setting the selectedDeviceIndex to -1
@@ -274,17 +274,61 @@ export const IODevicesDialog = ({
             selectedDeviceIndex = index;
         }
 
+        console.log('handleDeviceClick: ', index);
         // Update the radio button's checked attribute based on the selectedDeviceIndex
         const radioInput = document.getElementById(`device${index}`);
+        console.log('radioInput: ', radioInput);
         if (radioInput) {
             radioInput.checked = selectedDeviceIndex === index;
             radioInput.style.accentColor = 'black';
-            setTimeout(() => {
-                console.log('Selected Device: ', devices[selectedDeviceIndex]);
-                onClose(devices[selectedDeviceIndex]);
-            }, 200);
+            if (vanish) {
+                setTimeout(() => {
+                    console.log(
+                        'Selected Device: ',
+                        devices[selectedDeviceIndex]
+                    );
+                    onClose(devices[selectedDeviceIndex]);
+                }, 200);
+            }
         }
     };
+
+    //check selected devices and make it selected on radio button too
+    if (devices && devices.length > 0) {
+        devices.forEach((value, index) => {
+            console.log('Device: ', value, ' index: ', index);
+            if (value.kind === 'audioinput') {
+                if (selectedMic && selectedMic.deviceId === value.deviceId) {
+                    console.log('selectedMicis: ', selectedMic);
+                    setTimeout(() => {
+                        handleDeviceClick(index, false);
+                    }, 250);
+                }
+            } else if (value.kind === 'videoinput') {
+                if (
+                    selectedCamera &&
+                    selectedCamera.deviceId === value.deviceId
+                ) {
+                    console.log('selectedCamis: ', selectedCamera);
+
+                    setTimeout(() => {
+                        handleDeviceClick(index, false);
+                    }, 250);
+                }
+            } else if (value.kind === 'audiooutput') {
+                if (
+                    selectedSpeaker &&
+                    selectedSpeaker.deviceId === value.deviceId
+                ) {
+                    console.log('selectedSpeakeris: ', selectedSpeaker);
+
+                    setTimeout(() => {
+                        handleDeviceClick(index, false);
+                    }, 250);
+                }
+            }
+        });
+    }
 
     return html` <div class="absolute top-0 left-0 w-full h-full">
         <div class="z-20 absolute w-full h-full bg-black bg-opacity-60" />
