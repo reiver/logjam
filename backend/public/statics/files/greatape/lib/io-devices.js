@@ -10,6 +10,22 @@ export class IODevices {
         }
     };
 
+    //disply dveices in alert
+    display = () => {
+        console.log('devices: ', this.devices);
+        var str = '';
+
+        this.devices.forEach((device) => {
+            str += '\n';
+            str += device.kind;
+            str += ' : ';
+            str += device.label;
+            str += '\n';
+        });
+
+        console.log('devices: String: ', str);
+        alert(str);
+    };
     //list input audio devices
     getAudioInputDevices = () => {
         var audioInputDevices = [];

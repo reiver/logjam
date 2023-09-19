@@ -129,6 +129,14 @@ export const IOSettingsDialog = ({
         );
     };
 
+    const isIphone = () => {
+        const userAgent = navigator.userAgent;
+        if (userAgent.match(/iPhone|iPad|iPod/i)) {
+            return true;
+        }
+        return false;
+    };
+
     console.log('Resetting..');
 
     return html` <div class="absolute top-0 left-0 w-full h-full">
@@ -150,61 +158,64 @@ export const IOSettingsDialog = ({
                 />
             </div>
             <hr class="dark:border-gray-2 border-gray-0 sm:block hidden" />
-
-            <div
-                class="sm:py-4 sm:pt-8 pt:4 py-2 flex pt-4 cursor-pointer"
-                onClick=${selectAudioOutputDevice}
-            >
-                <div class="text-left text-bold-12 px-5 flex-1">
-                    Audio Output
-                </div>
+            ${!isIphone() &&
+            html`
                 <div
-                    id="selectedSpeaker"
-                    class="text-right text-bold-12 px-5 flex-1 text-gray-1 cursor-pointer"
+                    class="sm:py-4 sm:pt-8 pt:4 py-2 flex pt-4 cursor-pointer"
+                    onClick=${selectAudioOutputDevice}
                 >
-                    ${(() => {
-                        const elem = document.getElementById('selectedSpeaker');
+                    <div class="text-left text-bold-12 px-5 flex-1">
+                        Audio Output
+                    </div>
+                    <div
+                        id="selectedSpeaker"
+                        class="text-right text-bold-12 px-5 flex-1 text-gray-1 cursor-pointer"
+                    >
+                        ${(() => {
+                            const elem =
+                                document.getElementById('selectedSpeaker');
 
-                        if (elem && elem.innerHTML !== '') {
-                            // innerHTML exists and is not empty or just whitespace
-                            console.log(
-                                'Speaker innerHTML exists:',
-                                elem.innerHTML
-                            );
-                            if (
-                                elem.innerHTML
-                                    .toLowerCase()
-                                    .includes(builtInLabel.toLowerCase())
-                            ) {
-                                elem.innerHTML = '';
+                            if (elem && elem.innerHTML !== '') {
+                                // innerHTML exists and is not empty or just whitespace
+                                console.log(
+                                    'Speaker innerHTML exists:',
+                                    elem.innerHTML
+                                );
+                                if (
+                                    elem.innerHTML
+                                        .toLowerCase()
+                                        .includes(builtInLabel.toLowerCase())
+                                ) {
+                                    elem.innerHTML = '';
+                                    return builtInLabel;
+                                }
+                            } else {
+                                // innerHTML does not exist or is empty/whitespace
+                                console.log('Speaker innerHTML not exists');
+
+                                console.log(
+                                    'selectedSpeaker-default: ',
+                                    selectedSpeaker
+                                );
+
+                                //return device name
+                                if (selectedSpeaker && selectedSpeaker.label) {
+                                    const labelLowerCase =
+                                        selectedSpeaker.label.toLowerCase();
+                                    if (labelLowerCase.includes('default')) {
+                                        console.log('returning built in 1');
+                                        return builtInLabel;
+                                    } else {
+                                        return selectedSpeaker.label;
+                                    }
+                                }
+                                console.log('returning built in 2');
                                 return builtInLabel;
                             }
-                        } else {
-                            // innerHTML does not exist or is empty/whitespace
-                            console.log('Speaker innerHTML not exists');
-
-                            console.log(
-                                'selectedSpeaker-default: ',
-                                selectedSpeaker
-                            );
-
-                            //return device name
-                            if (selectedSpeaker && selectedSpeaker.label) {
-                                const labelLowerCase =
-                                    selectedSpeaker.label.toLowerCase();
-                                if (labelLowerCase.includes('default')) {
-                                    console.log('returning built in 1');
-                                    return builtInLabel;
-                                } else {
-                                    return selectedSpeaker.label;
-                                }
-                            }
-                            console.log('returning built in 2');
-                            return builtInLabel;
-                        }
-                    })()}
+                        })()}
+                    </div>
                 </div>
-            </div>
+            `}
 
             <div
                 class="sm:py-4 py-2 flex cursor-pointer"
