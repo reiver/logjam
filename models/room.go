@@ -80,7 +80,8 @@ func (r *RoomModel) GetLevelMembers(level uint, includeAll bool) ([]**PeerModel,
 				if child == nil {
 					continue
 				}
-				if !includeAll && r.Members[child.ID].CanAcceptChild {
+				_, memberExists := r.Members[child.ID]
+				if !includeAll && memberExists && r.Members[child.ID].CanAcceptChild {
 					newList = append(newList, &child)
 				} else if includeAll {
 					newList = append(newList, &child)
