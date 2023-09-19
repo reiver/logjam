@@ -81,7 +81,12 @@ export const IOSettingsDialog = ({
                         const elem = document.getElementById('selectedMic');
                         console.log('selectedCamera elem: ', elem);
                         elem.innerHTML = '';
-                        if (device.label.toLowerCase().includes('default')) {
+                        if (
+                            device.label.toLowerCase().includes('default') ||
+                            device.label
+                                .toLowerCase()
+                                .includes('iphone microphone')
+                        ) {
                             elem.innerHTML = builtInLabel;
                         } else {
                             elem.innerHTML = device.label;
@@ -253,7 +258,10 @@ export const IOSettingsDialog = ({
                             if (selectedMic && selectedMic.label) {
                                 const labelLowerCase =
                                     selectedMic.label.toLowerCase();
-                                if (labelLowerCase.includes('default')) {
+                                if (
+                                    labelLowerCase.includes('default') ||
+                                    labelLowerCase.includes('iphone microphone')
+                                ) {
                                     return builtInLabel;
                                 } else {
                                     return selectedMic.label;
@@ -455,8 +463,15 @@ export const IODevicesDialog = ({
     const isBuiltInDevice = (deviceType, device) => {
         switch (deviceType) {
             case 'speaker':
-            case 'microphone':
                 if (device.label.toLowerCase().includes('default')) {
+                    return true;
+                }
+                break;
+            case 'microphone':
+                if (
+                    device.label.toLowerCase().includes('default') ||
+                    device.label.toLowerCase().includes('iphone microphone')
+                ) {
                     return true;
                 }
                 break;
