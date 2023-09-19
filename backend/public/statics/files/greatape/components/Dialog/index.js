@@ -384,32 +384,35 @@ export const IODevicesDialog = ({
 }) => {
     let selectedDeviceIndex = -1;
     const handleDeviceClick = (index = -1, vanish = true) => {
-        //mark built-in / default devices checked already
+        //mark built-in / default devices checked by defualt on initial load
+        if (index === -1) {
+            devices.forEach((elem, _index) => {
+                if (
+                    deviceType === 'microphone' &&
+                    elem.kind === 'audioinput' &&
+                    (elem.label.toLowerCase().includes('default') ||
+                        elem.label.toLowerCase().includes('iphone microphone'))
+                ) {
+                    index = _index;
+                } else if (
+                    deviceType === 'speaker' &&
+                    elem.kind === 'audiooutput' &&
+                    elem.label.toLowerCase().includes('default')
+                ) {
+                    index = _index;
+                } else if (
+                    deviceType === 'camera' &&
+                    elem.kind === 'videoinput' &&
+                    (elem.label.toLowerCase().includes('default') ||
+                        elem.label.toLowerCase().includes('(') ||
+                        elem.label.toLowerCase().includes('front'))
+                ) {
+                    index = _index;
+                }
+            });
 
-        // if (index === -1) {
-        //     devices.forEach((elem, _index) => {
-        //         if (
-        //             deviceType === 'microphone' &&
-        //             elem.kind === 'audioinput' &&
-        //             elem.label.toLowerCase().includes('default')
-        //         ) {
-        //             index = _index;
-        //         } else if (
-        //             deviceType === 'speaker' &&
-        //             elem.kind === 'audiooutput' &&
-        //             elem.label.toLowerCase().includes('default')
-        //         ) {
-        //             index = _index;
-        //         } else if (
-        //             deviceType === 'camera' &&
-        //             elem.kind === 'videoinput' &&
-        //             (elem.label.toLowerCase().includes('default') ||
-        //                 elem.label.toLowerCase().includes('('))
-        //         ) {
-        //             index = _index;
-        //         }
-        //     });
-        // }
+            console.log('Updated Index: ', index, ' ,value: ', devices[index]);
+        }
 
         // Now, the 'index' variable will contain the index of the matching device (or -1 if none found).
 
@@ -440,6 +443,17 @@ export const IODevicesDialog = ({
             }
         }
     };
+
+    // mark default device selected on inital display
+    setTimeout(() => {
+        if (deviceType === 'speaker' && !selectedSpeaker) {
+            handleDeviceClick(-1, false);
+        } else if (deviceType === 'microphone' && !selectedMic) {
+            handleDeviceClick(-1, false);
+        } else if (deviceType === 'camera' && !selectedCamera) {
+            handleDeviceClick(-1, false);
+        }
+    }, 50);
 
     //check selected devices and make it selected on radio button too
     if (devices && devices.length > 0) {
