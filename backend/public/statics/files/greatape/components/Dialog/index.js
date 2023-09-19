@@ -163,27 +163,92 @@ export const IOSettingsDialog = ({
                 />
             </div>
             <hr class="dark:border-gray-2 border-gray-0 sm:block hidden" />
-            ${!isIphone() &&
-            html`
+
+            <div class="sm:pt-8 pt-4 sm:pb-8 pb-4">
+                ${!isIphone() &&
+                html`
+                    <div
+                        class="sm:py-4 py-2 flex cursor-pointer hover:dark:bg-white hover:dark:bg-opacity-10 hover:bg-gray-500 hover:bg-opacity-10 transition-all"
+                        onClick=${selectAudioOutputDevice}
+                    >
+                        <div class="text-left text-bold-12 px-5 flex-1">
+                            Audio Output
+                        </div>
+                        <div
+                            id="selectedSpeaker"
+                            class="text-right text-bold-12 px-5 flex-1 text-gray-1 cursor-pointer"
+                        >
+                            ${(() => {
+                                const elem =
+                                    document.getElementById('selectedSpeaker');
+
+                                if (elem && elem.innerHTML !== '') {
+                                    // innerHTML exists and is not empty or just whitespace
+                                    console.log(
+                                        'Speaker innerHTML exists:',
+                                        elem.innerHTML
+                                    );
+                                    if (
+                                        elem.innerHTML
+                                            .toLowerCase()
+                                            .includes(
+                                                builtInLabel.toLowerCase()
+                                            )
+                                    ) {
+                                        elem.innerHTML = '';
+                                        return builtInLabel;
+                                    }
+                                } else {
+                                    // innerHTML does not exist or is empty/whitespace
+                                    console.log('Speaker innerHTML not exists');
+
+                                    console.log(
+                                        'selectedSpeaker-default: ',
+                                        selectedSpeaker
+                                    );
+
+                                    //return device name
+                                    if (
+                                        selectedSpeaker &&
+                                        selectedSpeaker.label
+                                    ) {
+                                        const labelLowerCase =
+                                            selectedSpeaker.label.toLowerCase();
+                                        if (
+                                            labelLowerCase.includes('default')
+                                        ) {
+                                            console.log('returning built in 1');
+                                            return builtInLabel;
+                                        } else {
+                                            return selectedSpeaker.label;
+                                        }
+                                    }
+                                    console.log('returning built in 2');
+                                    return builtInLabel;
+                                }
+                            })()}
+                        </div>
+                    </div>
+                `}
+
                 <div
-                    class="sm:py-4 sm:pt-8 pt:4 py-2 flex pt-4 cursor-pointer"
-                    onClick=${selectAudioOutputDevice}
+                    class="sm:py-4 py-2 flex cursor-pointer hover:dark:bg-white hover:dark:bg-opacity-10 hover:bg-gray-500 hover:bg-opacity-10 transition-all"
+                    onClick=${selectAudioInputDevice}
                 >
                     <div class="text-left text-bold-12 px-5 flex-1">
-                        Audio Output
+                        Microphone
                     </div>
                     <div
-                        id="selectedSpeaker"
-                        class="text-right text-bold-12 px-5 flex-1 text-gray-1 cursor-pointer"
+                        id="selectedMic"
+                        class="text-right text-bold-12 px-5 flex-1 text-gray-1"
                     >
                         ${(() => {
-                            const elem =
-                                document.getElementById('selectedSpeaker');
+                            const elem = document.getElementById('selectedMic');
 
                             if (elem && elem.innerHTML !== '') {
                                 // innerHTML exists and is not empty or just whitespace
                                 console.log(
-                                    'Speaker innerHTML exists:',
+                                    'mic innerHTML exists:',
                                     elem.innerHTML
                                 );
                                 if (
@@ -196,137 +261,90 @@ export const IOSettingsDialog = ({
                                 }
                             } else {
                                 // innerHTML does not exist or is empty/whitespace
-                                console.log('Speaker innerHTML not exists');
+                                console.log('mic innerHTML not exists');
 
                                 console.log(
-                                    'selectedSpeaker-default: ',
-                                    selectedSpeaker
+                                    'selectedMic-default: ',
+                                    selectedMic
                                 );
 
                                 //return device name
-                                if (selectedSpeaker && selectedSpeaker.label) {
+                                if (selectedMic && selectedMic.label) {
                                     const labelLowerCase =
-                                        selectedSpeaker.label.toLowerCase();
-                                    if (labelLowerCase.includes('default')) {
-                                        console.log('returning built in 1');
+                                        selectedMic.label.toLowerCase();
+                                    if (
+                                        labelLowerCase.includes('default') ||
+                                        labelLowerCase.includes(
+                                            'iphone microphone'
+                                        )
+                                    ) {
                                         return builtInLabel;
                                     } else {
-                                        return selectedSpeaker.label;
+                                        return selectedMic.label;
                                     }
                                 }
-                                console.log('returning built in 2');
                                 return builtInLabel;
                             }
                         })()}
                     </div>
                 </div>
-            `}
 
-            <div
-                class="sm:py-4 py-2 flex cursor-pointer"
-                onClick=${selectAudioInputDevice}
-            >
-                <div class="text-left text-bold-12 px-5 flex-1">Microphone</div>
                 <div
-                    id="selectedMic"
-                    class="text-right text-bold-12 px-5 flex-1 text-gray-1"
+                    class="sm:py-4 py-2 flex cursor-pointer hover:dark:bg-white hover:dark:bg-opacity-10 hover:bg-gray-500 hover:bg-opacity-10 transition-all"
+                    onClick=${selectVideoInputDevice}
                 >
-                    ${(() => {
-                        const elem = document.getElementById('selectedMic');
+                    <div class="text-left text-bold-12 px-5 flex-1">
+                        Video Input
+                    </div>
+                    <div
+                        id="selectedCamera"
+                        class="text-right text-bold-12 px-5 flex-1 text-gray-1"
+                    >
+                        ${(() => {
+                            const elem =
+                                document.getElementById('selectedCamera');
 
-                        if (elem && elem.innerHTML !== '') {
-                            // innerHTML exists and is not empty or just whitespace
-                            console.log(
-                                'mic innerHTML exists:',
-                                elem.innerHTML
-                            );
-                            if (
-                                elem.innerHTML
-                                    .toLowerCase()
-                                    .includes(builtInLabel.toLowerCase())
-                            ) {
-                                elem.innerHTML = '';
+                            if (elem && elem.innerHTML !== '') {
+                                // innerHTML exists and is not empty or just whitespace
+                                console.log(
+                                    'Cam innerHTML exists:',
+                                    elem.innerHTML
+                                );
+                                if (
+                                    elem.innerHTML
+                                        .toLowerCase()
+                                        .includes(builtInLabel.toLowerCase())
+                                ) {
+                                    elem.innerHTML = '';
+                                    return builtInLabel;
+                                }
+                            } else {
+                                // innerHTML does not exist or is empty/whitespace
+                                console.log('Cam innerHTML not exists');
+
+                                console.log(
+                                    'selectedCamera-default: ',
+                                    selectedCamera
+                                );
+
+                                //return device name
+                                if (selectedCamera && selectedCamera.label) {
+                                    const labelLowerCase =
+                                        selectedCamera.label.toLowerCase();
+                                    if (
+                                        labelLowerCase.includes('default') ||
+                                        labelLowerCase.includes('(') ||
+                                        labelLowerCase.includes('front')
+                                    ) {
+                                        return builtInLabel;
+                                    } else {
+                                        return selectedCamera.label;
+                                    }
+                                }
                                 return builtInLabel;
                             }
-                        } else {
-                            // innerHTML does not exist or is empty/whitespace
-                            console.log('mic innerHTML not exists');
-
-                            console.log('selectedMic-default: ', selectedMic);
-
-                            //return device name
-                            if (selectedMic && selectedMic.label) {
-                                const labelLowerCase =
-                                    selectedMic.label.toLowerCase();
-                                if (
-                                    labelLowerCase.includes('default') ||
-                                    labelLowerCase.includes('iphone microphone')
-                                ) {
-                                    return builtInLabel;
-                                } else {
-                                    return selectedMic.label;
-                                }
-                            }
-                            return builtInLabel;
-                        }
-                    })()}
-                </div>
-            </div>
-
-            <div
-                class="sm:py-4 sm:pb-8 py-2 flex pb-4 cursor-pointer"
-                onClick=${selectVideoInputDevice}
-            >
-                <div class="text-left text-bold-12 px-5 flex-1">
-                    Video Input
-                </div>
-                <div
-                    id="selectedCamera"
-                    class="text-right text-bold-12 px-5 flex-1 text-gray-1"
-                >
-                    ${(() => {
-                        const elem = document.getElementById('selectedCamera');
-
-                        if (elem && elem.innerHTML !== '') {
-                            // innerHTML exists and is not empty or just whitespace
-                            console.log(
-                                'Cam innerHTML exists:',
-                                elem.innerHTML
-                            );
-                            if (
-                                elem.innerHTML
-                                    .toLowerCase()
-                                    .includes(builtInLabel.toLowerCase())
-                            ) {
-                                elem.innerHTML = '';
-                                return builtInLabel;
-                            }
-                        } else {
-                            // innerHTML does not exist or is empty/whitespace
-                            console.log('Cam innerHTML not exists');
-
-                            console.log(
-                                'selectedCamera-default: ',
-                                selectedCamera
-                            );
-
-                            //return device name
-                            if (selectedCamera && selectedCamera.label) {
-                                const labelLowerCase =
-                                    selectedCamera.label.toLowerCase();
-                                if (
-                                    labelLowerCase.includes('default') ||
-                                    labelLowerCase.includes('(') ||
-                                    labelLowerCase.includes('front')
-                                ) {
-                                    return builtInLabel;
-                                } else {
-                                    return selectedCamera.label;
-                                }
-                            }
-                            return builtInLabel;
-                        }
-                    })()}
+                        })()}
+                    </div>
                 </div>
             </div>
 
@@ -523,7 +541,7 @@ export const IODevicesDialog = ({
                     ${devices.map(
                         (device, index) => html`
                             <div
-                                class="sm:py-4 py-2 flex items-center cursor-pointer"
+                                class="sm:py-4 py-2 flex items-center cursor-pointer hover:dark:bg-white hover:dark:bg-opacity-10 hover:bg-gray-500 hover:bg-opacity-10 transition-all"
                                 onClick=${() => handleDeviceClick(index)}
                             >
                                 <${Icon}
