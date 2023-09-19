@@ -114,7 +114,8 @@ export const IOSettingsDialog = ({
                         elem.innerHTML = '';
                         if (
                             device.label.toLowerCase().includes('default') ||
-                            device.label.toLowerCase().includes('(')
+                            device.label.toLowerCase().includes('(') ||
+                            device.label.toLowerCase().includes('front')
                         ) {
                             elem.innerHTML = builtInLabel;
                         } else {
@@ -296,7 +297,8 @@ export const IOSettingsDialog = ({
                                     selectedCamera.label.toLowerCase();
                                 if (
                                     labelLowerCase.includes('default') ||
-                                    labelLowerCase.includes('(')
+                                    labelLowerCase.includes('(') ||
+                                    labelLowerCase.includes('front')
                                 ) {
                                     return builtInLabel;
                                 } else {
