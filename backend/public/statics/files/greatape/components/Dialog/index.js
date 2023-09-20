@@ -186,7 +186,11 @@ export const IOSettingsDialog = ({
                                 const elem =
                                     document.getElementById('selectedSpeaker');
 
-                                if (elem && elem.innerHTML !== '') {
+                                if (
+                                    elem &&
+                                    elem.innerHTML !== '' &&
+                                    selectedSpeaker === null
+                                ) {
                                     // innerHTML exists and is not empty or just whitespace
                                     console.log(
                                         'Speaker innerHTML exists:',
@@ -206,6 +210,9 @@ export const IOSettingsDialog = ({
                                     // innerHTML does not exist or is empty/whitespace
                                     console.log('Speaker innerHTML not exists');
 
+                                    if (elem) {
+                                        elem.innerHTML = '';
+                                    }
                                     console.log(
                                         'selectedSpeaker-default: ',
                                         selectedSpeaker
@@ -249,7 +256,11 @@ export const IOSettingsDialog = ({
                         ${(() => {
                             const elem = document.getElementById('selectedMic');
 
-                            if (elem && elem.innerHTML !== '') {
+                            if (
+                                elem &&
+                                elem.innerHTML !== '' &&
+                                selectedMic === null
+                            ) {
                                 // innerHTML exists and is not empty or just whitespace
                                 console.log(
                                     'mic innerHTML exists:',
@@ -267,6 +278,9 @@ export const IOSettingsDialog = ({
                                 // innerHTML does not exist or is empty/whitespace
                                 console.log('mic innerHTML not exists');
 
+                                if (elem) {
+                                    elem.innerHTML = '';
+                                }
                                 console.log(
                                     'selectedMic-default: ',
                                     selectedMic
@@ -308,7 +322,11 @@ export const IOSettingsDialog = ({
                             const elem =
                                 document.getElementById('selectedCamera');
 
-                            if (elem && elem.innerHTML !== '') {
+                            if (
+                                elem &&
+                                elem.innerHTML !== '' &&
+                                selectedCamera === null
+                            ) {
                                 // innerHTML exists and is not empty or just whitespace
                                 console.log(
                                     'Cam innerHTML exists:',
@@ -325,6 +343,10 @@ export const IOSettingsDialog = ({
                             } else {
                                 // innerHTML does not exist or is empty/whitespace
                                 console.log('Cam innerHTML not exists');
+
+                                if (elem) {
+                                    elem.innerHTML = '';
+                                }
 
                                 console.log(
                                     'selectedCamera-default: ',
