@@ -30,7 +30,7 @@ export const IOSettingsDialog = ({
         const io = new IODevices();
         await io.initDevices();
         const devices = io.getAudioOutputDevices();
-        console.log('Devices: ', devices);
+        console.log('Audio Output Devices: ', devices);
         makeIODevicesDialog(
             'io-devices',
             {
@@ -66,6 +66,8 @@ export const IOSettingsDialog = ({
         const io = new IODevices();
         await io.initDevices();
         const devices = io.getAudioInputDevices();
+        console.log('Audio Input Devices: ', devices);
+
         makeIODevicesDialog(
             'io-devices',
             {
@@ -102,6 +104,8 @@ export const IOSettingsDialog = ({
         const io = new IODevices();
         await io.initDevices();
         const devices = io.getVideoInputDevices();
+        console.log('Video Input Devices: ', devices);
+
         makeIODevicesDialog(
             'io-devices',
             {

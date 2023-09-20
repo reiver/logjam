@@ -11,11 +11,11 @@ export class IODevices {
     };
 
     //disply dveices in alert
-    display = () => {
-        console.log('devices: ', this.devices);
+    display = (_devices) => {
+        console.log('devices: ', _devices);
         var str = '';
 
-        this.devices.forEach((device) => {
+        _devices.forEach((device) => {
             str += '\n';
             str += device.kind;
             str += ' : ';
@@ -35,6 +35,30 @@ export class IODevices {
             }
         });
 
+        //Rearrange Devices
+
+        //iphone microphone
+        //default
+        audioInputDevices = audioInputDevices.sort((a, b) => {
+            if (
+                (a.label.toLowerCase().includes('default') ||
+                    a.label.toLowerCase().includes('iphone microphone')) &&
+                (!b.label.toLowerCase().includes('default') ||
+                    !b.label.toLowerCase().includes('iphone microphone'))
+            ) {
+                return -1; // "a" comes before "b"
+            } else if (
+                (!a.label.toLowerCase().includes('default') ||
+                    !a.label.toLowerCase().includes('iphone microphone')) &&
+                (b.label.toLowerCase().includes('default') ||
+                    b.label.toLowerCase().includes('iphone microphone'))
+            ) {
+                return 1; // "b" comes before "a"
+            } else {
+                return 0; // No change in order
+            }
+        });
+
         return audioInputDevices;
     };
 
@@ -47,6 +71,36 @@ export class IODevices {
             }
         });
 
+        //Rearrange Devices
+
+        //front
+        // (
+        //default
+
+        videoInputDevices.sort((a, b) => {
+            if (
+                (a.label.toLowerCase().includes('default') ||
+                    a.label.toLowerCase().includes('front') ||
+                    a.label.toLowerCase().includes('(')) &&
+                (!b.label.toLowerCase().includes('default') ||
+                    !b.label.toLowerCase().includes('front') ||
+                    !b.label.toLowerCase().includes('('))
+            ) {
+                return -1; // "a" comes before "b"
+            } else if (
+                (!a.label.toLowerCase().includes('default') ||
+                    !a.label.toLowerCase().includes('front') ||
+                    !a.label.toLowerCase().includes('(')) &&
+                (b.label.toLowerCase().includes('default') ||
+                    b.label.toLowerCase().includes('front') ||
+                    b.label.toLowerCase().includes('('))
+            ) {
+                return 1; // "b" comes before "a"
+            } else {
+                return 0; // No change in order
+            }
+        });
+
         return videoInputDevices;
     };
 
@@ -56,6 +110,24 @@ export class IODevices {
         this.devices.forEach((device) => {
             if (device.kind === 'audiooutput') {
                 audioOutputDevices.push(device);
+            }
+        });
+
+        //Rearrange Devices
+        //default
+        audioOutputDevices.sort((a, b) => {
+            if (
+                a.label.toLowerCase().includes('default') &&
+                !b.label.toLowerCase().includes('default')
+            ) {
+                return -1; // "a" comes before "b"
+            } else if (
+                !a.label.toLowerCase().includes('default') &&
+                b.label.toLowerCase().includes('default')
+            ) {
+                return 1; // "b" comes before "a"
+            } else {
+                return 0; // No change in order
             }
         });
 
