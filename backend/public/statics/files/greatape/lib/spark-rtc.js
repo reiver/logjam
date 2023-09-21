@@ -1,4 +1,4 @@
-import { Queue } from './queue.js';
+import { IODevices } from './io-devices.js';
 
 /** Your class description
  *
@@ -44,6 +44,10 @@ export class SparkRTC {
     parentDC = true;
     broadcasterDC = true;
     leftMeeting = false;
+
+    defaultSpeaker = null;
+    defaultCam = null;
+    defaultMic = null;
 
     userListCallback = null;
     // remoteStreamsQueue = new Queue();
@@ -891,6 +895,7 @@ export class SparkRTC {
             this.updateTheStatus(`No media device available`);
             throw new Error('No media device available');
         }
+
         this.localStream = await navigator.mediaDevices.getUserMedia(
             this.constraints
         );
@@ -1459,129 +1464,133 @@ export class SparkRTC {
                 }
 
                 const videoTrack = stream.getVideoTracks()[0];
-                videoTrack.onended = (event) => {
-                    this.updateTheStatus('track Ended', event);
+                if (videoTrack) {
+                    videoTrack.onended = (event) => {
+                        this.updateTheStatus('track Ended', event);
 
-                    if (this.firefoxAgent || this.safariAgent) {
-                        this.updateTheStatus(`onremovetrack `, event);
-                        this.updateTheStatus(`currentTarget `, stream);
+                        if (this.firefoxAgent || this.safariAgent) {
+                            this.updateTheStatus(`onremovetrack `, event);
+                            this.updateTheStatus(`currentTarget `, stream);
 
-                        this.updateTheStatus(
-                            `[newPeerConnectionInstance] stream.oninactive ${JSON.stringify(
+                            this.updateTheStatus(
+                                `[newPeerConnectionInstance] stream.oninactive ${JSON.stringify(
+                                    event
+                                )}`
+                            );
+                            this.updateTheStatus(
+                                `[stream.oninactive] event `,
                                 event
-                            )}`
-                        );
-                        this.updateTheStatus(
-                            `[stream.oninactive] event `,
-                            event
-                        );
-                        this.updateTheStatus(
-                            `targetTracks`,
-                            stream.getTracks()
-                        );
+                            );
+                            this.updateTheStatus(
+                                `targetTracks`,
+                                stream.getTracks()
+                            );
 
-                        this.remoteStreamNotified = false;
+                            this.remoteStreamNotified = false;
 
-                        const theEventStream = stream;
-                        const trackIds = theEventStream
-                            .getTracks()
-                            .map((t) => t.id);
+                            const theEventStream = stream;
+                            const trackIds = theEventStream
+                                .getTracks()
+                                .map((t) => t.id);
 
-                        for (const userId in this.myPeerConnectionArray) {
-                            const apeerConnection =
-                                this.myPeerConnectionArray[userId];
-                            //if (!apeerConnection.isAdience) continue;
-                            const allSenders = apeerConnection.getSenders();
-                            for (const sender of allSenders) {
-                                if (!sender.track) continue;
-                                this.updateTheStatus(
-                                    `the streamId`,
-                                    this.trackToStreamMap[sender.track.id]
-                                );
-                                if (
-                                    this.trackToStreamMap[sender.track.id] ===
-                                    theEventStream.id
-                                ) {
-                                    try {
-                                        apeerConnection.removeTrack(sender);
-                                        // delete this.trackToStreamMap[sender.track.id];
-                                    } catch (e) {
-                                        this.updateTheStatus(e);
+                            for (const userId in this.myPeerConnectionArray) {
+                                const apeerConnection =
+                                    this.myPeerConnectionArray[userId];
+                                //if (!apeerConnection.isAdience) continue;
+                                const allSenders = apeerConnection.getSenders();
+                                for (const sender of allSenders) {
+                                    if (!sender.track) continue;
+                                    this.updateTheStatus(
+                                        `the streamId`,
+                                        this.trackToStreamMap[sender.track.id]
+                                    );
+                                    if (
+                                        this.trackToStreamMap[
+                                            sender.track.id
+                                        ] === theEventStream.id
+                                    ) {
+                                        try {
+                                            apeerConnection.removeTrack(sender);
+                                            // delete this.trackToStreamMap[sender.track.id];
+                                        } catch (e) {
+                                            this.updateTheStatus(e);
+                                        }
                                     }
                                 }
                             }
-                        }
 
-                        this.updateTheStatus(
-                            `indx`,
-                            this.remoteStreams.indexOf(theEventStream)
-                        );
+                            this.updateTheStatus(
+                                `indx`,
+                                this.remoteStreams.indexOf(theEventStream)
+                            );
 
-                        //remove the event stream from remotestreamslist
-                        this.remoteStreams.forEach((stream) => {
-                            if (stream.id === theEventStream.id) {
-                                this.updateTheStatus(`ids matched`);
+                            //remove the event stream from remotestreamslist
+                            this.remoteStreams.forEach((stream) => {
+                                if (stream.id === theEventStream.id) {
+                                    this.updateTheStatus(`ids matched`);
 
-                                let newArray = this.remoteStreams.filter(
-                                    (str) => str !== stream
-                                );
-
-                                this.remoteStreams = newArray;
-                            }
-                        });
-
-                        //print remote stream array
-                        if (this.remoteStreams.length > 0) {
-                            for (
-                                var i = 0;
-                                i < this.remoteStreams.length;
-                                i++
-                            ) {
-                                this.updateTheStatus(
-                                    `RemoteStreamsList-1`,
-                                    this.remoteStreams[i]
-                                );
-                            }
-                        }
-
-                        if (
-                            this.parentStreamId &&
-                            this.parentStreamId === theEventStream.id
-                        ) {
-                            if (this.remoteStreamDCCallback) {
-                                this.remoteStreams.forEach((strm) => {
-                                    this.remoteStreamDCCallback(strm);
-                                });
-                            }
-                            this.parentStreamId = undefined;
-                            this.parentDC = true;
-                        }
-                        if (this.remoteStreamDCCallback) {
-                            try {
-                                this.remoteStreamDCCallback(stream);
-                            } catch {}
-                        }
-
-                        this.removeFromRaiseHandList(target);
-
-                        //check meeting status and close socket
-                        if (this.leftMeeting) {
-                            //close websocket
-                            if (this.socket) {
-                                this.socket.onclose = () => {
-                                    this.updateTheStatus(
-                                        `socket is closed after leaveMeeting`
+                                    let newArray = this.remoteStreams.filter(
+                                        (str) => str !== stream
                                     );
-                                    this.resetVariables(true);
-                                }; //empty on close callback
-                                this.socket.close();
-                                this.socket = null;
 
-                                return;
+                                    this.remoteStreams = newArray;
+                                }
+                            });
+
+                            //print remote stream array
+                            if (this.remoteStreams.length > 0) {
+                                for (
+                                    var i = 0;
+                                    i < this.remoteStreams.length;
+                                    i++
+                                ) {
+                                    this.updateTheStatus(
+                                        `RemoteStreamsList-1`,
+                                        this.remoteStreams[i]
+                                    );
+                                }
+                            }
+
+                            if (
+                                this.parentStreamId &&
+                                this.parentStreamId === theEventStream.id
+                            ) {
+                                if (this.remoteStreamDCCallback) {
+                                    this.remoteStreams.forEach((strm) => {
+                                        this.remoteStreamDCCallback(strm);
+                                    });
+                                }
+                                this.parentStreamId = undefined;
+                                this.parentDC = true;
+                            }
+                            if (this.remoteStreamDCCallback) {
+                                try {
+                                    this.remoteStreamDCCallback(stream);
+                                } catch {}
+                            }
+
+                            this.removeFromRaiseHandList(target);
+
+                            //check meeting status and close socket
+                            if (this.leftMeeting) {
+                                //close websocket
+                                if (this.socket) {
+                                    this.socket.onclose = () => {
+                                        this.updateTheStatus(
+                                            `socket is closed after leaveMeeting`
+                                        );
+                                        this.resetVariables(true);
+                                    }; //empty on close callback
+                                    this.socket.close();
+                                    this.socket = null;
+
+                                    return;
+                                }
                             }
                         }
-                    }
-                };
+                    };
+                }
+
                 //callback to detect stream inactive status for Chrome, Edge
                 stream.oninactive = (event) => {
                     this.updateTheStatus(`oninactive called`);
@@ -2469,6 +2478,96 @@ export class SparkRTC {
 
         this.updateTheStatus(`Start as audience`);
         return this.startReadingBroadcast();
+    };
+
+    getUserMediaWithDevices = async (mic, cam) => {
+        try {
+            const audioConstraints = {
+                deviceId:
+                    mic && mic.deviceId ? { exact: mic.deviceId } : undefined,
+            };
+
+            const videoConstraints = {
+                deviceId:
+                    cam && cam.deviceId ? { exact: cam.deviceId } : undefined,
+            };
+
+            //close the original stream
+            if (this.localStream) {
+                this.localStream.getTracks().forEach((track) => {
+                    track.stop();
+                });
+            }
+
+            this.localStream = await navigator.mediaDevices.getUserMedia({
+                audio: audioConstraints,
+                video: videoConstraints,
+            });
+
+            console.log('new LocalStream: ', this.localStream);
+            return this.localStream;
+        } catch (e) {
+            console.error(e);
+        }
+    };
+    changeIODevices = async (mic, cam, speaker) => {
+        if (speaker) {
+            this.defaultSpeaker = speaker.deviceId;
+        }
+        if (mic) {
+            this.defaultMic = mic;
+        }
+        if (cam) {
+            this.defaultCam = cam;
+        }
+        return await this.getUserMediaWithDevices(mic, cam);
+    };
+
+    onMediaDevicesChange = async (devices) => {
+        if (devices) {
+            const audioOutputDevices = devices.filter(
+                (device) => device.kind === 'audiooutput'
+            );
+            const audioInputDevices = devices.filter(
+                (device) => device.kind === 'audioinput'
+            );
+            const videoInputDevices = devices.filter(
+                (device) => device.kind === 'videoinput'
+            );
+
+            //find default Speaker
+            if (audioOutputDevices.length > 0) {
+                const deviceWithDefaultLabel = audioOutputDevices.find(
+                    (device) =>
+                        device.deviceId.toLowerCase().includes('default')
+                );
+                if (deviceWithDefaultLabel) {
+                    this.defaultSpeaker = deviceWithDefaultLabel.deviceId;
+                }
+            }
+
+            //find default MIC
+            if (audioInputDevices.length > 0) {
+                const deviceWithDefaultLabel = audioInputDevices.find(
+                    (device) =>
+                        device.deviceId.toLowerCase().includes('default')
+                );
+                if (deviceWithDefaultLabel) {
+                    this.defaultMic = deviceWithDefaultLabel;
+                }
+            }
+
+            //find default Cam
+            if (videoInputDevices.length > 0) {
+                const deviceWithDefaultLabel = videoInputDevices.find(
+                    (device) =>
+                        device.label.toLowerCase().includes('integrated')
+                );
+                if (deviceWithDefaultLabel) {
+                    this.defaultCam = deviceWithDefaultLabel;
+                }
+            }
+        }
     };
 
     /**

@@ -12,6 +12,7 @@ import {
     currentUser,
     sparkRTC,
 } from '../../pages/meeting.js';
+import { IODevices } from '../../lib/io-devices.js';
 let timeOut;
 export const bottomBarVisible = signal(true);
 export const fullScreenedStream = signal(null);
@@ -57,6 +58,12 @@ const itemsWidth = computed(() => {
 
     return width;
 });
+
+// navigator.mediaDevices.addEventListener('devicechange', function (event) {
+//     navigator.mediaDevices.enumerateDevices().then((devices) => {
+//         sparkRTC.value.onMediaDevicesChange(devices);
+//     });
+// });
 
 export const getVideoWidth = (attendee, index) => {
     if (deviceSize.value === 'xs') {
@@ -256,6 +263,15 @@ export const Video = memo(
 
         useEffect(() => {
             videoRef.current.srcObject = stream;
+            //set default speaker
+            if (sparkRTC.value.defaultSpeaker) {
+                console.log('Changing speaker');
+                var io = new IODevices();
+                io.attachSinkId(
+                    videoRef.current,
+                    sparkRTC.value.defaultSpeaker
+                );
+            }
         }, [stream]);
 
         useEffect(() => {
