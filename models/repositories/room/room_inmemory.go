@@ -302,6 +302,41 @@ func (r *roomRepository) SetRoomMetaData(roomId string, metaData map[string]any)
 	r.rooms[roomId].MetaData = metaData
 	return nil
 }
+func (r *roomRepository) AddMessageToHistory(roomId string, senderId uint64, msg string) error {
+	r.Lock()
+	defer r.Unlock()
+	if !r.doesRoomExists(roomId) {
+		return errors.New("room doesn't exists")
+	}
+
+	r.rooms[roomId].Lock()
+	defer r.rooms[roomId].Unlock()
+
+	if _, exists := r.rooms[roomId].MetaData[models.RoomMessagesMetaDataKey]; !exists {
+		r.rooms[roomId].MetaData[models.RoomMessagesMetaDataKey] = []dto.UserMessageModel{}
+	}
+	lastMessages := r.rooms[roomId].MetaData[models.RoomMessagesMetaDataKey].([]dto.UserMessageModel)
+	r.rooms[roomId].MetaData[models.RoomMessagesMetaDataKey] = append(lastMessages, dto.UserMessageModel{
+		Message:  msg,
+		SenderId: senderId,
+	})
+
+	return nil
+}
+
+func (r *roomRepository) ClearMessageHistory(roomId string) error {
+	r.Lock()
+	defer r.Unlock()
+	if !r.doesRoomExists(roomId) {
+		return errors.New("room doesn't exists")
+	}
+
+	r.rooms[roomId].Lock()
+	defer r.rooms[roomId].Unlock()
+
+	r.rooms[roomId].MetaData[models.RoomMessagesMetaDataKey] = []dto.UserMessageModel{}
+	return nil
+}
 
 func (r *roomRepository) GetRoomMetaData(roomId string) (map[string]any, error) {
 	r.Lock()

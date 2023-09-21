@@ -4,4 +4,6 @@ var (
 	GoldGorillaId uint64 = 18446744073709551615
 )
 
-const ()
+const (
+	RoomMessagesMetaDataKey string = "messages"
+)

@@ -162,6 +162,11 @@ func (r *roomWSRouter) handleEvent(ctx *models.WSContext) {
 			r.roomCtrl.ReconnectChildren(ctx)
 			break
 		}
+	case "send-message":
+		{
+			r.roomCtrl.SendMessage(ctx)
+			break
+		}
 	default:
 		{
 			room, err := r.roomRepo.GetRoom(ctx.RoomId)

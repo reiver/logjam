@@ -85,6 +85,24 @@ func (c *RoomWSController) OnDisconnect(ctx *models.WSContext) {
 			}
 		}
 	}
+	membersIdList, err := c.roomRepo.GetAllMembersId(ctx.RoomId, false)
+	if err != nil {
+		c.log(contracts.LError, err.Error())
+		return
+	}
+	if len(membersIdList) == 0 {
+		err = c.roomRepo.ClearMessageHistory(ctx.RoomId)
+		if err != nil {
+			c.log(contracts.LError, err.Error())
+		}
+	} else if len(membersIdList) == 1 {
+		if membersIdList[0] == models.GoldGorillaId {
+			err = c.roomRepo.ClearMessageHistory(ctx.RoomId)
+			if err != nil {
+				c.log(contracts.LError, err.Error())
+			}
+		}
+	}
 }
 
 func (c *RoomWSController) Start(ctx *models.WSContext) {
@@ -303,6 +321,10 @@ func (c *RoomWSController) MetadataSet(ctx *models.WSContext) {
 		c.log(contracts.LError, err.Error())
 		return
 	}
+	if _, exists := metaData[models.RoomMessagesMetaDataKey]; exists {
+		c.socketSVC.Send(map[string]string{"error": "can't overwrite message history"}, ctx.SocketID)
+		return
+	}
 	err = c.roomRepo.SetRoomMetaData(ctx.RoomId, metaData)
 	if err != nil {
 		c.log(contracts.LError, err.Error())
@@ -400,6 +422,27 @@ func (c *RoomWSController) ReconnectChildren(ctx *models.WSContext) {
 		Data: strconv.FormatUint(ctx.SocketID, 10),
 	}
 	_ = c.socketSVC.Send(event, childrenIdList...)
+}
+
+func (c *RoomWSController) SendMessage(ctx *models.WSContext) {
+	membersIdList, err := c.roomRepo.GetAllMembersId(ctx.RoomId, false)
+	if err != nil {
+		c.log(contracts.LError, err.Error())
+		_ = c.socketSVC.Send(map[string]string{"error": "error getting members list"}, ctx.SocketID)
+		return
+	}
+	_ = c.socketSVC.Send(models.MessageContract{
+		Type:   "new-message",
+		Data:   ctx.ParsedMessage.Data,
+		Target: "",
+		Name:   strconv.FormatUint(ctx.SocketID, 10),
+	}, membersIdList...)
+	err = c.roomRepo.AddMessageToHistory(ctx.RoomId, ctx.SocketID, ctx.ParsedMessage.Data)
+	if err != nil {
+		c.log(contracts.LError, err.Error())
+		return
+	}
+
 }
 
 func (c *RoomWSController) SendOfferToAN(ctx *models.WSContext) {

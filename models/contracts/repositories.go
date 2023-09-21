@@ -23,6 +23,8 @@ type IRoomRepository interface {
 	RemoveMember(roomId string, memberId uint64) (wasBroadcaster bool, nodeChildrenIdList []uint64, err error)
 	SetRoomMetaData(roomId string, metaData map[string]any) error
 	GetRoomMetaData(roomId string) (map[string]any, error)
+	AddMessageToHistory(roomId string, senderId uint64, msg string) error
+	ClearMessageHistory(roomId string) error
 	GetUserByStreamId(roomId string, streamId string) (*models.MemberModel, error)
 	IsBroadcaster(roomId string, id uint64) (bool, error)
 	GetMembersList(roomId string) ([]dto.MemberDTO, error)
