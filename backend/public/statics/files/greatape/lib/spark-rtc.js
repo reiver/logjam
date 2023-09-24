@@ -18,6 +18,7 @@ export class SparkRTC {
     remoteStreamNotified = false;
     remoteStreams = [];
     socket;
+    audienceRoleAssigned = false;
     myName = 'NoName';
     roomName = 'SparkRTC';
     myUsername = 'NoUsername';
@@ -370,6 +371,9 @@ export class SparkRTC {
                 break;
             case 'role':
                 this.updateTheStatus(`[handleMessage] role:`, msg);
+                if (msg.data === 'yes:audience') {
+                    this.audienceRoleAssigned = true;
+                }
                 if (this.role === this.Roles.BROADCAST) {
                     if (msg.data === 'no:broadcast') {
                         alert('You are not a broadcaster anymore!');
@@ -992,12 +996,26 @@ export class SparkRTC {
             this.updateTheStatus(`Request Audience Role`);
 
             if (await this.checkSocketStatus()) {
+                //save request status
+                this.audienceRoleAssigned = false;
+
                 this.socket.send(
                     JSON.stringify({
                         type: 'role',
                         data: this.Roles.AUDIENCE,
                     })
                 );
+
+                setTimeout(async () => {
+                    console.log(
+                        'audienceRoleAssigned: ',
+                        this.audienceRoleAssigned
+                    );
+
+                    if (!this.audienceRoleAssigned) {
+                        this.handleUnExpectedError();
+                    }
+                }, 10000);
             }
 
             this.updateTheStatus(`[startReadingBroadcast] send role audience`);
@@ -1006,6 +1024,11 @@ export class SparkRTC {
         }
     };
 
+    handleUnExpectedError = async () => {
+        if (this.unExpectedError) this.unExpectedError(); //show unexpected error message and reload
+        await this.wait();
+        window.location.reload();
+    };
     /**
      * Function to request to broadcast video
      *
@@ -3063,7 +3086,7 @@ export class SparkRTC {
         this.parentDcMessage = options.parentDcMessage;
         this.onAudioStatusChange = options.onAudioStatusChange;
         this.userLoweredHand = options.userLoweredHand;
-
+        this.unExpectedError = options.unExpectedError;
         this.checkBrowser(); //detect browser
         this.getSupportedCodecs();
     }
