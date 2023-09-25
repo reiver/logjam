@@ -515,6 +515,13 @@ const Meeting = () => {
                         ableToRaiseHand: true,
                     });
                 },
+                unExpectedError: () => {
+                    makeDialog('info', {
+                        message: `An unexpected error occured. please wait some seconds to reconnect again.`,
+                        icon: 'Close',
+                        variant: 'danger',
+                    });
+                },
                 parentDcMessage: () => {
                     makeDialog('info', {
                         message: `For some unexpected reason, you've gotten disconnected. please wait some seconds to reconnect again.`,
