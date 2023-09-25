@@ -48,13 +48,13 @@ export const Participant = ({ participant }) => {
                 },
                 () => {
                     participant.acceptRaiseHand(true);
-                    onUserRaisedHand(participant.userId, false);
+                    onUserRaisedHand(participant.userId, false, true);
                 },
                 () => {},
                 {
                     onReject: () => {
                         participant.acceptRaiseHand(false);
-                        onUserRaisedHand(participant.userId, false);
+                        onUserRaisedHand(participant.userId, false, false);
                     },
                 }
             );
@@ -105,11 +105,17 @@ export const Participant = ({ participant }) => {
                     : ''}
             </div>
         </div>
-        ${(raisedHand || participant.hasCamera) &&
+        ${(raisedHand || participant.hasCamera || participant.actionLoading) &&
         html`
             <div>
                 <${Icon}
-                    icon=${raisedHand ? 'Hand' : 'Camera'}
+                    icon=${participant.actionLoading
+                        ? 'Loader'
+                        : raisedHand
+                        ? 'Hand'
+                        : participant.hasCamera
+                        ? 'Camera'
+                        : ''}
                     width="25"
                     height="25px"
                     class="dark:text-gray-0 text-gray-1"

@@ -37,6 +37,8 @@ export const raiseHandMaxLimitReached = computed(() => {
     );
 });
 
+var Loading = false;
+
 // const url = `stats/index.html`;
 // var targetWindow = window.open(url, '_blank');
 export const currentUser = signal({
@@ -170,12 +172,19 @@ export const leaveMeeting = () => {
     }
 };
 
-export const onUserRaisedHand = (userId, raisedHand, acceptRaiseHand) => {
+export const onUserRaisedHand = (
+    userId,
+    raisedHand,
+    actionLoading,
+    acceptRaiseHand
+) => {
+    Loading = actionLoading;
     attendees.value = {
         ...attendees.value,
         [userId]: {
             ...attendees.value[userId],
             raisedHand,
+            actionLoading,
             acceptRaiseHand,
         },
     };
@@ -332,6 +341,7 @@ const Meeting = () => {
                     onUserRaisedHand(
                         user.userId,
                         new Date(),
+                        false,
                         raiseHandCallback
                     );
 
@@ -468,6 +478,7 @@ const Meeting = () => {
                             hasCamera: !!video,
                             userId,
                             video,
+                            actionLoading: Loading,
                         };
                     }
                     //get latest raise hand count from sparkRTC
@@ -523,7 +534,7 @@ const Meeting = () => {
                     });
                 },
                 userLoweredHand: (data) => {
-                    onUserRaisedHand(data, false);
+                    onUserRaisedHand(data, false, false);
                     log('userLoweredHand: ', data);
                     sparkRTC.value.getLatestUserList('UserLowerHand');
 
