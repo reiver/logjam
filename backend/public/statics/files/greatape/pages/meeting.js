@@ -36,7 +36,15 @@ export const raiseHandMaxLimitReached = computed(() => {
         raisedHandsCount.value === sparkRTC.value.maxRaisedHands
     );
 });
-
+export const setUserActionLoading = (userId, actionLoading) => {
+    attendees.value = {
+        ...attendees.value,
+        [userId]: {
+            ...attendees.value[userId],
+            actionLoading,
+        },
+    };
+};
 var Loading = false;
 
 // const url = `stats/index.html`;
@@ -98,6 +106,8 @@ const displayStream = async (stream, toggleFull = false) => {
             local = true;
         }
     }
+
+    setUserActionLoading(stream.userId, false);
 
     streamers.value = {
         ...streamers.value,
@@ -314,7 +324,10 @@ const Meeting = () => {
 
                     let raiseHandCallback = () => {};
                     const handler = new Promise((resolve, reject) => {
-                        raiseHandCallback = resolve;
+                        raiseHandCallback = (value) => {
+                            setUserActionLoading(user.userId, true);
+                            resolve(value);
+                        };
                     });
 
                     //only show message when limit is not reached
@@ -382,6 +395,8 @@ const Meeting = () => {
                         updateUser({
                             ableToRaiseHand: true,
                         });
+
+                        setUserActionLoading(currentUser.userId, false);
                     } else {
                         const localStream =
                             await sparkRTC.value.getAccessToLocalStream();
@@ -417,6 +432,7 @@ const Meeting = () => {
                                         sparkRTC.value.sendAudioStatus(true);
                                     }
                                 }, 2000);
+                                setUserActionLoading(currentUser.userId, false);
                             },
                             () => {
                                 //onClose
@@ -429,6 +445,7 @@ const Meeting = () => {
                                 sparkRTC.value.resetAudioVideoState();
                                 sparkRTC.value.cancelJoinStage(data);
                                 sparkRTC.value.onRaiseHandRejected();
+                                setUserActionLoading(currentUser.userId, false);
                             }
                         );
                     }
@@ -478,7 +495,6 @@ const Meeting = () => {
                             hasCamera: !!video,
                             userId,
                             video,
-                            actionLoading: Loading,
                         };
                     }
                     //get latest raise hand count from sparkRTC

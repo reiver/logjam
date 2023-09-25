@@ -109,6 +109,13 @@ export const Participant = ({ participant }) => {
         html`
             <div>
                 <${Icon}
+                    key=${participant.actionLoading
+                        ? 'Loader'
+                        : raisedHand
+                        ? 'Hand'
+                        : participant.hasCamera
+                        ? 'Camera'
+                        : ''}
                     icon=${participant.actionLoading
                         ? 'Loader'
                         : raisedHand
