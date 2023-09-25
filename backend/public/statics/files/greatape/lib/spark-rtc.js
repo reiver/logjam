@@ -800,8 +800,7 @@ export class SparkRTC {
                 );
                 reject(error);
                 if (!this.leftMeeting) {
-                    window.location.reload(); //reload before, alert because alert blocks the reload
-                    alert('Can not connect to server');
+                    this.handleUnExpectedError();
                 }
             };
 
