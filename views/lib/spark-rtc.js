@@ -368,7 +368,6 @@ export class SparkRTC {
           if (this.remoteStreamDCCallback) {
             try {
               this.remoteStreamDCCallback("no-stream");
-              this.handleUnExpectedError(5000);
             } catch (e) {
               this.updateTheStatus(e);
             }
@@ -2843,7 +2842,7 @@ export class SparkRTC {
       this.socket = null;
     }
     this.myName = "NoName";
-    this.roomName = "SparkRTC";
+    this.roomName = "test";
     this.myUsername = "NoUsername";
     this.role = "audience";
     this.started = false;
