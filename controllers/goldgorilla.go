@@ -116,14 +116,15 @@ func (ctrl *GoldGorillaController) Join(rw http.ResponseWriter, req *http.Reques
 		_, _, _ = ctrl.roomRepo.RemoveMember(reqModel.RoomId, models.GoldGorillaId)
 		return
 	}
-	_ = ctrl.socketSVC.Send(models.MessageContract{
-		Type: "add_audience",
-		Data: strconv.FormatUint(models.GoldGorillaId, 10),
-	}, *parentId)
 	err = ctrl.ggSVCRepo.CreatePeer(reqModel.RoomId, *parentId, true, true)
 	if ctrl.helper.HandleIfErr(rw, err, 503) {
 		return
 	}
+	_ = ctrl.socketSVC.Send(models.MessageContract{
+		Type: "add_audience",
+		Data: strconv.FormatUint(models.GoldGorillaId, 10),
+	}, *parentId)
+
 	_ = ctrl.helper.Write(rw, nil, 204)
 	go func(roomId string, svcAddr string) {
 		for {
