@@ -18,9 +18,8 @@ export class SparkRTC {
   remoteStreamNotified = false;
   remoteStreams = [];
   socket;
-  audienceRoleAssigned = false;
   myName = "NoName";
-  roomName = "SparkRTC";
+  roomName = "test";
   myUsername = "NoUsername";
   debug = false;
   lastBroadcasterId = "";
@@ -369,6 +368,7 @@ export class SparkRTC {
           if (this.remoteStreamDCCallback) {
             try {
               this.remoteStreamDCCallback("no-stream");
+              this.handleUnExpectedError(5000);
             } catch (e) {
               this.updateTheStatus(e);
             }
@@ -544,8 +544,6 @@ export class SparkRTC {
         };
         break;
       case "user-event":
-        this.audienceRoleAssigned = true;
-
         this.updateTheStatus(`[handleMessage] ${msg.type}`);
         this.getMetadata();
         setTimeout(() => {
@@ -947,7 +945,6 @@ export class SparkRTC {
 
       if (await this.checkSocketStatus()) {
         //save request status
-        this.audienceRoleAssigned = false;
 
         this.socket.send(
           JSON.stringify({
@@ -955,14 +952,6 @@ export class SparkRTC {
             data: this.Roles.AUDIENCE,
           })
         );
-
-        setTimeout(async () => {
-          console.log("audienceRoleAssigned: ", this.audienceRoleAssigned);
-
-          if (!this.audienceRoleAssigned) {
-            this.handleUnExpectedError();
-          }
-        }, 10000);
       }
 
       this.updateTheStatus(`[startReadingBroadcast] send role audience`);
@@ -971,9 +960,9 @@ export class SparkRTC {
     }
   };
 
-  handleUnExpectedError = async () => {
+  handleUnExpectedError = async (timeMil) => {
     if (this.unExpectedError) this.unExpectedError(); //show unexpected error message and reload
-    await this.wait();
+    await this.wait(timeMil);
     window.location.reload();
   };
   /**
