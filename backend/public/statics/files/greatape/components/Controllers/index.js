@@ -114,6 +114,7 @@ export const Controllers = () => {
                     isCameraOn: true,
                 });
                 sparkRTC.value.lowerHand();
+                setUserActionLoading(currentUser.userId, false);
             }
         }
     };
