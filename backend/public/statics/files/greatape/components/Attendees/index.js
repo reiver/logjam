@@ -93,7 +93,6 @@ export const Participant = ({ participant }) => {
             'flex w-full justify-between items-center rounded-md px-2 py-1 max-w-full gap-2 group',
             'cursor-pointer hover:dark:bg-white hover:dark:bg-opacity-10 hover:bg-gray-500 hover:bg-opacity-10 transition-all'
         )}
-        onmouseover=${() => inviteToStage(participant)}
     >
         <div class="flex gap-2 items-center truncate">
             ${participant.avatar
@@ -135,11 +134,15 @@ export const Participant = ({ participant }) => {
             ${!raisedHand &&
             !participant.hasCamera &&
             !participant.actionLoading &&
+            currentUser.value.isHost &&
             html`<${Icon}
                 class="hidden group-hover:block"
                 icon="Check"
                 width="25"
                 height="25px"
+                onClick=${() => {
+                    inviteToStage(participant);
+                }}
             />`}
             ${(raisedHand ||
                 participant.hasCamera ||
