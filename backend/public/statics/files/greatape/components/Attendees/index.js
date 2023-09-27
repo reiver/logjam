@@ -1,12 +1,14 @@
 import { computed, signal } from '@preact/signals';
 import clsx from 'clsx';
 import { BottomSheet, Icon, makeDialog } from 'components';
+import { makeInviteDialog } from '.././Dialog/index.js';
 import { html } from 'htm';
 import {
     currentUser,
     onUserRaisedHand,
     raiseHandMaxLimitReached,
     sparkRTC,
+    onInviteToStage,
 } from '../../pages/meeting.js';
 import { deviceSize } from '../MeetingBody/Stage.js';
 export const attendees = signal(
@@ -61,13 +63,29 @@ export const Participant = ({ participant }) => {
         }
     };
 
-
-    function inviteToStage(participant){
-
+    function inviteToStage(participant) {
         //show invite dialog
-        makeInviteDialog()
+
+        if (
+            currentUser.value.isHost &&
+            participant.userId != currentUser.userId
+        ) {
+            makeInviteDialog(
+                'invite',
+                {
+                    message: `Do you want to request "<strong>${participant.name}</strong>" to come on stage?`,
+                    title: 'Request To Come On Stage',
+                },
+                () => {
+                    //on ok
+                    onInviteToStage(participant);
+                },
+                () => {},
+                {}
+            );
+        }
     }
-    
+
     const raisedHand =
         participant.raisedHand && !raiseHandMaxLimitReached.value;
     return html` <div
@@ -75,6 +93,7 @@ export const Participant = ({ participant }) => {
             'flex w-full justify-between items-center rounded-md px-2 py-1 max-w-full gap-2',
             'cursor-pointer hover:dark:bg-white hover:dark:bg-opacity-10 hover:bg-gray-500 hover:bg-opacity-10 transition-all'
         )}
+        onmouseover=${() => inviteToStage(participant)}
     >
         <div class="flex gap-2 items-center truncate">
             ${participant.avatar
