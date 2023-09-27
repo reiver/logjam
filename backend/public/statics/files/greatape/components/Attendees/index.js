@@ -61,6 +61,13 @@ export const Participant = ({ participant }) => {
         }
     };
 
+
+    function inviteToStage(participant){
+
+        //show invite dialog
+        makeInviteDialog()
+    }
+    
     const raisedHand =
         participant.raisedHand && !raiseHandMaxLimitReached.value;
     return html` <div
