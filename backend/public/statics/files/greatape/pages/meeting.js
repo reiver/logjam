@@ -385,6 +385,8 @@ const Meeting = () => {
                     }
                 },
                 altBroadcastApprove: async (isStreamming, data) => {
+                    setUserActionLoading(currentUser.userId, false);
+
                     if (!isStreamming) {
                         sparkRTC.value.onRaiseHandRejected();
                         makeDialog('info', {
@@ -395,8 +397,6 @@ const Meeting = () => {
                         updateUser({
                             ableToRaiseHand: true,
                         });
-
-                        setUserActionLoading(currentUser.userId, false);
                     } else {
                         const localStream =
                             await sparkRTC.value.getAccessToLocalStream();
@@ -432,7 +432,6 @@ const Meeting = () => {
                                         sparkRTC.value.sendAudioStatus(true);
                                     }
                                 }, 2000);
-                                setUserActionLoading(currentUser.userId, false);
                             },
                             () => {
                                 //onClose
@@ -445,7 +444,6 @@ const Meeting = () => {
                                 sparkRTC.value.resetAudioVideoState();
                                 sparkRTC.value.cancelJoinStage(data);
                                 sparkRTC.value.onRaiseHandRejected();
-                                setUserActionLoading(currentUser.userId, false);
                             }
                         );
                     }
