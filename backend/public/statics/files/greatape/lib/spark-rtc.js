@@ -1087,7 +1087,7 @@ export class SparkRTC {
             try {
                 if (await this.checkSocketStatus()) {
                     this.invitedUsers.push(user.toString()); //save invited user ids
-
+                    this.raiseHands.push(user.toString()); //add to raise hand list also to make sure the count
                     this.socket.send(
                         JSON.stringify({
                             type: 'invite-to-stage',

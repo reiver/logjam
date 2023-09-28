@@ -60,6 +60,12 @@ export const Participant = ({ participant }) => {
                     },
                 }
             );
+        } else {
+            makeDialog('info', {
+                message: 'The stage is already full. try again later.',
+                icon: 'Close',
+                variant: 'danger',
+            });
         }
     };
 
