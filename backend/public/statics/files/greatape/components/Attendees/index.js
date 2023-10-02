@@ -41,7 +41,10 @@ export const attendeesWidth = computed(() => {
 
 export const Participant = ({ participant }) => {
     const handleRaiseHand = () => {
-        if (sparkRTC.value.raiseHands.length < sparkRTC.value.maxRaisedHands) {
+        //check multiple scenarios
+        let res = checkUserCount();
+
+        if (res) {
             makeDialog(
                 'confirm',
                 {
@@ -51,6 +54,9 @@ export const Participant = ({ participant }) => {
                 () => {
                     participant.acceptRaiseHand(true);
                     onUserRaisedHand(participant.userId, false, true);
+                    sparkRTC.value.acceptedRequests.push(
+                        participant.userId.toString()
+                    );
                 },
                 () => {},
                 {
@@ -60,19 +66,74 @@ export const Participant = ({ participant }) => {
                     },
                 }
             );
-        } else {
+        }
+    };
+
+    function checkUserCount() {
+        //check multiple scenarios for messages
+
+        //people on stage + sent requests + accepted requests ==  maxraisehands
+        if (
+            sparkRTC.value.sentRequests.length > 0 &&
+            sparkRTC.value.acceptedRequests.length > 0 &&
+            sparkRTC.value.raiseHands.length >= sparkRTC.value.maxRaisedHands
+        ) {
+            makeDialog('info', {
+                message: `You can accept upto ${sparkRTC.value.maxRaisedHands} people on stage.`,
+                icon: 'Close',
+                variant: 'danger',
+            });
+            return false;
+        }
+
+        //people on stage + accepted requests == maxrasiehand
+
+        if (
+            sparkRTC.value.acceptedRequests.length > 0 &&
+            sparkRTC.value.raiseHands.length >= sparkRTC.value.maxRaisedHands
+        ) {
+            makeDialog('info', {
+                message: `You've already accepted some requests. Please wait!`,
+                icon: 'Close',
+                variant: 'danger',
+            });
+            return false;
+        }
+
+        //people on stage + send requests == maxraisehands
+        if (
+            sparkRTC.value.sentRequests.length > 0 &&
+            sparkRTC.value.raiseHands.length >= sparkRTC.value.maxRaisedHands
+        ) {
+            makeDialog('info', {
+                message: `You've already sent some requests. Please wait!`,
+                icon: 'Close',
+                variant: 'danger',
+            });
+            return false;
+        }
+
+        //people on stage === maxraisehands
+        if (sparkRTC.value.raiseHands.length >= sparkRTC.value.maxRaisedHands) {
             makeDialog('info', {
                 message: 'The stage is already full. try again later.',
                 icon: 'Close',
                 variant: 'danger',
             });
+            return false;
         }
-    };
+
+        //by default
+
+        return true;
+    }
 
     function inviteToStage(participant) {
         //show invite dialog
+        let res = checkUserCount();
 
         if (
+            res &&
             currentUser.value.isHost &&
             participant.userId != currentUser.userId
         ) {

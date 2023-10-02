@@ -28,7 +28,9 @@ export class SparkRTC {
     myPeerConnectionArray = {};
     iceCandidates = [];
     pingInterval;
-    raiseHands = [];
+    raiseHands = []; //people on stage
+    acceptedRequests = []; //whose requests are accepted but not joined stage yet
+    sentRequests = []; //request to join is sent but not joined yet
     startedRaiseHand = false;
     targetStreams = {};
     parentStreamId;
@@ -236,7 +238,12 @@ export class SparkRTC {
     };
 
     cancelJoinStage = async (data, cancel = false) => {
-        console.log('cancelJoinStage: audience-broadcasting: ', cancel," ", data);
+        console.log(
+            'cancelJoinStage: audience-broadcasting: ',
+            cancel,
+            ' ',
+            data
+        );
         this.lastBroadcasterId = data.toString();
         this.socket.send(
             JSON.stringify({
@@ -252,8 +259,9 @@ export class SparkRTC {
     joinStage = async (data) => {
         this.startBroadcasting('alt-broadcast');
 
-        this.lastBroadcasterId = data;
+        this.lastBroadcasterId = data.toString();
         if (this.localStream) {
+            console.log('audience-broadcasting: joining stage');
             this.socket.send(
                 JSON.stringify({
                     type: 'audience-broadcasting',
@@ -654,12 +662,21 @@ export class SparkRTC {
                         if (msg.name) {
                             name = JSON.parse(msg.name);
                             name = name.name;
+
+                            //remove from sentrequests
+                            this.removeFromSentRequest(msg.data);
+                        } else {
+                            this.removeFromAcceptedRequests(msg.data);
                         }
 
                         this.userLoweredHand(msg.data, name);
                     }
 
                     this.removeFromInvitedUsersList(msg.data);
+                } else {
+                    //remove from sentrequests
+                    this.removeFromSentRequest(msg.data);
+                    this.removeFromAcceptedRequests(msg.data);
                 }
                 break;
 
@@ -718,6 +735,45 @@ export class SparkRTC {
                     this.removeFromRaiseHandList(id);
                 }
             });
+        }
+    };
+
+    removeFromAcceptedRequests = (data) => {
+        if (
+            this.acceptedRequests.includes(data) &&
+            this.role === this.Roles.BROADCAST
+        ) {
+            console.log(
+                'removing from acceptedRequests: ',
+                this.acceptedRequests.length
+            );
+            var index = this.acceptedRequests.indexOf(data);
+            if (index > -1) {
+                this.acceptedRequests.splice(index, 1);
+            }
+
+            console.log(
+                'removed from acceptedRequests: ',
+                this.acceptedRequests.length
+            );
+        }
+    };
+
+    removeFromSentRequest = (data) => {
+        if (
+            this.sentRequests.includes(data) &&
+            this.role === this.Roles.BROADCAST
+        ) {
+            console.log(
+                'removing from sentRequest: ',
+                this.sentRequests.length
+            );
+            var index = this.sentRequests.indexOf(data);
+            if (index > -1) {
+                this.sentRequests.splice(index, 1);
+            }
+
+            console.log('removed from sentRequest: ', this.sentRequests.length);
         }
     };
 
@@ -1097,6 +1153,7 @@ export class SparkRTC {
                 if (await this.checkSocketStatus()) {
                     this.invitedUsers.push(user.toString()); //save invited user ids
                     this.raiseHands.push(user.toString()); //add to raise hand list also to make sure the count
+                    this.sentRequests.push(user.toString()); //save sent request
                     this.socket.send(
                         JSON.stringify({
                             type: 'invite-to-stage',
