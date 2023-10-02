@@ -22,6 +22,9 @@ export const attendees = signal(
     // }
 );
 
+const isMobile =
+    window.parent.outerWidth <= 400 && window.parent.outerHeight <= 850;
+
 export const attendeesCount = computed(
     () => Object.values(attendees.value).length
 );
@@ -219,6 +222,7 @@ export const Participant = ({ participant }) => {
             !participant.hasCamera &&
             !participant.actionLoading &&
             currentUser.value.isHost &&
+            !isMobile &&
             html`<${Icon}
                 class="hidden group-hover:block"
                 icon="Check"
