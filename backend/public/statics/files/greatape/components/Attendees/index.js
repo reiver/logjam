@@ -92,6 +92,21 @@ export const Participant = ({ participant }) => {
         }
     }
 
+    function handleRowClick(participant) {
+        if (raisedHand && currentUser.value.isHost) {
+            handleRaiseHand();
+        } else {
+            if (
+                !raisedHand &&
+                !participant.hasCamera &&
+                !participant.actionLoading &&
+                currentUser.value.isHost
+            ) {
+                inviteToStage(participant);
+            }
+        }
+    }
+
     const raisedHand =
         participant.raisedHand && !raiseHandMaxLimitReached.value;
     return html` <div
@@ -99,6 +114,9 @@ export const Participant = ({ participant }) => {
             'flex w-full justify-between items-center rounded-md px-2 py-1 max-w-full gap-2 group',
             'cursor-pointer'
         )}
+        onclick="${() => {
+            handleRowClick(participant);
+        }}"
     >
         <div class="flex gap-2 items-center truncate">
             ${participant.avatar
@@ -146,9 +164,6 @@ export const Participant = ({ participant }) => {
                 icon="Check"
                 width="25"
                 height="25px"
-                onClick=${() => {
-                    inviteToStage(participant);
-                }}
             />`}
             ${(raisedHand ||
                 participant.hasCamera ||
@@ -172,7 +187,6 @@ export const Participant = ({ participant }) => {
                             : ''}
                         width="25"
                         height="25px"
-                        onClick=${raisedHand ? handleRaiseHand : null}
                     />
                 </div>
             `}
