@@ -172,7 +172,7 @@ export const IOSettingsDialog = ({
                 ${!isIphone() &&
                 html`
                     <div
-                        class="sm:py-4 py-2 flex rounded-md mx-2 cursor-pointer hover:dark:bg-white hover:dark:bg-opacity-10 hover:bg-gray-500 hover:bg-opacity-10 transition-all"
+                        class="sm:py-4 py-2 flex rounded-md mx-2 cursor-pointer"
                         onClick=${selectAudioOutputDevice}
                     >
                         <div class="text-left text-bold-12 px-5 flex-1">
@@ -243,7 +243,7 @@ export const IOSettingsDialog = ({
                 `}
 
                 <div
-                    class="sm:py-4 py-2 rounded-md mx-2 flex cursor-pointer hover:dark:bg-white hover:dark:bg-opacity-10 hover:bg-gray-500 hover:bg-opacity-10 transition-all"
+                    class="sm:py-4 py-2 rounded-md mx-2 flex cursor-pointer"
                     onClick=${selectAudioInputDevice}
                 >
                     <div class="text-left text-bold-12 px-5 flex-1">
@@ -308,7 +308,7 @@ export const IOSettingsDialog = ({
                 </div>
 
                 <div
-                    class="sm:py-4 py-2 rounded-md mx-2 flex cursor-pointer hover:dark:bg-white hover:dark:bg-opacity-10 hover:bg-gray-500 hover:bg-opacity-10 transition-all"
+                    class="sm:py-4 py-2 rounded-md mx-2 flex cursor-pointer"
                     onClick=${selectVideoInputDevice}
                 >
                     <div class="text-left text-bold-12 px-5 flex-1">
@@ -581,7 +581,7 @@ export const IODevicesDialog = ({
                     ${devices.map(
                         (device, index) => html`
                             <div
-                                class="sm:py-4 py-2 rounded-md mx-2 flex items-center cursor-pointer hover:dark:bg-white hover:dark:bg-opacity-10 hover:bg-gray-500 hover:bg-opacity-10 transition-all"
+                                class="sm:py-4 py-2 rounded-md mx-2 flex items-center cursor-pointer"
                                 onClick=${() => handleDeviceClick(index)}
                             >
                                 <${Icon}
