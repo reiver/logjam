@@ -168,8 +168,7 @@ export const Participant = ({ participant }) => {
         }
     }
 
-    const raisedHand =
-        participant.raisedHand && !raiseHandMaxLimitReached.value;
+    const raisedHand = participant.raisedHand; // && !raiseHandMaxLimitReached.value
     return html` <div
         class=${clsx(
             'flex w-full justify-between items-center rounded-md px-2 py-1 max-w-full gap-2 group',
