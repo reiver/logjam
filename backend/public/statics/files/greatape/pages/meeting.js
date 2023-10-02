@@ -569,7 +569,7 @@ const Meeting = () => {
                         variant: 'danger',
                     });
                 },
-                userLoweredHand: (data) => {
+                userLoweredHand: (data, name) => {
                     onUserRaisedHand(data, false, false);
                     log('userLoweredHand: ', data);
                     sparkRTC.value.getLatestUserList('UserLowerHand');
@@ -587,6 +587,14 @@ const Meeting = () => {
 
                     if (rC === 0) {
                         attendeesBadge.value = false;
+                    }
+
+                    if (name) {
+                        makeDialog('info', {
+                            message: `${name} has rejected your request to join stage.`,
+                            icon: 'Close',
+                            variant: 'danger',
+                        });
                     }
                 },
 
@@ -632,6 +640,7 @@ const Meeting = () => {
                             }, 2000);
                         },
                         () => {
+                            console.log("audience-broadcasting cancelling..")
                             //onClose
                             updateUser({
                                 ableToRaiseHand: true,
@@ -640,7 +649,7 @@ const Meeting = () => {
                             });
 
                             sparkRTC.value.resetAudioVideoState();
-                            sparkRTC.value.cancelJoinStage(data);
+                            sparkRTC.value.cancelJoinStage(data, true);
                             sparkRTC.value.onRaiseHandRejected();
                         }
                     );

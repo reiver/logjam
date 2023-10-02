@@ -815,7 +815,6 @@ export const PreviewDialog = ({
                     class="w-full flex-grow-1"
                     onClick=${() => {
                         onReject && onReject();
-                        onClose();
                     }}
                     >${cancelText}<//
                 >

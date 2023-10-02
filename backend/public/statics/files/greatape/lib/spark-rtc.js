@@ -235,12 +235,14 @@ export class SparkRTC {
         }
     };
 
-    cancelJoinStage = async (data) => {
+    cancelJoinStage = async (data, cancel = false) => {
+        console.log('cancelJoinStage: audience-broadcasting: ', cancel," ", data);
         this.lastBroadcasterId = data.toString();
         this.socket.send(
             JSON.stringify({
                 type: 'audience-broadcasting',
                 data: this.myUsername,
+                name: cancel ? this.myName : null,
                 target: this.lastBroadcasterId,
                 joinedStage: false,
             })
@@ -647,7 +649,14 @@ export class SparkRTC {
                     this.removeFromRaiseHandList(msg.data);
                     console.log('userLoweredHand: ', this.userLoweredHand);
                     if (this.userLoweredHand) {
-                        this.userLoweredHand(msg.data);
+                        //get name and parse
+                        let name = null;
+                        if (msg.name) {
+                            name = JSON.parse(msg.name);
+                            name = name.name;
+                        }
+
+                        this.userLoweredHand(msg.data, name);
                     }
 
                     this.removeFromInvitedUsersList(msg.data);
