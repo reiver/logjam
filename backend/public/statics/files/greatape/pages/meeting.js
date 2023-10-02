@@ -214,6 +214,11 @@ export const onInviteToStage = (participant) => {
         console.log('Send Intitation to ', participant);
         sparkRTC.value.inviteToStage(participant.userId);
         setUserActionLoading(participant.userId, true);
+
+        makeDialog('info', {
+            message: `You've sent the request.`,
+            icon: 'Check',
+        });
     }
 };
 

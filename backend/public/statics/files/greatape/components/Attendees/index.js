@@ -97,7 +97,7 @@ export const Participant = ({ participant }) => {
     return html` <div
         class=${clsx(
             'flex w-full justify-between items-center rounded-md px-2 py-1 max-w-full gap-2 group',
-            'cursor-pointer hover:dark:bg-white hover:dark:bg-opacity-10 hover:bg-gray-500 hover:bg-opacity-10 transition-all'
+            'cursor-pointer'
         )}
     >
         <div class="flex gap-2 items-center truncate">
