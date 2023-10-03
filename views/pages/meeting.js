@@ -36,6 +36,16 @@ export const raiseHandMaxLimitReached = computed(() => {
         raisedHandsCount.value === sparkRTC.value.maxRaisedHands
     );
 });
+export const setUserActionLoading = (userId, actionLoading) => {
+    attendees.value = {
+        ...attendees.value,
+        [userId]: {
+            ...attendees.value[userId],
+            actionLoading,
+        },
+    };
+};
+var Loading = false;
 
 // const url = `stats/index.html`;
 // var targetWindow = window.open(url, '_blank');
@@ -96,6 +106,8 @@ const displayStream = async (stream, toggleFull = false) => {
             local = true;
         }
     }
+
+    setUserActionLoading(stream.userId, false);
 
     streamers.value = {
         ...streamers.value,
@@ -170,17 +182,44 @@ export const leaveMeeting = () => {
     }
 };
 
-export const onUserRaisedHand = (userId, raisedHand, acceptRaiseHand) => {
+export const onUserRaisedHand = (
+    userId,
+    raisedHand,
+    actionLoading,
+    acceptRaiseHand
+) => {
+    Loading = actionLoading;
     attendees.value = {
         ...attendees.value,
         [userId]: {
             ...attendees.value[userId],
             raisedHand,
+            actionLoading,
             acceptRaiseHand,
         },
     };
     console.log('LOWER HAND', userId, raisedHand);
     sparkRTC.value.getLatestUserList('onUserRaiseHand');
+};
+
+export const onInviteToStage = (participant) => {
+    if (sparkRTC.value.raiseHands.length >= sparkRTC.value.maxRaisedHands) {
+        makeDialog('info', {
+            message: 'The stage is already full. try again later.',
+            icon: 'Close',
+            variant: 'danger',
+        });
+    } else {
+        //send invite
+        console.log('Send Intitation to ', participant);
+        sparkRTC.value.inviteToStage(participant.userId);
+        setUserActionLoading(participant.userId, true);
+
+        makeDialog('info', {
+            message: `You've sent the request.`,
+            icon: 'Check',
+        });
+    }
 };
 
 export const getUserRaiseHandStatus = (userId) => {
@@ -305,7 +344,10 @@ const Meeting = () => {
 
                     let raiseHandCallback = () => {};
                     const handler = new Promise((resolve, reject) => {
-                        raiseHandCallback = resolve;
+                        raiseHandCallback = (value) => {
+                            setUserActionLoading(user.userId, true);
+                            resolve(value);
+                        };
                     });
 
                     //only show message when limit is not reached
@@ -332,6 +374,7 @@ const Meeting = () => {
                     onUserRaisedHand(
                         user.userId,
                         new Date(),
+                        false,
                         raiseHandCallback
                     );
 
@@ -362,6 +405,10 @@ const Meeting = () => {
                     }
                 },
                 altBroadcastApprove: async (isStreamming, data) => {
+                    setUserActionLoading(currentUser.userId, false);
+
+                    console.log('altBroadcastApprove: data: ', data);
+
                     if (!isStreamming) {
                         sparkRTC.value.onRaiseHandRejected();
                         makeDialog('info', {
@@ -515,13 +562,6 @@ const Meeting = () => {
                         ableToRaiseHand: true,
                     });
                 },
-                unExpectedError: () => {
-                    makeDialog('info', {
-                        message: `An unexpected error occured. please wait some seconds to reconnect again.`,
-                        icon: 'Close',
-                        variant: 'danger',
-                    });
-                },
                 parentDcMessage: () => {
                     makeDialog('info', {
                         message: `For some unexpected reason, you've gotten disconnected. please wait some seconds to reconnect again.`,
@@ -529,8 +569,8 @@ const Meeting = () => {
                         variant: 'danger',
                     });
                 },
-                userLoweredHand: (data) => {
-                    onUserRaisedHand(data, false);
+                userLoweredHand: (data, name) => {
+                    onUserRaisedHand(data, false, false);
                     log('userLoweredHand: ', data);
                     sparkRTC.value.getLatestUserList('UserLowerHand');
 
@@ -548,6 +588,71 @@ const Meeting = () => {
                     if (rC === 0) {
                         attendeesBadge.value = false;
                     }
+
+                    if (name) {
+                        makeDialog('info', {
+                            message: `${name} has rejected your request to join stage.`,
+                            icon: 'Close',
+                            variant: 'danger',
+                        });
+                    }
+                },
+
+                invitationToJoinStage: async (msg) => {
+                    console.log('invitationToJoinStage: ', msg);
+                    const data = parseInt(msg.data);
+                    //show preview dialog to Join stage
+                    const localStream =
+                        await sparkRTC.value.getAccessToLocalStream();
+
+                    previewDialogId = makePreviewDialog(
+                        'preview',
+                        localStream,
+                        {
+                            message:
+                                'The host has requested you to come on stage. Set the default state of your “Video” and “Audio” before joining please.',
+                            title: 'Join The Stage',
+                            yesButton: 'Join The Stage!',
+                            noButton: 'Not Now!',
+                        },
+                        () => {
+                            //onOk
+                            updateUser({
+                                isStreamming: true,
+                                ableToRaiseHand: true,
+                            });
+                            sparkRTC.value.joinStage(data);
+                            makeDialog('info', {
+                                message: 'You’ve been added to the stage',
+                                icon: 'Check',
+                            });
+
+                            //send user mute status to everyone to update the Ui
+                            setTimeout(() => {
+                                if (
+                                    sparkRTC.value.lastAudioState ===
+                                    sparkRTC.value.LastState.DISABLED
+                                ) {
+                                    sparkRTC.value.sendAudioStatus(false);
+                                } else {
+                                    sparkRTC.value.sendAudioStatus(true);
+                                }
+                            }, 2000);
+                        },
+                        () => {
+                            console.log("audience-broadcasting cancelling..")
+                            //onClose
+                            updateUser({
+                                ableToRaiseHand: true,
+                                isMicrophoneOn: true,
+                                isCameraOn: true,
+                            });
+
+                            sparkRTC.value.resetAudioVideoState();
+                            sparkRTC.value.cancelJoinStage(data, true);
+                            sparkRTC.value.onRaiseHandRejected();
+                        }
+                    );
                 },
             });
 

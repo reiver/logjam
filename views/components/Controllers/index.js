@@ -16,6 +16,7 @@ import {
     onStartShareScreen,
     onStopShareScreen,
     raiseHandMaxLimitReached,
+    setUserActionLoading,
     sparkRTC,
     updateUser,
 } from '../../pages/meeting.js';
@@ -96,6 +97,8 @@ export const Controllers = () => {
                     isRaisingHand: true,
                     ableToRaiseHand: false,
                 });
+
+                setUserActionLoading(currentUser.userId, true);
                 sparkRTC.value.raiseHand();
                 makeDialog('info', {
                     message: 'Raise hand request has been sent.',
@@ -111,6 +114,7 @@ export const Controllers = () => {
                     isCameraOn: true,
                 });
                 sparkRTC.value.lowerHand();
+                setUserActionLoading(currentUser.userId, false);
             }
         }
     };
@@ -173,7 +177,7 @@ export const Controllers = () => {
                 <${Icon} icon="Share${sharingScreenStream ? 'Off' : ''}" />
             <//>
         <//>`}
-        ${((!raiseHandMaxLimitReached.value && !isStreamming) ||
+        ${((/*!raiseHandMaxLimitReached.value && */!isStreamming) ||
             (isStreamming && !isHost)) &&
         html`<${Tooltip}
             key="${isStreamming ? 'OffStage' : 'Hand'}"
