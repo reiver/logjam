@@ -177,7 +177,7 @@ export const Controllers = () => {
                 <${Icon} icon="Share${sharingScreenStream ? 'Off' : ''}" />
             <//>
         <//>`}
-        ${((!raiseHandMaxLimitReached.value && !isStreamming) ||
+        ${((/*!raiseHandMaxLimitReached.value && */!isStreamming) ||
             (isStreamming && !isHost)) &&
         html`<${Tooltip}
             key="${isStreamming ? 'OffStage' : 'Hand'}"

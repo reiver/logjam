@@ -28,7 +28,9 @@ export class SparkRTC {
     myPeerConnectionArray = {};
     iceCandidates = [];
     pingInterval;
-    raiseHands = [];
+    raiseHands = []; //people on stage
+    acceptedRequests = []; //whose requests are accepted but not joined stage yet
+    sentRequests = []; //request to join is sent but not joined yet
     startedRaiseHand = false;
     targetStreams = {};
     parentStreamId;
@@ -48,6 +50,8 @@ export class SparkRTC {
     defaultSpeaker = null;
     defaultCam = null;
     defaultMic = null;
+
+    invitedUsers = [];
 
     userListCallback = null;
     // remoteStreamsQueue = new Queue();
@@ -233,12 +237,19 @@ export class SparkRTC {
         }
     };
 
-    cancelJoinStage = async (data) => {
+    cancelJoinStage = async (data, cancel = false) => {
+        console.log(
+            'cancelJoinStage: audience-broadcasting: ',
+            cancel,
+            ' ',
+            data
+        );
         this.lastBroadcasterId = data.toString();
         this.socket.send(
             JSON.stringify({
                 type: 'audience-broadcasting',
                 data: this.myUsername,
+                name: cancel ? this.myName : null,
                 target: this.lastBroadcasterId,
                 joinedStage: false,
             })
@@ -248,8 +259,9 @@ export class SparkRTC {
     joinStage = async (data) => {
         this.startBroadcasting('alt-broadcast');
 
-        this.lastBroadcasterId = data;
+        this.lastBroadcasterId = data.toString();
         if (this.localStream) {
+            console.log('audience-broadcasting: joining stage');
             this.socket.send(
                 JSON.stringify({
                     type: 'audience-broadcasting',
@@ -445,65 +457,72 @@ export class SparkRTC {
                 }
                 break;
             case 'alt-broadcast':
-                this.updateTheStatus(`[handleMessage] ${msg.type}`);
+                this.updateTheStatus(`[handleMessage] alt-broadcast`, msg);
                 if (this.role === this.Roles.BROADCAST) {
-                    var limitReached = false;
+                    const userInvitedAlready = this.invitedUsers.includes(
+                        msg.data
+                    );
+                    if (!userInvitedAlready) {
+                        var limitReached = false;
 
-                    // if (this.raiseHands.length >= this.maxRaisedHands) {
-                    //     limitReached = true;
-                    // }
-                    this.updateTheStatus(`My ID: ${this.myUsername}`);
+                        // if (this.raiseHands.length >= this.maxRaisedHands) {
+                        //     limitReached = true;
+                        // }
+                        this.updateTheStatus(`My ID: ${this.myUsername}`);
 
-                    if (this.raiseHands.indexOf(msg.data) === -1) {
-                        var result = false;
-                        if (this.raiseHandConfirmation /*&& !limitReached*/) {
-                            try {
-                                const data = JSON.parse(msg.name);
-                                const name = data.name;
-                                const email = data.email;
+                        if (this.raiseHands.indexOf(msg.data) === -1) {
+                            var result = false;
+                            if (
+                                this.raiseHandConfirmation /*&& !limitReached*/
+                            ) {
+                                try {
+                                    const data = JSON.parse(msg.name);
+                                    const name = data.name;
+                                    const email = data.email;
 
-                                result = await this.raiseHandConfirmation({
-                                    name,
-                                    email,
-                                    userId: msg.Data,
-                                });
-                                this.updateTheStatus(
-                                    `[handleMessage] alt-broadcast result ${result}`
-                                );
-                            } catch (e) {
-                                console.error(e);
-                                return;
+                                    result = await this.raiseHandConfirmation({
+                                        name,
+                                        email,
+                                        userId: msg.Data,
+                                    });
+                                    this.updateTheStatus(
+                                        `[handleMessage] alt-broadcast result ${result}`
+                                    );
+                                } catch (e) {
+                                    console.error(e);
+                                    return;
+                                }
                             }
+
+                            if (await this.checkSocketStatus())
+                                this.socket.send(
+                                    JSON.stringify({
+                                        type: 'alt-broadcast-approve',
+                                        target: msg.data,
+                                        result,
+                                        maxLimitReached: false, //limitReached,
+                                    })
+                                );
+
+                            if (result !== true) return;
+
+                            this.getLatestUserList('alt-broadcast');
+                            this.raiseHands.push(msg.data);
+                            this.updateTheStatus(
+                                `[handleMessage] ${msg.type} approving raised hand`,
+                                msg.data
+                            );
+                            this.getMetadata();
+                            setTimeout(() => {
+                                const metaData = this.metaData;
+                                metaData.raiseHands = JSON.stringify(
+                                    this.raiseHands
+                                );
+                                this.setMetadata(metaData);
+                            }, 1000);
+                        } else {
+                            this.updateTheStatus(`else of this.raiseHands`);
                         }
-
-                        if (await this.checkSocketStatus())
-                            this.socket.send(
-                                JSON.stringify({
-                                    type: 'alt-broadcast-approve',
-                                    target: msg.data,
-                                    result,
-                                    maxLimitReached: false, //limitReached,
-                                })
-                            );
-
-                        if (result !== true) return;
-
-                        this.getLatestUserList('alt-broadcast');
-                        this.raiseHands.push(msg.data);
-                        this.updateTheStatus(
-                            `[handleMessage] ${msg.type} approving raised hand`,
-                            msg.data
-                        );
-                        this.getMetadata();
-                        setTimeout(() => {
-                            const metaData = this.metaData;
-                            metaData.raiseHands = JSON.stringify(
-                                this.raiseHands
-                            );
-                            this.setMetadata(metaData);
-                        }, 1000);
-                    } else {
-                        this.updateTheStatus(`else of this.raiseHands`);
                     }
                 } else {
                     this.updateTheStatus(`else of role check`);
@@ -638,9 +657,39 @@ export class SparkRTC {
                     this.removeFromRaiseHandList(msg.data);
                     console.log('userLoweredHand: ', this.userLoweredHand);
                     if (this.userLoweredHand) {
-                        this.userLoweredHand(msg.data);
+                        //get name and parse
+                        let name = null;
+                        if (msg.name) {
+                            name = JSON.parse(msg.name);
+                            name = name.name;
+
+                            //remove from sentrequests
+                            this.removeFromSentRequest(msg.data);
+                        } else {
+                            this.removeFromAcceptedRequests(msg.data);
+                        }
+
+                        this.userLoweredHand(msg.data, name);
                     }
+
+                    this.removeFromInvitedUsersList(msg.data);
+                } else {
+                    //remove from sentrequests
+                    this.removeFromSentRequest(msg.data);
+                    this.removeFromAcceptedRequests(msg.data);
                 }
+                break;
+
+            case 'invite-to-stage':
+                console.log('invite-to-stage: ', msg);
+                if (this.invitationToJoinStage) {
+                    this.invitationToJoinStage(msg);
+                }
+                break;
+
+            case 'left-stage':
+                console.log('left-stage', msg);
+                this.removeFromInvitedUsersList(msg.data);
                 break;
 
             default:
@@ -648,6 +697,14 @@ export class SparkRTC {
                 //     `[handleMessage] default ${JSON.stringify(msg)}`
                 // );
                 break;
+        }
+    };
+
+    removeFromInvitedUsersList = (data) => {
+        //remove user from invited users list
+        const indexToRemove = this.invitedUsers.indexOf(data);
+        if (indexToRemove != -1) {
+            this.invitedUsers.splice(indexToRemove, 1);
         }
     };
 
@@ -678,6 +735,45 @@ export class SparkRTC {
                     this.removeFromRaiseHandList(id);
                 }
             });
+        }
+    };
+
+    removeFromAcceptedRequests = (data) => {
+        if (
+            this.acceptedRequests.includes(data) &&
+            this.role === this.Roles.BROADCAST
+        ) {
+            console.log(
+                'removing from acceptedRequests: ',
+                this.acceptedRequests.length
+            );
+            var index = this.acceptedRequests.indexOf(data);
+            if (index > -1) {
+                this.acceptedRequests.splice(index, 1);
+            }
+
+            console.log(
+                'removed from acceptedRequests: ',
+                this.acceptedRequests.length
+            );
+        }
+    };
+
+    removeFromSentRequest = (data) => {
+        if (
+            this.sentRequests.includes(data) &&
+            this.role === this.Roles.BROADCAST
+        ) {
+            console.log(
+                'removing from sentRequest: ',
+                this.sentRequests.length
+            );
+            var index = this.sentRequests.indexOf(data);
+            if (index > -1) {
+                this.sentRequests.splice(index, 1);
+            }
+
+            console.log('removed from sentRequest: ', this.sentRequests.length);
         }
     };
 
@@ -733,6 +829,8 @@ export class SparkRTC {
             });
             this.socket.send(message);
         }
+
+        this.removeFromInvitedUsersList(target);
     };
 
     /**
@@ -1015,6 +1113,7 @@ export class SparkRTC {
      */
     raiseHand = async () => {
         try {
+            console.log('Raising Hand');
             if (this.startedRaiseHand) return;
             this.startedRaiseHand = true;
 
@@ -1047,6 +1146,27 @@ export class SparkRTC {
             this.updateTheStatus(`[getLatestUserList] Error: ${error}`);
         }
     }
+
+    inviteToStage = async (user) => {
+        if (user) {
+            try {
+                if (await this.checkSocketStatus()) {
+                    this.invitedUsers.push(user.toString()); //save invited user ids
+                    this.raiseHands.push(user.toString()); //add to raise hand list also to make sure the count
+                    this.sentRequests.push(user.toString()); //save sent request
+                    this.socket.send(
+                        JSON.stringify({
+                            type: 'invite-to-stage',
+                            target: user.toString(),
+                            data: null,
+                        })
+                    );
+                }
+            } catch (error) {
+                this.updateTheStatus(`[inviteToStage] Error: ${error}`);
+            }
+        }
+    };
 
     onRaiseHandRejected = () => {
         this.startedRaiseHand = false;
@@ -2744,6 +2864,20 @@ export class SparkRTC {
             track.stop();
         });
         this.startedRaiseHand = false;
+
+        //notify host I am leaving, so host can remove from invitation list
+        try {
+            if (await this.checkSocketStatus())
+                this.socket.send(
+                    JSON.stringify({
+                        type: 'left-stage',
+                        data: this.myUsername,
+                        target: this.lastBroadcasterId.toString(),
+                    })
+                );
+        } catch (exception) {
+            this.updateTheStatus(exception);
+        }
     };
 
     /**
@@ -3063,6 +3197,7 @@ export class SparkRTC {
         this.parentDcMessage = options.parentDcMessage;
         this.onAudioStatusChange = options.onAudioStatusChange;
         this.userLoweredHand = options.userLoweredHand;
+        this.invitationToJoinStage = options.invitationToJoinStage;
 
         this.checkBrowser(); //detect browser
         this.getSupportedCodecs();
