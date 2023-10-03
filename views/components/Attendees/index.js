@@ -1,12 +1,14 @@
 import { computed, signal } from '@preact/signals';
 import clsx from 'clsx';
 import { BottomSheet, Icon, makeDialog } from 'components';
+import { makeInviteDialog } from '.././Dialog/index.js';
 import { html } from 'htm';
 import {
     currentUser,
     onUserRaisedHand,
     raiseHandMaxLimitReached,
     sparkRTC,
+    onInviteToStage,
 } from '../../pages/meeting.js';
 import { deviceSize } from '../MeetingBody/Stage.js';
 export const attendees = signal(
@@ -19,6 +21,9 @@ export const attendees = signal(
     //   hasCamera: true,
     // }
 );
+
+const isMobile =
+    window.parent.outerWidth <= 400 && window.parent.outerHeight <= 850;
 
 export const attendeesCount = computed(
     () => Object.values(attendees.value).length
@@ -39,7 +44,10 @@ export const attendeesWidth = computed(() => {
 
 export const Participant = ({ participant }) => {
     const handleRaiseHand = () => {
-        if (sparkRTC.value.raiseHands.length < sparkRTC.value.maxRaisedHands) {
+        //check multiple scenarios
+        let res = checkUserCount();
+
+        if (res) {
             makeDialog(
                 'confirm',
                 {
@@ -48,26 +56,130 @@ export const Participant = ({ participant }) => {
                 },
                 () => {
                     participant.acceptRaiseHand(true);
-                    onUserRaisedHand(participant.userId, false);
+                    onUserRaisedHand(participant.userId, false, true);
+                    sparkRTC.value.acceptedRequests.push(
+                        participant.userId.toString()
+                    );
                 },
                 () => {},
                 {
                     onReject: () => {
                         participant.acceptRaiseHand(false);
-                        onUserRaisedHand(participant.userId, false);
+                        onUserRaisedHand(participant.userId, false, false);
                     },
                 }
             );
         }
     };
 
-    const raisedHand =
-        participant.raisedHand && !raiseHandMaxLimitReached.value;
+    function checkUserCount() {
+        //check multiple scenarios for messages
+
+        //people on stage + sent requests + accepted requests ==  maxraisehands
+        if (
+            sparkRTC.value.sentRequests.length > 0 &&
+            sparkRTC.value.acceptedRequests.length > 0 &&
+            sparkRTC.value.raiseHands.length >= sparkRTC.value.maxRaisedHands
+        ) {
+            makeDialog('info', {
+                message: `You can accept upto ${sparkRTC.value.maxRaisedHands} people on stage.`,
+                icon: 'Close',
+                variant: 'danger',
+            });
+            return false;
+        }
+
+        //people on stage + accepted requests == maxrasiehand
+
+        if (
+            sparkRTC.value.acceptedRequests.length > 0 &&
+            sparkRTC.value.raiseHands.length >= sparkRTC.value.maxRaisedHands
+        ) {
+            makeDialog('info', {
+                message: `You've already accepted some requests. Please wait!`,
+                icon: 'Close',
+                variant: 'danger',
+            });
+            return false;
+        }
+
+        //people on stage + send requests == maxraisehands
+        if (
+            sparkRTC.value.sentRequests.length > 0 &&
+            sparkRTC.value.raiseHands.length >= sparkRTC.value.maxRaisedHands
+        ) {
+            makeDialog('info', {
+                message: `You've already sent some requests. Please wait!`,
+                icon: 'Close',
+                variant: 'danger',
+            });
+            return false;
+        }
+
+        //people on stage === maxraisehands
+        if (sparkRTC.value.raiseHands.length >= sparkRTC.value.maxRaisedHands) {
+            makeDialog('info', {
+                message: 'The stage is already full. try again later.',
+                icon: 'Close',
+                variant: 'danger',
+            });
+            return false;
+        }
+
+        //by default
+
+        return true;
+    }
+
+    function inviteToStage(participant) {
+        //show invite dialog
+        let res = checkUserCount();
+
+        if (
+            res &&
+            currentUser.value.isHost &&
+            participant.userId != currentUser.userId
+        ) {
+            makeInviteDialog(
+                'invite',
+                {
+                    message: `Do you want to request "<strong>${participant.name}</strong>" to come on stage?`,
+                    title: 'Request To Come On Stage',
+                },
+                () => {
+                    //on ok
+                    onInviteToStage(participant);
+                },
+                () => {},
+                {}
+            );
+        }
+    }
+
+    function handleRowClick(participant) {
+        if (raisedHand && currentUser.value.isHost) {
+            handleRaiseHand();
+        } else {
+            if (
+                !raisedHand &&
+                !participant.hasCamera &&
+                !participant.actionLoading &&
+                currentUser.value.isHost
+            ) {
+                inviteToStage(participant);
+            }
+        }
+    }
+
+    const raisedHand = participant.raisedHand; // && !raiseHandMaxLimitReached.value
     return html` <div
         class=${clsx(
-            'flex w-full justify-between items-center rounded-md px-2 py-1 max-w-full gap-2',
-            'cursor-pointer hover:dark:bg-white hover:dark:bg-opacity-10 hover:bg-gray-500 hover:bg-opacity-10 transition-all'
+            'flex w-full justify-between items-center rounded-md px-2 py-1 max-w-full gap-2 group',
+            'cursor-pointer'
         )}
+        onclick="${() => {
+            handleRowClick(participant);
+        }}"
     >
         <div class="flex gap-2 items-center truncate">
             ${participant.avatar
@@ -105,18 +217,44 @@ export const Participant = ({ participant }) => {
                     : ''}
             </div>
         </div>
-        ${(raisedHand || participant.hasCamera) &&
-        html`
-            <div>
-                <${Icon}
-                    icon=${raisedHand ? 'Hand' : 'Camera'}
-                    width="25"
-                    height="25px"
-                    class="dark:text-gray-0 text-gray-1"
-                    onClick=${raisedHand ? handleRaiseHand : null}
-                />
-            </div>
-        `}
+        <div class="flex gap-1 dark:text-gray-0 text-gray-1">
+            ${!raisedHand &&
+            !participant.hasCamera &&
+            !participant.actionLoading &&
+            currentUser.value.isHost &&
+            !isMobile &&
+            html`<${Icon}
+                class="hidden group-hover:block"
+                icon="Check"
+                width="25"
+                height="25px"
+            />`}
+            ${(raisedHand ||
+                participant.hasCamera ||
+                participant.actionLoading) &&
+            html`
+                <div>
+                    <${Icon}
+                        key=${participant.actionLoading
+                            ? 'Loader'
+                            : raisedHand
+                            ? 'Hand'
+                            : participant.hasCamera
+                            ? 'Camera'
+                            : ''}
+                        icon=${participant.actionLoading
+                            ? 'Loader'
+                            : raisedHand
+                            ? 'Hand'
+                            : participant.hasCamera
+                            ? 'Camera'
+                            : ''}
+                        width="25"
+                        height="25px"
+                    />
+                </div>
+            `}
+        </div>
     </div>`;
 };
 
