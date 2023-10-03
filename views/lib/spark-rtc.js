@@ -3001,6 +3001,19 @@ export class SparkRTC {
     };
 
     /**
+     * chat feat
+     */
+    sendChatMessage=async (content)=>{
+        if (await this.checkSocketStatus())
+        this.socket.send(
+            JSON.stringify({
+                type: 'send-message',
+                data: content,
+            })
+        );
+    }
+
+    /**
      * To leave the meeting
      */
     leaveMeeting = async () => {
