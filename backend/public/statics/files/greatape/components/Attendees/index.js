@@ -48,13 +48,13 @@ export const Participant = ({ participant }) => {
                 },
                 () => {
                     participant.acceptRaiseHand(true);
-                    onUserRaisedHand(participant.userId, false);
+                    onUserRaisedHand(participant.userId, false, true);
                 },
                 () => {},
                 {
                     onReject: () => {
                         participant.acceptRaiseHand(false);
-                        onUserRaisedHand(participant.userId, false);
+                        onUserRaisedHand(participant.userId, false, false);
                     },
                 }
             );
@@ -65,7 +65,7 @@ export const Participant = ({ participant }) => {
         participant.raisedHand && !raiseHandMaxLimitReached.value;
     return html` <div
         class=${clsx(
-            'flex w-full justify-between items-center rounded-md px-2 py-1 max-w-full gap-2',
+            'flex w-full justify-between items-center rounded-md px-2 py-1 max-w-full gap-2 group',
             'cursor-pointer hover:dark:bg-white hover:dark:bg-opacity-10 hover:bg-gray-500 hover:bg-opacity-10 transition-all'
         )}
     >
@@ -105,18 +105,43 @@ export const Participant = ({ participant }) => {
                     : ''}
             </div>
         </div>
-        ${(raisedHand || participant.hasCamera) &&
-        html`
-            <div>
-                <${Icon}
-                    icon=${raisedHand ? 'Hand' : 'Camera'}
-                    width="25"
-                    height="25px"
-                    class="dark:text-gray-0 text-gray-1"
-                    onClick=${raisedHand ? handleRaiseHand : null}
-                />
-            </div>
-        `}
+        <div class="flex gap-1 dark:text-gray-0 text-gray-1">
+            ${!raisedHand &&
+            !participant.hasCamera &&
+            !participant.actionLoading &&
+            html`<${Icon}
+                class="hidden group-hover:block"
+                icon="Check"
+                width="25"
+                height="25px"
+            />`}
+            ${(raisedHand ||
+                participant.hasCamera ||
+                participant.actionLoading) &&
+            html`
+                <div>
+                    <${Icon}
+                        key=${participant.actionLoading
+                            ? 'Loader'
+                            : raisedHand
+                            ? 'Hand'
+                            : participant.hasCamera
+                            ? 'Camera'
+                            : ''}
+                        icon=${participant.actionLoading
+                            ? 'Loader'
+                            : raisedHand
+                            ? 'Hand'
+                            : participant.hasCamera
+                            ? 'Camera'
+                            : ''}
+                        width="25"
+                        height="25px"
+                        onClick=${raisedHand ? handleRaiseHand : null}
+                    />
+                </div>
+            `}
+        </div>
     </div>`;
 };
 

@@ -36,6 +36,16 @@ export const raiseHandMaxLimitReached = computed(() => {
         raisedHandsCount.value === sparkRTC.value.maxRaisedHands
     );
 });
+export const setUserActionLoading = (userId, actionLoading) => {
+    attendees.value = {
+        ...attendees.value,
+        [userId]: {
+            ...attendees.value[userId],
+            actionLoading,
+        },
+    };
+};
+var Loading = false;
 
 // const url = `stats/index.html`;
 // var targetWindow = window.open(url, '_blank');
@@ -96,6 +106,8 @@ const displayStream = async (stream, toggleFull = false) => {
             local = true;
         }
     }
+
+    setUserActionLoading(stream.userId, false);
 
     streamers.value = {
         ...streamers.value,
@@ -170,12 +182,19 @@ export const leaveMeeting = () => {
     }
 };
 
-export const onUserRaisedHand = (userId, raisedHand, acceptRaiseHand) => {
+export const onUserRaisedHand = (
+    userId,
+    raisedHand,
+    actionLoading,
+    acceptRaiseHand
+) => {
+    Loading = actionLoading;
     attendees.value = {
         ...attendees.value,
         [userId]: {
             ...attendees.value[userId],
             raisedHand,
+            actionLoading,
             acceptRaiseHand,
         },
     };
@@ -305,7 +324,10 @@ const Meeting = () => {
 
                     let raiseHandCallback = () => {};
                     const handler = new Promise((resolve, reject) => {
-                        raiseHandCallback = resolve;
+                        raiseHandCallback = (value) => {
+                            setUserActionLoading(user.userId, true);
+                            resolve(value);
+                        };
                     });
 
                     //only show message when limit is not reached
@@ -332,6 +354,7 @@ const Meeting = () => {
                     onUserRaisedHand(
                         user.userId,
                         new Date(),
+                        false,
                         raiseHandCallback
                     );
 
@@ -362,6 +385,8 @@ const Meeting = () => {
                     }
                 },
                 altBroadcastApprove: async (isStreamming, data) => {
+                    setUserActionLoading(currentUser.userId, false);
+
                     if (!isStreamming) {
                         sparkRTC.value.onRaiseHandRejected();
                         makeDialog('info', {
@@ -523,7 +548,7 @@ const Meeting = () => {
                     });
                 },
                 userLoweredHand: (data) => {
-                    onUserRaisedHand(data, false);
+                    onUserRaisedHand(data, false, false);
                     log('userLoweredHand: ', data);
                     sparkRTC.value.getLatestUserList('UserLowerHand');
 
