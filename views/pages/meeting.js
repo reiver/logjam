@@ -649,6 +649,10 @@ const Meeting = () => {
                         }
                     );
                 },
+
+                newChatMessage: (content, from) => {
+                    console.log("Got Message: ", content, " from: ", from);
+                },
             });
 
             if (sparkRTC.value) {

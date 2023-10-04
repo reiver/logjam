@@ -631,7 +631,21 @@ export class SparkRTC {
                     this.startProcedure(true);
                 }
                 break;
+            case "new-message":
+                const content = msg.Data;
+                const sender = msg.Name;
 
+                const foundUser = this.users.find(
+                    (user) => parseFloat(user.id) === parseFloat(sender)
+                );
+                if (foundUser) {
+                let name = JSON.parse(foundUser.name);
+                if (this.newChatMessage) {
+                        this.newChatMessage(content, name.name);
+                    }
+                }
+
+                break;
             case 'audience-broadcasting':
                 console.log('audience-broadcasting', msg);
 
@@ -2967,6 +2981,16 @@ export class SparkRTC {
     };
 
     /**
+     
+chat feat*/
+  sendChatMessage=async (content)=>{
+    if (await this.checkSocketStatus())
+    this.socket.send(
+        JSON.stringify({
+            type: 'send-message',
+            data: content,}));}
+
+    /**
      * To leave the meeting
      */
     leaveMeeting = async () => {
@@ -3164,6 +3188,7 @@ export class SparkRTC {
         this.onAudioStatusChange = options.onAudioStatusChange;
         this.userLoweredHand = options.userLoweredHand;
         this.invitationToJoinStage = options.invitationToJoinStage;
+        this.newChatMessage = options.newChatMessage;
 
         this.checkBrowser(); //detect browser
         this.getSupportedCodecs();
