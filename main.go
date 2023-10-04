@@ -6,7 +6,7 @@ import (
 )
 
 func main() {
-	src := flag.String("src", "0.0.0.0:8090", "source listen address")
+	src := flag.String("src", "0.0.0.0:8080", "source listen address")
 	prodMode := flag.Bool("prod", false, "enable production mode ( its in dev mode by default )")
 	help := flag.Bool("h", false, "print help")
 	flag.Parse()
