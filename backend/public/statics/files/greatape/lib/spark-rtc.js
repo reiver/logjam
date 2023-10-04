@@ -208,14 +208,14 @@ export class SparkRTC {
                 localDescription
             );
 
-            this.updateTheStatus(
-                `broadcasterLocalDescription`,
-                localDescription.sdp
-            );
-            this.updateTheStatus(
-                `broadcasterRemoteDescription`,
-                broadcasterPeerConnection.remoteDescription.sdp
-            );
+            // this.updateTheStatus(
+            //     `broadcasterLocalDescription`,
+            //     localDescription.sdp
+            // );
+            // this.updateTheStatus(
+            //     `broadcasterRemoteDescription`,
+            //     broadcasterPeerConnection.remoteDescription.sdp
+            // );
 
             if (await this.checkSocketStatus()) {
                 const videoAnswerMsg = JSON.stringify({
@@ -316,10 +316,10 @@ export class SparkRTC {
                         new RTCSessionDescription(msg.sdp)
                     );
 
-                    this.updateTheStatus(
-                        `remoteDescription`,
-                        audiencePeerConnection.remoteDescription.sdp
-                    );
+                    // this.updateTheStatus(
+                    //     `remoteDescription`,
+                    //     audiencePeerConnection.remoteDescription.sdp
+                    // );
                 } catch (e) {
                     this.updateTheStatus(
                         `setRemoteDescription failed with exception: ${e.message}`
@@ -1446,7 +1446,8 @@ export class SparkRTC {
         // Handle connectionstatechange event
         peerConnection.onconnectionstatechange = (event) => {
             this.updateTheStatus(
-                `Connection state: ${peerConnection.connectionState}`
+                `Connection state: ${peerConnection.connectionState}, pc: `,
+                peerConnection
             );
 
             if (
@@ -1461,9 +1462,7 @@ export class SparkRTC {
         };
 
         peerConnection.onicecandidateerror = async (event) => {
-            this.updateTheStatus(
-                `Peer Connection ice candidate error ${event}`
-            );
+            this.updateTheStatus(`Peer Connection ice candidate error`, event);
         };
 
         peerConnection.onicecandidate = async (event) => {
@@ -1496,10 +1495,10 @@ export class SparkRTC {
                     await peerConnection.createOffer()
                 );
 
-                this.updateTheStatus(
-                    `localDescription`,
-                    peerConnection.localDescription.sdp
-                );
+                // this.updateTheStatus(
+                //     `localDescription`,
+                //     peerConnection.localDescription.sdp
+                // );
                 if (await this.checkSocketStatus())
                     this.socket.send(
                         JSON.stringify({
@@ -2128,10 +2127,7 @@ export class SparkRTC {
                     this.lastBroadcasterId = broadcaster.id;
                 }
 
-                // console.log('broadcasterName: ', broadcasterName);
-
                 this.remoteStreams.forEach((stream) => {
-                    console.log('remotestream: ', stream);
                     const user = users.find(
                         (user) => user?.video?.id === stream.id
                     );
@@ -2142,9 +2138,6 @@ export class SparkRTC {
                         unmatchedStreams.push(stream);
                     }
                 });
-
-                // console.log('matchedStreams: ', matchedStreamMap);
-                // console.log('unmatchedStreams: ', unmatchedStreams);
 
                 //set name to stream and display
                 for (const entry of matchedStreamMap) {
