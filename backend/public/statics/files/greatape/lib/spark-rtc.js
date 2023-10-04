@@ -2098,8 +2098,9 @@ export class SparkRTC {
         }, 4000);
 
         setTimeout(() => {
-            console.log('ice not connected yet, restarting ice');
             if (!peerConnection._iceIsConnected) {
+                console.log('ice not connected yet, restarting ice');
+
                 peerConnection.restartIce();
             }
             setTimeout(() => {
