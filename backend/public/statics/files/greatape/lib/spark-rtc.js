@@ -51,8 +51,6 @@ export class SparkRTC {
     defaultCam = null;
     defaultMic = null;
 
-    invitedUsers = [];
-
     userListCallback = null;
     // remoteStreamsQueue = new Queue();
 
@@ -257,7 +255,7 @@ export class SparkRTC {
     };
 
     joinStage = async (data) => {
-        this.startBroadcasting('alt-broadcast');
+        await this.startBroadcasting('alt-broadcast');
 
         this.lastBroadcasterId = data.toString();
         if (this.localStream) {
@@ -459,70 +457,58 @@ export class SparkRTC {
             case 'alt-broadcast':
                 this.updateTheStatus(`[handleMessage] alt-broadcast`, msg);
                 if (this.role === this.Roles.BROADCAST) {
-                    const userInvitedAlready = this.invitedUsers.includes(
-                        msg.data
-                    );
-                    if (!userInvitedAlready) {
-                        var limitReached = false;
+                    this.updateTheStatus(`My ID: ${this.myUsername}`);
 
-                        // if (this.raiseHands.length >= this.maxRaisedHands) {
-                        //     limitReached = true;
-                        // }
-                        this.updateTheStatus(`My ID: ${this.myUsername}`);
+                    if (this.raiseHands.indexOf(msg.data) === -1) {
+                        var result = false;
+                        if (this.raiseHandConfirmation) {
+                            try {
+                                const data = JSON.parse(msg.name);
+                                const name = data.name;
+                                const email = data.email;
 
-                        if (this.raiseHands.indexOf(msg.data) === -1) {
-                            var result = false;
-                            if (
-                                this.raiseHandConfirmation /*&& !limitReached*/
-                            ) {
-                                try {
-                                    const data = JSON.parse(msg.name);
-                                    const name = data.name;
-                                    const email = data.email;
-
-                                    result = await this.raiseHandConfirmation({
-                                        name,
-                                        email,
-                                        userId: msg.Data,
-                                    });
-                                    this.updateTheStatus(
-                                        `[handleMessage] alt-broadcast result ${result}`
-                                    );
-                                } catch (e) {
-                                    console.error(e);
-                                    return;
-                                }
+                                result = await this.raiseHandConfirmation({
+                                    name,
+                                    email,
+                                    userId: msg.Data,
+                                });
+                                this.updateTheStatus(
+                                    `[handleMessage] alt-broadcast result ${result}`
+                                );
+                            } catch (e) {
+                                console.error(e);
+                                return;
                             }
-
-                            if (await this.checkSocketStatus())
-                                this.socket.send(
-                                    JSON.stringify({
-                                        type: 'alt-broadcast-approve',
-                                        target: msg.data,
-                                        result,
-                                        maxLimitReached: false, //limitReached,
-                                    })
-                                );
-
-                            if (result !== true) return;
-
-                            this.getLatestUserList('alt-broadcast');
-                            this.raiseHands.push(msg.data);
-                            this.updateTheStatus(
-                                `[handleMessage] ${msg.type} approving raised hand`,
-                                msg.data
-                            );
-                            this.getMetadata();
-                            setTimeout(() => {
-                                const metaData = this.metaData;
-                                metaData.raiseHands = JSON.stringify(
-                                    this.raiseHands
-                                );
-                                this.setMetadata(metaData);
-                            }, 1000);
-                        } else {
-                            this.updateTheStatus(`else of this.raiseHands`);
                         }
+
+                        if (await this.checkSocketStatus())
+                            this.socket.send(
+                                JSON.stringify({
+                                    type: 'alt-broadcast-approve',
+                                    target: msg.data,
+                                    result,
+                                    maxLimitReached: false, //limitReached,
+                                })
+                            );
+
+                        if (result !== true) return;
+
+                        this.getLatestUserList('alt-broadcast');
+                        this.raiseHands.push(msg.data);
+                        this.updateTheStatus(
+                            `[handleMessage] ${msg.type} approving raised hand`,
+                            msg.data
+                        );
+                        this.getMetadata();
+                        setTimeout(() => {
+                            const metaData = this.metaData;
+                            metaData.raiseHands = JSON.stringify(
+                                this.raiseHands
+                            );
+                            this.setMetadata(metaData);
+                        }, 1000);
+                    } else {
+                        this.updateTheStatus(`else of this.raiseHands`);
                     }
                 } else {
                     this.updateTheStatus(`else of role check`);
@@ -671,8 +657,6 @@ export class SparkRTC {
 
                         this.userLoweredHand(msg.data, name);
                     }
-
-                    this.removeFromInvitedUsersList(msg.data);
                 } else {
                     //remove from sentrequests
                     this.removeFromSentRequest(msg.data);
@@ -689,7 +673,6 @@ export class SparkRTC {
 
             case 'left-stage':
                 console.log('left-stage', msg);
-                this.removeFromInvitedUsersList(msg.data);
                 break;
 
             default:
@@ -697,14 +680,6 @@ export class SparkRTC {
                 //     `[handleMessage] default ${JSON.stringify(msg)}`
                 // );
                 break;
-        }
-    };
-
-    removeFromInvitedUsersList = (data) => {
-        //remove user from invited users list
-        const indexToRemove = this.invitedUsers.indexOf(data);
-        if (indexToRemove != -1) {
-            this.invitedUsers.splice(indexToRemove, 1);
         }
     };
 
@@ -829,8 +804,6 @@ export class SparkRTC {
             });
             this.socket.send(message);
         }
-
-        this.removeFromInvitedUsersList(target);
     };
 
     /**
@@ -1151,7 +1124,6 @@ export class SparkRTC {
         if (user) {
             try {
                 if (await this.checkSocketStatus()) {
-                    this.invitedUsers.push(user.toString()); //save invited user ids
                     this.raiseHands.push(user.toString()); //add to raise hand list also to make sure the count
                     this.sentRequests.push(user.toString()); //save sent request
                     this.socket.send(
