@@ -96,10 +96,6 @@ export const onStartShareScreen = (stream) => {
 };
 
 const displayStream = async (stream, toggleFull = false) => {
-    console.log(
-        `toggleFullScreen displayStream: ${toggleFull} stream: `,
-        stream
-    );
     let local = false;
     if (sparkRTC.value.localStream) {
         if (sparkRTC.value.localStream.id === stream.id) {
@@ -600,7 +596,6 @@ const Meeting = () => {
 
                 invitationToJoinStage: async (msg) => {
                     console.log('invitationToJoinStage: ', msg);
-                    const data = parseInt(msg.data);
                     //show preview dialog to Join stage
                     const localStream =
                         await sparkRTC.value.getAccessToLocalStream();
@@ -621,7 +616,7 @@ const Meeting = () => {
                                 isStreamming: true,
                                 ableToRaiseHand: true,
                             });
-                            sparkRTC.value.joinStage(data);
+                            sparkRTC.value.joinStage(msg.data);
                             makeDialog('info', {
                                 message: 'You’ve been added to the stage',
                                 icon: 'Check',
@@ -640,7 +635,7 @@ const Meeting = () => {
                             }, 2000);
                         },
                         () => {
-                            console.log("audience-broadcasting cancelling..")
+                            console.log('audience-broadcasting cancelling..');
                             //onClose
                             updateUser({
                                 ableToRaiseHand: true,
@@ -649,7 +644,7 @@ const Meeting = () => {
                             });
 
                             sparkRTC.value.resetAudioVideoState();
-                            sparkRTC.value.cancelJoinStage(data, true);
+                            sparkRTC.value.cancelJoinStage(msg.data, true);
                             sparkRTC.value.onRaiseHandRejected();
                         }
                     );
