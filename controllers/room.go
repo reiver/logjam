@@ -234,7 +234,7 @@ func (c *RoomWSController) Role(ctx *models.WSContext) {
 		}
 		if err != nil {
 			c.log(contracts.LError, err.Error())
-			_ = c.socketSVC.Send(map[string]any{
+			_ = c.socketSVC.Send(map[string]interface{}{
 				"type": "error",
 				"data": "Insert Child Error : " + err.Error(),
 			}, ctx.SocketID)
@@ -315,7 +315,7 @@ func (c *RoomWSController) Tree(ctx *models.WSContext) {
 }
 
 func (c *RoomWSController) MetadataSet(ctx *models.WSContext) {
-	metaData := make(map[string]any)
+	metaData := make(map[string]interface{})
 	err := json.Unmarshal([]byte(ctx.ParsedMessage.Data), &metaData)
 	if err != nil {
 		c.log(contracts.LError, err.Error())
@@ -446,7 +446,7 @@ func (c *RoomWSController) SendMessage(ctx *models.WSContext) {
 }
 
 func (c *RoomWSController) SendOfferToAN(ctx *models.WSContext) {
-	msg := make(map[string]any)
+	msg := make(map[string]interface{})
 	err := json.Unmarshal(ctx.PureMessage, &msg)
 	if err != nil {
 		c.log(contracts.LError, err.Error())
@@ -460,7 +460,7 @@ func (c *RoomWSController) SendOfferToAN(ctx *models.WSContext) {
 }
 
 func (c *RoomWSController) SendAnswerToAN(ctx *models.WSContext) {
-	msg := make(map[string]any)
+	msg := make(map[string]interface{})
 	err := json.Unmarshal(ctx.PureMessage, &msg)
 	if err != nil {
 		c.log(contracts.LError, err.Error())
@@ -474,7 +474,7 @@ func (c *RoomWSController) SendAnswerToAN(ctx *models.WSContext) {
 }
 
 func (c *RoomWSController) SendICECandidateToAN(ctx *models.WSContext) {
-	msg := make(map[string]any)
+	msg := make(map[string]interface{})
 	err := json.Unmarshal(ctx.PureMessage, &msg)
 	if err != nil {
 		c.log(contracts.LError, err.Error())

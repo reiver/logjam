@@ -41,7 +41,7 @@ func (ctrl *GoldGorillaController) SendAnswer(rw http.ResponseWriter, req *http.
 	if ctrl.helper.HandleIfErr(rw, err, 400) {
 		return
 	}
-	ctrl.socketSVC.Send(map[string]any{
+	ctrl.socketSVC.Send(map[string]interface{}{
 		"type":   "video-answer",
 		"target": strconv.FormatUint(reqModel.ID, 10),
 		"name":   strconv.FormatUint(models.GoldGorillaId, 10),
@@ -61,7 +61,7 @@ func (ctrl *GoldGorillaController) SendOffer(rw http.ResponseWriter, req *http.R
 	if ctrl.helper.HandleIfErr(rw, err, 400) {
 		return
 	}
-	_ = ctrl.socketSVC.Send(map[string]any{
+	_ = ctrl.socketSVC.Send(map[string]interface{}{
 		"type":   "video-offer",
 		"target": strconv.FormatUint(reqModel.ID, 10),
 		"name":   strconv.FormatUint(models.GoldGorillaId, 10),
@@ -81,7 +81,7 @@ func (ctrl *GoldGorillaController) SendICECandidate(rw http.ResponseWriter, req 
 	if ctrl.helper.HandleIfErr(rw, err, 400) {
 		return
 	}
-	_ = ctrl.socketSVC.Send(map[string]any{
+	_ = ctrl.socketSVC.Send(map[string]interface{}{
 		"Type":      "new-ice-candidate",
 		"Target":    strconv.FormatUint(reqModel.ID, 10),
 		"candidate": reqModel.ICECandidate,

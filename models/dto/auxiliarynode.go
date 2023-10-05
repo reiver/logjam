@@ -12,7 +12,7 @@ type JoinReqModel struct {
 
 type SendIceCandidateReqModel struct {
 	RoomPeerDTO
-	ICECandidate any `json:"iceCandidate"`
+	ICECandidate interface{} `json:"iceCandidate"`
 }
 
 type CreatePeerRPCModel struct {
@@ -23,5 +23,5 @@ type CreatePeerRPCModel struct {
 
 type SetSDPRPCModel struct {
 	RoomPeerDTO
-	SDP any `json:"sdp"`
+	SDP interface{} `json:"sdp"`
 }

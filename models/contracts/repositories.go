@@ -21,8 +21,8 @@ type IRoomRepository interface {
 	GetAllMembersId(roomId string, excludeBroadcaster bool) ([]uint64, error)
 	InsertMemberToTree(roomId string, memberId uint64, isGoldGorilla bool) (parentId *uint64, err error)
 	RemoveMember(roomId string, memberId uint64) (wasBroadcaster bool, nodeChildrenIdList []uint64, err error)
-	SetRoomMetaData(roomId string, metaData map[string]any) error
-	GetRoomMetaData(roomId string) (map[string]any, error)
+	SetRoomMetaData(roomId string, metaData map[string]interface{}) error
+	GetRoomMetaData(roomId string) (map[string]interface{}, error)
 	AddMessageToHistory(roomId string, senderId uint64, msg string) error
 	ClearMessageHistory(roomId string) error
 	GetUserByStreamId(roomId string, streamId string) (*models.MemberModel, error)
@@ -37,8 +37,8 @@ type IGoldGorillaServiceRepository interface {
 	Start() error
 	ResetRoom(roomId string) error
 	CreatePeer(roomId string, id uint64, canPublish bool, isCaller bool) error
-	SendICECandidate(roomId string, id uint64, iceCandidate any) error
-	SendAnswer(roomId string, peerId uint64, answer any) error
-	SendOffer(roomId string, peerId uint64, offer any) error
+	SendICECandidate(roomId string, id uint64, iceCandidate interface{}) error
+	SendAnswer(roomId string, peerId uint64, answer interface{}) error
+	SendOffer(roomId string, peerId uint64, offer interface{}) error
 	ClosePeer(roomId string, id uint64) error
 }
