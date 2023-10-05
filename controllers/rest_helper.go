@@ -9,7 +9,7 @@ import (
 type RestResponseHelper struct {
 }
 
-func (r *RestResponseHelper) Write(rw http.ResponseWriter, response any, statusCode int) error {
+func (r *RestResponseHelper) Write(rw http.ResponseWriter, response interface{}, statusCode int) error {
 	if response == nil {
 		response = struct{}{}
 	}

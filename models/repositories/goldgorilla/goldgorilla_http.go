@@ -52,7 +52,7 @@ func (a *GoldGorillaRepository) CreatePeer(roomId string, id uint64, canPublish 
 	return nil
 }
 
-func (a *GoldGorillaRepository) SendICECandidate(roomId string, id uint64, iceCandidate any) error {
+func (a *GoldGorillaRepository) SendICECandidate(roomId string, id uint64, iceCandidate interface{}) error {
 	body, err := getReader(
 		dto.SendIceCandidateReqModel{
 			RoomPeerDTO: dto.RoomPeerDTO{
@@ -74,7 +74,7 @@ func (a *GoldGorillaRepository) SendICECandidate(roomId string, id uint64, iceCa
 	return nil
 }
 
-func (a *GoldGorillaRepository) SendAnswer(roomId string, peerId uint64, answer any) error {
+func (a *GoldGorillaRepository) SendAnswer(roomId string, peerId uint64, answer interface{}) error {
 	body, err := getReader(dto.SetSDPRPCModel{
 		RoomPeerDTO: dto.RoomPeerDTO{
 			RoomId: roomId,
@@ -95,7 +95,7 @@ func (a *GoldGorillaRepository) SendAnswer(roomId string, peerId uint64, answer 
 	return nil
 }
 
-func (a *GoldGorillaRepository) SendOffer(roomId string, peerId uint64, offer any) error {
+func (a *GoldGorillaRepository) SendOffer(roomId string, peerId uint64, offer interface{}) error {
 	body, err := getReader(dto.SetSDPRPCModel{
 		RoomPeerDTO: dto.RoomPeerDTO{
 			RoomId: roomId,
@@ -139,7 +139,7 @@ func (a *GoldGorillaRepository) ClosePeer(roomId string, id uint64) error {
 }
 
 func (a *GoldGorillaRepository) ResetRoom(roomId string) error {
-	body, err := getReader(map[string]any{"roomId": roomId})
+	body, err := getReader(map[string]interface{}{"roomId": roomId})
 	if err != nil {
 		return err
 	}
@@ -171,7 +171,7 @@ func (a *GoldGorillaRepository) Start() error {
 	return nil
 }
 
-func getReader(obj any) (*bytes.Reader, error) {
+func getReader(obj interface{}) (*bytes.Reader, error) {
 	buffer, err := json.Marshal(obj)
 	if err != nil {
 		return nil, err

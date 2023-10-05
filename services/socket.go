@@ -45,7 +45,7 @@ func (s *socketService) GetSocketId(conn *websocket.Conn) (*uint64, error) {
 	return nil, nil
 }
 
-func (s *socketService) Send(data any, receiverIds ...uint64) error {
+func (s *socketService) Send(data interface{}, receiverIds ...uint64) error {
 	var jsonData []byte
 	var err error
 	if b, isByte := data.([]byte); isByte {
