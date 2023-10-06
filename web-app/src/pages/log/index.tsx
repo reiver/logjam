@@ -227,7 +227,7 @@ const Meeting = () => {
         },
         onUserInitialized: (userId) => {
           //@ts-ignore
-          currentUser.userId = userId
+          currentUser.value.userId = userId
         },
         localStreamChangeCallback: (stream) => {
           log('[Local Stream Callback]', stream)
@@ -348,7 +348,7 @@ const Meeting = () => {
         },
         altBroadcastApprove: async (isStreamming, data) => {
           //@ts-ignore
-          setUserActionLoading(currentUser.userId, false)
+          setUserActionLoading(currentUser.value.userId, false)
 
           console.log('altBroadcastApprove: data: ', data)
 

@@ -1,21 +1,26 @@
 import { signal } from '@preact/signals'
 import Camera from 'assets/icons/Camera.svg?react'
+import CameraLight from 'assets/icons/CameraLight.svg?react'
 import CameraOff from 'assets/icons/CameraOff.svg?react'
 import Close from 'assets/icons/Close.svg?react'
+import Headphone from 'assets/icons/Headphone.svg?react'
 import Microphone from 'assets/icons/Microphone.svg?react'
+import MicrophoneLight from 'assets/icons/MicrophoneLight.svg?react'
 import MicrophoneOff from 'assets/icons/MicrophoneOff.svg?react'
 import Settings from 'assets/icons/Settings.svg?react'
+import Smartphone from 'assets/icons/Smartphone.svg?react'
 import { clsx } from 'clsx'
 import { Button, Icon, IconButton, Tooltip } from 'components'
 import { currentUser, sparkRTC, updateUser } from 'pages/log'
+import { Fragment } from 'preact'
 import { useEffect, useRef } from 'preact/compat'
 import { v4 as uuidv4 } from 'uuid'
 import { IODevices } from '../../lib/io-devices.js'
 
 const dialogs = signal([])
-var selectedMic = null
-var selectedSpeaker = null
-var selectedCamera = null
+var selectedMic = signal(null)
+var selectedSpeaker = signal(null)
+var selectedCamera = signal(null)
 const builtInLabel = 'Built-in'
 const builtInThisDevice = 'Built-in (This Device)'
 
@@ -46,20 +51,7 @@ export const IOSettingsDialog = ({
       (device) => {
         setTimeout(() => {
           if (device && device.label) {
-            console.log('Audio Device', device)
-            var elem = document.getElementById('selectedSpeaker')
-            elem.innerHTML = ''
-            console.log('selectedSpeaker elem: ', elem)
-            if (device.label.toLowerCase().includes('default')) {
-              console.log('Setting inner HTML Built in')
-              elem.innerHTML = builtInLabel
-            } else {
-              console.log('Setting inner HTML Devuice lable')
-
-              elem.innerHTML = device.label
-            }
-
-            selectedSpeaker = device
+            selectedSpeaker.value = device
           }
         }, 100)
       } //on close
@@ -83,16 +75,7 @@ export const IOSettingsDialog = ({
       (device) => {
         setTimeout(() => {
           if (device && device.label) {
-            console.log('Mic Device', device)
-            const elem = document.getElementById('selectedMic')
-            console.log('selectedCamera elem: ', elem)
-            elem.innerHTML = ''
-            if (device.label.toLowerCase().includes('default') || device.label.toLowerCase().includes('iphone microphone')) {
-              elem.innerHTML = builtInLabel
-            } else {
-              elem.innerHTML = device.label
-            }
-            selectedMic = device
+            selectedMic.value = device
           }
         }, 100)
       } //on close
@@ -116,17 +99,7 @@ export const IOSettingsDialog = ({
       (device) => {
         setTimeout(() => {
           if (device && device.label) {
-            console.log('Video Device', device)
-            const elem = document.getElementById('selectedCamera')
-            console.log('selectedCamera elem: ', elem)
-            elem.innerHTML = ''
-            if (device.label.toLowerCase().includes('default') || device.label.toLowerCase().includes('(') || device.label.toLowerCase().includes('front')) {
-              elem.innerHTML = builtInLabel
-            } else {
-              elem.innerHTML = device.label
-            }
-
-            selectedCamera = device
+            selectedCamera.value = device
           }
         }, 100)
       } //on close
@@ -163,39 +136,7 @@ export const IOSettingsDialog = ({
             <div class="sm:py-4 py-2 flex rounded-md mx-2 cursor-pointer" onClick={selectAudioOutputDevice}>
               <div class="text-left text-bold-12 px-5 flex-1">Audio Output</div>
               <div id="selectedSpeaker" class="text-right text-bold-12 px-5 flex-1 text-gray-1 cursor-pointer">
-                {(() => {
-                  const elem = document.getElementById('selectedSpeaker')
-
-                  if (elem && elem.innerHTML !== '' && selectedSpeaker === null) {
-                    // innerHTML exists and is not empty or just whitespace
-                    console.log('Speaker innerHTML exists:', elem.innerHTML)
-                    if (elem.innerHTML.toLowerCase().includes(builtInLabel.toLowerCase())) {
-                      elem.innerHTML = ''
-                      return builtInLabel
-                    }
-                  } else {
-                    // innerHTML does not exist or is empty/whitespace
-                    console.log('Speaker innerHTML not exists')
-
-                    if (elem) {
-                      elem.innerHTML = ''
-                    }
-                    console.log('selectedSpeaker-default: ', selectedSpeaker)
-
-                    //return device name
-                    if (selectedSpeaker && selectedSpeaker.label) {
-                      const labelLowerCase = selectedSpeaker.label.toLowerCase()
-                      if (labelLowerCase.includes('default')) {
-                        console.log('returning built in 1')
-                        return builtInLabel
-                      } else {
-                        return selectedSpeaker.label
-                      }
-                    }
-                    console.log('returning built in 2')
-                    return builtInLabel
-                  }
-                })()}
+                {selectedSpeaker.value ? selectedSpeaker.value.label : builtInLabel}
               </div>
             </div>
           )}
@@ -203,75 +144,14 @@ export const IOSettingsDialog = ({
           <div class="sm:py-4 py-2 rounded-md mx-2 flex cursor-pointer" onClick={selectAudioInputDevice}>
             <div class="text-left text-bold-12 px-5 flex-1">Microphone</div>
             <div id="selectedMic" class="text-right text-bold-12 px-5 flex-1 text-gray-1">
-              {(() => {
-                const elem = document.getElementById('selectedMic')
-
-                if (elem && elem.innerHTML !== '' && selectedMic === null) {
-                  // innerHTML exists and is not empty or just whitespace
-                  console.log('mic innerHTML exists:', elem.innerHTML)
-                  if (elem.innerHTML.toLowerCase().includes(builtInLabel.toLowerCase())) {
-                    elem.innerHTML = ''
-                    return builtInLabel
-                  }
-                } else {
-                  // innerHTML does not exist or is empty/whitespace
-                  console.log('mic innerHTML not exists')
-
-                  if (elem) {
-                    elem.innerHTML = ''
-                  }
-                  console.log('selectedMic-default: ', selectedMic)
-
-                  //return device name
-                  if (selectedMic && selectedMic.label) {
-                    const labelLowerCase = selectedMic.label.toLowerCase()
-                    if (labelLowerCase.includes('default') || labelLowerCase.includes('iphone microphone')) {
-                      return builtInLabel
-                    } else {
-                      return selectedMic.label
-                    }
-                  }
-                  return builtInLabel
-                }
-              })()}
+              {selectedMic.value ? selectedMic.value.label : builtInLabel}
             </div>
           </div>
 
           <div class="sm:py-4 py-2 rounded-md mx-2 flex cursor-pointer" onClick={selectVideoInputDevice}>
             <div class="text-left text-bold-12 px-5 flex-1">Video Input</div>
             <div id="selectedCamera" class="text-right text-bold-12 px-5 flex-1 text-gray-1">
-              {(() => {
-                const elem = document.getElementById('selectedCamera')
-
-                if (elem && elem.innerHTML !== '' && selectedCamera === null) {
-                  // innerHTML exists and is not empty or just whitespace
-                  console.log('Cam innerHTML exists:', elem.innerHTML)
-                  if (elem.innerHTML.toLowerCase().includes(builtInLabel.toLowerCase())) {
-                    elem.innerHTML = ''
-                    return builtInLabel
-                  }
-                } else {
-                  // innerHTML does not exist or is empty/whitespace
-                  console.log('Cam innerHTML not exists')
-
-                  if (elem) {
-                    elem.innerHTML = ''
-                  }
-
-                  console.log('selectedCamera-default: ', selectedCamera)
-
-                  //return device name
-                  if (selectedCamera && selectedCamera.label) {
-                    const labelLowerCase = selectedCamera.label.toLowerCase()
-                    if (labelLowerCase.includes('default') || labelLowerCase.includes('(') || labelLowerCase.includes('front')) {
-                      return builtInLabel
-                    } else {
-                      return selectedCamera.label
-                    }
-                  }
-                  return builtInLabel
-                }
-              })()}
+              {selectedCamera.value ? selectedCamera.value.label : builtInLabel}
             </div>
           </div>
         </div>
@@ -294,7 +174,7 @@ export const IOSettingsDialog = ({
               variant={okButtonVariant}
               class="w-full flex-grow-1"
               onClick={() => {
-                onOk(selectedMic, selectedCamera, selectedSpeaker)
+                onOk(selectedMic.value, selectedCamera.value, selectedSpeaker.value)
               }}
             >
               {okText}
@@ -357,11 +237,11 @@ export const IODevicesDialog = ({ onClose, message: { message, title }, devices,
 
   // mark default device selected on inital display
   setTimeout(() => {
-    if (deviceType === 'speaker' && !selectedSpeaker) {
+    if (deviceType === 'speaker' && !selectedSpeaker.value) {
       handleDeviceClick(-1, false)
-    } else if (deviceType === 'microphone' && !selectedMic) {
+    } else if (deviceType === 'microphone' && !selectedMic.value) {
       handleDeviceClick(-1, false)
-    } else if (deviceType === 'camera' && !selectedCamera) {
+    } else if (deviceType === 'camera' && !selectedCamera.value) {
       handleDeviceClick(-1, false)
     }
   }, 50)
@@ -371,23 +251,23 @@ export const IODevicesDialog = ({ onClose, message: { message, title }, devices,
     devices.forEach((value, index) => {
       console.log('Device: ', value, ' index: ', index)
       if (value.kind === 'audioinput') {
-        if (selectedMic && selectedMic.deviceId === value.deviceId) {
-          console.log('selectedMicis: ', selectedMic)
+        if (selectedMic.value && selectedMic.value.deviceId === value.deviceId) {
+          console.log('selectedMicis: ', selectedMic.value)
           setTimeout(() => {
             handleDeviceClick(index, false)
           }, 250)
         }
       } else if (value.kind === 'videoinput') {
-        if (selectedCamera && selectedCamera.deviceId === value.deviceId) {
-          console.log('selectedCamis: ', selectedCamera)
+        if (selectedCamera.value && selectedCamera.value.deviceId === value.deviceId) {
+          console.log('selectedCamis: ', selectedCamera.value)
 
           setTimeout(() => {
             handleDeviceClick(index, false)
           }, 250)
         }
       } else if (value.kind === 'audiooutput') {
-        if (selectedSpeaker && selectedSpeaker.deviceId === value.deviceId) {
-          console.log('selectedSpeakeris: ', selectedSpeaker)
+        if (selectedSpeaker.value && selectedSpeaker.value.deviceId === value.deviceId) {
+          console.log('selectedSpeakeris: ', selectedSpeaker.value)
 
           setTimeout(() => {
             handleDeviceClick(index, false)
@@ -421,6 +301,7 @@ export const IODevicesDialog = ({ onClose, message: { message, title }, devices,
 
     return false
   }
+  console.log(devices)
 
   return (
     <div class="absolute top-0 left-0 w-full h-full">
@@ -443,47 +324,24 @@ export const IODevicesDialog = ({ onClose, message: { message, title }, devices,
             {devices.map((device, index) => (
               <div class="sm:py-4 py-2 rounded-md mx-2 flex items-center cursor-pointer" onClick={() => handleDeviceClick(index)}>
                 <Icon
-                  icon={(() => {
-                    //return defualt builtin
-
-                    if (isBuiltInDevice(deviceType, device)) {
-                      return 'Smartphone'
-                    }
-
-                    //select other then default
-                    if (deviceType === 'microphone') {
-                      return 'MicrophoneLight'
-                    } else if (deviceType === 'camera') {
-                      return 'CameraLight'
-                    } else if (deviceType === 'speaker') {
-                      return 'Headphone'
-                    }
-                  })()}
+                  icon={
+                    isBuiltInDevice(deviceType, device)
+                      ? Smartphone
+                      : deviceType === 'microphone'
+                      ? MicrophoneLight
+                      : deviceType === 'camera'
+                      ? CameraLight
+                      : deviceType === 'speaker'
+                      ? Headphone
+                      : Fragment
+                  }
                   class="ml-5"
                   width="20px"
                   height="20px"
                 />
-                <div class="text-left px-2 text-bold-12 flex-1">
-                  {(() => {
-                    var deviceName = ''
-
-                    if (isBuiltInDevice(deviceType, device)) {
-                      deviceName = builtInThisDevice
-                    } else {
-                      deviceName = device.label
-                    }
-
-                    return deviceName
-                  })()}
-                </div>
+                <div class="text-left px-2 text-bold-12 flex-1">{isBuiltInDevice(deviceType, device) ? builtInThisDevice : device.label}</div>
                 <label class="flex items-right px-5 flex-0">
-                  <input
-                    type="radio"
-                    name="devices"
-                    id={`device${index}`}
-
-                    // device={device}
-                  />
+                  <input type="radio" name="devices" id={`device${index}`} />
                 </label>
               </div>
             ))}
@@ -507,9 +365,10 @@ export const PreviewDialog = ({
   className,
   contentClassName,
 }) => {
-  selectedCamera = null
-  selectedMic = null
-  selectedSpeaker = null
+  selectedCamera.value = null
+  selectedMic.value = null
+  selectedSpeaker.value = null
+
   const videoRef = useRef<HTMLVideoElement>()
   const { hasCamera, hasMic, isCameraOn, isMicrophoneOn } = currentUser.value
 
@@ -597,12 +456,12 @@ export const PreviewDialog = ({
             <Tooltip label={!isCameraOn ? 'Turn Camera On' : 'Turn Camera Off'}>
               <IconButton variant={!isCameraOn && 'danger'} onClick={toggleCamera}>
                 {' '}
-                <Icon icon={!isCameraOn ? Camera : CameraOff} />{' '}
+                <Icon icon={!isCameraOn ? CameraOff : Camera} />{' '}
               </IconButton>
             </Tooltip>
           )}
           {hasMic && (
-            <Tooltip key="Microphone${!isMicrophoneOn ? 'Off' : ''}" label={!isMicrophoneOn ? 'Turn Microphone On' : 'Turn Microphone Off'}>
+            <Tooltip label={!isMicrophoneOn ? 'Turn Microphone On' : 'Turn Microphone Off'}>
               <IconButton variant={!isMicrophoneOn && 'danger'} onClick={toggleMicrophone}>
                 <Icon icon={!isMicrophoneOn ? MicrophoneOff : Microphone} />
               </IconButton>
@@ -629,7 +488,7 @@ export const PreviewDialog = ({
             >
               {cancelText}
             </Button>
-            <Button size="lg" variant="${okButtonVariant}" class="w-full flex-grow-1" onClick={onOk}>
+            <Button size="lg" variant={okButtonVariant} class="w-full flex-grow-1" onClick={onOk}>
               {okText}
             </Button>
           </div>
@@ -661,7 +520,7 @@ export const InviteDialog = ({
         )}
       >
         <div class="flex justify-center items-center p-5 relative">
-          <span class="dark:text-white text-black text-bold-12">${title}</span>
+          <span class="dark:text-white text-black text-bold-12">{title}</span>
           <Icon icon={Close} class="absolute top-1/2 sm:right-5 right-[unset] left-5 sm:left-[unset] transform -translate-y-1/2 cursor-pointer" onClick={onClose} />
         </div>
         <hr class="dark:border-gray-2 border-gray-0 sm:block hidden" />
@@ -679,7 +538,7 @@ export const InviteDialog = ({
             >
               {cancelText}
             </Button>
-            <Button size="lg" variant="${okButtonVariant}" class="w-full flex-grow-1" onClick={onOk}>
+            <Button size="lg" variant={okButtonVariant} class="w-full flex-grow-1" onClick={onOk}>
               {okText}
             </Button>
           </div>
@@ -711,7 +570,7 @@ export const ConfirmDialog = ({
         )}
       >
         <div class="flex justify-center items-center p-5 relative">
-          <span class="dark:text-white text-black text-bold-12">${title}</span>
+          <span class="dark:text-white text-black text-bold-12">{title}</span>
           <Icon icon={Close} class="absolute top-1/2 sm:right-5 right-[unset] left-5 sm:left-[unset] transform -translate-y-1/2 cursor-pointer" onClick={onClose} />
         </div>
         <hr class="dark:border-gray-2 border-gray-0 sm:block hidden" />
@@ -920,9 +779,6 @@ export const makeIOSettingsDialog = (type, message, onOk, onClose, options = {})
         destroy()
       },
       onClose: () => {
-        // selectedCamera = null;
-        // selectedMic = null;
-        // selectedSpeaker = null;
         onClose && onClose()
         destroy()
       },
