@@ -14,7 +14,7 @@ import Volume from 'assets/icons/Volume.svg?react'
 import VolumeOff from 'assets/icons/VolumeOff.svg?react'
 import { clsx } from 'clsx'
 import { Icon, IconButton, Tooltip, attendeesBadge, makeDialog } from 'components'
-import { currentUser, isDebugMode, onStartShareScreen, onStopShareScreen, setUserActionLoading, sparkRTC, updateUser } from 'pages/log'
+import { currentUser, isDebugMode, onStartShareScreen, onStopShareScreen, setUserActionLoading, sparkRTC, updateUser } from 'pages/Meeting.js'
 import { useState } from 'preact/compat'
 import { isMobile } from '../../lib/common.js'
 

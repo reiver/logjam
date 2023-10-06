@@ -1,6 +1,6 @@
 import { Button, Container, Logo } from 'components'
 
-import { leaveMeeting, meetingStatus } from 'pages/log'
+import { leaveMeeting, meetingStatus } from 'pages/Meeting'
 
 export const TopBar = () => {
   const handleLeaveMeeting = leaveMeeting

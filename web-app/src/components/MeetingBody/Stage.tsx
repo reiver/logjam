@@ -10,7 +10,7 @@ import { memo, useEffect, useRef, useState } from 'preact/compat'
 import { userInteractedWithDom } from '../..'
 import { getDeviceConfig } from '../../hooks/use-breakpoint.js'
 import { IODevices } from '../../lib/io-devices.js'
-import { broadcastIsInTheMeeting, currentUser, sparkRTC } from '../../pages/log'
+import { broadcastIsInTheMeeting, currentUser, sparkRTC } from '../../pages/Meeting'
 let timeOut
 export const bottomBarVisible = signal(true)
 export const fullScreenedStream = signal(null)

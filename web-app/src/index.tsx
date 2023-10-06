@@ -5,7 +5,8 @@ import { ErrorBoundary, lazy, LocationProvider, Router } from 'preact-iso'
 import './global.css'
 
 const Home = lazy(() => import('./pages'))
-const LogPage = lazy(() => import('./pages/log'))
+const HostPage = lazy(() => import('./pages/host'))
+const AudiencePage = lazy(() => import('./pages/audience'))
 const NotFound = lazy(() => import('./pages/_404.jsx'))
 
 export const userInteractedWithDom = signal(false)
@@ -39,8 +40,8 @@ export function App() {
         <ErrorBoundary>
           <Router>
             <Home path="/" />
-            <LogPage path="/log/:room" />
-            <LogPage path="/:displayName/:room" />
+            <AudiencePage path="/log/:room" />
+            <HostPage path="/:displayName" />
             <NotFound default />
           </Router>
         </ErrorBoundary>

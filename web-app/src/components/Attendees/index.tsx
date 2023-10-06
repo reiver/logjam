@@ -6,7 +6,7 @@ import Hand from 'assets/icons/Hand.svg?react'
 import Loader from 'assets/icons/Loader.svg?react'
 import clsx from 'clsx'
 import { BottomSheet, Icon, makeDialog } from 'components'
-import { currentUser, onInviteToStage, onUserRaisedHand, sparkRTC } from 'pages/log'
+import { currentUser, onInviteToStage, onUserRaisedHand, sparkRTC } from 'pages/Meeting'
 import { makeInviteDialog } from '../Dialog'
 import { deviceSize } from '../MeetingBody/Stage.js'
 

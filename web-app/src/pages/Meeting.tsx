@@ -6,7 +6,7 @@ import { Roles, createSparkRTC, getWsUrl } from 'lib/common.js'
 import { lazy } from 'preact-iso'
 import { useEffect } from 'preact/compat'
 
-const PageNotFound = lazy(() => import('../_404'))
+const PageNotFound = lazy(() => import('./_404'))
 
 export const isDebugMode = signal((new URLSearchParams(window.location.search).get('debug') || '').toLowerCase() === 'true')
 export const statsDataOpen = signal(false)
@@ -192,15 +192,15 @@ export const getUserRaiseHandStatus = (userId) => {
   return attendees.value[userId]?.raisedHand || false
 }
 
-const Meeting = ({ params: { room, displayName } }: { params?: { room?: string; displayName?: string } }) => {
+const Meeting = ({ params: { room, displayName, name } }: { params?: { room?: string; displayName?: string; name?: string } }) => {
   if (displayName && room) {
     if (displayName[0] !== '@') return <PageNotFound />
   }
-
+  const isHost = !!displayName
   useEffect(() => {
     const queryParams = new URLSearchParams(window.location.search)
-    const name = queryParams.get('name')
-    var role = displayName ? 'broadcast' : 'audience'
+
+    var role = isHost ? 'broadcast' : 'audience'
     const host = queryParams.get('host')
     var previewDialogId = null
 

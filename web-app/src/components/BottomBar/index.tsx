@@ -4,7 +4,7 @@ import LinkIcon from 'assets/icons/Link.svg?react'
 import Troubleshoot from 'assets/icons/Troubleshoot.svg?react'
 import clsx from 'clsx'
 import { BottomSheet, Container, Controllers, Icon, MoreControllers, Tooltip, attendeesBadge, attendeesCount, isAttendeesOpen, isMoreOptionsOpen, toggleAttendees, toggleMoreOptions } from 'components'
-import { broadcastIsInTheMeeting, isDebugMode } from 'pages/log'
+import { broadcastIsInTheMeeting, isDebugMode } from 'pages/Meeting'
 
 export const BottomBar = () => {
   return (
