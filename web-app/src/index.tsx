@@ -39,7 +39,8 @@ export function App() {
         <ErrorBoundary>
           <Router>
             <Home path="/" />
-            <LogPage path="/log/*" />
+            <LogPage path="/log/:room" />
+            <LogPage path="/:displayName/:room" />
             <NotFound default />
           </Router>
         </ErrorBoundary>

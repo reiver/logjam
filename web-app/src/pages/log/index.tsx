@@ -3,7 +3,10 @@ import { BottomBar, Button, MeetingBody, TopBar, attendees, attendeesBadge, isMo
 import { isAttendeesOpen } from 'components/Attendees'
 import { ToastProvider, destroyDialog, makePreviewDialog } from 'components/Dialog'
 import { Roles, createSparkRTC, getWsUrl } from 'lib/common.js'
+import { lazy } from 'preact-iso'
 import { useEffect } from 'preact/compat'
+
+const PageNotFound = lazy(() => import('../_404'))
 
 export const isDebugMode = signal((new URLSearchParams(window.location.search).get('debug') || '').toLowerCase() === 'true')
 export const statsDataOpen = signal(false)
@@ -24,7 +27,6 @@ export const setUserActionLoading = (userId, actionLoading) => {
     },
   }
 }
-var Loading = false
 
 // const url = `stats/index.html`;
 // var targetWindow = window.open(url, '_blank');
@@ -153,7 +155,6 @@ export const leaveMeeting = () => {
 }
 
 export const onUserRaisedHand = (userId, raisedHand, actionLoading: boolean, acceptRaiseHand?: any) => {
-  Loading = actionLoading
   attendees.value = {
     ...attendees.value,
     [userId]: {
@@ -191,14 +192,16 @@ export const getUserRaiseHandStatus = (userId) => {
   return attendees.value[userId]?.raisedHand || false
 }
 
-const Meeting = () => {
+const Meeting = ({ params: { room, displayName } }: { params?: { room?: string; displayName?: string } }) => {
+  if (displayName && room) {
+    if (displayName[0] !== '@') return <PageNotFound />
+  }
+
   useEffect(() => {
     const queryParams = new URLSearchParams(window.location.search)
     const name = queryParams.get('name')
-    var role = queryParams.get('role')
-    const room = queryParams.get('room')
+    var role = displayName ? 'broadcast' : 'audience'
     const host = queryParams.get('host')
-
     var previewDialogId = null
 
     if (role === null || role === '') {
