@@ -47,10 +47,10 @@ export const AudiencePage = ({ params: { room } }: { params?: { room?: string } 
 
             <div class="flex gap-2 w-full">
               <Button variant="outlined" className="w-full normal-case" sx={{ textTransform: 'none' }}>
-                Attend Live Show
+                Not now
               </Button>
               <Button type="submit" variant="contained" className="w-full normal-case" sx={{ textTransform: 'none' }} color="primary">
-                Not now
+                Attend Live Show
               </Button>
             </div>
           </div>
