@@ -18,6 +18,8 @@ import { currentUser, isDebugMode, onStartShareScreen, onStopShareScreen, setUse
 import { useState } from 'preact/compat'
 import { isMobile } from '../../lib/common.js'
 
+const disableRaiseHandFeat = true
+
 export const isMoreOptionsOpen = signal(false)
 export const toggleMoreOptions = () => (isMoreOptionsOpen.value = !isMoreOptionsOpen.value)
 export const Controllers = () => {
@@ -147,7 +149,7 @@ export const Controllers = () => {
           </IconButton>
         </Tooltip>
       )}
-      {(!isStreamming || (isStreamming && !isHost)) && (
+      {((!isStreamming && !disableRaiseHandFeat )|| (isStreamming && !isHost)) && (
         <Tooltip key={isStreamming ? 'Leave the stage' : ableToRaiseHand ? 'Raise Hand' : 'Put Hand Down'} label={isStreamming ? 'Leave the stage' : ableToRaiseHand ? 'Raise Hand' : 'Put Hand Down'}>
           <IconButton key={isStreamming ? 'hand' : 'lower-hand'} onClick={onRaiseHand} variant={(isStreamming || !ableToRaiseHand) && 'danger'}>
             <Icon icon={isStreamming ? OffStage : Hand} />
