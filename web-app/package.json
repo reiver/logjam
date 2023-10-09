@@ -8,7 +8,12 @@
     "preview": "vite preview --port 3000"
   },
   "dependencies": {
+    "@emotion/react": "^11.11.1",
+    "@emotion/styled": "^11.11.0",
+    "@hookform/resolvers": "^3.3.1",
+    "@mui/material": "^5.14.12",
     "@preact/signals": "^1.2.1",
+    "clipboard-copy": "^4.0.1",
     "clsx": "^2.0.0",
     "htm": "^3.1.1",
     "lodash.throttle": "^4.1.1",
@@ -16,8 +21,10 @@
     "preact-css-styled": "^1.1.9",
     "preact-iso": "^2.3.1",
     "preact-render-to-string": "^6.2.2",
+    "react-hook-form": "^7.47.0",
     "tippy.js": "^6.3.7",
-    "uuid": "^9.0.1"
+    "uuid": "^9.0.1",
+    "zod": "^3.22.4"
   },
   "devDependencies": {
     "@preact/preset-vite": "^2.5.0",

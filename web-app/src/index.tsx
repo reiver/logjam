@@ -1,7 +1,9 @@
+import { ThemeProvider } from '@mui/material/styles'
 import { signal } from '@preact/signals'
 import { render } from 'preact'
-import { ErrorBoundary, lazy, LocationProvider, Router } from 'preact-iso'
+import { ErrorBoundary, LocationProvider, Router, lazy } from 'preact-iso'
 
+import { muiTheme } from 'theme'
 import './global.css'
 
 const Home = lazy(() => import('./pages'))
@@ -35,18 +37,20 @@ const interval = setInterval(() => {
 
 export function App() {
   return (
-    <LocationProvider>
-      <main>
-        <ErrorBoundary>
-          <Router>
-            <Home path="/" />
-            <AudiencePage path="/log/:room" />
-            <HostPage path="/:displayName" />
-            <NotFound default />
-          </Router>
-        </ErrorBoundary>
-      </main>
-    </LocationProvider>
+    <ThemeProvider theme={muiTheme}>
+      <LocationProvider>
+        <main>
+          <ErrorBoundary>
+            <Router>
+              <Home path="/" />
+              <AudiencePage path="/log/:room" />
+              <HostPage path="/:displayName" />
+              <NotFound default />
+            </Router>
+          </ErrorBoundary>
+        </main>
+      </LocationProvider>
+    </ThemeProvider>
   )
 }
 

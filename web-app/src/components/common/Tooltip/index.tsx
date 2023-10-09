@@ -4,17 +4,18 @@ import tippy, { Instance } from 'tippy.js'
 import { deviceSize } from '../../MeetingBody/Stage'
 
 import 'tippy.js/dist/tippy.css'
-export const Tooltip = ({ children, label }) => {
+export const Tooltip = ({ children, label, hideOnClick = true }) => {
   const ref = useRef<any>()
   const component = toChildArray(children)[0] as VNode
   const tippyInstance = useRef<Instance>()
   useEffect(() => {
     if ((ref.current.base || ref.current) && deviceSize.value !== 'xs')
+      // @ts-ignore
       tippyInstance.current = tippy(ref.current.base || ref.current, {
         content: label,
         arrow: false,
-        hideOnClick: true,
-      })[0]
+        hideOnClick,
+      })
 
     return () => {
       if (tippyInstance.current) {
@@ -24,6 +25,7 @@ export const Tooltip = ({ children, label }) => {
   }, [deviceSize.value])
 
   useEffect(() => {
+    console.log('changed', label, tippyInstance.current)
     if (tippyInstance.current) tippyInstance.current.setContent(label)
   }, [label])
 
