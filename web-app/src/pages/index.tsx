@@ -5,7 +5,7 @@ export function Home() {
     <div class="w-full h-screen bg-primary flex items-center justify-center">
       <div class="flex flex-col items-center justify-center gap-10">
         <Logo />
-        <span class="text-medium-12">Version {import.meta.env.VITE_APP_GREATAPE_VERSION}</span>
+        <span class="text-medium-12">Version {import.meta.env.VITE_APP_GREATAPE_VERSION} (alpha)</span>
       </div>
     </div>
   )
