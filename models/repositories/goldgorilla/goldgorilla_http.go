@@ -1,4 +1,4 @@
-package GoldGorilla
+package GoldGorillaRepository
 
 import (
 	"bytes"
@@ -10,13 +10,13 @@ import (
 	"time"
 )
 
-type GoldGorillaRepository struct {
+type HTTPRepository struct {
 	client  *http.Client
 	svcAddr string
 }
 
-func NewGoldGorillaRepository() contracts.IGoldGorillaServiceRepository {
-	return &GoldGorillaRepository{
+func NewHTTPRepository() contracts.IGoldGorillaServiceRepository {
+	return &HTTPRepository{
 		client: &http.Client{
 			Timeout: 8 * time.Second,
 		},
@@ -24,12 +24,19 @@ func NewGoldGorillaRepository() contracts.IGoldGorillaServiceRepository {
 	}
 }
 
-func (a *GoldGorillaRepository) Init(svcAddr string) error {
+func (a *HTTPRepository) Init(svcAddr string) error {
 	a.svcAddr = svcAddr
 	return nil
 }
 
-func (a *GoldGorillaRepository) CreatePeer(roomId string, id uint64, canPublish bool, isCaller bool) error {
+func (a *HTTPRepository) isConfigured() bool {
+	return len(a.svcAddr) > 0
+}
+
+func (a *HTTPRepository) CreatePeer(roomId string, id uint64, canPublish bool, isCaller bool) error {
+	if !a.isConfigured() {
+		return errors.New("gg repository not initialized yet")
+	}
 	body, err := getReader(
 		dto.CreatePeerRPCModel{
 			RoomPeerDTO: dto.RoomPeerDTO{
@@ -52,7 +59,10 @@ func (a *GoldGorillaRepository) CreatePeer(roomId string, id uint64, canPublish 
 	return nil
 }
 
-func (a *GoldGorillaRepository) SendICECandidate(roomId string, id uint64, iceCandidate interface{}) error {
+func (a *HTTPRepository) SendICECandidate(roomId string, id uint64, iceCandidate interface{}) error {
+	if !a.isConfigured() {
+		return errors.New("gg repository not initialized yet")
+	}
 	body, err := getReader(
 		dto.SendIceCandidateReqModel{
 			RoomPeerDTO: dto.RoomPeerDTO{
@@ -74,7 +84,10 @@ func (a *GoldGorillaRepository) SendICECandidate(roomId string, id uint64, iceCa
 	return nil
 }
 
-func (a *GoldGorillaRepository) SendAnswer(roomId string, peerId uint64, answer interface{}) error {
+func (a *HTTPRepository) SendAnswer(roomId string, peerId uint64, answer interface{}) error {
+	if !a.isConfigured() {
+		return errors.New("gg repository not initialized yet")
+	}
 	body, err := getReader(dto.SetSDPRPCModel{
 		RoomPeerDTO: dto.RoomPeerDTO{
 			RoomId: roomId,
@@ -95,7 +108,10 @@ func (a *GoldGorillaRepository) SendAnswer(roomId string, peerId uint64, answer 
 	return nil
 }
 
-func (a *GoldGorillaRepository) SendOffer(roomId string, peerId uint64, offer interface{}) error {
+func (a *HTTPRepository) SendOffer(roomId string, peerId uint64, offer interface{}) error {
+	if !a.isConfigured() {
+		return errors.New("gg repository not initialized yet")
+	}
 	body, err := getReader(dto.SetSDPRPCModel{
 		RoomPeerDTO: dto.RoomPeerDTO{
 			RoomId: roomId,
@@ -116,7 +132,10 @@ func (a *GoldGorillaRepository) SendOffer(roomId string, peerId uint64, offer in
 	return nil
 }
 
-func (a *GoldGorillaRepository) ClosePeer(roomId string, id uint64) error {
+func (a *HTTPRepository) ClosePeer(roomId string, id uint64) error {
+	if !a.isConfigured() {
+		return errors.New("gg repository not initialized yet")
+	}
 	body, err := getReader(dto.RoomPeerDTO{
 		RoomId: roomId,
 		ID:     id,
@@ -138,7 +157,10 @@ func (a *GoldGorillaRepository) ClosePeer(roomId string, id uint64) error {
 	return nil
 }
 
-func (a *GoldGorillaRepository) ResetRoom(roomId string) error {
+func (a *HTTPRepository) ResetRoom(roomId string) error {
+	if !a.isConfigured() {
+		return errors.New("gg repository not initialized yet")
+	}
 	body, err := getReader(map[string]interface{}{"roomId": roomId})
 	if err != nil {
 		return err
@@ -157,9 +179,9 @@ func (a *GoldGorillaRepository) ResetRoom(roomId string) error {
 	return nil
 }
 
-func (a *GoldGorillaRepository) Start() error {
+func (a *HTTPRepository) Start() error {
 	if a.svcAddr == "" {
-		return errors.New("GoldGorillaRepository instance is not initialized yet(waiting for goldgorilla hook)...")
+		return errors.New("HTTPRepository instance is not initialized yet(waiting for goldgorilla hook)...")
 	}
 	resp, err := a.client.Post(a.svcAddr+"/room/", "application/json", nil)
 	if err != nil {
