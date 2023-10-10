@@ -1,20 +1,16 @@
 import AvatarIcon from 'assets/icons/Avatar.svg?react'
-import CopyIcon from 'assets/icons/Copy.svg?react'
-import LinkIcon from 'assets/icons/Link.svg?react'
 import Troubleshoot from 'assets/icons/Troubleshoot.svg?react'
 import clsx from 'clsx'
 import { BottomSheet, Container, Controllers, Icon, MoreControllers, Tooltip, attendeesBadge, attendeesCount, isAttendeesOpen, isMoreOptionsOpen, toggleAttendees, toggleMoreOptions } from 'components'
-import { broadcastIsInTheMeeting, isDebugMode,sparkRTC } from 'pages/Meeting'
-import {LinkCopyComponent} from '../../pages/host/index.tsx'
+import { broadcastIsInTheMeeting, isDebugMode, sparkRTC } from 'pages/Meeting'
+import { LinkCopyComponent } from '../../pages/host/index.tsx'
 export const BottomBar = () => {
   return (
     <Container class={clsx('transition-all', {})}>
       <div class="w-full grid grid-cols-12 dark:bg-secondary-1-a py-3 pt-0 dark:text-gray-0 text-gray-2" id="bottom-bar">
         <div class="col-span-3 sm:block hidden">
           <div class="h-full flex items-center">
-            <div class="truncate max-w-full flex items-center gap-2 dark:bg-gray-2  bg-gray-0 rounded-full px-4 py-1">
-              <LinkCopyComponent link={generateAudienceUrl(sparkRTC.value? sparkRTC.value.roomName:'')} />
-            </div>
+            <LinkCopyComponent link={generateAudienceUrl(sparkRTC.value ? sparkRTC.value.roomName : '')} />
           </div>
         </div>
         <div class="col-span-12 sm:col-span-6 flex items-center justify-center">{broadcastIsInTheMeeting.value ? <Controllers /> : null}</div>
@@ -55,9 +51,9 @@ export const BottomBarBottomSheet = () => {
   return (
     <BottomSheet open={isMoreOptionsOpen.value} onClose={toggleMoreOptions} title="More">
       <div class="w-full h-full flex gap-3 py-6 flex-col pb-0">
-        <span class="text-bold-14">{sparkRTC.value && sparkRTC.value.role===sparkRTC.value.Roles.AUDIENCE ? 'GreatApe':'Is Your Future Distributed? Welcome to the Fediverse!'}</span>
+        <span class="text-bold-14">{sparkRTC.value && sparkRTC.value.role === sparkRTC.value.Roles.AUDIENCE ? 'GreatApe' : 'Is Your Future Distributed? Welcome to the Fediverse!'}</span>
         <div class="mb-2 truncate text-gray-2 dark:text-gray-0 max-w-full flex items-center gap-2 dark:bg-gray-2  bg-gray-0 rounded-full px-4 py-1">
-          <LinkCopyComponent link={generateAudienceUrl(sparkRTC.value? sparkRTC.value.roomName:'')} />
+          <LinkCopyComponent link={generateAudienceUrl(sparkRTC.value ? sparkRTC.value.roomName : '')} />
         </div>
         <Tooltip label={isAttendeesOpen.value ? 'Hide Attendees' : 'Show Attendees'}>
           <div

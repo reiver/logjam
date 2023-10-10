@@ -47,13 +47,11 @@ export const AudiencePage = ({ params: { room } }: { params?: { room?: string } 
                 />
               </FormControl>
 
-            <div class="flex gap-2 w-full">
-              <Button variant="outlined" className="w-full normal-case" sx={{ textTransform: 'none' }}>
-                Not now
-              </Button>
-              <Button type="submit" variant="contained" className="w-full normal-case" sx={{ textTransform: 'none' }} color="primary">
-                Attend Live Show
-              </Button>ce/host forms)
+              <div class="flex gap-2 w-full">
+                <Button type="submit" variant="contained" className="w-full normal-case" sx={{ textTransform: 'none' }} color="primary">
+                  Attend Live Show
+                </Button>
+              </div>
             </div>
           </form>
         </div>

@@ -138,7 +138,6 @@ export const LinkCopyComponent = ({ title, link }) => {
   const [copyTooltipTitle, setCopyTooltipTitle] = useState('Copy Link')
   const onCopy = () => {
     copy(link).then(() => {
-      console.log('here')
       setCopyTooltipTitle('Coppied')
       setTimeout(() => {
         setCopyTooltipTitle('Copy Link')
@@ -146,9 +145,9 @@ export const LinkCopyComponent = ({ title, link }) => {
     })
   }
   return (
-    <div class="flex flex-col gap-1">
+    <div class="flex flex-col gap-1 w-full max-w-[280px]">
       {title && <span class="text-bold-12 text-gray-3">{title}</span>}
-      <div className="bg-gray-0 px-4 py-2 text-gray-2 flex justify-between rounded-full items-center">
+      <div className="dark:bg-gray-2 dark:text-gray-0 w-full bg-gray-0 px-4 py-2 text-gray-2 flex justify-between rounded-full items-center">
         <div className="flex gap-2 items-center overflow-hidden">
           <Icon icon={LinkIcon} />
           <span class="text-medium-12 truncate">{link}</span>
