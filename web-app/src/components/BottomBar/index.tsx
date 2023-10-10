@@ -4,8 +4,8 @@ import LinkIcon from 'assets/icons/Link.svg?react'
 import Troubleshoot from 'assets/icons/Troubleshoot.svg?react'
 import clsx from 'clsx'
 import { BottomSheet, Container, Controllers, Icon, MoreControllers, Tooltip, attendeesBadge, attendeesCount, isAttendeesOpen, isMoreOptionsOpen, toggleAttendees, toggleMoreOptions } from 'components'
-import { broadcastIsInTheMeeting, isDebugMode } from 'pages/Meeting'
-
+import { broadcastIsInTheMeeting, isDebugMode,sparkRTC } from 'pages/Meeting'
+import {LinkCopyComponent} from '../../pages/host/index.tsx'
 export const BottomBar = () => {
   return (
     <Container class={clsx('transition-all', {})}>
@@ -13,11 +13,7 @@ export const BottomBar = () => {
         <div class="col-span-3 sm:block hidden">
           <div class="h-full flex items-center">
             <div class="truncate max-w-full flex items-center gap-2 dark:bg-gray-2  bg-gray-0 rounded-full px-4 py-1">
-              <Icon icon={LinkIcon} class="min-w-[24px]" />
-              <span class="truncate flex-grow">https://great.ape/r/thu-kiu</span>
-              <div class="ml-3 min-w-[24px]">
-                <Icon icon={CopyIcon} />
-              </div>
+              <LinkCopyComponent link={generateAudienceUrl(sparkRTC.value? sparkRTC.value.roomName:'')} />
             </div>
           </div>
         </div>
@@ -46,6 +42,10 @@ export const BottomBar = () => {
       </div>
     </Container>
   )
+}
+
+const generateAudienceUrl = (roomName: string) => {
+  return `${window.location.origin}/log/${roomName}`
 }
 
 export const BottomBarBottomSheet = () => {

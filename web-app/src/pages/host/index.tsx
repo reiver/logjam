@@ -127,7 +127,7 @@ export const HostPage = ({ params: { displayName } }: { params?: { displayName?:
 }
 export default HostPage
 
-const LinkCopyComponent = ({ title, link }) => {
+export const LinkCopyComponent = ({ title, link }) => {
   const [copyTooltipTitle, setCopyTooltipTitle] = useState('Copy Link')
   const onCopy = () => {
     copy(link).then(() => {
