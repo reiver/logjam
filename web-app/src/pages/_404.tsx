@@ -1,4 +1,4 @@
-import Logo from 'assets/images/Logo.svg?react'
+import Logo from 'assets/images/logo.svg?react'
 
 export function NotFound() {
   return (
