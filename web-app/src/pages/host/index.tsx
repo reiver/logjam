@@ -119,7 +119,7 @@ export const HostPage = ({ params: { displayName } }: { params?: { displayName?:
         params={{
           ...form.getValues(),
           displayName: `@${form.getValues('displayName')}`,
-          name: displayName.replace('@', ''),
+          name: `${form.getValues('displayName')}`,
         }}
       />
     )
