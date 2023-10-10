@@ -35,7 +35,7 @@ export const AudiencePage = ({ params: { room } }: { params?: { room?: string } 
             <span className="text-bold-12 text-black block text-center pt-5">Join the meeting</span>
             <hr className="my-3" />
             <div className="p-5 flex flex-col gap-3">
-              <span class="text-bold-12 text-gray-2">Please enter your display name</span>
+              <span class="text-bold-12 text-gray-2">Please enter your display name:</span>
               <FormControl className="w-full">
                 <TextField
                   label="Display name"
