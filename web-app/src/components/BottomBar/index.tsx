@@ -10,7 +10,7 @@ export const BottomBar = () => {
       <div class="w-full grid grid-cols-12 dark:bg-secondary-1-a py-3 pt-0 dark:text-gray-0 text-gray-2" id="bottom-bar">
         <div class="col-span-3 sm:block hidden">
           <div class="h-full flex items-center">
-            <LinkCopyComponent link={generateAudienceUrl(sparkRTC.value ? sparkRTC.value.roomName : '')} />
+            <LinkCopyComponent link={generateAudienceUrl(sparkRTC.value ? sparkRTC.value.roomName : '')} className="max-w-[300px]" />
           </div>
         </div>
         <div class="col-span-12 sm:col-span-6 flex items-center justify-center">{broadcastIsInTheMeeting.value ? <Controllers /> : null}</div>
@@ -52,9 +52,7 @@ export const BottomBarBottomSheet = () => {
     <BottomSheet open={isMoreOptionsOpen.value} onClose={toggleMoreOptions} title="More">
       <div class="w-full h-full flex gap-3 py-6 flex-col pb-0">
         <span class="text-bold-14">{sparkRTC.value && sparkRTC.value.role === sparkRTC.value.Roles.AUDIENCE ? 'GreatApe' : 'Is Your Future Distributed? Welcome to the Fediverse!'}</span>
-        <div class="mb-2 truncate text-gray-2 dark:text-gray-0 max-w-full flex items-center gap-2 dark:bg-gray-2  bg-gray-0 rounded-full px-4 py-1">
-          <LinkCopyComponent link={generateAudienceUrl(sparkRTC.value ? sparkRTC.value.roomName : '')} />
-        </div>
+        <LinkCopyComponent link={generateAudienceUrl(sparkRTC.value ? sparkRTC.value.roomName : '')} className="max-w-[300px]" />
         <Tooltip label={isAttendeesOpen.value ? 'Hide Attendees' : 'Show Attendees'}>
           <div
             onClick={handleAttendeesOpen}

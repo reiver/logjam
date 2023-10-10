@@ -4,6 +4,7 @@ import CloseIcon from 'assets/icons/Close.svg?react'
 import CopyIcon from 'assets/icons/Copy.svg?react'
 import LinkIcon from 'assets/icons/Link.svg?react'
 import copy from 'clipboard-copy'
+import clsx from 'clsx'
 import { Icon, IconButton, Tooltip } from 'components'
 import Meeting from 'pages/Meeting'
 import { lazy } from 'preact-iso'
@@ -101,7 +102,7 @@ export const HostPage = ({ params: { displayName } }: { params?: { displayName?:
             </div>
           </form>
           <Modal open={showModal} onClose={setShowModal.bind(null, false)}>
-            <div className="pointer-events-none w-full px-4 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex justify-center">
+            <div className="w-full px-4 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex justify-center">
               <div class="max-w-[400px] rounded-xl bg-white  text-black relative">
                 <span className="text-bold-12 text-black block text-center pt-5">Room Links</span>
                 <IconButton onClick={setShowModal.bind(null, false)} variant="nothing" className="absolute top-4 right-4">
@@ -134,7 +135,7 @@ export const HostPage = ({ params: { displayName } }: { params?: { displayName?:
 }
 export default HostPage
 
-export const LinkCopyComponent = ({ title, link }) => {
+export const LinkCopyComponent = ({ title, link, className }) => {
   const [copyTooltipTitle, setCopyTooltipTitle] = useState('Copy Link')
   const onCopy = () => {
     copy(link).then(() => {
@@ -145,7 +146,7 @@ export const LinkCopyComponent = ({ title, link }) => {
     })
   }
   return (
-    <div class="flex flex-col gap-1 w-full max-w-[280px]">
+    <div class={clsx('flex flex-col gap-1 w-full', className)}>
       {title && <span class="text-bold-12 text-gray-3">{title}</span>}
       <div className="dark:bg-gray-2 dark:text-gray-0 w-full bg-gray-0 px-4 py-2 text-gray-2 flex justify-between rounded-full items-center">
         <div className="flex gap-2 items-center overflow-hidden">
