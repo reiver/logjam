@@ -5,6 +5,7 @@
 html,
 body {
 	background: white;
+	color: black;
 }
 
 .tippy-box[data-animation=fade][data-state=hidden] {

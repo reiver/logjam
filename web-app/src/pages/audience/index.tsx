@@ -29,21 +29,23 @@ export const AudiencePage = ({ params: { room } }: { params?: { room?: string } 
 
   if (!started)
     return (
-      <div class="w-full flex justify-center items-center max-w-[500px] mx-auto mt-10 border rounded-md border-gray-300">
-        <form class="flex flex-col w-full " onSubmit={form.handleSubmit(onSubmit)}>
-          <span className="text-bold-12 text-black block text-center pt-5">New Live Room</span>
-          <hr className="my-3" />
-          <div className="p-5 flex flex-col gap-5">
-            <FormControl className="w-full">
-              <TextField
-                label="Display name"
-                variant="outlined"
-                size="small"
-                {...form.register('name')}
-                error={!!form.formState.errors.displayName}
-                helperText={form.formState.errors.displayName?.message}
-              />
-            </FormControl>
+      <div class="w-full flex justify-center items-center px-4">
+        <div class="w-full flex justify-center items-center max-w-[500px] mx-auto mt-10 border rounded-md border-gray-300">
+          <form class="flex flex-col w-full " onSubmit={form.handleSubmit(onSubmit)}>
+            <span className="text-bold-12 text-black block text-center pt-5">Join the meeting</span>
+            <hr className="my-3" />
+            <div className="p-5 flex flex-col gap-3">
+              <span class="text-bold-12 text-gray-2">Please enter your display name</span>
+              <FormControl className="w-full">
+                <TextField
+                  label="Display name"
+                  variant="outlined"
+                  size="small"
+                  {...form.register('name')}
+                  error={!!form.formState.errors.displayName}
+                  helperText={form.formState.errors.displayName?.message}
+                />
+              </FormControl>
 
             <div class="flex gap-2 w-full">
               <Button variant="outlined" className="w-full normal-case" sx={{ textTransform: 'none' }}>
@@ -51,10 +53,10 @@ export const AudiencePage = ({ params: { room } }: { params?: { room?: string } 
               </Button>
               <Button type="submit" variant="contained" className="w-full normal-case" sx={{ textTransform: 'none' }} color="primary">
                 Attend Live Show
-              </Button>
+              </Button>ce/host forms)
             </div>
-          </div>
-        </form>
+          </form>
+        </div>
       </div>
     )
 
