@@ -148,8 +148,20 @@ func (c *RoomWSController) Role(ctx *models.WSContext) {
 		Name:   "",
 	}
 	if ctx.ParsedMessage.Data == "broadcast" {
+		br, err := c.roomRepo.GetBroadcaster(ctx.RoomId)
+		if err != nil {
+			c.log(contracts.LError, err.Error())
+			return
+		}
+		if br != nil {
+			_ = c.socketSVC.Send(models.MessageContract{
+				Type: "role",
+				Data: "no:broadcast",
+			}, ctx.SocketID)
+			return
+		}
 		resultEvent.Data = "yes:broadcast"
-		err := c.roomRepo.UpdateCanConnect(ctx.RoomId, ctx.SocketID, true)
+		err = c.roomRepo.UpdateCanConnect(ctx.RoomId, ctx.SocketID, true)
 		if err != nil {
 			c.log(contracts.LError, err.Error())
 			return
