@@ -55,13 +55,9 @@ export const BottomBarBottomSheet = () => {
   return (
     <BottomSheet open={isMoreOptionsOpen.value} onClose={toggleMoreOptions} title="More">
       <div class="w-full h-full flex gap-3 py-6 flex-col pb-0">
-        <span class="text-bold-14">Is Your Future Distributed? Welcome to the Fediverse!</span>
+        <span class="text-bold-14">{sparkRTC.value && sparkRTC.value.role===sparkRTC.value.Roles.AUDIENCE ? 'GreatApe':'Is Your Future Distributed? Welcome to the Fediverse!'}</span>
         <div class="mb-2 truncate text-gray-2 dark:text-gray-0 max-w-full flex items-center gap-2 dark:bg-gray-2  bg-gray-0 rounded-full px-4 py-1">
-          <Icon icon={LinkIcon} class="min-w-[24px]" />
-          <span class="truncate flex-grow">https://great.ape/r/thu-kiu</span>
-          <div class="ml-3 min-w-[24px]">
-            <Icon icon={CopyIcon} />
-          </div>
+          <LinkCopyComponent link={generateAudienceUrl(sparkRTC.value? sparkRTC.value.roomName:'')} />
         </div>
         <Tooltip label={isAttendeesOpen.value ? 'Hide Attendees' : 'Show Attendees'}>
           <div
