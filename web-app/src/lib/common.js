@@ -13,13 +13,13 @@ export const isMobile = async () => {
 
 // TODO: set base url
 export function getWsUrl(host = null) {
-  let baseUrl = "broadcast-cfw2l.ondigitalocean.app";
+  let baseUrl = "";
 
-//   if (host) {
-//     baseUrl = host;
-//   } else {
-//     baseUrl = window.location.href.split("//")[1].split("/")[0];
-//   }
+  if (host) {
+    baseUrl = host;
+  } else {
+    baseUrl = window.location.href.split("//")[1].split("/")[0];
+  }
 
   const protocol =
     window.location.href.split("//")[0] === "http:" ? "ws" : "wss";
