@@ -2,11 +2,12 @@ package routers
 
 import (
 	"fmt"
+	"net/http"
+	"strings"
+
 	"github.com/gorilla/mux"
 	"github.com/sparkscience/logjam/controllers"
 	"github.com/sparkscience/logjam/models/contracts"
-	"net/http"
-	"strings"
 )
 
 type IRouteRegistrar interface {
@@ -33,7 +34,7 @@ func (r *Router) RegisterRoutes() error {
 	r.roomWSRouter.registerRoutes(r.router)
 	r.GoldGorillaRouter.registerRoutes(r.router)
 
-	r.router.PathPrefix("/").Handler(http.FileServer(http.Dir("views/")))
+	r.router.PathPrefix("/").Handler(http.FileServer(http.Dir("web-app/")))
 	r.router.Use(func(handler http.Handler) http.Handler {
 		return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 			ip := request.RemoteAddr
