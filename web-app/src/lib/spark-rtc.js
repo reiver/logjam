@@ -7,7 +7,7 @@ import { iceServers } from './config.js'
  */
 export class SparkRTC {
   started = false
-  maxRaisedHands = 2
+  maxRaisedHands = 6
   myPeerConnectionConfig = {
     iceServers: iceServers,
   }

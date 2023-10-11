@@ -14,6 +14,7 @@ import { broadcastIsInTheMeeting, currentUser, sparkRTC } from '../../pages/Meet
 let timeOut
 export const bottomBarVisible = signal(true)
 export const fullScreenedStream = signal(null)
+export const hasShareScreenStream = computed(() => !!Object.values(streamers.value).find((s) => s.isShareScreen))
 export const hasFullScreenedStream = computed(() => !!fullScreenedStream.value)
 export const streamers = signal<Record<string, { isHost: boolean; isShareScreen: boolean; isLocalStream: boolean; stream: any; userId: any; muted: boolean; name: string; toggleScreenId: any }>>({})
 export const streamersLength = computed(() => Object.keys(streamers.value).length)
@@ -22,10 +23,15 @@ const topBarBottomBarHeight = () => document.getElementById('top-bar').offsetHei
 const windowWidth = signal(window.innerWidth)
 const windowHeight = signal(window.innerHeight)
 const stageWidth = computed(() => windowWidth.value - attendeesWidth.value - (deviceSize.value !== 'xs' ? 140 : 32))
+
 const itemsWidth = computed(() => {
-  let width = Math.max(stageWidth.value / streamersLength.value, stageWidth.value / 2)
+  let sw = stageWidth.value
+  if (deviceSize.value !== 'xs' && hasShareScreenStream.value) {
+    sw /= 2
+  }
+  let width = Math.max(sw / streamersLength.value, sw / 2)
   let height = (width * 9) / 16
-  let eachPerLine = width == stageWidth.value / 2 ? 2 : 1
+  let eachPerLine = width == sw / 2 ? 2 : 1
   const lines = Math.ceil(streamersLength.value / eachPerLine)
   const gapHeight = (lines - 1) * 16 + 16
 
@@ -78,8 +84,12 @@ export const getVideoWidth = (attendee, index) => {
       return `0px; height: 0px;`
     }
   }
-  let height = (itemsWidth.value * 9) / 16
-  return `${itemsWidth.value}px;height: ${height}px;`
+  let iw = itemsWidth.value
+  if (attendee.isShareScreen) {
+    iw = stageWidth.value / 2
+  }
+  let height = (iw * 9) / 16
+  return `${iw}px;height: ${height}px;`
 }
 
 export const Stage = () => {
@@ -125,56 +135,63 @@ export const Stage = () => {
       e.stopPropagation()
     }
   }
+
   return (
     <div class="transition-all h-full lg:px-0 relative" style={`width: calc(100% - ${attendeesWidth.value}px);`}>
       {broadcastIsInTheMeeting.value ? (
-        <div
-          class={clsx('flex flex-wrap justify-start sm:justify-center items-center h-full transition-all', {
-            'gap-4': !hasFullScreenedStream.value,
-            'gap-0': hasFullScreenedStream.value,
-          })}
-        >
-          {Object.values(streamers.value)
-            .sort((a, b) => {
-              let aScore = 0
-              let bScore = 0
-              if (a.isHost) aScore += 10
-              if (a.isShareScreen) aScore += 20
-              if (b.isHost) bScore += 10
-              if (b.isShareScreen) bScore += 20
-              return bScore - aScore
-            })
-            .map((attendee, i) => {
-              let muted = false
-
-              //mute the stream if it's my local stream
-              if (attendee.isLocalStream === true) {
-                muted = true
-              } else {
-                //mute it based on meeting status
-                muted = currentUser.value.isMeetingMuted
-              }
-
-              return (
-                <div
-                  key={i}
-                  style={`width: ${getVideoWidth(attendee, i)}`}
-                  class={clsx('group transition-all aspect-video relative max-w-full text-white-f-9', 'bg-gray-1 rounded-lg min-w-10', 'dark:bg-gray-3 overflow-hidden')}
-                  onClick={(e) => handleOnClick(e, attendee.stream.id)}
-                >
-                  <Video
-                    stream={attendee.stream}
-                    userId={attendee.userId}
-                    isMuted={muted}
-                    isUserMuted={attendee.muted}
-                    name={attendee.name}
-                    isHostStream={attendee.isHost}
-                    isShareScreen={attendee.isShareScreen}
-                    toggleScreen={attendee.toggleScreenId}
-                  />
-                </div>
-              )
+        <div class={clsx('relative h-full flex justify-end')}>
+          <div
+            class={clsx('flex flex-wrap justify-start sm:justify-center items-center h-full transition-all', {
+              'gap-4': !hasFullScreenedStream.value,
+              'gap-0': hasFullScreenedStream.value,
+              'w-1/2': !hasFullScreenedStream.value && hasShareScreenStream.value && deviceSize.value !== 'xs',
+              'w-full': hasFullScreenedStream.value || !hasShareScreenStream.value || deviceSize.value === 'xs',
             })}
+          >
+            {Object.values(streamers.value)
+              .sort((a, b) => {
+                let aScore = 0
+                let bScore = 0
+                if (a.isHost) aScore += 10
+                if (a.isShareScreen) aScore += 20
+                if (b.isHost) bScore += 10
+                if (b.isShareScreen) bScore += 20
+                return bScore - aScore
+              })
+              .map((attendee, i) => {
+                let muted = false
+
+                //mute the stream if it's my local stream
+                if (attendee.isLocalStream === true) {
+                  muted = true
+                } else {
+                  //mute it based on meeting status
+                  muted = currentUser.value.isMeetingMuted
+                }
+
+                return (
+                  <div
+                    key={i}
+                    style={clsx(`width: ${getVideoWidth(attendee, i)}`, {
+                      [`position: absolute; left: 25px;`]: !hasFullScreenedStream.value && deviceSize.value !== 'xs' && attendee.isShareScreen,
+                    })}
+                    class={clsx('group transition-all aspect-video relative max-w-full text-white-f-9', 'bg-gray-1 rounded-lg min-w-10', 'dark:bg-gray-3 overflow-hidden')}
+                    onClick={(e) => handleOnClick(e, attendee.stream.id)}
+                  >
+                    <Video
+                      stream={attendee.stream}
+                      userId={attendee.userId}
+                      isMuted={muted}
+                      isUserMuted={attendee.muted}
+                      name={attendee.name}
+                      isHostStream={attendee.isHost}
+                      isShareScreen={attendee.isShareScreen}
+                      toggleScreen={attendee.toggleScreenId}
+                    />
+                  </div>
+                )
+              })}
+          </div>
         </div>
       ) : (
         <span class="inline-block w-full text-center"> The broadcaster is not in the meeting, please wait until the broadcaster joins </span>
