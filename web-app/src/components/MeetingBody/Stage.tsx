@@ -300,7 +300,7 @@ export const Video = memo(({ stream, isMuted, isHostStream, name, userId, isUser
       <div class="absolute top-0 left-0 flex justify-between w-full px-2 gap-2">
         <div class="flex truncate justify-center items-center">
           <div class="px-4 py-1 bg-black bg-opacity-50 text-white rounded-full text-medium-12 truncate">
-            {name} {isHostStream ? ' (Host)' : ''}
+            {name} {isHostStream && isShareScreen?'(Shared Screen)':isHostStream ? ' (Host)' :''}
           </div>
         </div>
         <div class={clsx('h-[48px] gap-0 flex justify-center items-center')}>
