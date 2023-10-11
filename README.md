@@ -1,27 +1,35 @@
-# logjam
+# LOGJAM
 
-Private repo for logjam.
+## Running The Project
 
-**DO NOT SHARE THIS!**
+---
 
-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-
+first you need to get the binary by one of this ways :
 
-# Run Backend
-```bash
-cd backend
-go run . -vvvvvv -http-port=8080
-```
+1. downloading it from **releases** page
+2. **building** it your self
+3. leaving the build and run to **docker**!
 
-# Endpoints
-To broadcast
-```
-http://localhost:8090/files/frontend/?role=broadcast
-```
+- ### getting the release
+1. download the latest binary from here https://github.com/sparkscience/logjam/releases
+2. make it executable like `chmod +x ./logjam`
+3. run it! `./logjam`
 
-To be audience
-```
-http://localhost:8090/files/frontend/?role=audience
-```
+**note:** default listen host(`0.0.0.0`) or listen port(`8090`) can be changed using the `--listen-host` and `--listen-port` arguments.
 
+- ### building
 
-If you want to use it in a specific `room`  then you need to pass the `room` as a query param.
+first make sure you have golang installed *(>=v1.20)*
+1. clone the repository and `cd` into it.
+2. build it using go like `go build .`
+3. run it! `./logjam`
+
+- ### using Docker
+
+make sure you have docker installed first.
+1. clone the repository and `cd` into it.
+2. if you have docker-compose installed then run `docker-compose up`
+3. if you choose to build and run it with docker itself then :
+   1. build the image: `docker build -t logjam:latest .`
+   2. create and run the container: `docker run --rm logjam:latest`
+
