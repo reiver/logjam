@@ -56,16 +56,18 @@ func (r *RoomModel) GetLevelMembers(level uint, includeAll bool) ([]**PeerModel,
 	var lastLevelChildren []**PeerModel
 
 	if len(r.PeersTree.Children) > 0 {
-		if !includeAll && r.Members[r.PeersTree.Children[0].ID].CanAcceptChild {
+		member, memberExists := r.Members[r.PeersTree.Children[0].ID]
+		if !includeAll && memberExists && member.CanAcceptChild {
 			lastLevelChildren = append(lastLevelChildren, &r.PeersTree.Children[0])
-		} else if includeAll {
+		} else if includeAll && memberExists {
 			lastLevelChildren = append(lastLevelChildren, &r.PeersTree.Children[0])
 		}
 	}
 	if len(r.PeersTree.Children) > 1 {
-		if !includeAll && r.Members[r.PeersTree.Children[1].ID].CanAcceptChild {
+		member, memberExists := r.Members[r.PeersTree.Children[1].ID]
+		if !includeAll && memberExists && member.CanAcceptChild {
 			lastLevelChildren = append(lastLevelChildren, &r.PeersTree.Children[1])
-		} else if includeAll {
+		} else if includeAll && memberExists {
 			lastLevelChildren = append(lastLevelChildren, &r.PeersTree.Children[1])
 		}
 	}

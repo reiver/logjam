@@ -25,7 +25,7 @@ func (app *App) Init(srcListenAddr string, prodMode bool) {
 		GoldGorillaSVCAddr: "",
 		SrcListenAddr:      srcListenAddr,
 	}
-	ggSVCRepo := GoldGorilla.NewGoldGorillaRepository()
+	ggSVCRepo := GoldGorillaRepository.NewHTTPRepository()
 	roomRepo := roomRepository.NewRoomRepository()
 	socketSVC := services.NewSocketService(app.Logger)
 	roomWSCtrl := controllers.NewRoomWSController(socketSVC, roomRepo, ggSVCRepo, app.Logger)
