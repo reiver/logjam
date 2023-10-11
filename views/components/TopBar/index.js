@@ -12,8 +12,7 @@ export const TopBar = () => {
                     ${meetingStatus.value &&
                     html`<span
                         class="text-black dark:text-white text-center text-bold-14 hidden sm:block"
-                        >Is Your Future Distributed? Welcome to the
-                        Fediverse!</span
+                        >Welcome to the Fediverse!</span
                     >`}
                 </div>
                 <div class="col-span-3 text-right">

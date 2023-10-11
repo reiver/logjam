@@ -91,7 +91,7 @@ export const BottomBarBottomSheet = () => {
     >
         <div class="w-full h-full flex gap-3 py-6 flex-col pb-0">
             <span class="text-bold-14"
-                >Is Your Future Distributed? Welcome to the Fediverse!</span
+                >Welcome to the Fediverse!</span
             >
             <div
                 class="mb-2 truncate text-gray-2 dark:text-gray-0 max-w-full flex items-center gap-2 dark:bg-gray-2  bg-gray-0 rounded-full px-4 py-1"
