@@ -42,8 +42,8 @@ export const AudiencePage = ({ params: { room } }: { params?: { room?: string } 
                   variant="outlined"
                   size="small"
                   {...form.register('name')}
-                  error={!!form.formState.errors.displayName}
-                  helperText={form.formState.errors.displayName?.message}
+                  error={!!form.formState.errors.name}
+                  helperText={form.formState.errors.name?.message}
                 />
               </FormControl>
 
