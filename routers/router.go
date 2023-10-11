@@ -34,7 +34,11 @@ func (r *Router) RegisterRoutes() error {
 	r.roomWSRouter.registerRoutes(r.router)
 	r.GoldGorillaRouter.registerRoutes(r.router)
 
-	r.router.PathPrefix("/").Handler(http.FileServer(http.Dir("dist/")))
+	r.router.PathPrefix("/assets/").Handler(http.StripPrefix("/assets/", http.FileServer(http.Dir("./web-app/dist/assets/"))))
+	r.router.PathPrefix("/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "./web-app/dist/index.html")
+	})
+
 	r.router.Use(func(handler http.Handler) http.Handler {
 		return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 			ip := request.RemoteAddr
@@ -45,6 +49,7 @@ func (r *Router) RegisterRoutes() error {
 			handler.ServeHTTP(writer, request)
 		})
 	})
+
 	return nil
 }
 
