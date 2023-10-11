@@ -194,7 +194,7 @@ export const Stage = () => {
           </div>
         </div>
       ) : (
-        <span class="inline-block w-full text-center"> The broadcaster is not in the meeting, please wait until the broadcaster joins </span>
+        <span class="inline-block w-full text-center">The host has not arrived yet. Please stand by.</span>
       )}
     </div>
   )

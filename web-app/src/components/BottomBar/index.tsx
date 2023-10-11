@@ -51,7 +51,7 @@ export const BottomBarBottomSheet = () => {
   return (
     <BottomSheet open={isMoreOptionsOpen.value} onClose={toggleMoreOptions} title="More">
       <div class="w-full h-full flex gap-3 py-6 flex-col pb-0">
-        {/* <span class="text-bold-14">{sparkRTC.value && sparkRTC.value.role === sparkRTC.value.Roles.AUDIENCE ? 'GreatApe' : 'Is Your Future Distributed? Welcome to the Fediverse!'}</span> */}
+        <span class="text-bold-14">{'Welcome to the Fediverse!'}</span>
         <LinkCopyComponent link={generateAudienceUrl(sparkRTC.value ? sparkRTC.value.roomName : '')}  />
         <Tooltip label={isAttendeesOpen.value ? 'Hide Attendees' : 'Show Attendees'}>
           <div
