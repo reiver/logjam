@@ -1,11 +1,10 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Button, FormControl, Modal, TextField } from '@mui/material'
-import CloseIcon from 'assets/icons/Close.svg?react'
+import { Button, FormControl, TextField } from '@mui/material'
 import CopyIcon from 'assets/icons/Copy.svg?react'
 import LinkIcon from 'assets/icons/Link.svg?react'
 import copy from 'clipboard-copy'
 import clsx from 'clsx'
-import { Icon, IconButton, Tooltip } from 'components'
+import { Icon, ResponsiveModal, Tooltip } from 'components'
 import Meeting from 'pages/Meeting'
 import { lazy } from 'preact-iso'
 import { useState } from 'preact/compat'
@@ -101,22 +100,15 @@ export const HostPage = ({ params: { displayName } }: { params?: { displayName?:
               </div>
             </div>
           </form>
-          <Modal open={showModal} onClose={setShowModal.bind(null, false)}>
-            <div className="w-full px-4 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex justify-center">
-              <div class="max-w-[400px] rounded-xl bg-white  text-black relative">
-                <span className="text-bold-12 text-black block text-center pt-5">Room Links</span>
-                <IconButton onClick={setShowModal.bind(null, false)} variant="nothing" className="absolute top-4 right-4">
-                  <Icon icon={CloseIcon} width="24px" className="text-gray-1" />
-                </IconButton>
-                <hr className="mt-4 mb-1" />
-                <div className="p-5 flex flex-col gap-5 pb-6">
-                  <span class="text-bold-12 text-gray-2">Copy and use host’s link for yourself, and audience link for sending to others:</span>
-                  <LinkCopyComponent title="Host's Link:" link={generateHostUrl('@' + form.getValues('displayName'))} />
-                  <LinkCopyComponent title="Audience’s Link:" link={generateAudienceUrl(form.getValues('room'))} />
-                </div>
-              </div>
+          <ResponsiveModal open={showModal} onClose={setShowModal.bind(null, false)}>
+            <span className="text-bold-12 text-black block text-center pt-5">Room Links</span>
+            <hr className="mt-4 mb-1 border-white md:border-gray-0" />
+            <div className="p-5 flex flex-col gap-5 pb-6">
+              <span class="text-bold-12 text-gray-2">Copy and use host’s link for yourself, and audience link for sending to others:</span>
+              <LinkCopyComponent title="Host's Link:" link={generateHostUrl('@' + form.getValues('displayName'))} />
+              <LinkCopyComponent title="Audience’s Link:" link={generateAudienceUrl(form.getValues('room'))} />
             </div>
-          </Modal>
+          </ResponsiveModal>
         </div>
       </div>
     )
