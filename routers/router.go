@@ -34,7 +34,7 @@ func (r *Router) RegisterRoutes() error {
 	r.roomWSRouter.registerRoutes(r.router)
 	r.GoldGorillaRouter.registerRoutes(r.router)
 
-	r.router.PathPrefix("/").Handler(http.FileServer(http.Dir("web-app/")))
+	r.router.PathPrefix("/").Handler(http.FileServer(http.Dir("dist/")))
 	r.router.Use(func(handler http.Handler) http.Handler {
 		return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 			ip := request.RemoteAddr
