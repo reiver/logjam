@@ -44,7 +44,7 @@ export function App() {
             <Router>
               <Home path="/" />
               <AudiencePage path="/log/:room" />
-              <HostPage path="/:displayName" />
+              <HostPage path="/:displayName/host" />
               <NotFound default />
             </Router>
           </ErrorBoundary>
