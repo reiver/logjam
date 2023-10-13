@@ -811,11 +811,23 @@ export class SparkRTC {
   startShareScreen = async () => {
     this.updateTheStatus(`[handleMessage] startShareScreen`)
     try {
-      this.shareStream = await navigator.mediaDevices.getDisplayMedia(this.constraints)
+      const screenConstraints = {
+        audio:true,
+        video: {
+          mediaSource: 'screen',
+          width: { ideal: 1920 },
+          height: { ideal: 1080 },
+          displaySurface: 'monitor', // You can specify displaySurface to filter by monitor type
+          cursor: 'always',          // You can specify cursor behavior
+          logicalSurface: true,      // You can specify logical surface behavior
+          frameRate: { ideal: 30}, // Adjust the frame rate to your preference
+        },
+      }
+      this.shareStream = await navigator.mediaDevices.getDisplayMedia(screenConstraints)
 
-      // Add hint to content type
-      await this.addHintToTrack(this.shareStream)
-      await this.setResolution(this.shareStream)
+      // // Add hint to content type
+      // await this.addHintToTrack(this.shareStream)
+      // await this.setResolution(this.shareStream)
 
       this.remoteStreams.push(this.shareStream)
 
@@ -824,7 +836,7 @@ export class SparkRTC {
         this.shareStream.getTracks().forEach((track) => {
           apeerConnection.addTrack(track, this.shareStream)
         })
-        await this.addCodecPrefrences(apeerConnection, this.shareStream)
+        // await this.addCodecPrefrences(apeerConnection, this.shareStream)
       }
 
       // Add name to stream
@@ -853,7 +865,7 @@ export class SparkRTC {
     //add hint to content type
     await this.addHintToTrack(this.localStream)
 
-    await this.setResolution(this.localStream)
+    // await this.setResolution(this.localStream)
 
     this.updateTheStatus(`Local stream loaded`)
     this.updateTheStatus(`[startBroadcasting] local stream loaded`)
@@ -1705,7 +1717,7 @@ export class SparkRTC {
               // await this.updatePeerConnectionParams(sender);
             } catch {}
           })
-          await this.addCodecPrefrences(apeerConnection, stream)
+          // await this.addCodecPrefrences(apeerConnection, stream)
         }
 
         if (!this.started) {
@@ -2037,7 +2049,7 @@ export class SparkRTC {
           } catch {}
         })
 
-        await this.addCodecPrefrences(this.myPeerConnectionArray[audienceName], astream)
+        // await this.addCodecPrefrences(this.myPeerConnectionArray[audienceName], astream)
       })
     }
   }
@@ -2065,7 +2077,7 @@ export class SparkRTC {
       // await this.updatePeerConnectionParams(sender);
     })
 
-    await this.addCodecPrefrences(peerConnection, stream)
+    // await this.addCodecPrefrences(peerConnection, stream)
   }
 
   /**
