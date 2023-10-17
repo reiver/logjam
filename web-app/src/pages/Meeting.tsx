@@ -3,8 +3,10 @@ import { BottomBar, Button, MeetingBody, TopBar, attendees, attendeesBadge, isMo
 import { isAttendeesOpen } from 'components/Attendees'
 import { ToastProvider, destroyDialog, makePreviewDialog } from 'components/Dialog'
 import { Roles, createSparkRTC, getWsUrl } from 'lib/common.js'
+import { detectKeyPress } from 'lib/controls'
 import { lazy } from 'preact-iso'
 import { useEffect } from 'preact/compat'
+import {fullScreenedStream} from 'components/MeetingBody/Stage'
 
 const PageNotFound = lazy(() => import('./_404'))
 
@@ -107,6 +109,7 @@ const displayStream = async (stream, toggleFull = false) => {
 }
 
 const toggleFullScreen = async (stream) => {
+  console.log("Toggle Screen",stream)
   await displayStream(stream, true)
 }
 
@@ -192,7 +195,41 @@ export const getUserRaiseHandStatus = (userId) => {
   return attendees.value[userId]?.raisedHand || false
 }
 
+function keyPressCallback(key){  
+
+  //get streams
+  console.log("Streamers: ",streamers.value)
+
+  if(key==="1"){
+    // Iterate over the properties of the streamers object
+    for (const userId in streamers.value) {
+      const id = userId;
+      if (streamers.value.hasOwnProperty(userId)) {
+          const streamer = streamers.value[id];
+        
+          // Access the properties of the streamer object
+          const isHost = streamer.isHost;
+          const isShareScreen = streamer.isShareScreen;
+          const isLocalStream = streamer.isLocalStream;
+          const stream = streamer.stream;
+
+
+          if(!isShareScreen && isHost){
+            console.log("Key: 1: Streamer: ",streamer)
+          
+            if (fullScreenedStream.value === stream.id) {
+              fullScreenedStream.value = null
+            } else fullScreenedStream.value = stream.id
+          }
+
+      }
+    }
+  }
+}
 const Meeting = ({ params: { room, displayName, name } }: { params?: { room?: string; displayName?: string; name?: string } }) => {  
+  
+  detectKeyPress(keyPressCallback)
+  
   if (displayName && room) {
     if (displayName[0] !== '@') return <PageNotFound />
   }

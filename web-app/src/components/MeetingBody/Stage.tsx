@@ -16,7 +16,7 @@ export const bottomBarVisible = signal(true)
 export const fullScreenedStream = signal(null)
 export const hasShareScreenStream = computed(() => !!Object.values(streamers.value).find((s) => s.isShareScreen))
 export const hasFullScreenedStream = computed(() => !!fullScreenedStream.value)
-export const streamers = signal<Record<string, { isHost: boolean; isShareScreen: boolean; isLocalStream: boolean; stream: any; userId: any; muted: boolean; name: string; toggleScreenId: any }>>({})
+export const streamers = signal<Record<string, { isHost: boolean; isShareScreen: boolean; isLocalStream: boolean; stream: any; userId: any; muted: boolean; name: string; toggleScreenId: any;}>>({})
 export const streamersLength = computed(() => Object.keys(streamers.value).length)
 export const deviceSize = signal(getDeviceConfig(window.innerWidth))
 const topBarBottomBarHeight = () => document.getElementById('top-bar').offsetHeight + (bottomBarVisible.value ? document.getElementById('bottom-bar').offsetHeight : 0) + 32
@@ -207,6 +207,7 @@ export const Video = memo(({ stream, isMuted, isHostStream, name, userId, isUser
   const videoRef = useRef<HTMLVideoElement>()
   const [menuOpen, setMenuOpen] = useState(false)
   const toggleFullScreen = (e?: any) => {
+    console.log("toggleFullScreen")
     if (fullScreenedStream.value === stream.id) {
       fullScreenedStream.value = null
     } else fullScreenedStream.value = stream.id
@@ -216,11 +217,12 @@ export const Video = memo(({ stream, isMuted, isHostStream, name, userId, isUser
     }
   }
 
+
   //toggle screen back to normal mode, when stream is stopped
-  if (toggleScreen && hasFullScreenedStream.value && fullScreenedStream.value === stream.id) {
-    console.log('toggleFullScreen finally')
-    toggleFullScreen()
-    toggleScreen = null
+  if ((toggleScreen && hasFullScreenedStream.value && fullScreenedStream.value === stream.id)) {
+      console.log('toggleFullScreen finally')
+      toggleFullScreen()
+      toggleScreen = null
   }
 
   useEffect(() => {
