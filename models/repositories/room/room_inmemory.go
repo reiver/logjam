@@ -461,7 +461,7 @@ start:
 					nodeChildrenIdList = append(nodeChildrenIdList, parentLostChild.ID)
 				}
 				(*node).Children = append((*node).Children[:i], (*node).Children[i+1:]...)
-				if memberId == models.GoldGorillaId {
+				if memberId == models.GetGoldGorillaId() {
 					r.rooms[roomId].GoldGorilla = nil
 				}
 				found = true

@@ -6,7 +6,7 @@ services:
     container_name: "logjam"
     build: ./
     ports:
-      - "0.0.0.0:8090:8090"
+      - "0.0.0.0:8080:8090"
     network_mode: bridge
     deploy:
       restart_policy:
