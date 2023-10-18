@@ -8,6 +8,8 @@ import { lazy } from 'preact-iso'
 import { useEffect } from 'preact/compat'
 import {fullScreenedStream} from 'components/MeetingBody/Stage'
 
+let displayIdCounter = 2
+
 const PageNotFound = lazy(() => import('./_404'))
 
 export const isDebugMode = signal((new URLSearchParams(window.location.search).get('debug') || '').toLowerCase() === 'true')
@@ -29,6 +31,9 @@ export const setUserActionLoading = (userId, actionLoading) => {
     },
   }
 }
+
+//hashmap for stream and display id
+let streamMap = new Map<any,any>()
 
 // const url = `stats/index.html`;
 // var targetWindow = window.open(url, '_blank');
@@ -76,8 +81,12 @@ export const onStartShareScreen = (stream) => {
       hasCamera: false,
       stream,
       isShareScreen: true,
+      displayId:1,
     },
   }
+
+  console.log("Set 1 for screen share")
+
 }
 
 const displayStream = async (stream, toggleFull = false) => {
@@ -89,6 +98,37 @@ const displayStream = async (stream, toggleFull = false) => {
   }
 
   setUserActionLoading(stream.userId, false)
+
+  
+  let dId = 0;
+  if(!toggleFull && !streamMap.has(stream.id) && stream.hasOwnProperty('isShareScreen')){
+
+    if(stream.isShareScreen){
+      dId = 1;
+    }else if(stream.role === Roles.BROADCAST && !stream.isShareScreen){
+      dId = 2;
+    }else{
+      let usedValues = Array.from(streamMap.values());
+
+      // Loop through the values from 3 to 9
+      for (let i = 3; i <= 9; i++) {
+        if (!usedValues.includes(i)) {
+            dId = i;
+            break; // Exit the loop once a missing value is found
+        }
+      }
+
+      if (dId === 0) {
+          // If no missing value was found, increment the counter
+          displayIdCounter++;
+          dId = displayIdCounter;
+      }
+    }
+
+    console.log("Setting id: ",dId," of stream: ",stream)
+    streamMap.set(stream.id,dId)
+
+  }
 
   streamers.value = {
     ...streamers.value,
@@ -104,6 +144,7 @@ const displayStream = async (stream, toggleFull = false) => {
       isLocalStream: local,
       isShareScreen: stream.isShareScreen || false,
       toggleScreenId: toggleFull ? stream.id : null,
+      displayId:streamMap.get(stream.id),
     },
   }
 }
@@ -119,6 +160,9 @@ export const onStopStream = async (stream) => {
   const streamersTmp = { ...streamers.value }
   delete streamersTmp[stream.id]
   streamers.value = streamersTmp
+
+  streamMap.delete(stream.id) //remove stream display id from stream map
+
 }
 
 export const onStopShareScreen = async (stream) => {
@@ -196,35 +240,26 @@ export const getUserRaiseHandStatus = (userId) => {
 }
 
 function keyPressCallback(key){  
-
   //get streams
   console.log("Streamers: ",streamers.value)
 
-  if(key==="1"){
-    // Iterate over the properties of the streamers object
-    for (const userId in streamers.value) {
-      const id = userId;
-      if (streamers.value.hasOwnProperty(userId)) {
-          const streamer = streamers.value[id];
-        
-          // Access the properties of the streamer object
-          const isHost = streamer.isHost;
-          const isShareScreen = streamer.isShareScreen;
-          const isLocalStream = streamer.isLocalStream;
-          const stream = streamer.stream;
+  // Iterate over the properties of the streamers object
+  for (const userId in streamers.value) {
+    const id = userId;
+    if (streamers.value.hasOwnProperty(userId)) {
+        const streamer = streamers.value[id];
+      
+        const stream = streamer.stream;
+        const displayId = streamer.displayId;
 
-
-          if(!isShareScreen && isHost){
-            console.log("Key: 1: Streamer: ",streamer)
-          
-            if (fullScreenedStream.value === stream.id) {
-              fullScreenedStream.value = null
-            } else fullScreenedStream.value = stream.id
-          }
-
-      }
+        if(displayId.toString()===key){
+          if (fullScreenedStream.value === stream.id) {
+            fullScreenedStream.value = null
+          } else fullScreenedStream.value = stream.id
+        }
     }
   }
+ 
 }
 const Meeting = ({ params: { room, displayName, name } }: { params?: { room?: string; displayName?: string; name?: string } }) => {  
   
@@ -282,8 +317,10 @@ const Meeting = ({ params: { room, displayName, name } }: { params?: { room?: st
               stream,
               isLocalStream: true,
               isShareScreen: stream.isShareScreen || false,
+              displayId:2,
             },
           }
+
         },
         remoteStreamCallback: async (stream) => {
           log(`remoteStreamCallback`, stream)

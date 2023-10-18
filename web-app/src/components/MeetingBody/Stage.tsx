@@ -16,7 +16,7 @@ export const bottomBarVisible = signal(true)
 export const fullScreenedStream = signal(null)
 export const hasShareScreenStream = computed(() => !!Object.values(streamers.value).find((s) => s.isShareScreen))
 export const hasFullScreenedStream = computed(() => !!fullScreenedStream.value)
-export const streamers = signal<Record<string, { isHost: boolean; isShareScreen: boolean; isLocalStream: boolean; stream: any; userId: any; muted: boolean; name: string; toggleScreenId: any;}>>({})
+export const streamers = signal<Record<string, { isHost: boolean; isShareScreen: boolean; isLocalStream: boolean; stream: any; userId: any; muted: boolean; name: string; toggleScreenId: any; displayId:string}>>({})
 export const streamersLength = computed(() => Object.keys(streamers.value).length)
 export const deviceSize = signal(getDeviceConfig(window.innerWidth))
 const topBarBottomBarHeight = () => document.getElementById('top-bar').offsetHeight + (bottomBarVisible.value ? document.getElementById('bottom-bar').offsetHeight : 0) + 32
