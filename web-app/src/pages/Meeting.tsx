@@ -3,8 +3,12 @@ import { BottomBar, Button, MeetingBody, TopBar, attendees, attendeesBadge, isMo
 import { isAttendeesOpen } from 'components/Attendees'
 import { ToastProvider, destroyDialog, makePreviewDialog } from 'components/Dialog'
 import { Roles, createSparkRTC, getWsUrl } from 'lib/common.js'
+import { detectKeyPress } from 'lib/controls'
 import { lazy } from 'preact-iso'
 import { useEffect } from 'preact/compat'
+import {fullScreenedStream} from 'components/MeetingBody/Stage'
+
+let displayIdCounter = 2
 
 const PageNotFound = lazy(() => import('./_404'))
 
@@ -27,6 +31,9 @@ export const setUserActionLoading = (userId, actionLoading) => {
     },
   }
 }
+
+//hashmap for stream and display id
+let streamMap = new Map<any,any>()
 
 // const url = `stats/index.html`;
 // var targetWindow = window.open(url, '_blank');
@@ -74,8 +81,12 @@ export const onStartShareScreen = (stream) => {
       hasCamera: false,
       stream,
       isShareScreen: true,
+      displayId:1,
     },
   }
+
+  console.log("Setting 1 for screen share: ",stream)
+
 }
 
 const displayStream = async (stream, toggleFull = false) => {
@@ -87,6 +98,61 @@ const displayStream = async (stream, toggleFull = false) => {
   }
 
   setUserActionLoading(stream.userId, false)
+
+  
+  let dId = 0;
+  if(!toggleFull 
+      && stream.hasOwnProperty('isShareScreen')
+      && stream.hasOwnProperty('role')){
+
+    if(stream.role === Roles.BROADCAST){
+      if(stream.isShareScreen===true){
+        //share screen
+        dId = 1;
+        console.log("Setting 1 to Stream: ",stream)
+      }else{
+        //host camera feed
+        dId = 2;
+        console.log("Setting 2 to Stream: ",stream)
+      }
+
+    }else{
+      //this stream is from Audince and it exists in map with HOST key (1 or 2)
+
+      if(streamMap.has(stream.id) && (streamMap.get(stream.id)===1 || streamMap.get(stream.id)===2)){
+        console.log("Setting deleting ",stream.id," from Map")
+        streamMap.delete(stream.id)
+      }
+
+      if(!streamMap.has(stream.id)){
+        let usedValues = Array.from(streamMap.values());
+
+        // Loop through the values from 3 to 9
+        for (let i = 3; i <= 9; i++) {
+          if (!usedValues.includes(i)) {
+              dId = i;
+              break; // Exit the loop once a missing value is found
+          }
+        }
+  
+        if (dId === 0) {
+            // If no missing value was found, increment the counter
+            displayIdCounter++;
+            dId = displayIdCounter;
+        }
+  
+        console.log("Setting some number ",dId," to Stream: ",stream)
+  
+      }
+
+    }
+    if(dId!=0){
+      streamMap.set(stream.id,dId)
+    }
+
+    console.log("Setting StreamMap: ",streamMap.entries())
+
+  }
 
   streamers.value = {
     ...streamers.value,
@@ -102,11 +168,13 @@ const displayStream = async (stream, toggleFull = false) => {
       isLocalStream: local,
       isShareScreen: stream.isShareScreen || false,
       toggleScreenId: toggleFull ? stream.id : null,
+      displayId:streamMap.get(stream.id),
     },
   }
 }
 
 const toggleFullScreen = async (stream) => {
+  console.log("Toggle Screen",stream)
   await displayStream(stream, true)
 }
 
@@ -116,6 +184,9 @@ export const onStopStream = async (stream) => {
   const streamersTmp = { ...streamers.value }
   delete streamersTmp[stream.id]
   streamers.value = streamersTmp
+
+  streamMap.delete(stream.id) //remove stream display id from stream map
+
 }
 
 export const onStopShareScreen = async (stream) => {
@@ -192,7 +263,32 @@ export const getUserRaiseHandStatus = (userId) => {
   return attendees.value[userId]?.raisedHand || false
 }
 
+function keyPressCallback(key){  
+  //get streams
+  console.log("Streamers: ",streamers.value)
+
+  // Iterate over the properties of the streamers object
+  for (const userId in streamers.value) {
+    const id = userId;
+    if (streamers.value.hasOwnProperty(userId)) {
+        const streamer = streamers.value[id];
+      
+        const stream = streamer.stream;
+        const displayId = streamer.displayId;
+
+        if(displayId.toString()===key){
+          if (fullScreenedStream.value === stream.id) {
+            fullScreenedStream.value = null
+          } else fullScreenedStream.value = stream.id
+        }
+    }
+  }
+ 
+}
 const Meeting = ({ params: { room, displayName, name } }: { params?: { room?: string; displayName?: string; name?: string } }) => {  
+  
+  detectKeyPress(keyPressCallback)
+  
   if (displayName && room) {
     if (displayName[0] !== '@') return <PageNotFound />
   }
@@ -245,8 +341,11 @@ const Meeting = ({ params: { room, displayName, name } }: { params?: { room?: st
               stream,
               isLocalStream: true,
               isShareScreen: stream.isShareScreen || false,
+              displayId:2,
             },
           }
+
+          console.log("Setting 2 for LocalStream: ",stream)
         },
         remoteStreamCallback: async (stream) => {
           log(`remoteStreamCallback`, stream)
