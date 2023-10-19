@@ -101,11 +101,13 @@ const displayStream = async (stream, toggleFull = false) => {
 
   
   let dId = 0;
-  if(!toggleFull && !streamMap.has(stream.id) && stream.hasOwnProperty('isShareScreen')){
+  if(!toggleFull && !streamMap.has(stream.id) 
+      && stream.hasOwnProperty('isShareScreen')
+      && stream.hasOwnProperty('role')){
 
-    if(stream.isShareScreen){
+    if(stream.role === Roles.BROADCAST && stream.isShareScreen===true){
       dId = 1;
-    }else if(stream.role === Roles.BROADCAST && !stream.isShareScreen){
+    }else if(stream.role === Roles.BROADCAST && stream.isShareScreen!=true){
       dId = 2;
     }else{
       let usedValues = Array.from(streamMap.values());
