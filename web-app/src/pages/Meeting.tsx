@@ -85,7 +85,7 @@ export const onStartShareScreen = (stream) => {
     },
   }
 
-  console.log("Set 1 for screen share")
+  console.log("Setting 1 for screen share: ",stream)
 
 }
 
@@ -101,34 +101,56 @@ const displayStream = async (stream, toggleFull = false) => {
 
   
   let dId = 0;
-  if(!toggleFull && !streamMap.has(stream.id) 
+  if(!toggleFull 
       && stream.hasOwnProperty('isShareScreen')
       && stream.hasOwnProperty('role')){
 
-    if(stream.role === Roles.BROADCAST && stream.isShareScreen===true){
-      dId = 1;
-    }else if(stream.role === Roles.BROADCAST && stream.isShareScreen!=true){
-      dId = 2;
+    if(stream.role === Roles.BROADCAST){
+      if(stream.isShareScreen===true){
+        //share screen
+        dId = 1;
+        console.log("Setting 1 to Stream: ",stream)
+      }else{
+        //host camera feed
+        dId = 2;
+        console.log("Setting 2 to Stream: ",stream)
+      }
+
     }else{
-      let usedValues = Array.from(streamMap.values());
+      //this stream is from Audince and it exists in map with HOST key (1 or 2)
 
-      // Loop through the values from 3 to 9
-      for (let i = 3; i <= 9; i++) {
-        if (!usedValues.includes(i)) {
-            dId = i;
-            break; // Exit the loop once a missing value is found
+      if(streamMap.has(stream.id) && (streamMap.get(stream.id)===1 || streamMap.get(stream.id)===2)){
+        console.log("Setting deleting ",stream.id," from Map")
+        streamMap.delete(stream.id)
+      }
+
+      if(!streamMap.has(stream.id)){
+        let usedValues = Array.from(streamMap.values());
+
+        // Loop through the values from 3 to 9
+        for (let i = 3; i <= 9; i++) {
+          if (!usedValues.includes(i)) {
+              dId = i;
+              break; // Exit the loop once a missing value is found
+          }
         }
+  
+        if (dId === 0) {
+            // If no missing value was found, increment the counter
+            displayIdCounter++;
+            dId = displayIdCounter;
+        }
+  
+        console.log("Setting some number ",dId," to Stream: ",stream)
+  
       }
 
-      if (dId === 0) {
-          // If no missing value was found, increment the counter
-          displayIdCounter++;
-          dId = displayIdCounter;
-      }
+    }
+    if(dId!=0){
+      streamMap.set(stream.id,dId)
     }
 
-    console.log("Setting id: ",dId," of stream: ",stream)
-    streamMap.set(stream.id,dId)
+    console.log("Setting StreamMap: ",streamMap.entries())
 
   }
 
@@ -323,6 +345,7 @@ const Meeting = ({ params: { room, displayName, name } }: { params?: { room?: st
             },
           }
 
+          console.log("Setting 2 for LocalStream: ",stream)
         },
         remoteStreamCallback: async (stream) => {
           log(`remoteStreamCallback`, stream)
