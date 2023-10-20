@@ -187,6 +187,7 @@ export const Stage = () => {
                       isHostStream={attendee.isHost}
                       isShareScreen={attendee.isShareScreen}
                       toggleScreen={attendee.toggleScreenId}
+                      displayId={attendee.displayId}
                     />
                   </div>
                 )
@@ -200,7 +201,7 @@ export const Stage = () => {
   )
 }
 
-export const Video = memo(({ stream, isMuted, isHostStream, name, userId, isUserMuted, isShareScreen, toggleScreen }: any) => {
+export const Video = memo(({ stream, isMuted, isHostStream, name, userId, isUserMuted, isShareScreen, toggleScreen, displayId }: any) => {
   const [muted, setMuted] = useState(true)
   const { isHost } = currentUser.value
   const menu = useRef<any>()
@@ -332,7 +333,7 @@ export const Video = memo(({ stream, isMuted, isHostStream, name, userId, isUser
                   <Icon icon={verticalDots} width="20px" height="20px" />
 
                   {menuOpen && (
-                    <div class="absolute top-full right-0 h-full w-full">
+                    <div class="absolute z-10 top-full right-0 h-full w-full">
                       <ul class="bg-white absolute top-0 right-0 mt-1 -ml-2 text-black rounded-sm p-1">
                         <li class="w-full whitespace-nowrap px-4 py-1 rounded-sm bg-black bg-opacity-0 hover:bg-opacity-10" onClick={handleRemoveStream}>
                           Stop broadcast
@@ -345,6 +346,19 @@ export const Video = memo(({ stream, isMuted, isHostStream, name, userId, isUser
             </div>
           </div>
         </div>
+      </div>
+      <div class="absolute top-8 left-0 flex justify-between w-full px-2 gap-2">
+          <div class={clsx('h-[48px] gap-0 flex justify-end items-center flex-grow')}> 
+            <div
+              className={clsx('sm:group-hover:flex hidden')}
+            >
+              <div class="flex justify-center items-center">
+                <div className="px-4 py-1 bg-gray-0 text-gray-2 rounded-full text-medium-12">
+                  {'Maximize shortcut key='}{displayId}
+                </div>
+              </div>
+            </div>
+          </div>
       </div>
     </div>
   )

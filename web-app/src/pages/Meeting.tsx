@@ -703,7 +703,7 @@ const Meeting = ({ params: { room, displayName, name } }: { params?: { room?: st
     <div class="flex flex-col justify-between min-h-[--doc-height] dark:bg-secondary-1-a bg-white-f-9 text-medium-12 text-gray-800 dark:text-gray-200">
       <TopBar />
       {meetingStatus.value ? (
-        <>
+      <>
           <MeetingBody />
           <BottomBar />
         </>
