@@ -360,6 +360,20 @@ export const Video = memo(({ stream, isMuted, isHostStream, name, userId, isUser
             </div>
           </div>
       </div>
+
+      <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+          <div class={clsx('h-[48px] gap-0 flex justify-end items-center flex-grow')}> 
+            <div
+              className={clsx('sm:group-hover:flex hidden')}
+            >
+              <div class="flex justify-center items-center">
+                <div className="px-4 py-1 bg-black bg-opacity-50 text-white rounded-[16px] text-semi-bold-32">
+                  {displayId}
+                </div>
+              </div>
+            </div>
+          </div>
+      </div>
     </div>
   )
 })
