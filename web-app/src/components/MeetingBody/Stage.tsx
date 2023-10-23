@@ -207,6 +207,8 @@ export const Video = memo(({ stream, isMuted, isHostStream, name, userId, isUser
   const menu = useRef<any>()
   const videoRef = useRef<HTMLVideoElement>()
   const [menuOpen, setMenuOpen] = useState(false)
+  const [isHoveredOnFullScreenIcon, setHoveredOnFullScreenIcon] = useState(false)
+
   const toggleFullScreen = (e?: any) => {
     console.log("toggleFullScreen")
     if (fullScreenedStream.value === stream.id) {
@@ -269,9 +271,11 @@ export const Video = memo(({ stream, isMuted, isHostStream, name, userId, isUser
   const handleOpenMenu = (e) => {
     e.stopPropagation()
     setMenuOpen(!menuOpen)
+
+    //hide tooltip
+    setHoveredOnFullScreenIcon(false)
   }
   const [isHover, setHover] = useState(false)
-  const [isHoveredOnFullScreenIcon, setHoveredOnFullScreenIcon] = useState(false)
 
   const handleOnClick = () => {
     setHover(!isHover)
@@ -366,7 +370,7 @@ export const Video = memo(({ stream, isMuted, isHostStream, name, userId, isUser
           <div class={clsx('h-[48px] gap-0 flex justify-end items-center flex-grow')}> 
             <div
               className={clsx('sm:flex:hidden',{
-                hidden:!isHoveredOnFullScreenIcon
+                hidden:!isHoveredOnFullScreenIcon || menuOpen
               })}
             >
               <div class="flex justify-center items-center">
@@ -382,7 +386,7 @@ export const Video = memo(({ stream, isMuted, isHostStream, name, userId, isUser
           <div class={clsx('h-[48px] gap-0 flex justify-end items-center flex-grow')}> 
             <div
               className={clsx('sm:flex:hidden',{
-                hidden:!isHoveredOnFullScreenIcon
+                hidden:!isHoveredOnFullScreenIcon || menuOpen
               })}
             >
               <div class="flex justify-center items-center">
