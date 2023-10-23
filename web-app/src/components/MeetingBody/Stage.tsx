@@ -213,6 +213,9 @@ export const Video = memo(({ stream, isMuted, isHostStream, name, userId, isUser
       fullScreenedStream.value = null
     } else fullScreenedStream.value = stream.id
 
+    //hide tooltips
+    setHoveredOnFullScreenIcon(false)
+
     if (e) {
       e.stopPropagation()
     }
@@ -268,10 +271,16 @@ export const Video = memo(({ stream, isMuted, isHostStream, name, userId, isUser
     setMenuOpen(!menuOpen)
   }
   const [isHover, setHover] = useState(false)
+  const [isHoveredOnFullScreenIcon, setHoveredOnFullScreenIcon] = useState(false)
 
   const handleOnClick = () => {
     setHover(!isHover)
   }
+
+  const toggleFullScreenHover = ()=>{
+    setHoveredOnFullScreenIcon(!isHoveredOnFullScreenIcon)
+  }
+
   useEffect(() => {
     if ((!bottomBarVisible.value && isHover) || (!hasFullScreenedStream.value && isHover)) {
       setHover(false)
@@ -320,12 +329,18 @@ export const Video = memo(({ stream, isMuted, isHostStream, name, userId, isUser
                 flex: menuOpen || isHover,
               })}
             >
-              <IconButton variant="nothing" class="w-[30px] h-[30px] p-0" onClick={toggleFullScreen}>
+              <IconButton variant="nothing" class="w-[30px] h-[30px] p-0" onClick={()=>{
+                toggleFullScreen()
+              }}
+              onMouseEnter = {toggleFullScreenHover}
+              onMouseLeave = {toggleFullScreenHover}
+              >
                 <Icon
                   key={stream && fullScreenedStream.value === stream.id ? ScreenNormal : ScreenFull}
                   icon={stream && fullScreenedStream.value === stream.id ? ScreenNormal : ScreenFull}
                   width="20px"
                   height="20px"
+                  
                 />
               </IconButton>
               {isHost && !isHostStream && (
@@ -350,11 +365,13 @@ export const Video = memo(({ stream, isMuted, isHostStream, name, userId, isUser
       <div class="absolute top-8 left-0 flex justify-between w-full px-2 gap-2">
           <div class={clsx('h-[48px] gap-0 flex justify-end items-center flex-grow')}> 
             <div
-              className={clsx('sm:group-hover:flex hidden')}
+              className={clsx('sm:flex:hidden',{
+                hidden:!isHoveredOnFullScreenIcon
+              })}
             >
               <div class="flex justify-center items-center">
                 <div className="px-4 py-1 bg-gray-0 text-gray-2 rounded-full text-medium-12">
-                  {'Maximize shortcut key='}{displayId}
+                  {fullScreenedStream.value!=stream.id?'Maximize':'Minimize'}{' shortcut key='}{displayId}
                 </div>
               </div>
             </div>
@@ -364,7 +381,9 @@ export const Video = memo(({ stream, isMuted, isHostStream, name, userId, isUser
       <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
           <div class={clsx('h-[48px] gap-0 flex justify-end items-center flex-grow')}> 
             <div
-              className={clsx('sm:group-hover:flex hidden')}
+              className={clsx('sm:flex:hidden',{
+                hidden:!isHoveredOnFullScreenIcon
+              })}
             >
               <div class="flex justify-center items-center">
                 <div className="px-4 py-1 bg-black bg-opacity-50 text-white rounded-[16px] text-semi-bold-32">
