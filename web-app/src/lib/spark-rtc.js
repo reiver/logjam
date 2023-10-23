@@ -1801,7 +1801,7 @@ export class SparkRTC {
     this.userListCallback = async (users) => {
       if (users && users.length > 0) {
         const matchedStreamMap = new Map()
-        const unmatchedStreams = []
+        var unmatchedStreams = []
         let broadcasterName = ''
 
         // Find the broadcaster in the user list and retrieve the name
@@ -1855,7 +1855,14 @@ export class SparkRTC {
               this.remoteStreamCallback(stream)
             }
           } else {
-            // TODO: remove the stream from the list because it must be the disconnected audience
+            //remove the stream from the list because it must be the disconnected audience
+            unmatchedStreams = unmatchedStreams.filter((s) => !!s.userId);
+            this.remoteStreams = this.remoteStreams.filter((STR) => STR.id !== stream.id)
+
+            //remove stream from screen
+            if(this.remoteStreamDCCallback){
+              this.remoteStreamDCCallback(stream)
+            }
           }
         })
       }
