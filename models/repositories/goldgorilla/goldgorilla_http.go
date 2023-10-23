@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"github.com/sparkscience/logjam/models/contracts"
-	"github.com/sparkscience/logjam/models/dto"
+	"sourcecode.social/greatape/logjam/models/contracts"
+	"sourcecode.social/greatape/logjam/models/dto"
 	"net/http"
 	"time"
 )

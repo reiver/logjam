@@ -2,7 +2,7 @@ package routers
 
 import (
 	"github.com/gorilla/mux"
-	"github.com/sparkscience/logjam/controllers"
+	"sourcecode.social/greatape/logjam/controllers"
 	"net/http"
 )
 

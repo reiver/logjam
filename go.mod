@@ -1,4 +1,4 @@
-module github.com/sparkscience/logjam
+module sourcecode.social/greatape/logjam
 
 go 1.20
 

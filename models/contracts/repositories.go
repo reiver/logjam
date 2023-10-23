@@ -1,8 +1,8 @@
 package contracts
 
 import (
-	"github.com/sparkscience/logjam/models"
-	"github.com/sparkscience/logjam/models/dto"
+	"sourcecode.social/greatape/logjam/models"
+	"sourcecode.social/greatape/logjam/models/dto"
 )
 
 type IRoomRepository interface {
