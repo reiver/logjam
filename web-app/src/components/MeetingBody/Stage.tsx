@@ -210,7 +210,6 @@ export const Video = memo(({ stream, isMuted, isHostStream, name, userId, isUser
   const [isHoveredOnFullScreenIcon, setHoveredOnFullScreenIcon] = useState(false)
 
   const toggleFullScreen = (e?: any) => {
-    console.log("toggleFullScreen")
     if (fullScreenedStream.value === stream.id) {
       fullScreenedStream.value = null
     } else fullScreenedStream.value = stream.id
@@ -281,10 +280,6 @@ export const Video = memo(({ stream, isMuted, isHostStream, name, userId, isUser
     setHover(!isHover)
   }
 
-  const toggleFullScreenHover = ()=>{
-    setHoveredOnFullScreenIcon(!isHoveredOnFullScreenIcon)
-  }
-
   useEffect(() => {
     if ((!bottomBarVisible.value && isHover) || (!hasFullScreenedStream.value && isHover)) {
       setHover(false)
@@ -336,8 +331,8 @@ export const Video = memo(({ stream, isMuted, isHostStream, name, userId, isUser
               <IconButton variant="nothing" class="w-[30px] h-[30px] p-0" onClick={()=>{
                 toggleFullScreen()
               }}
-              onMouseEnter = {toggleFullScreenHover}
-              onMouseLeave = {toggleFullScreenHover}
+              onMouseEnter = {()=>{setHoveredOnFullScreenIcon(true)}}
+              onMouseLeave = {()=>{setHoveredOnFullScreenIcon(false)}}
               >
                 <Icon
                   key={stream && fullScreenedStream.value === stream.id ? ScreenNormal : ScreenFull}

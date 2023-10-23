@@ -85,7 +85,6 @@ export const onStartShareScreen = (stream) => {
     },
   }
 
-  console.log("Setting 1 for screen share: ",stream)
 
 }
 
@@ -109,18 +108,15 @@ const displayStream = async (stream, toggleFull = false) => {
       if(stream.isShareScreen===true){
         //share screen
         dId = 1;
-        console.log("Setting 1 to Stream: ",stream)
       }else{
         //host camera feed
         dId = 2;
-        console.log("Setting 2 to Stream: ",stream)
       }
 
     }else{
       //this stream is from Audince and it exists in map with HOST key (1 or 2)
 
       if(streamMap.has(stream.id) && (streamMap.get(stream.id)===1 || streamMap.get(stream.id)===2)){
-        console.log("Setting deleting ",stream.id," from Map")
         streamMap.delete(stream.id)
       }
 
@@ -141,7 +137,6 @@ const displayStream = async (stream, toggleFull = false) => {
             dId = displayIdCounter;
         }
   
-        console.log("Setting some number ",dId," to Stream: ",stream)
   
       }
 
@@ -150,7 +145,6 @@ const displayStream = async (stream, toggleFull = false) => {
       streamMap.set(stream.id,dId)
     }
 
-    console.log("Setting StreamMap: ",streamMap.entries())
 
   }
 
@@ -174,7 +168,6 @@ const displayStream = async (stream, toggleFull = false) => {
 }
 
 const toggleFullScreen = async (stream) => {
-  console.log("Toggle Screen",stream)
   await displayStream(stream, true)
 }
 
@@ -264,9 +257,7 @@ export const getUserRaiseHandStatus = (userId) => {
 }
 
 function keyPressCallback(key){  
-  //get streams
-  console.log("Streamers: ",streamers.value)
-
+ 
   // Iterate over the properties of the streamers object
   for (const userId in streamers.value) {
     const id = userId;
@@ -345,7 +336,6 @@ const Meeting = ({ params: { room, displayName, name } }: { params?: { room?: st
             },
           }
 
-          console.log("Setting 2 for LocalStream: ",stream)
         },
         remoteStreamCallback: async (stream) => {
           log(`remoteStreamCallback`, stream)
