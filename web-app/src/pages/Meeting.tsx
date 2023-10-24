@@ -81,7 +81,7 @@ export const onStartShareScreen = (stream) => {
       hasCamera: false,
       stream,
       isShareScreen: true,
-      displayId:1,
+      displayId:2,
     },
   }
 
@@ -107,10 +107,10 @@ const displayStream = async (stream, toggleFull = false) => {
     if(stream.role === Roles.BROADCAST){
       if(stream.isShareScreen===true){
         //share screen
-        dId = 1;
+        dId = 2;
       }else{
         //host camera feed
-        dId = 2;
+        dId = 1;
       }
 
     }else{
@@ -332,7 +332,7 @@ const Meeting = ({ params: { room, displayName, name } }: { params?: { room?: st
               stream,
               isLocalStream: true,
               isShareScreen: stream.isShareScreen || false,
-              displayId:2,
+              displayId:1,
             },
           }
 
