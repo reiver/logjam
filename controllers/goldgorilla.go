@@ -44,9 +44,9 @@ func (ctrl *GoldGorillaController) SendAnswer(rw http.ResponseWriter, req *http.
 	ctrl.socketSVC.Send(map[string]interface{}{
 		"type":   "video-answer",
 		"target": strconv.FormatUint(reqModel.ID, 10),
-		"name":   strconv.FormatUint(models.GoldGorillaId, 10),
+		"name":   strconv.FormatUint(models.GetGoldGorillaId(), 10),
 		"sdp":    reqModel.SDP,
-		"data":   strconv.FormatUint(models.GoldGorillaId, 10),
+		"data":   strconv.FormatUint(models.GetGoldGorillaId(), 10),
 	}, reqModel.ID)
 	_ = ctrl.helper.Write(rw, nil, 204)
 }
@@ -64,9 +64,9 @@ func (ctrl *GoldGorillaController) SendOffer(rw http.ResponseWriter, req *http.R
 	_ = ctrl.socketSVC.Send(map[string]interface{}{
 		"type":   "video-offer",
 		"target": strconv.FormatUint(reqModel.ID, 10),
-		"name":   strconv.FormatUint(models.GoldGorillaId, 10),
+		"name":   strconv.FormatUint(models.GetGoldGorillaId(), 10),
 		"sdp":    reqModel.SDP,
-		"data":   strconv.FormatUint(models.GoldGorillaId, 10),
+		"data":   strconv.FormatUint(models.GetGoldGorillaId(), 10),
 	}, reqModel.ID)
 	_ = ctrl.helper.Write(rw, nil, 204)
 }
@@ -85,7 +85,7 @@ func (ctrl *GoldGorillaController) SendICECandidate(rw http.ResponseWriter, req 
 		"Type":      "new-ice-candidate",
 		"Target":    strconv.FormatUint(reqModel.ID, 10),
 		"candidate": reqModel.ICECandidate,
-		"data":      strconv.FormatUint(models.GoldGorillaId, 10),
+		"data":      strconv.FormatUint(models.GetGoldGorillaId(), 10),
 	}, reqModel.ID)
 	_ = ctrl.helper.Write(rw, nil, 204)
 }
@@ -102,18 +102,18 @@ func (ctrl *GoldGorillaController) Join(rw http.ResponseWriter, req *http.Reques
 	}
 	ctrl.conf.GoldGorillaSVCAddr = reqModel.ServiceAddr
 	_ = ctrl.ggSVCRepo.Init(reqModel.ServiceAddr)
-	models.GoldGorillaId--
-	err = ctrl.roomRepo.AddMember(reqModel.RoomId, models.GoldGorillaId, "{}", "", "")
+	models.DecreaseGoldGorillaId()
+	err = ctrl.roomRepo.AddMember(reqModel.RoomId, models.GetGoldGorillaId(), "{}", "", "")
 	if ctrl.helper.HandleIfErr(rw, err, 500) {
 		return
 	}
-	err = ctrl.roomRepo.UpdateCanConnect(reqModel.RoomId, models.GoldGorillaId, true)
+	err = ctrl.roomRepo.UpdateCanConnect(reqModel.RoomId, models.GetGoldGorillaId(), true)
 	if ctrl.helper.HandleIfErr(rw, err, 500) {
 		return
 	}
-	parentId, err := ctrl.roomRepo.InsertMemberToTree(reqModel.RoomId, models.GoldGorillaId, true)
+	parentId, err := ctrl.roomRepo.InsertMemberToTree(reqModel.RoomId, models.GetGoldGorillaId(), true)
 	if ctrl.helper.HandleIfErr(rw, err, 500) {
-		_, _, _ = ctrl.roomRepo.RemoveMember(reqModel.RoomId, models.GoldGorillaId)
+		_, _, _ = ctrl.roomRepo.RemoveMember(reqModel.RoomId, models.GetGoldGorillaId())
 		return
 	}
 	err = ctrl.ggSVCRepo.CreatePeer(reqModel.RoomId, *parentId, true, true)
@@ -122,7 +122,7 @@ func (ctrl *GoldGorillaController) Join(rw http.ResponseWriter, req *http.Reques
 	}
 	_ = ctrl.socketSVC.Send(models.MessageContract{
 		Type: "add_audience",
-		Data: strconv.FormatUint(models.GoldGorillaId, 10),
+		Data: strconv.FormatUint(models.GetGoldGorillaId(), 10),
 	}, *parentId)
 
 	_ = ctrl.helper.Write(rw, nil, 204)
@@ -137,14 +137,14 @@ func (ctrl *GoldGorillaController) Join(rw http.ResponseWriter, req *http.Reques
 			}
 			time.Sleep(2 * time.Second)
 		}
-		_, childrenIdList, err := ctrl.roomRepo.RemoveMember(roomId, models.GoldGorillaId)
+		_, childrenIdList, err := ctrl.roomRepo.RemoveMember(roomId, models.GetGoldGorillaId())
 		if err != nil {
 			println(err.Error())
 			return
 		}
 		parentDCEvent := models.MessageContract{
 			Type: "event-parent-dc",
-			Data: strconv.FormatUint(models.GoldGorillaId, 10),
+			Data: strconv.FormatUint(models.GetGoldGorillaId(), 10),
 		}
 		_ = ctrl.socketSVC.Send(parentDCEvent, childrenIdList...)
 		println("deleted goldgorilla from tree")
@@ -172,7 +172,7 @@ func (ctrl *GoldGorillaController) RejoinGoldGorilla(rw http.ResponseWriter, req
 		_ = ctrl.helper.Write(rw, nil, 503)
 		return
 	}
-	_, _, err = ctrl.roomRepo.RemoveMember(reqModel.RoomId, models.GoldGorillaId)
+	_, _, err = ctrl.roomRepo.RemoveMember(reqModel.RoomId, models.GetGoldGorillaId())
 	if ctrl.helper.HandleIfErr(rw, err, 500) {
 		return
 	}

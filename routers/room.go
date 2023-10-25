@@ -174,7 +174,7 @@ func (r *roomWSRouter) handleEvent(ctx *models.WSContext) {
 				println(err.Error())
 			} else if room != nil {
 				if room.GoldGorilla != nil {
-					if ctx.ParsedMessage.Target == strconv.FormatUint(models.GoldGorillaId, 10) {
+					if ctx.ParsedMessage.Target == strconv.FormatUint(models.GetGoldGorillaId(), 10) {
 						switch ctx.ParsedMessage.Type {
 						case "video-answer":
 							{

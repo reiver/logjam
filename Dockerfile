@@ -13,6 +13,6 @@ RUN apt update && apt install wget curl htop nano tar xz-utils unzip gzip net-to
 WORKDIR /backend
 COPY --from=build-stage /backend/logjam ./logjam
 
-EXPOSE 8090
+EXPOSE 8080
 
 ENTRYPOINT ["./logjam"]

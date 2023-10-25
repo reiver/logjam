@@ -56,7 +56,7 @@ func (c *RoomWSController) OnDisconnect(ctx *models.WSContext) {
 			c.log(contracts.LError, err.Error())
 			//return
 		}
-		c.roomRepo.RemoveMember(ctx.RoomId, models.GoldGorillaId)
+		c.roomRepo.RemoveMember(ctx.RoomId, models.GetGoldGorillaId())
 	} else {
 		parentDCEvent := models.MessageContract{
 			Type: "event-parent-dc",
@@ -66,13 +66,13 @@ func (c *RoomWSController) OnDisconnect(ctx *models.WSContext) {
 
 		if c.roomRepo.HadGoldGorillaInTreeBefore(ctx.RoomId) {
 			for _, id := range childrenIdList {
-				if id == models.GoldGorillaId {
+				if id == models.GetGoldGorillaId() {
 					err = c.ggRepo.ResetRoom(ctx.RoomId)
 					if err != nil {
 						c.log(contracts.LError, err.Error())
 						//return
 					}
-					c.roomRepo.RemoveMember(ctx.RoomId, models.GoldGorillaId)
+					c.roomRepo.RemoveMember(ctx.RoomId, models.GetGoldGorillaId())
 					go func() {
 						err := c.ggRepo.Start()
 						if err != nil {
@@ -96,7 +96,7 @@ func (c *RoomWSController) OnDisconnect(ctx *models.WSContext) {
 			c.log(contracts.LError, err.Error())
 		}
 	} else if len(membersIdList) == 1 {
-		if membersIdList[0] == models.GoldGorillaId {
+		if membersIdList[0] == models.GetGoldGorillaId() {
 			err = c.roomRepo.ClearMessageHistory(ctx.RoomId)
 			if err != nil {
 				c.log(contracts.LError, err.Error())
@@ -252,7 +252,7 @@ func (c *RoomWSController) Role(ctx *models.WSContext) {
 			}, ctx.SocketID)
 			return
 		}
-		if *parentId != models.GoldGorillaId {
+		if *parentId != models.GetGoldGorillaId() {
 			_ = c.socketSVC.Send(models.MessageContract{
 				Type: "add_audience",
 				Data: strconv.FormatUint(ctx.SocketID, 10),
@@ -403,7 +403,7 @@ func (c *RoomWSController) emitUserList(roomId string) {
 	}
 	index := -1
 	for i, v := range list {
-		if v.Id == models.GoldGorillaId {
+		if v.Id == models.GetGoldGorillaId() {
 			index = i
 			break
 		}
@@ -505,7 +505,7 @@ func (c *RoomWSController) DefaultHandler(ctx *models.WSContext) {
 		c.log(contracts.LError, err.Error())
 		return
 	}
-	if id == models.GoldGorillaId {
+	if id == models.GetGoldGorillaId() {
 		return // as there is no GoldGorilla in tree, we ignore messages that targets it
 	}
 	targetMember, err := c.roomRepo.GetMember(ctx.RoomId, id)
