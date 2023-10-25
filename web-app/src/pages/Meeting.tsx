@@ -81,11 +81,10 @@ export const onStartShareScreen = (stream) => {
       hasCamera: false,
       stream,
       isShareScreen: true,
-      displayId:1,
+      displayId:2,
     },
   }
 
-  console.log("Setting 1 for screen share: ",stream)
 
 }
 
@@ -108,19 +107,16 @@ const displayStream = async (stream, toggleFull = false) => {
     if(stream.role === Roles.BROADCAST){
       if(stream.isShareScreen===true){
         //share screen
-        dId = 1;
-        console.log("Setting 1 to Stream: ",stream)
+        dId = 2;
       }else{
         //host camera feed
-        dId = 2;
-        console.log("Setting 2 to Stream: ",stream)
+        dId = 1;
       }
 
     }else{
       //this stream is from Audince and it exists in map with HOST key (1 or 2)
 
       if(streamMap.has(stream.id) && (streamMap.get(stream.id)===1 || streamMap.get(stream.id)===2)){
-        console.log("Setting deleting ",stream.id," from Map")
         streamMap.delete(stream.id)
       }
 
@@ -141,7 +137,6 @@ const displayStream = async (stream, toggleFull = false) => {
             dId = displayIdCounter;
         }
   
-        console.log("Setting some number ",dId," to Stream: ",stream)
   
       }
 
@@ -150,7 +145,6 @@ const displayStream = async (stream, toggleFull = false) => {
       streamMap.set(stream.id,dId)
     }
 
-    console.log("Setting StreamMap: ",streamMap.entries())
 
   }
 
@@ -174,7 +168,6 @@ const displayStream = async (stream, toggleFull = false) => {
 }
 
 const toggleFullScreen = async (stream) => {
-  console.log("Toggle Screen",stream)
   await displayStream(stream, true)
 }
 
@@ -264,9 +257,7 @@ export const getUserRaiseHandStatus = (userId) => {
 }
 
 function keyPressCallback(key){  
-  //get streams
-  console.log("Streamers: ",streamers.value)
-
+ 
   // Iterate over the properties of the streamers object
   for (const userId in streamers.value) {
     const id = userId;
@@ -341,11 +332,10 @@ const Meeting = ({ params: { room, displayName, name } }: { params?: { room?: st
               stream,
               isLocalStream: true,
               isShareScreen: stream.isShareScreen || false,
-              displayId:2,
+              displayId:1,
             },
           }
 
-          console.log("Setting 2 for LocalStream: ",stream)
         },
         remoteStreamCallback: async (stream) => {
           log(`remoteStreamCallback`, stream)
@@ -703,7 +693,7 @@ const Meeting = ({ params: { room, displayName, name } }: { params?: { room?: st
     <div class="flex flex-col justify-between min-h-[--doc-height] dark:bg-secondary-1-a bg-white-f-9 text-medium-12 text-gray-800 dark:text-gray-200">
       <TopBar />
       {meetingStatus.value ? (
-        <>
+      <>
           <MeetingBody />
           <BottomBar />
         </>

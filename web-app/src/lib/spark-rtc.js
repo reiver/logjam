@@ -812,15 +812,15 @@ export class SparkRTC {
     this.updateTheStatus(`[handleMessage] startShareScreen`)
     try {
       const screenConstraints = {
-        audio:true,
+        audio: true,
         video: {
           mediaSource: 'screen',
           width: { ideal: 1920 },
           height: { ideal: 1080 },
           displaySurface: 'monitor', // You can specify displaySurface to filter by monitor type
-          cursor: 'always',          // You can specify cursor behavior
-          logicalSurface: true,      // You can specify logical surface behavior
-          frameRate: { ideal: 30}, // Adjust the frame rate to your preference
+          cursor: 'always', // You can specify cursor behavior
+          logicalSurface: true, // You can specify logical surface behavior
+          frameRate: { ideal: 30 }, // Adjust the frame rate to your preference
         },
       }
       this.shareStream = await navigator.mediaDevices.getDisplayMedia(screenConstraints)
@@ -1801,7 +1801,7 @@ export class SparkRTC {
     this.userListCallback = async (users) => {
       if (users && users.length > 0) {
         const matchedStreamMap = new Map()
-        const unmatchedStreams = []
+        var unmatchedStreams = []
         let broadcasterName = ''
 
         // Find the broadcaster in the user list and retrieve the name
@@ -1844,14 +1844,25 @@ export class SparkRTC {
           }
         }
 
-        //display unmatched stream .a.k.a Screen share stream
+        // display unmatched stream .a.k.a Screen share stream
         unmatchedStreams.forEach((stream) => {
-          stream.role = this.Roles.BROADCAST
-          stream.name = broadcasterName
-          stream.isShareScreen = true
+          if (!!!stream.userId) {
+            stream.role = this.Roles.BROADCAST
+            stream.name = broadcasterName
+            stream.isShareScreen = true
 
-          if (this.remoteStreamCallback) {
-            this.remoteStreamCallback(stream)
+            if (this.remoteStreamCallback) {
+              this.remoteStreamCallback(stream)
+            }
+          } else {
+            //remove the stream from the list because it must be the disconnected audience
+            unmatchedStreams = unmatchedStreams.filter((s) => !!s.userId);
+            this.remoteStreams = this.remoteStreams.filter((STR) => STR.id !== stream.id)
+
+            //remove stream from screen
+            if(this.remoteStreamDCCallback){
+              this.remoteStreamDCCallback(stream)
+            }
           }
         })
       }
