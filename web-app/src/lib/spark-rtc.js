@@ -193,15 +193,6 @@ export class SparkRTC {
       const localDescription = await broadcasterPeerConnection.createAnswer()
       await broadcasterPeerConnection.setLocalDescription(localDescription)
 
-      // this.updateTheStatus(
-      //     `broadcasterLocalDescription`,
-      //     localDescription.sdp
-      // );
-      // this.updateTheStatus(
-      //     `broadcasterRemoteDescription`,
-      //     broadcasterPeerConnection.remoteDescription.sdp
-      // );
-
       if (await this.checkSocketStatus()) {
         const videoAnswerMsg = JSON.stringify({
           name: this.myUsername,
@@ -210,6 +201,13 @@ export class SparkRTC {
           sdp: broadcasterPeerConnection.localDescription,
         })
         this.socket.send(videoAnswerMsg)
+      } else {
+        //re Connect
+        if(this.startProcedure){
+          this.updateTheStatus(`[startProcedure] in handleVideoOfferMsg`)
+          this.startProcedure(true)
+        }
+        return
       }
 
       this.updateTheStatus(`[handleVideoOfferMsg] send video-answer to ${msg.name} from ${this.myUsername}`)
@@ -221,15 +219,25 @@ export class SparkRTC {
   cancelJoinStage = async (data, cancel = false) => {
     console.log('cancelJoinStage: audience-broadcasting: ', cancel, ' ', data)
     this.lastBroadcasterId = data.toString()
-    this.socket.send(
-      JSON.stringify({
-        type: 'audience-broadcasting',
-        data: this.myUsername,
-        name: cancel ? this.myName : null,
-        target: this.lastBroadcasterId,
-        joinedStage: false,
-      })
-    )
+    if(await this.checkSocketStatus()){
+      this.socket.send(
+        JSON.stringify({
+          type: 'audience-broadcasting',
+          data: this.myUsername,
+          name: cancel ? this.myName : null,
+          target: this.lastBroadcasterId,
+          joinedStage: false,
+        })
+      )
+    } else {
+      //re Connect
+      if(this.startProcedure){
+        this.updateTheStatus(`[startProcedure] in cancelJoinStage`)
+        this.startProcedure(true)
+      }
+      return
+    }
+    
   }
 
   joinStage = async (data) => {
@@ -238,14 +246,24 @@ export class SparkRTC {
     this.lastBroadcasterId = data.toString()
     if (this.localStream) {
       console.log('audience-broadcasting: joining stage')
-      this.socket.send(
-        JSON.stringify({
-          type: 'audience-broadcasting',
-          data: this.myUsername,
-          target: this.lastBroadcasterId,
-          joinedStage: true,
-        })
-      )
+      if(await this.checkSocketStatus()){
+        this.socket.send(
+          JSON.stringify({
+            type: 'audience-broadcasting',
+            data: this.myUsername,
+            target: this.lastBroadcasterId,
+            joinedStage: true,
+          })
+        )
+      } else {
+        //re Connect
+        if(this.startProcedure){
+          this.updateTheStatus(`[startProcedure] in joinStage`)
+          this.startProcedure(true)
+        }
+        return
+      }
+      
       this.sendStreamTo(data, this.localStream)
     }
   }
@@ -410,7 +428,7 @@ export class SparkRTC {
               }
             }
 
-            if (await this.checkSocketStatus())
+            if (await this.checkSocketStatus()){
               this.socket.send(
                 JSON.stringify({
                   type: 'alt-broadcast-approve',
@@ -419,6 +437,14 @@ export class SparkRTC {
                   maxLimitReached: false, //limitReached,
                 })
               )
+            }else {
+              //re Connect
+              if(this.startProcedure){
+                this.updateTheStatus(`[startProcedure] in alt-broadcast`)
+                this.startProcedure(true)
+              }
+              return
+            }
 
             if (result !== true) return
 
@@ -456,12 +482,22 @@ export class SparkRTC {
         const broadcasterId = this.broadcasterUserId()
         this.broadcastersMessage = null
 
-        this.socket.send(
-          JSON.stringify({
-            type: 'stream',
-            data: 'false',
-          })
-        )
+        if(await this.checkSocketStatus()){
+          this.socket.send(
+            JSON.stringify({
+              type: 'stream',
+              data: 'false',
+            })
+          )
+        } else {
+          //re Connect
+          if(this.startProcedure){
+            this.updateTheStatus(`[startProcedure] in event-broadcaster-dc`)
+            this.startProcedure(true)
+          }
+          return
+        }
+        
         for (const u in this.myPeerConnectionArray) {
           this.myPeerConnectionArray[u].close()
         }
@@ -681,6 +717,13 @@ export class SparkRTC {
       } catch (error) {
         console.error('Error sending message:', error)
       }
+    }else {
+      //re Connect
+      if(this.startProcedure){
+        this.updateTheStatus(`[startProcedure] in ping`)
+        this.startProcedure(true)
+      }
+      return
     }
   }
 
@@ -704,6 +747,13 @@ export class SparkRTC {
         target: target,
       })
       this.socket.send(message)
+    } else {
+      //re Connect
+      if(this.startProcedure){
+        this.updateTheStatus(`[startProcedure] in disable-audience`)
+        this.startProcedure(true)
+      }
+      return
     }
   }
 
@@ -752,7 +802,7 @@ export class SparkRTC {
         this.myPeerConnectionArray = {}
         this.started = false
         if (this.startProcedure && !this.leftMeeting) {
-          this.startProcedure()
+          this.startProcedure(true)
         }
       }
       socket.onerror = (error) => {
@@ -773,7 +823,21 @@ export class SparkRTC {
    * @returns
    */
   async checkSocketStatus() {
-    return this.socket && this.socket.readyState === WebSocket.OPEN
+    if(this.socket){
+
+      //check conneting state & wait for 1 sec
+      if(this.socket.readyState === WebSocket.CONNECTING){
+        await this.wait(1000);
+      }
+
+      //if open then proceed
+      if(this.socket.readyState === WebSocket.OPEN){
+        return true;
+      }
+    }
+
+    //closed or closing
+    return false;
   }
 
   /**
@@ -890,7 +954,7 @@ export class SparkRTC {
 
       this.updateTheStatus(`Request Broadcast Role`)
 
-      if (await this.checkSocketStatus())
+      if (await this.checkSocketStatus()){
         this.socket.send(
           JSON.stringify({
             type: 'role',
@@ -898,6 +962,14 @@ export class SparkRTC {
             streamId: this.localStream.id,
           })
         )
+      } else {
+        //re Connect
+        if(this.startProcedure){
+          this.updateTheStatus(`[startProcedure] in startBroadcast`)
+          this.startProcedure(true)
+        }
+        return
+      }
       this.updateTheStatus(`[startBroadcasting] send role`)
       return this.localStream
     } catch (e) {
@@ -956,6 +1028,13 @@ export class SparkRTC {
             data: this.Roles.AUDIENCE,
           })
         )
+      } else {
+        //re Connect
+        if(this.startProcedure){
+          this.updateTheStatus(`[startProcedure] in startReadingBroadcast`)
+          this.startProcedure(true)
+        }
+        return
       }
 
       this.updateTheStatus(`[startReadingBroadcast] send role audience`)
@@ -986,7 +1065,15 @@ export class SparkRTC {
             streamId: '',
           })
         )
+      } else {
+        //re Connect
+        if(this.startProcedure){
+          this.updateTheStatus(`[startProcedure] in raiseHand`)
+          this.startProcedure(true)
+        }
+        return
       }
+
     } catch (error) {
       this.updateTheStatus(`[raiseHand] Error: ${error}`)
     }
@@ -1001,6 +1088,13 @@ export class SparkRTC {
             type: 'get-latest-user-list',
           })
         )
+      } else {
+        //re Connect
+        if(this.startProcedure){
+          this.updateTheStatus(`[startProcedure] in getLatestUserList`)
+          this.startProcedure(true)
+        }
+        return
       }
     } catch (error) {
       this.updateTheStatus(`[getLatestUserList] Error: ${error}`)
@@ -1020,6 +1114,13 @@ export class SparkRTC {
               data: null,
             })
           )
+        } else {
+          //re Connect
+          if(this.startProcedure){
+            this.updateTheStatus(`[startProcedure] in inviteToStage`)
+            this.startProcedure(true)
+          }
+          return
         }
       } catch (error) {
         this.updateTheStatus(`[inviteToStage] Error: ${error}`)
@@ -1319,7 +1420,7 @@ export class SparkRTC {
     peerConnection.onicecandidate = async (event) => {
       this.updateTheStatus(`Peer Connection ice candidate arrived for ${target}: event.candidate='${JSON.stringify(event.candidate)}'`)
       if (event.candidate) {
-        if (await this.checkSocketStatus())
+        if (await this.checkSocketStatus()){
           this.socket.send(
             JSON.stringify({
               type: 'new-ice-candidate',
@@ -1327,6 +1428,14 @@ export class SparkRTC {
               target,
             })
           )
+        } else {
+          //re Connect
+          if(this.startProcedure){
+            this.updateTheStatus(`[startProcedure] in onIceCandidate`)
+            this.startProcedure(true)
+          }
+          return
+        }
       }
     }
 
@@ -1342,7 +1451,7 @@ export class SparkRTC {
         //     `localDescription`,
         //     peerConnection.localDescription.sdp
         // );
-        if (await this.checkSocketStatus())
+        if (await this.checkSocketStatus()){
           this.socket.send(
             JSON.stringify({
               type: 'video-offer',
@@ -1351,6 +1460,14 @@ export class SparkRTC {
               name: this.myUsername,
             })
           )
+        } else {
+          //re Connect
+          if(this.startProcedure){
+            this.updateTheStatus(`[startProcedure] in onNegotiationNeeded`)
+            this.startProcedure(true)
+          }
+          return
+        }
       } catch (e) {
         this.updateTheStatus(`[newPeerConnectionInstance] failed ${e}`)
       }
@@ -1366,13 +1483,21 @@ export class SparkRTC {
 
       if (stream && stream.active) {
         this.updateTheStatus(`user-by-stream ${stream.id}`)
-        if (await this.checkSocketStatus())
+        if (await this.checkSocketStatus()){
           this.socket.send(
             JSON.stringify({
               type: 'user-by-stream',
               data: stream.id,
             })
           )
+        } else {
+          //re Connect
+          if(this.startProcedure){
+            this.updateTheStatus(`[startProcedure] in onTrack user-by-stream`)
+            this.startProcedure(true)
+          }
+          return
+        }
         if (this.remoteStreams.length === 0) {
           this.parentStreamId = stream.id
         }
@@ -1693,13 +1818,21 @@ export class SparkRTC {
           this.remoteStreamNotified = true
           this.updateTheStatus(`[newPeerConnectionInstance] A7`)
 
-          if (await this.checkSocketStatus())
+          if (await this.checkSocketStatus()){
             this.socket.send(
               JSON.stringify({
                 type: 'stream',
                 data: 'true',
               })
             )
+          } else {
+            //re Connect
+            if(this.startProcedure){
+              this.updateTheStatus(`[startProcedure] in onTrack stream`)
+              this.startProcedure(true)
+            }
+            return
+          }
           this.updateTheStatus(`[newPeerConnectionInstance] stream message`)
         }
         this.targetStreams[target] = stream.id
@@ -2318,14 +2451,21 @@ export class SparkRTC {
     }
   }
 
-  sendAudioStatus = (enable) => {
+  sendAudioStatus = async (enable) => {
     const data = {
       type: 'muted',
       value: !enable,
       stream: this.localStream.id,
     }
-    if (this.checkSocketStatus()) {
+    if (await this.checkSocketStatus()) {
       this.socket.send(JSON.stringify(data))
+    } else {
+      //re Connect
+      if(this.startProcedure){
+        this.updateTheStatus(`[startProcedure] in sendAudioStatus`)
+        this.startProcedure(true)
+      }
+      return
     }
   }
 
@@ -2351,12 +2491,20 @@ export class SparkRTC {
     const max = 5
     const reconnect = true
     return new Promise(async (resolve, reject) => {
-      if (await this.checkSocketStatus())
+      if (await this.checkSocketStatus()){
         this.socket.send(
           JSON.stringify({
             type: 'broadcaster-status',
           })
         )
+      } else {
+        //re Connect
+        if(this.startProcedure){
+          this.updateTheStatus(`[startProcedure] in broadcaster status`)
+          this.startProcedure(true)
+        }
+        return
+      }
 
       let i = 0
       while (this.broadcasterStatus === '' && i < max) {
@@ -2456,7 +2604,7 @@ export class SparkRTC {
 
     //notify host I am leaving, so host can remove from invitation list
     try {
-      if (await this.checkSocketStatus())
+      if (await this.checkSocketStatus()){
         this.socket.send(
           JSON.stringify({
             type: 'left-stage',
@@ -2464,6 +2612,14 @@ export class SparkRTC {
             target: this.lastBroadcasterId.toString(),
           })
         )
+      } else {
+        //re Connect
+        if(this.startProcedure){
+          this.updateTheStatus(`[startProcedure] in left-stage`)
+          this.startProcedure(true)
+        }
+        return
+      }
     } catch (exception) {
       this.updateTheStatus(exception)
     }
@@ -2493,21 +2649,37 @@ export class SparkRTC {
     return null
   }
   setMetadata = async (metadata) => {
-    if (await this.checkSocketStatus())
+    if (await this.checkSocketStatus()){
       this.socket.send(
         JSON.stringify({
           type: 'metadata-set',
           data: JSON.stringify(metadata),
         })
       )
+    } else {
+      //re Connect
+      if(this.startProcedure){
+        this.updateTheStatus(`[startProcedure] in setMetadata`)
+        this.startProcedure(true)
+      }
+      return
+    }
   }
   getMetadata = async () => {
-    if (await this.checkSocketStatus())
+    if (await this.checkSocketStatus()){
       this.socket.send(
         JSON.stringify({
           type: 'metadata-get',
         })
       )
+    } else {
+      //re Connect
+      if(this.startProcedure){
+        this.updateTheStatus(`[startProcedure] in getMetadata`)
+        this.startProcedure(true)
+      }
+      return
+    }
   }
   streamById = (streamId) => {
     return this.remoteStreams.find((s) => s.id === streamId)
