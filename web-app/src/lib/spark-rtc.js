@@ -792,7 +792,7 @@ export class SparkRTC {
           })
         )
 
-        this.pingInterval = setInterval(this.ping, 5000)
+        // this.pingInterval = setInterval(this.ping, 5000)
         this.updateTheStatus(`[setupSignalingSocket] socket onopen and sent start`)
         resolve(socket)
       }
