@@ -2806,7 +2806,9 @@ export class SparkRTC {
     this.updateTheStatus(`left meeting`)
 
     clearTimeout(this.networkSpeedInterval)
-    clearInterval(this.pingInterval)
+    if(this.pingInterval){
+      clearInterval(this.pingInterval)
+    }
   }
 
   getStatsForPC = (peerConnection, userid) => {
