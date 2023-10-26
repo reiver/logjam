@@ -2693,6 +2693,9 @@ export class SparkRTC {
       this.pingInterval = null
     }
     if (this.socket) {
+      this.socket.onclose = ()=>{
+        this.updateTheStatus('Socket is closed in stopSignaling')
+      }
       this.socket.close()
     }
   }
@@ -2727,6 +2730,9 @@ export class SparkRTC {
 
     //close the web socket
     if (closeSocket && this.socket) {
+      this.socket.onclose = ()=>{
+        this.updateTheStatus('socket is closed in restart')
+      }
       this.socket.close()
       // this.socket.onclose = async () => {
       //   this.updateTheStatus(`socket is closed in restart`)
