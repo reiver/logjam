@@ -420,27 +420,14 @@ const Meeting = ({ params: { room, displayName, name } }: { params?: { room?: st
           return handler
         },
         onStart: async (closeSocket = false) => {
-          if (meetingStatus.value) {
-            if (role === Roles.AUDIENCE && closeSocket) {
-              if (sparkRTC.value) {
-                //Init socket and start sparkRTC
-                await setupSignalingSocket(host, name, room, isDebugMode.value)
-                await start()
-              }
-            }
+          if (meetingStatus.value && sparkRTC.value) {
 
-            if(role===Roles.BROADCAST && closeSocket){
-              if (sparkRTC.value) {
-                //Init socket and start sparkRTC
-                await setupSignalingSocket(host, name, room, isDebugMode.value)
-                await start()
-              }
+            if(closeSocket){ //recreate socket
+              await sparkRTC.value.socket.close()
+              await setupSignalingSocket(host, name, room, isDebugMode.value)
             }
+            await start()
 
-            if (!closeSocket) {
-              //start sparkRTC
-              await start()
-            }
           }
         },
         startAgain: async () => {
