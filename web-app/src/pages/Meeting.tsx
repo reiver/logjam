@@ -7,6 +7,7 @@ import { detectKeyPress } from 'lib/controls'
 import { lazy } from 'preact-iso'
 import { useEffect } from 'preact/compat'
 import {fullScreenedStream} from 'components/MeetingBody/Stage'
+import { R } from '../../dist/assets/index-d6e8897e'
 
 let displayIdCounter = 2
 
@@ -422,12 +423,17 @@ const Meeting = ({ params: { room, displayName, name } }: { params?: { room?: st
         onStart: async (closeSocket = false) => {
           if (meetingStatus.value && sparkRTC.value) {
 
-            if(closeSocket){ //recreate socket
-              await sparkRTC.value.socket.close()
-              await setupSignalingSocket(host, name, room, isDebugMode.value)
+            if(role===Roles.AUDIENCE){
+              await sparkRTC.value.restart(closeSocket)
             }
-            await start()
 
+            if(role===Roles.BROADCAST){
+              if(closeSocket){ //recreate socket
+                await setupSignalingSocket(host, name, room, isDebugMode.value)
+              }
+              await start()
+            }
+            
           }
         },
         startAgain: async () => {

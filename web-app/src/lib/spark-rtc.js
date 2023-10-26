@@ -2728,15 +2728,17 @@ export class SparkRTC {
     //close the web socket
     if (closeSocket && this.socket) {
       this.socket.close()
-      this.socket.onclose = async () => {
-        this.updateTheStatus(`socket is closed in restart`)
-        this.socket = null
+      // this.socket.onclose = async () => {
+      //   this.updateTheStatus(`socket is closed in restart`)
+      //   this.socket = null
 
-        //waiting to websocket to close then repoen again
-        if (this.startAgain) {
-          this.startAgain()
-        }
-      } //on close callback
+        
+      // } //on close callback
+
+      //waiting to websocket to close then repoen again
+      if (this.startAgain) {
+        this.startAgain()
+      }
     } else {
       this.updateTheStatus(`socket closing is not required`)
     }
