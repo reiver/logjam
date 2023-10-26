@@ -473,7 +473,7 @@ export class SparkRTC {
         if (this.role === this.Roles.BROADCAST) return
         this.broadcasterDC = false
         this.updateTheStatus(`[handleMessage] ${msg.type}`)
-        this.startProcedure(true)
+        // this.startProcedure(true)
         break
       case 'event-reconnect':
       case 'event-broadcaster-disconnected':
