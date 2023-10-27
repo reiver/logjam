@@ -428,7 +428,9 @@ const Meeting = ({ params: { room, displayName, name } }: { params?: { room?: st
             }
 
             if(role===Roles.BROADCAST){
-              await setupSignalingSocket(host, name, room, isDebugMode.value)
+              if(closeSocket){//socket closed already
+                await setupSignalingSocket(host, name, room, isDebugMode.value)
+              }
               await start()
             }
             

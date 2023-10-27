@@ -344,7 +344,9 @@ export class SparkRTC {
         if (this.role === this.Roles.BROADCAST) {
           if (msg.data === 'no:broadcast') {
             alert('You are not a broadcaster anymore!')
-            this.socket.close()
+            if(this.socket.readyState === WebSocket.OPEN){
+              this.socket.close()
+            }
           } else if (msg.data === 'yes:broadcast') {
             this.updateTheStatus(`myName:`, this.myName)
 
@@ -473,10 +475,9 @@ export class SparkRTC {
         if (this.role === this.Roles.BROADCAST) return
         this.broadcasterDC = false
         this.updateTheStatus(`[handleMessage] ${msg.type}`)
-        // if(this.socket){
-        //   this.socket.close()
-        // }
-        if(this.startProcedure){
+        if(this.checkSocketStatus()){
+          this.startProcedure()
+        }else{
           this.startProcedure(true)
         }
         break
@@ -835,7 +836,7 @@ export class SparkRTC {
 
       //check conneting state & wait for 1 sec
       if(this.socket.readyState === WebSocket.CONNECTING){
-        await this.wait(1000);
+        await this.wait(2000);
       }
 
       //if open then proceed
@@ -1601,7 +1602,9 @@ export class SparkRTC {
                     this.updateTheStatus(`socket is closed after leaveMeeting`)
                     this.resetVariables(true)
                   } //empty on close callback
-                  this.socket.close()
+                  if(this.socket.readyState === WebSocket.OPEN){
+                    this.socket.close()
+                  }
                   this.socket = null
 
                   return
@@ -1691,7 +1694,9 @@ export class SparkRTC {
                   this.updateTheStatus(`socket is closed after leaveMeeting`)
                   this.resetVariables(true)
                 } //empty on close callback
-                this.socket.close()
+                if(this.socket.readyState === WebSocket.OPEN){
+                  this.socket.close()
+                }
                 this.socket = null
 
                 return
@@ -1780,7 +1785,9 @@ export class SparkRTC {
                   this.updateTheStatus(`socket is closed after leaveMeeting`)
                   this.resetVariables(true)
                 } //empty on close callback
-                this.socket.close()
+                if(this.socket.readyState === WebSocket.OPEN){
+                  this.socket.close()
+                }
                 this.socket = null
 
                 return
@@ -2701,7 +2708,9 @@ export class SparkRTC {
       this.socket.onclose = ()=>{
         this.updateTheStatus('Socket is closed in stopSignaling')
       }
-      this.socket.close()
+      if(this.socket.readyState === WebSocket.OPEN){
+        this.socket.close()
+      }
     }
   }
 
@@ -2742,7 +2751,13 @@ export class SparkRTC {
           this.startAgain()
         }
       }
-      this.socket.close()
+      if(this.socket.readyState === WebSocket.OPEN){
+        this.socket.close()
+      }else{
+        this.updateTheStatus(`Socket is Not opened yet properly`)
+        //only start
+        this.start()
+      }
     } else {
       this.updateTheStatus(`socket closing is not required`)
     }
@@ -2787,7 +2802,9 @@ export class SparkRTC {
           this.updateTheStatus(`socket is closed after leaveMeeting`)
           this.resetVariables()
         } //empty on close callback
-        this.socket.close()
+        if(this.socket.readyState === WebSocket.OPEN){
+          this.socket.close()
+        }
         this.socket = null
       }
     }
@@ -2805,7 +2822,9 @@ export class SparkRTC {
           this.updateTheStatus(`socket is closed after leaveMeeting`)
           this.resetVariables()
         } //empty on close callback
-        this.socket.close()
+        if(this.socket.readyState === WebSocket.OPEN){
+          this.socket.close()
+        }
         this.socket = null
       }
     }
