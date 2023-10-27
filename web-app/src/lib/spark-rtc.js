@@ -473,8 +473,11 @@ export class SparkRTC {
         if (this.role === this.Roles.BROADCAST) return
         this.broadcasterDC = false
         this.updateTheStatus(`[handleMessage] ${msg.type}`)
-        if(this.socket){
-          this.socket.close()
+        // if(this.socket){
+        //   this.socket.close()
+        // }
+        if(this.startProcedure){
+          this.startProcedure(true)
         }
         break
       case 'event-reconnect':
@@ -805,7 +808,7 @@ export class SparkRTC {
         this.started = false
         if (this.startProcedure && !this.leftMeeting) {
           this.updateTheStatus('[startProcedure] in socket.onclose')
-          this.startProcedure(true)
+          this.startProcedure()
         }else{
           this.updateTheStatus(`Not starting procedure leftMeeting ${this.leftMeeting} startProcedure: ${this.startProcedure}`)
         }
@@ -2734,19 +2737,12 @@ export class SparkRTC {
     if (closeSocket && this.socket) {
       this.socket.onclose = ()=>{
         this.updateTheStatus('socket is closed in restart')
+        //waiting to websocket to close then repoen again
+        if (this.startAgain) {
+          this.startAgain()
+        }
       }
       this.socket.close()
-      // this.socket.onclose = async () => {
-      //   this.updateTheStatus(`socket is closed in restart`)
-      //   this.socket = null
-
-        
-      // } //on close callback
-
-      //waiting to websocket to close then repoen again
-      if (this.startAgain) {
-        this.startAgain()
-      }
     } else {
       this.updateTheStatus(`socket closing is not required`)
     }
