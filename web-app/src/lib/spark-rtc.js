@@ -2798,20 +2798,19 @@ export class SparkRTC {
         }
       }
       
-      // if(this.socket.readyState===WebSocket.CLOSING){
-      //   //wait
-      //   this.updateTheStatus(`socket is in closing state`)
-      //   await this.wait(2000);
-      // }
-      // else if(this.socket.readyState===WebSocket.CLOSED){
-      //   this.updateTheStatus(`socket is in closed state`)
-      //   //if closed start procedure
-      //   if (this.startAgain) {
-      //     this.startAgain()
-      //   }
-      // }
-      // else 
-      if(this.socket.readyState === WebSocket.OPEN){
+      if(this.socket.readyState===WebSocket.CLOSING){
+        //wait
+        this.updateTheStatus(`socket is in closing state`)
+        await this.wait(2000);
+      }
+      else if(this.socket.readyState===WebSocket.CLOSED){
+        this.updateTheStatus(`socket is in closed state`)
+        //if closed start procedure
+        if (this.startAgain) {
+          this.startAgain()
+        }
+      }
+      else if(this.socket.readyState === WebSocket.OPEN){
         this.updateTheStatus(`socket is in OPEN state`)
         if(this.checkSocketCreationTime()){
           this.updateTheStatus(`You can close the socket`)
