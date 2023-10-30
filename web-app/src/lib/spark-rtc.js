@@ -2768,9 +2768,9 @@ export class SparkRTC {
       this.socket.onclose = ()=>{
         this.updateTheStatus('socket is closed in restart')
         //waiting to websocket to close then repoen again
-        // if (this.startAgain) {
-        //   this.startAgain()
-        // }
+        if (this.startAgain) {
+          this.startAgain()
+        }
       }
       
       // if(this.socket.readyState===WebSocket.CLOSING){
