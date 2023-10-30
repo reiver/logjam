@@ -797,7 +797,7 @@ export class SparkRTC {
    */
   setupSignalingSocket = (url, myName, roomName, debug) => {
 
-    if(!this.checkSocketCreationTime()){
+    if(!this.checkSocketCreationTime() && this.checkSocketStatus()){
       this.updateTheStatus(`You can not create the socket`)
       return
     }
