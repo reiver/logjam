@@ -2785,12 +2785,13 @@ export class SparkRTC {
 
     idList.forEach((id) => delete sparkRTC.value.myPeerConnectionArray[id])
 
-    //reset few variables
-    this.resetVariables(false)
-
+    
     //close the web socket
     if (closeSocket && this.socket) {
       this.socket.onclose = ()=>{
+        //reset few variables
+        this.resetVariables(false)
+
         this.updateTheStatus('socket is closed in restart')
         //waiting to websocket to close then repoen again
         if (this.startAgain) {
@@ -2804,6 +2805,9 @@ export class SparkRTC {
         await this.wait(2000);
       }
       else if(this.socket.readyState===WebSocket.CLOSED){
+        //reset few variables
+        this.resetVariables(false)
+
         this.updateTheStatus(`socket is in closed state`)
         //if closed start procedure
         if (this.startAgain) {
@@ -2815,6 +2819,9 @@ export class SparkRTC {
         if(this.checkSocketCreationTime()){
           this.updateTheStatus(`You can close the socket`)
           this.socket.close()
+
+          //reset few variables
+          this.resetVariables(false)
         }else{
           //only start, without new socket
           this.start()
