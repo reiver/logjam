@@ -6,6 +6,7 @@ import { iceServers } from './config.js'
  *
  */
 export class SparkRTC {
+  socketCreatedAt = null;
   started = false
   maxRaisedHands = 6
   myPeerConnectionConfig = {
@@ -771,6 +772,21 @@ export class SparkRTC {
     // }
   }
 
+
+  checkSocketCreationTime(){
+    if(this.socketCreatedAt){
+      //check if tyring to create socket in less then 10 seconds
+      const currentTime = new Date().getMilliseconds();
+
+      const diff = currentTime - this.socketCreatedAt;
+      if(diff<10000){
+        this.updateTheStatus(`socket created 10 seconds ago`)
+        return false;
+      }
+    }
+    return true
+  }
+
   /**
    * Function to setup Signaling WebSocket with backend
    *
@@ -780,6 +796,12 @@ export class SparkRTC {
    * @returns
    */
   setupSignalingSocket = (url, myName, roomName, debug) => {
+
+    if(!this.checkSocketCreationTime()){
+      this.updateTheStatus(`You can not create the socket`)
+      return
+    }
+    
     this.updateTheStatus(`[setupSignalingSocket] url=${url} myName=${myName} roomName=${roomName}`)
     return new Promise((resolve, reject) => {
       if (this.pingInterval) {
@@ -809,6 +831,9 @@ export class SparkRTC {
         // this.pingInterval = setInterval(this.ping, 5000)
         this.updateTheStatus(`[setupSignalingSocket] socket onopen and sent start`)
         resolve(socket)
+
+        //save last socket created time
+        this.socketCreatedAt = new Date().getMilliseconds()
       }
       socket.onclose = async () => {
         this.updateTheStatus(`socket is closed in setupSignalingSocket, leftmeeting Via Button: ${this.leftMeeting}`)
@@ -2788,7 +2813,13 @@ export class SparkRTC {
       // else 
       if(this.socket.readyState === WebSocket.OPEN){
         this.updateTheStatus(`socket is in OPEN state`)
-        this.socket.close()
+        if(this.checkSocketCreationTime()){
+          this.updateTheStatus(`You can close the socket`)
+          this.socket.close()
+        }else{
+          //only start, without new socket
+          this.start()
+        }
       }
     } else {
       this.updateTheStatus(`socket closing is not required`)
