@@ -841,7 +841,7 @@ export class SparkRTC {
         this.started = false
         if (this.startProcedure && !this.leftMeeting) {
           this.updateTheStatus('[startProcedure] in socket.onclose')
-          this.startProcedure()
+          this.startProcedure(true)
         }else{
           this.updateTheStatus(`Not starting procedure leftMeeting ${this.leftMeeting} startProcedure: ${this.startProcedure}`)
         }
@@ -1003,7 +1003,10 @@ export class SparkRTC {
             streamId: this.localStream.id,
           })
         )
-      } 
+        this.updateTheStatus(`[startBroadcasting] sent role request`)
+      }else{
+        this.updateTheStatus(`[startBroadcasting] socket is not active`)
+      }
       // else {
       //   //re Connect
       //   if(this.startProcedure){
@@ -1012,7 +1015,6 @@ export class SparkRTC {
       //   }
       //   return
       // }
-      this.updateTheStatus(`[startBroadcasting] send role`)
       return this.localStream
     } catch (e) {
       this.updateTheStatus(`Error Start Broadcasting`)
