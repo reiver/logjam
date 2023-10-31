@@ -1004,17 +1004,17 @@ export class SparkRTC {
           })
         )
         this.updateTheStatus(`[startBroadcasting] sent role request`)
-      }else{
-        this.updateTheStatus(`[startBroadcasting] socket is not active`)
       }
-      // else {
-      //   //re Connect
-      //   if(this.startProcedure){
-      //     this.updateTheStatus(`[startProcedure] in startBroadcast`)
-      //     this.startProcedure(true)
-      //   }
-      //   return
-      // }
+      else {
+        this.updateTheStatus(`[startBroadcasting] socket is not active`)
+
+        //re Connect
+        if(this.startProcedure){
+          this.updateTheStatus(`[startProcedure] in startBroadcast`)
+          this.startProcedure(true)
+        }
+        return
+      }
       return this.localStream
     } catch (e) {
       this.updateTheStatus(`Error Start Broadcasting`)
