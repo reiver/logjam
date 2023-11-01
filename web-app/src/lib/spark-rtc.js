@@ -966,9 +966,15 @@ export class SparkRTC {
             data: this.Roles.AUDIENCE,
           })
         )
+      this.updateTheStatus(`[startReadingBroadcast] send role audience`)
+
+      }else{
+        this.updateTheStatus(`[startReadingBroadcast] socket is not avtive`)
+        if(this.startProcedure){
+          this.startProcedure(true)
+        }
       }
 
-      this.updateTheStatus(`[startReadingBroadcast] send role audience`)
     } catch (error) {
       this.updateTheStatus(`[startReadingBroadcast] Error: ${error}`)
     }
