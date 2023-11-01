@@ -890,7 +890,7 @@ export class SparkRTC {
 
       this.updateTheStatus(`Request Broadcast Role`)
 
-      if (await this.checkSocketStatus())
+      if (await this.checkSocketStatus()){
         this.socket.send(
           JSON.stringify({
             type: 'role',
@@ -898,7 +898,17 @@ export class SparkRTC {
             streamId: this.localStream.id,
           })
         )
-      this.updateTheStatus(`[startBroadcasting] send role`)
+        this.updateTheStatus(`[startBroadcasting] send role`)
+
+      }else{
+        //no socket is active need to create on [zaid]
+        if(this.startProcedure){
+          this.startProcedure(true)
+        }
+
+        return
+      }
+        
       return this.localStream
     } catch (e) {
       this.updateTheStatus(`Error Start Broadcasting`)
