@@ -2555,7 +2555,16 @@ export class SparkRTC {
       this.socket.close()
 
     } else {
-      this.updateTheStatus(`socket closing is not required`)
+      //else condition [zaid]
+      if(!this.checkSocketStatus()){
+        this.updateTheStatus(`socket is closed already`)
+        if (this.startAgain) {
+          this.startAgain()
+        }
+      }else{
+        this.updateTheStatus(`socket is not closed`)
+        await this.start()
+      }
     }
 
     //update the UI (Controllers)
