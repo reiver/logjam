@@ -752,7 +752,7 @@ export class SparkRTC {
         this.myPeerConnectionArray = {}
         this.started = false
         if (this.startProcedure && !this.leftMeeting) {
-          this.startProcedure()
+          this.startProcedure(true)
         }
       }
       socket.onerror = (error) => {
