@@ -185,8 +185,12 @@ func (c *RoomWSController) Role(ctx *models.WSContext) {
 			c.log(contracts.LError, err.Error())
 		}
 		_ = c.socketSVC.Send(resultEvent, ctx.SocketID)
-		ggEnabled, exists := eventData["ggEnabled"]
-		if exists && ggEnabled == true {
+		ggEnabled := true
+		ggEnabledInReqBody, exists := eventData["ggEnabled"]
+		if exists && ggEnabledInReqBody == false {
+			ggEnabled = false
+		}
+		if ggEnabled == true {
 			go func() {
 				err := c.ggRepo.Start(ctx.RoomId)
 				if err != nil {
