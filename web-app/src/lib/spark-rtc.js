@@ -752,7 +752,7 @@ export class SparkRTC {
         this.myPeerConnectionArray = {}
         this.started = false
         if (this.startProcedure && !this.leftMeeting) {
-          this.startProcedure()
+          this.startProcedure(true)
         }
       }
       socket.onerror = (error) => {
@@ -890,7 +890,7 @@ export class SparkRTC {
 
       this.updateTheStatus(`Request Broadcast Role`)
 
-      if (await this.checkSocketStatus())
+      if (await this.checkSocketStatus()){
         this.socket.send(
           JSON.stringify({
             type: 'role',
@@ -898,7 +898,17 @@ export class SparkRTC {
             streamId: this.localStream.id,
           })
         )
-      this.updateTheStatus(`[startBroadcasting] send role`)
+        this.updateTheStatus(`[startBroadcasting] send role`)
+
+      }else{
+        //no socket is active need to create on [zaid]
+        if(this.startProcedure){
+          this.startProcedure(true)
+        }
+
+        return
+      }
+        
       return this.localStream
     } catch (e) {
       this.updateTheStatus(`Error Start Broadcasting`)
@@ -956,9 +966,15 @@ export class SparkRTC {
             data: this.Roles.AUDIENCE,
           })
         )
+      this.updateTheStatus(`[startReadingBroadcast] send role audience`)
+
+      }else{
+        this.updateTheStatus(`[startReadingBroadcast] socket is not avtive`)
+        if(this.startProcedure){
+          this.startProcedure(true)
+        }
       }
 
-      this.updateTheStatus(`[startReadingBroadcast] send role audience`)
     } catch (error) {
       this.updateTheStatus(`[startReadingBroadcast] Error: ${error}`)
     }
@@ -2552,7 +2568,6 @@ export class SparkRTC {
 
     //close the web socket
     if (closeSocket && this.socket) {
-      this.socket.close()
       this.socket.onclose = async () => {
         this.updateTheStatus(`socket is closed in restart`)
         this.socket = null
@@ -2562,8 +2577,21 @@ export class SparkRTC {
           this.startAgain()
         }
       } //on close callback
+
+      //[zaid] close socket after setting callback
+      this.socket.close()
+
     } else {
-      this.updateTheStatus(`socket closing is not required`)
+      //else condition [zaid] test
+      if(!this.checkSocketStatus()){
+        this.updateTheStatus(`socket is closed already`)
+        if (this.startAgain) {
+          this.startAgain()
+        }
+      }else{
+        this.updateTheStatus(`socket is not closed`)
+        await this.start()
+      }
     }
 
     //update the UI (Controllers)
