@@ -18,7 +18,7 @@ export class SparkRTC {
   socketURL = ''
   remoteStreamNotified = false
   remoteStreams = []
-  socket = null
+  socket
   myName = 'NoName'
   roomName = 'SparkRTC'
   myUsername = 'NoUsername'
@@ -795,9 +795,9 @@ export class SparkRTC {
    * @param {String} roomName - room identifier
    * @returns
    */
-  setupSignalingSocket = async (url, myName, roomName, debug) => {
+  setupSignalingSocket = (url, myName, roomName, debug) => {
 
-    if(await this.checkSocketStatus()){
+    if(this.checkSocketStatus()){
       return
     }
     
