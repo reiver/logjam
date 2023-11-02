@@ -718,12 +718,12 @@ export class SparkRTC {
         console.error('Error sending message:', error)
       }
     }else {
-      // //re Connect
-      // if(this.startProcedure){
-      //   this.updateTheStatus(`[startProcedure] in ping`)
-      //   this.startProcedure(true)
-      // }
-      // return
+      //re Connect
+      if(this.startProcedure){
+        this.updateTheStatus(`[startProcedure] in ping`)
+        this.startProcedure(true)
+      }
+      return
     }
   }
 
@@ -1089,12 +1089,12 @@ export class SparkRTC {
           })
         )
       } else {
-        // //re Connect
-        // if(this.startProcedure){
-        //   this.updateTheStatus(`[startProcedure] in getLatestUserList`)
-        //   this.startProcedure(true)
-        // }
-        // return
+        //re Connect
+        if(this.startProcedure){
+          this.updateTheStatus(`[startProcedure] in getLatestUserList`)
+          this.startProcedure(true)
+        }
+        return
       }
     } catch (error) {
       this.updateTheStatus(`[getLatestUserList] Error: ${error}`)
