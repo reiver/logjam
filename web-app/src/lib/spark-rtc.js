@@ -792,7 +792,7 @@ export class SparkRTC {
           })
         )
 
-        // this.pingInterval = setInterval(this.ping, 5000)
+        this.pingInterval = setInterval(this.ping, 5000)
         this.updateTheStatus(`[setupSignalingSocket] socket onopen and sent start`)
         resolve(socket)
       }
@@ -2806,9 +2806,7 @@ export class SparkRTC {
     this.updateTheStatus(`left meeting`)
 
     clearTimeout(this.networkSpeedInterval)
-    if(this.pingInterval){
-      clearInterval(this.pingInterval)
-    }
+    clearInterval(this.pingInterval)
   }
 
   getStatsForPC = (peerConnection, userid) => {
