@@ -125,7 +125,7 @@ func (c *RoomWSController) Start(ctx *models.WSContext) {
 	_ = c.socketSVC.Send(resultEvent, ctx.SocketID)
 }
 func (c *RoomWSController) Role(ctx *models.WSContext) {
-	var eventData map[string]any
+	var eventData map[string]interface{}
 	err := json.Unmarshal(ctx.PureMessage, &eventData)
 	if err != nil {
 
