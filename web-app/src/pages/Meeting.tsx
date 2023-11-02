@@ -425,14 +425,6 @@ const Meeting = ({ params: { room, displayName, name } }: { params?: { room?: st
               await sparkRTC.value.restart(closeSocket)
             }
 
-            if(role===Roles.BROADCAST && closeSocket){
-              if (sparkRTC.value) {
-                //Init socket and start sparkRTC
-                await setupSignalingSocket(host, name, room, isDebugMode.value)
-                await start()
-              }
-            }
-
             if (!closeSocket) {
               //start sparkRTC
               await start()
