@@ -129,6 +129,12 @@ func (ctrl *GoldGorillaController) Join(rw http.ResponseWriter, req *http.Reques
 	}{
 		ID: newGGID,
 	}, 200)
+	memsId, err := ctrl.roomRepo.GetAllMembersId(reqModel.RoomId, false)
+	if err != nil {
+		println(err.Error())
+	} else {
+		_ = ctrl.socketSVC.Send(models.MessageContract{Type: "goldgorilla-joined", Data: strconv.FormatUint(newGGID, 10)}, memsId...)
+	}
 	go func(roomId string, svcAddr string, ggId uint64) {
 		for {
 			res, err := http.Get(svcAddr + "/healthcheck?roomId=" + roomId)
