@@ -73,8 +73,7 @@ func (s *socketService) OnConnect(conn *websocket.Conn) (uint64, error) {
 	s.Lock()
 	defer s.Unlock()
 
-	id := s.lastId
-	s.lastId++
+	id := s.getNewId()
 	s.sockets[conn] = &SocketKeeper{
 		Mutex:  &sync.Mutex{},
 		wsConn: conn,
@@ -83,6 +82,17 @@ func (s *socketService) OnConnect(conn *websocket.Conn) (uint64, error) {
 	s.socketsById[id] = conn
 
 	return id, nil
+}
+
+func (s *socketService) getNewId() uint64 {
+	id := s.lastId
+	s.lastId++
+	return id
+}
+func (s *socketService) GetNewID() uint64 {
+	s.Lock()
+	defer s.Unlock()
+	return s.getNewId()
 }
 
 func (s *socketService) OnDisconnect(conn *websocket.Conn) error {

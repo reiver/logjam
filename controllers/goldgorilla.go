@@ -2,11 +2,11 @@ package controllers
 
 import (
 	"encoding/json"
+	"io"
+	"net/http"
 	"sourcecode.social/greatape/logjam/models"
 	"sourcecode.social/greatape/logjam/models/contracts"
 	"sourcecode.social/greatape/logjam/models/dto"
-	"io"
-	"net/http"
 	"strconv"
 	"time"
 )
@@ -44,9 +44,9 @@ func (ctrl *GoldGorillaController) SendAnswer(rw http.ResponseWriter, req *http.
 	ctrl.socketSVC.Send(map[string]interface{}{
 		"type":   "video-answer",
 		"target": strconv.FormatUint(reqModel.ID, 10),
-		"name":   strconv.FormatUint(models.GetGoldGorillaId(), 10),
+		"name":   strconv.FormatUint(reqModel.GGID, 10),
 		"sdp":    reqModel.SDP,
-		"data":   strconv.FormatUint(models.GetGoldGorillaId(), 10),
+		"data":   strconv.FormatUint(reqModel.GGID, 10),
 	}, reqModel.ID)
 	_ = ctrl.helper.Write(rw, nil, 204)
 }
@@ -64,9 +64,9 @@ func (ctrl *GoldGorillaController) SendOffer(rw http.ResponseWriter, req *http.R
 	_ = ctrl.socketSVC.Send(map[string]interface{}{
 		"type":   "video-offer",
 		"target": strconv.FormatUint(reqModel.ID, 10),
-		"name":   strconv.FormatUint(models.GetGoldGorillaId(), 10),
+		"name":   strconv.FormatUint(reqModel.GGID, 10),
 		"sdp":    reqModel.SDP,
-		"data":   strconv.FormatUint(models.GetGoldGorillaId(), 10),
+		"data":   strconv.FormatUint(reqModel.GGID, 10),
 	}, reqModel.ID)
 	_ = ctrl.helper.Write(rw, nil, 204)
 }
@@ -85,7 +85,7 @@ func (ctrl *GoldGorillaController) SendICECandidate(rw http.ResponseWriter, req 
 		"Type":      "new-ice-candidate",
 		"Target":    strconv.FormatUint(reqModel.ID, 10),
 		"candidate": reqModel.ICECandidate,
-		"data":      strconv.FormatUint(models.GetGoldGorillaId(), 10),
+		"data":      strconv.FormatUint(reqModel.GGID, 10),
 	}, reqModel.ID)
 	_ = ctrl.helper.Write(rw, nil, 204)
 }
@@ -100,33 +100,42 @@ func (ctrl *GoldGorillaController) Join(rw http.ResponseWriter, req *http.Reques
 	if ctrl.helper.HandleIfErr(rw, err, 400) {
 		return
 	}
-	ctrl.conf.GoldGorillaSVCAddr = reqModel.ServiceAddr
-	_ = ctrl.ggSVCRepo.Init(reqModel.ServiceAddr)
-	models.DecreaseGoldGorillaId()
-	err = ctrl.roomRepo.AddMember(reqModel.RoomId, models.GetGoldGorillaId(), "{}", "", "")
+	//ctrl.conf.GoldGorillaSVCAddr = reqModel.ServiceAddr
+	newGGID := ctrl.socketSVC.GetNewID()
+	err = ctrl.roomRepo.AddMember(reqModel.RoomId, newGGID, "{}", "", "", true)
 	if ctrl.helper.HandleIfErr(rw, err, 500) {
 		return
 	}
-	err = ctrl.roomRepo.UpdateCanConnect(reqModel.RoomId, models.GetGoldGorillaId(), true)
+	err = ctrl.roomRepo.UpdateCanConnect(reqModel.RoomId, newGGID, true)
 	if ctrl.helper.HandleIfErr(rw, err, 500) {
 		return
 	}
-	parentId, err := ctrl.roomRepo.InsertMemberToTree(reqModel.RoomId, models.GetGoldGorillaId(), true)
+	parentId, err := ctrl.roomRepo.InsertMemberToTree(reqModel.RoomId, newGGID, true)
 	if ctrl.helper.HandleIfErr(rw, err, 500) {
-		_, _, _ = ctrl.roomRepo.RemoveMember(reqModel.RoomId, models.GetGoldGorillaId())
+		_, _, _ = ctrl.roomRepo.RemoveMember(reqModel.RoomId, newGGID)
 		return
 	}
-	err = ctrl.ggSVCRepo.CreatePeer(reqModel.RoomId, *parentId, true, true)
+	err = ctrl.ggSVCRepo.CreatePeer(reqModel.RoomId, *parentId, true, true, newGGID)
 	if ctrl.helper.HandleIfErr(rw, err, 503) {
 		return
 	}
 	_ = ctrl.socketSVC.Send(models.MessageContract{
 		Type: "add_audience",
-		Data: strconv.FormatUint(models.GetGoldGorillaId(), 10),
+		Data: strconv.FormatUint(newGGID, 10),
 	}, *parentId)
 
-	_ = ctrl.helper.Write(rw, nil, 204)
-	go func(roomId string, svcAddr string) {
+	_ = ctrl.helper.Write(rw, struct {
+		ID uint64 `json:"id"`
+	}{
+		ID: newGGID,
+	}, 200)
+	memsId, err := ctrl.roomRepo.GetAllMembersId(reqModel.RoomId, false)
+	if err != nil {
+		println(err.Error())
+	} else {
+		_ = ctrl.socketSVC.Send(models.MessageContract{Type: "goldgorilla-joined", Data: strconv.FormatUint(newGGID, 10)}, memsId...)
+	}
+	go func(roomId string, svcAddr string, ggId uint64) {
 		for {
 			res, err := http.Get(svcAddr + "/healthcheck?roomId=" + roomId)
 			if err != nil {
@@ -137,18 +146,18 @@ func (ctrl *GoldGorillaController) Join(rw http.ResponseWriter, req *http.Reques
 			}
 			time.Sleep(2 * time.Second)
 		}
-		_, childrenIdList, err := ctrl.roomRepo.RemoveMember(roomId, models.GetGoldGorillaId())
+		_, childrenIdList, err := ctrl.roomRepo.RemoveMember(roomId, newGGID)
 		if err != nil {
 			println(err.Error())
 			return
 		}
 		parentDCEvent := models.MessageContract{
 			Type: "event-parent-dc",
-			Data: strconv.FormatUint(models.GetGoldGorillaId(), 10),
+			Data: strconv.FormatUint(newGGID, 10),
 		}
 		_ = ctrl.socketSVC.Send(parentDCEvent, childrenIdList...)
-		println("deleted goldgorilla from tree")
-	}(reqModel.RoomId, reqModel.ServiceAddr)
+		println("deleted a goldgorilla instance from tree")
+	}(reqModel.RoomId, ctrl.conf.GoldGorillaSVCAddr, newGGID)
 }
 
 func (ctrl *GoldGorillaController) RejoinGoldGorilla(rw http.ResponseWriter, req *http.Request) {
@@ -158,6 +167,7 @@ func (ctrl *GoldGorillaController) RejoinGoldGorilla(rw http.ResponseWriter, req
 	}
 	var reqModel struct {
 		RoomId string `json:"roomId"`
+		GGID   uint64 `json:"ggid"`
 	}
 	err = json.Unmarshal(reqBody, &reqModel)
 	if ctrl.helper.HandleIfErr(rw, err, 400) {
@@ -172,7 +182,7 @@ func (ctrl *GoldGorillaController) RejoinGoldGorilla(rw http.ResponseWriter, req
 		_ = ctrl.helper.Write(rw, nil, 503)
 		return
 	}
-	_, _, err = ctrl.roomRepo.RemoveMember(reqModel.RoomId, models.GetGoldGorillaId())
+	_, _, err = ctrl.roomRepo.RemoveMember(reqModel.RoomId, reqModel.GGID)
 	if ctrl.helper.HandleIfErr(rw, err, 500) {
 		return
 	}
@@ -188,9 +198,9 @@ func (ctrl *GoldGorillaController) RejoinGoldGorilla(rw http.ResponseWriter, req
 
 	_ = ctrl.socketSVC.Send(brDCEvent, roomMembersIdList...)
 
-	go func(membersIdList []uint64) {
+	go func(roomId string, membersIdList []uint64) {
 		time.Sleep(500 * time.Millisecond)
-		err := ctrl.ggSVCRepo.Start()
+		err := ctrl.ggSVCRepo.Start(roomId)
 		if err != nil {
 			println(err.Error())
 			return
@@ -200,6 +210,6 @@ func (ctrl *GoldGorillaController) RejoinGoldGorilla(rw http.ResponseWriter, req
 		}
 
 		_ = ctrl.socketSVC.Send(brIsBackEvent, membersIdList...)
-	}(roomMembersIdList)
+	}(reqModel.RoomId, roomMembersIdList)
 	_ = ctrl.helper.Write(rw, nil, 204)
 }

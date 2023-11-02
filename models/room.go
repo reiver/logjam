@@ -11,6 +11,7 @@ type MemberModel struct {
 	IsUsingTurn    bool
 	MetaData       map[string]interface{}
 	CanAcceptChild bool
+	IsGoldGorilla  bool
 }
 
 type PeerTreeModel struct {
