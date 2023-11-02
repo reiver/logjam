@@ -7,7 +7,6 @@ import { detectKeyPress } from 'lib/controls'
 import { lazy } from 'preact-iso'
 import { useEffect } from 'preact/compat'
 import {fullScreenedStream} from 'components/MeetingBody/Stage'
-import { R } from '../../dist/assets/index-d6e8897e'
 
 let displayIdCounter = 2
 
@@ -316,10 +315,9 @@ const Meeting = ({ params: { room, displayName, name } }: { params?: { room?: st
             }
           }
         },
-        onUserInitialized: async (userId) => {
+        onUserInitialized: (userId) => {
           //@ts-ignore
           currentUser.value.userId = userId
-          await start()
         },
         localStreamChangeCallback: (stream) => {
           log('[Local Stream Callback]', stream)
@@ -355,38 +353,38 @@ const Meeting = ({ params: { room, displayName, name } }: { params?: { room?: st
           log(`remoteStreamDCCallback`, stream)
 
           if (stream != 'no-stream') {
-            await onStopStream(stream)
+            onStopStream(stream)
           } else {
             //get all remote streams and stop them
             const streams = sparkRTC.value.remoteStreams
-            streams.forEach(async (str) => {
-              await onStopStream(str)
+            streams.forEach((str) => {
+              onStopStream(str)
             })
 
             sparkRTC.value.remoteStreams = []
           }
 
           //display broadcaster not in the meeting message after 1 sec, to avoid any issues
-          // setTimeout(() => {
-          if (role === Roles.AUDIENCE) {
-            if (sparkRTC.value.broadcasterDC===true || stream === 'no-stream') {
-              //destroy preview Dialog
-              if (previewDialogId !== null) {
-                destroyDialog(previewDialogId)
-              }
+          setTimeout(() => {
+            if (role === Roles.AUDIENCE) {
+              if (sparkRTC.value.broadcasterDC || stream === 'no-stream') {
+                //destroy preview Dialog
+                if (previewDialogId !== null) {
+                  destroyDialog(previewDialogId)
+                }
 
-              broadcastIsInTheMeeting.value = false
-              updateUser({
-                isStreamming: false,
-                ableToRaiseHand: true,
-                isMicrophoneOn: true,
-                isCameraOn: true,
-              })
-              sparkRTC.value.resetAudioVideoState()
-              log(`broadcasterDC... dc: ${sparkRTC.value.broadcasterDC} & stream: ${stream}`)
+                broadcastIsInTheMeeting.value = false
+                updateUser({
+                  isStreamming: false,
+                  ableToRaiseHand: true,
+                  isMicrophoneOn: true,
+                  isCameraOn: true,
+                })
+                sparkRTC.value.resetAudioVideoState()
+                log(`broadcasterDC...`)
+              }
             }
-          }
-          // }, 1000)
+          }, 1000)
         },
         onRaiseHand: (user) => {
           log(`[On Raise Hand Request]`, user)
@@ -422,29 +420,22 @@ const Meeting = ({ params: { room, displayName, name } }: { params?: { room?: st
           return handler
         },
         onStart: async (closeSocket = false) => {
-          if (meetingStatus.value && sparkRTC.value) {
-
-            if(role===Roles.AUDIENCE){
+          if (meetingStatus.value) {
+            if (role === Roles.AUDIENCE) {
               await sparkRTC.value.restart(closeSocket)
             }
 
-            if(role===Roles.BROADCAST){
-              if(closeSocket){//socket closed already
-                await setupSignalingSocket(host, name, room, isDebugMode.value)
-              }else{
-                //socket is not closed just request the new Role
-                await start()
-              }
-              
+            if (!closeSocket) {
+              //start sparkRTC
+              await start()
             }
-            
           }
         },
         startAgain: async () => {
           if (sparkRTC.value) {
-            console.log("startAgain")
             //Init socket and start sparkRTC
             await setupSignalingSocket(host, name, room, isDebugMode.value)
+            await start()
           }
         },
         altBroadcastApprove: async (isStreamming, data) => {
@@ -681,6 +672,7 @@ const Meeting = ({ params: { room, displayName, name } }: { params?: { room?: st
       if (sparkRTC.value) {
         //Init socket and start sparkRTC
         await setupSignalingSocket(host, name, room, isDebugMode.value)
+        await start()
       }
     }
 
