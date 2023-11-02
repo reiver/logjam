@@ -2751,22 +2751,12 @@ export class SparkRTC {
           this.startAgain()
         }
       }
-      
-      if(this.socket.readyState===WebSocket.CLOSING){
-        //wait
-        this.updateTheStatus(`socket is in closing state`)
-        await this.wait(2000);
-      }
-      else if(this.socket.readyState===WebSocket.CLOSED){
-        this.updateTheStatus(`socket is in closed state`)
-        //if closed start procedure
-        if (this.startAgain) {
-          this.startAgain()
-        }
-      }
-      else if(this.socket.readyState === WebSocket.OPEN){
-        this.updateTheStatus(`socket is in OPEN state`)
+      if(this.socket.readyState === WebSocket.OPEN){
         this.socket.close()
+      }else{
+        this.updateTheStatus(`Socket is Not opened yet properly`)
+        //only start
+        this.start()
       }
     } else {
       this.updateTheStatus(`socket closing is not required`)
