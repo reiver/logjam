@@ -2770,7 +2770,6 @@ export class SparkRTC {
       }
     } else {
       this.updateTheStatus(`socket closing is not required`)
-      await this.start()
     }
 
     //update the UI (Controllers)
