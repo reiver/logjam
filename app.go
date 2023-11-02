@@ -18,14 +18,14 @@ type App struct {
 	config *models.ConfigModel
 }
 
-func (app *App) Init(srcListenAddr string, prodMode bool) {
+func (app *App) Init(srcListenAddr string, prodMode bool, goldGorillaSVCAddr string) {
 	app.Logger = logger.NewSTDOUTLogger(prodMode)
 	_ = app.Logger.Log("app", contracts.LInfo, "initializing logjam ..")
 	app.config = &models.ConfigModel{
-		GoldGorillaSVCAddr: "",
+		GoldGorillaSVCAddr: goldGorillaSVCAddr,
 		SrcListenAddr:      srcListenAddr,
 	}
-	ggSVCRepo := GoldGorillaRepository.NewHTTPRepository()
+	ggSVCRepo := GoldGorillaRepository.NewHTTPRepository(goldGorillaSVCAddr)
 	roomRepo := roomRepository.NewRoomRepository()
 	socketSVC := services.NewSocketService(app.Logger)
 	roomWSCtrl := controllers.NewRoomWSController(socketSVC, roomRepo, ggSVCRepo, app.Logger)
