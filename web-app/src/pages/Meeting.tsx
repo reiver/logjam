@@ -315,9 +315,13 @@ const Meeting = ({ params: { room, displayName, name } }: { params?: { room?: st
             }
           }
         },
-        onUserInitialized: (userId) => {
+        onUserInitialized: async (userId) => {
           //@ts-ignore
           currentUser.value.userId = userId
+
+          //request for role [zaid]
+          await start()
+
         },
         localStreamChangeCallback: (stream) => {
           log('[Local Stream Callback]', stream)
@@ -425,17 +429,22 @@ const Meeting = ({ params: { room, displayName, name } }: { params?: { room?: st
               await sparkRTC.value.restart(closeSocket)
             }
 
-            if (!closeSocket) {
-              //start sparkRTC
-              await start()
+            //restart for broadcaster [zaid]
+            if(role === Roles.BROADCAST){
+              if(closeSocket){
+                await setupSignalingSocket(host, name, room, isDebugMode.value)
+              }
+              else{
+                await start()
+              }
             }
+            
           }
         },
         startAgain: async () => {
           if (sparkRTC.value) {
             //Init socket and start sparkRTC
             await setupSignalingSocket(host, name, room, isDebugMode.value)
-            await start()
           }
         },
         altBroadcastApprove: async (isStreamming, data) => {
@@ -672,7 +681,6 @@ const Meeting = ({ params: { room, displayName, name } }: { params?: { room?: st
       if (sparkRTC.value) {
         //Init socket and start sparkRTC
         await setupSignalingSocket(host, name, room, isDebugMode.value)
-        await start()
       }
     }
 
