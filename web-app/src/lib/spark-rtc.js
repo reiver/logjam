@@ -797,15 +797,12 @@ export class SparkRTC {
         resolve(socket)
       }
       socket.onclose = async () => {
-        this.updateTheStatus(`socket is closed in setupSignalingSocket, leftmeeting Via Button: `,this.leftMeeting)
+        this.updateTheStatus(`socket is closed in setupSignalingSocket`)
         this.remoteStreamNotified = false
         this.myPeerConnectionArray = {}
         this.started = false
         if (this.startProcedure && !this.leftMeeting) {
-          this.updateTheStatus('[startProcedure] in socket.onclose')
           this.startProcedure(true)
-        }else{
-          this.updateTheStatus(`Not starting procedure leftMeeting ${this.leftMeeting} startProcedure: `,this.startProcedure)
         }
       }
       socket.onerror = (error) => {
