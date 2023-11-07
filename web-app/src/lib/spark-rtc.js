@@ -752,7 +752,7 @@ export class SparkRTC {
         this.myPeerConnectionArray = {}
         this.started = false
         if (this.startProcedure && !this.leftMeeting) {
-          this.startProcedure()
+          this.startProcedure(true)
         }
       }
       socket.onerror = (error) => {
@@ -812,15 +812,15 @@ export class SparkRTC {
     this.updateTheStatus(`[handleMessage] startShareScreen`)
     try {
       const screenConstraints = {
-        audio:true,
+        audio: true,
         video: {
           mediaSource: 'screen',
           width: { ideal: 1920 },
           height: { ideal: 1080 },
           displaySurface: 'monitor', // You can specify displaySurface to filter by monitor type
-          cursor: 'always',          // You can specify cursor behavior
-          logicalSurface: true,      // You can specify logical surface behavior
-          frameRate: { ideal: 30}, // Adjust the frame rate to your preference
+          cursor: 'always', // You can specify cursor behavior
+          logicalSurface: true, // You can specify logical surface behavior
+          frameRate: { ideal: 30 }, // Adjust the frame rate to your preference
         },
       }
       this.shareStream = await navigator.mediaDevices.getDisplayMedia(screenConstraints)
@@ -890,7 +890,7 @@ export class SparkRTC {
 
       this.updateTheStatus(`Request Broadcast Role`)
 
-      if (await this.checkSocketStatus())
+      if (await this.checkSocketStatus()){
         this.socket.send(
           JSON.stringify({
             type: 'role',
@@ -898,7 +898,17 @@ export class SparkRTC {
             streamId: this.localStream.id,
           })
         )
-      this.updateTheStatus(`[startBroadcasting] send role`)
+        this.updateTheStatus(`[startBroadcasting] send role`)
+
+      }else{
+        //no socket is active need to create on [zaid]
+        if(this.startProcedure){
+          this.startProcedure(true)
+        }
+
+        return
+      }
+        
       return this.localStream
     } catch (e) {
       this.updateTheStatus(`Error Start Broadcasting`)
@@ -956,9 +966,15 @@ export class SparkRTC {
             data: this.Roles.AUDIENCE,
           })
         )
+      this.updateTheStatus(`[startReadingBroadcast] send role audience`)
+
+      }else{
+        this.updateTheStatus(`[startReadingBroadcast] socket is not avtive`)
+        if(this.startProcedure){
+          this.startProcedure(true)
+        }
       }
 
-      this.updateTheStatus(`[startReadingBroadcast] send role audience`)
     } catch (error) {
       this.updateTheStatus(`[startReadingBroadcast] Error: ${error}`)
     }
@@ -1801,7 +1817,7 @@ export class SparkRTC {
     this.userListCallback = async (users) => {
       if (users && users.length > 0) {
         const matchedStreamMap = new Map()
-        const unmatchedStreams = []
+        var unmatchedStreams = []
         let broadcasterName = ''
 
         // Find the broadcaster in the user list and retrieve the name
@@ -1844,14 +1860,25 @@ export class SparkRTC {
           }
         }
 
-        //display unmatched stream .a.k.a Screen share stream
+        // display unmatched stream .a.k.a Screen share stream
         unmatchedStreams.forEach((stream) => {
-          stream.role = this.Roles.BROADCAST
-          stream.name = broadcasterName
-          stream.isShareScreen = true
+          if (!!!stream.userId) {
+            stream.role = this.Roles.BROADCAST
+            stream.name = broadcasterName
+            stream.isShareScreen = true
 
-          if (this.remoteStreamCallback) {
-            this.remoteStreamCallback(stream)
+            if (this.remoteStreamCallback) {
+              this.remoteStreamCallback(stream)
+            }
+          } else {
+            //remove the stream from the list because it must be the disconnected audience
+            unmatchedStreams = unmatchedStreams.filter((s) => !!s.userId);
+            this.remoteStreams = this.remoteStreams.filter((STR) => STR.id !== stream.id)
+
+            //remove stream from screen
+            if(this.remoteStreamDCCallback){
+              this.remoteStreamDCCallback(stream)
+            }
           }
         })
       }
@@ -2541,7 +2568,6 @@ export class SparkRTC {
 
     //close the web socket
     if (closeSocket && this.socket) {
-      this.socket.close()
       this.socket.onclose = async () => {
         this.updateTheStatus(`socket is closed in restart`)
         this.socket = null
@@ -2551,8 +2577,21 @@ export class SparkRTC {
           this.startAgain()
         }
       } //on close callback
+
+      //[zaid] close socket after setting callback
+      this.socket.close()
+
     } else {
-      this.updateTheStatus(`socket closing is not required`)
+      //else condition [zaid] test
+      if(!this.checkSocketStatus()){
+        this.updateTheStatus(`socket is closed already`)
+        if (this.startAgain) {
+          this.startAgain()
+        }
+      }else{
+        this.updateTheStatus(`socket is not closed`)
+        await this.start()
+      }
     }
 
     //update the UI (Controllers)

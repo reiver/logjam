@@ -187,6 +187,7 @@ export const Stage = () => {
                       isHostStream={attendee.isHost}
                       isShareScreen={attendee.isShareScreen}
                       toggleScreen={attendee.toggleScreenId}
+                      displayId={attendee.displayId}
                     />
                   </div>
                 )
@@ -200,17 +201,21 @@ export const Stage = () => {
   )
 }
 
-export const Video = memo(({ stream, isMuted, isHostStream, name, userId, isUserMuted, isShareScreen, toggleScreen }: any) => {
+export const Video = memo(({ stream, isMuted, isHostStream, name, userId, isUserMuted, isShareScreen, toggleScreen, displayId }: any) => {
   const [muted, setMuted] = useState(true)
   const { isHost } = currentUser.value
   const menu = useRef<any>()
   const videoRef = useRef<HTMLVideoElement>()
   const [menuOpen, setMenuOpen] = useState(false)
+  const [isHoveredOnFullScreenIcon, setHoveredOnFullScreenIcon] = useState(false)
+
   const toggleFullScreen = (e?: any) => {
-    console.log("toggleFullScreen")
     if (fullScreenedStream.value === stream.id) {
       fullScreenedStream.value = null
     } else fullScreenedStream.value = stream.id
+
+    //hide tooltips
+    setHoveredOnFullScreenIcon(false)
 
     if (e) {
       e.stopPropagation()
@@ -265,12 +270,16 @@ export const Video = memo(({ stream, isMuted, isHostStream, name, userId, isUser
   const handleOpenMenu = (e) => {
     e.stopPropagation()
     setMenuOpen(!menuOpen)
+
+    //hide tooltip
+    setHoveredOnFullScreenIcon(false)
   }
   const [isHover, setHover] = useState(false)
 
   const handleOnClick = () => {
     setHover(!isHover)
   }
+
   useEffect(() => {
     if ((!bottomBarVisible.value && isHover) || (!hasFullScreenedStream.value && isHover)) {
       setHover(false)
@@ -319,12 +328,18 @@ export const Video = memo(({ stream, isMuted, isHostStream, name, userId, isUser
                 flex: menuOpen || isHover,
               })}
             >
-              <IconButton variant="nothing" class="w-[30px] h-[30px] p-0" onClick={toggleFullScreen}>
+              <IconButton variant="nothing" class="w-[30px] h-[30px] p-0" onClick={()=>{
+                toggleFullScreen()
+              }}
+              onMouseEnter = {()=>{setHoveredOnFullScreenIcon(true)}}
+              onMouseLeave = {()=>{setHoveredOnFullScreenIcon(false)}}
+              >
                 <Icon
                   key={stream && fullScreenedStream.value === stream.id ? ScreenNormal : ScreenFull}
                   icon={stream && fullScreenedStream.value === stream.id ? ScreenNormal : ScreenFull}
                   width="20px"
                   height="20px"
+                  
                 />
               </IconButton>
               {isHost && !isHostStream && (
@@ -332,7 +347,7 @@ export const Video = memo(({ stream, isMuted, isHostStream, name, userId, isUser
                   <Icon icon={verticalDots} width="20px" height="20px" />
 
                   {menuOpen && (
-                    <div class="absolute top-full right-0 h-full w-full">
+                    <div class="absolute z-10 top-full right-0 h-full w-full">
                       <ul class="bg-white absolute top-0 right-0 mt-1 -ml-2 text-black rounded-sm p-1">
                         <li class="w-full whitespace-nowrap px-4 py-1 rounded-sm bg-black bg-opacity-0 hover:bg-opacity-10" onClick={handleRemoveStream}>
                           Stop broadcast
@@ -345,6 +360,37 @@ export const Video = memo(({ stream, isMuted, isHostStream, name, userId, isUser
             </div>
           </div>
         </div>
+      </div>
+      <div class="absolute top-8 left-0 flex justify-between w-full px-2 gap-2">
+          <div class={clsx('h-[48px] gap-0 flex justify-end items-center flex-grow')}> 
+            <div
+              className={clsx('sm:flex:hidden',{
+                hidden:!isHoveredOnFullScreenIcon || menuOpen
+              })}
+            >
+              <div class="flex justify-center items-center">
+                <div className="px-4 py-1 bg-gray-0 text-gray-2 rounded-full text-medium-12">
+                  {fullScreenedStream.value!=stream.id?'Maximize':'Minimize'}{' shortcut key='}{displayId}
+                </div>
+              </div>
+            </div>
+          </div>
+      </div>
+
+      <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+          <div class={clsx('h-[48px] gap-0 flex justify-end items-center flex-grow')}> 
+            <div
+              className={clsx('sm:flex:hidden',{
+                hidden:!isHoveredOnFullScreenIcon || menuOpen
+              })}
+            >
+              <div class="flex justify-center items-center">
+                <div className="px-4 py-1 bg-black bg-opacity-50 text-white rounded-[16px] text-semi-bold-32">
+                  {displayId}
+                </div>
+              </div>
+            </div>
+          </div>
       </div>
     </div>
   )

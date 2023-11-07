@@ -1,8 +1,8 @@
 package contracts
 
 import (
-	"github.com/sparkscience/logjam/models"
-	"github.com/sparkscience/logjam/models/dto"
+	"sourcecode.social/greatape/logjam/models"
+	"sourcecode.social/greatape/logjam/models/dto"
 )
 
 type IRoomRepository interface {
@@ -12,7 +12,7 @@ type IRoomRepository interface {
 	SetBroadcaster(roomId string, id uint64) error
 	GetBroadcaster(roomId string) (*models.MemberModel, error)
 	ClearBroadcasterSeat(roomId string) error
-	AddMember(roomId string, id uint64, name, email, streamId string) error
+	AddMember(roomId string, id uint64, name, email, streamId string, isGoldGorilla bool) error
 	GetMember(roomId string, id uint64) (*models.MemberModel, error)
 	UpdateCanConnect(roomId string, id uint64, newState bool) error
 	UpdateTurnStatus(roomId string, id uint64, newState bool) error
@@ -29,14 +29,14 @@ type IRoomRepository interface {
 	IsBroadcaster(roomId string, id uint64) (bool, error)
 	GetMembersList(roomId string) ([]dto.MemberDTO, error)
 	GetChildrenIdList(roomId string, id uint64) ([]uint64, error)
-	HadGoldGorillaInTreeBefore(id string) bool
+	IsGGInstance(roomId string, id uint64) bool
+	GetRoomGoldGorillaId(roomId string) (*uint64, error)
 }
 
 type IGoldGorillaServiceRepository interface {
-	Init(svcAddr string) error
-	Start() error
-	ResetRoom(roomId string) error
-	CreatePeer(roomId string, id uint64, canPublish bool, isCaller bool) error
+	Start(roomId string) error
+	ResetRoom(roomId string) (*uint64, error)
+	CreatePeer(roomId string, id uint64, canPublish bool, isCaller bool, ggId uint64) error
 	SendICECandidate(roomId string, id uint64, iceCandidate interface{}) error
 	SendAnswer(roomId string, peerId uint64, answer interface{}) error
 	SendOffer(roomId string, peerId uint64, offer interface{}) error

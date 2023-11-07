@@ -2,8 +2,8 @@ package routers
 
 import (
 	"github.com/gorilla/mux"
-	"github.com/sparkscience/logjam/controllers"
 	"net/http"
+	"sourcecode.social/greatape/logjam/controllers"
 )
 
 type GoldGorillaRouter struct {
@@ -17,7 +17,7 @@ func newGoldGorillaRouter(ctrl *controllers.GoldGorillaController) IRouteRegistr
 }
 
 func (r *GoldGorillaRouter) registerRoutes(router *mux.Router) {
-	prefix := "/auxiliary-node"
+	prefix := "/goldgorilla"
 	router.HandleFunc(prefix+"/ice", r.ctrl.SendICECandidate).
 		Methods(http.MethodPost)
 	router.HandleFunc(prefix+"/join", r.ctrl.Join).

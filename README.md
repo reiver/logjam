@@ -11,7 +11,7 @@ first you need to get the binary by one of this ways :
 3. leaving the build and run to **docker**!
 
 - ### getting the release
-1. download the latest binary from here https://github.com/sparkscience/logjam/releases
+1. download the latest binary from here https://sourcecode.social/greatape/logjam/releases
 2. make it executable like `chmod +x ./logjam`
 3. run it! `./logjam`
 
