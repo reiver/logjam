@@ -88,7 +88,7 @@ func (s *socketService) OnConnect(conn *websocket.Conn) (uint64, error) {
 		_ = s.OnDisconnect(conn, code, text)
 		return nil
 	})
-	/*lastPong := time.Now()
+	lastPong := time.Now()
 	conn.SetPongHandler(func(appData string) error {
 		lastPong = time.Now()
 		return nil
@@ -105,7 +105,7 @@ func (s *socketService) OnConnect(conn *websocket.Conn) (uint64, error) {
 				return
 			}
 		}
-	}()*/
+	}()
 	return id, nil
 }
 

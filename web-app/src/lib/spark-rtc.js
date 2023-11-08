@@ -25,7 +25,8 @@ export class SparkRTC {
   lastBroadcasterId = ''
   /**@type {Date} */
   lastPong = null;
-  pingTimeout = 5000;
+  /** ping timeout in seconds */
+  pingTimeout = 5;
   broadcastingApproved = false
   /**@type {{[key:string]:RTCPeerConnection}}*/
   myPeerConnectionArray = {}
@@ -600,6 +601,7 @@ export class SparkRTC {
       case 'pong':
       {
         this.lastPong = new Date();
+        break
       }
 
       default:
@@ -692,8 +694,8 @@ export class SparkRTC {
       }
     }
     if(!!this.lastPong){
-        let lastResponse= this.lastPong;
-        lastResponse.setSeconds(lastResponse.getSeconds() + (this.pingTimeout));
+        let lastResponse= new Date(this.lastPong);
+        lastResponse.setSeconds(lastResponse.getSeconds() + this.pingTimeout);
         let maxTime = new Date();
         maxTime.setSeconds(maxTime.getSeconds()-1)
         if(lastResponse<maxTime){
@@ -739,6 +741,7 @@ export class SparkRTC {
       if (this.pingInterval) {
         clearInterval(this.pingInterval)
         this.pingInterval = null
+        this.lastPong=null;
       }
 
       this.myName = myName || this.myName
@@ -760,7 +763,7 @@ export class SparkRTC {
           })
         )
 
-        this.pingInterval = setInterval(this.ping, this.pingTimeout)
+        this.pingInterval = setInterval(this.ping, this.pingTimeout*1000)
         this.updateTheStatus(`[setupSignalingSocket] socket onopen and sent start`)
         resolve(socket)
       }
@@ -2550,6 +2553,7 @@ export class SparkRTC {
     if (this.pingInterval) {
       clearInterval(this.pingInterval)
       this.pingInterval = null
+      this.lastPong=null;
     }
     if (this.socket) {
       this.socket.close()
@@ -2681,6 +2685,7 @@ export class SparkRTC {
 
     clearTimeout(this.networkSpeedInterval)
     clearInterval(this.pingInterval)
+    this.lastPong=null;
   }
 
   getStatsForPC = (peerConnection, userid) => {
