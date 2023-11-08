@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"github.com/gorilla/websocket"
 	"sourcecode.social/greatape/logjam/models/contracts"
+	"strconv"
 	"sync"
+	"time"
 )
 
 type SocketKeeper struct {
@@ -26,6 +28,7 @@ type socketService struct {
 	lastId      uint64
 	sockets     map[*websocket.Conn]*SocketKeeper
 	socketsById map[uint64]*websocket.Conn
+	pingTimeout time.Duration
 }
 
 func NewSocketService(logger contracts.ILogger) contracts.ISocketService {
@@ -35,6 +38,7 @@ func NewSocketService(logger contracts.ILogger) contracts.ISocketService {
 		lastId:      0,
 		sockets:     make(map[*websocket.Conn]*SocketKeeper),
 		socketsById: make(map[uint64]*websocket.Conn),
+		pingTimeout: 4 * time.Second,
 	}
 }
 
@@ -80,7 +84,28 @@ func (s *socketService) OnConnect(conn *websocket.Conn) (uint64, error) {
 		ID:     id,
 	}
 	s.socketsById[id] = conn
-
+	conn.SetCloseHandler(func(code int, text string) error {
+		_ = s.OnDisconnect(conn, code, text)
+		return nil
+	})
+	/*lastPong := time.Now()
+	conn.SetPongHandler(func(appData string) error {
+		lastPong = time.Now()
+		return nil
+	})
+	go func() {
+		for {
+			err := conn.WriteMessage(websocket.PingMessage, []byte("keepalive"))
+			if err != nil {
+				return
+			}
+			time.Sleep(s.pingTimeout / 2)
+			if time.Since(lastPong) > s.pingTimeout {
+				_ = conn.Close()
+				return
+			}
+		}
+	}()*/
 	return id, nil
 }
 
@@ -95,8 +120,8 @@ func (s *socketService) GetNewID() uint64 {
 	return s.getNewId()
 }
 
-func (s *socketService) OnDisconnect(conn *websocket.Conn) error {
-	s.logger.Log("socket_svc", contracts.LDebug, "a socket got disconnected")
+func (s *socketService) OnDisconnect(conn *websocket.Conn, code int, error string) error {
+	s.logger.Log("socket_svc", contracts.LDebug, "a socket got disconnected", strconv.Itoa(code), ":", error)
 	s.Lock()
 	defer s.Unlock()
 	if keeper, exists := s.sockets[conn]; exists {

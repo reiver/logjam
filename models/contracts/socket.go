@@ -7,6 +7,6 @@ type ISocketService interface {
 
 	GetNewID() uint64
 	OnConnect(conn *websocket.Conn) (uint64, error)
-	OnDisconnect(conn *websocket.Conn) error
+	OnDisconnect(conn *websocket.Conn, code int, error string) error
 	GetSocketId(conn *websocket.Conn) (*uint64, error)
 }

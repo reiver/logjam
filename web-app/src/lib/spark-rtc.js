@@ -23,6 +23,9 @@ export class SparkRTC {
   myUsername = 'NoUsername'
   debug = false
   lastBroadcasterId = ''
+  /**@type {Date} */
+  lastPong = null;
+  pingTimeout = 5000;
   broadcastingApproved = false
   /**@type {{[key:string]:RTCPeerConnection}}*/
   myPeerConnectionArray = {}
@@ -594,6 +597,11 @@ export class SparkRTC {
         console.log('left-stage', msg)
         break
 
+      case 'pong':
+      {
+        this.lastPong = new Date();
+      }
+
       default:
         // this.updateTheStatus(
         //     `[handleMessage] default ${JSON.stringify(msg)}`
@@ -675,12 +683,22 @@ export class SparkRTC {
     if (await this.checkSocketStatus()) {
       try {
         const message = {
-          type: this.treeCallback ? 'tree' : 'ping',
+          // type: this.treeCallback ? 'tree' : 'ping',
+          type: 'ping'
         }
         this.socket.send(JSON.stringify(message))
       } catch (error) {
         console.error('Error sending message:', error)
       }
+    }
+    if(!!this.lastPong){
+        let lastResponse= this.lastPong;
+        lastResponse.setSeconds(lastResponse.getSeconds() + (this.pingTimeout));
+        let maxTime = new Date();
+        maxTime.setSeconds(maxTime.getSeconds()-1)
+        if(lastResponse<maxTime){
+            this.startProcedure?.(true);
+        }
     }
   }
 
@@ -742,7 +760,7 @@ export class SparkRTC {
           })
         )
 
-        this.pingInterval = setInterval(this.ping, 5000)
+        this.pingInterval = setInterval(this.ping, this.pingTimeout)
         this.updateTheStatus(`[setupSignalingSocket] socket onopen and sent start`)
         resolve(socket)
       }
@@ -908,7 +926,7 @@ export class SparkRTC {
 
         return
       }
-        
+
       return this.localStream
     } catch (e) {
       this.updateTheStatus(`Error Start Broadcasting`)
