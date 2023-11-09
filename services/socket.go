@@ -15,10 +15,17 @@ type SocketKeeper struct {
 	ID     uint64
 }
 
-func (s *SocketKeeper) WriteMessage(data []byte) error {
+func (s *SocketKeeper) WriteTextMessage(data []byte) error {
 	s.Lock()
 	defer s.Unlock()
 	err := s.wsConn.WriteMessage(websocket.TextMessage, data)
+	return err
+}
+
+func (s *SocketKeeper) WriteMessage(messageType int, data []byte) error {
+	s.Lock()
+	defer s.Unlock()
+	err := s.wsConn.WriteMessage(messageType, data)
 	return err
 }
 
@@ -66,7 +73,7 @@ func (s *socketService) Send(data interface{}, receiverIds ...uint64) error {
 	for _, id := range receiverIds {
 		if socket, exists := s.socketsById[id]; exists {
 			keeper := s.sockets[socket]
-			_ = keeper.WriteMessage(jsonData)
+			_ = keeper.WriteTextMessage(jsonData)
 		}
 	}
 	return nil
@@ -95,14 +102,18 @@ func (s *socketService) OnConnect(conn *websocket.Conn) (uint64, error) {
 	})
 	go func() {
 		for {
-			err := conn.WriteMessage(websocket.PingMessage, []byte("keepalive"))
-			if err != nil {
-				return
-			}
-			time.Sleep(s.pingTimeout / 2)
-			if time.Since(lastPong) > s.pingTimeout {
-				_ = conn.Close()
-				return
+			if keeper, exists := s.sockets[conn]; exists {
+				err := keeper.WriteMessage(websocket.PingMessage, []byte("keepalive"))
+				if err != nil {
+					return
+				}
+				time.Sleep(s.pingTimeout / 2)
+				if time.Since(lastPong) > s.pingTimeout {
+					_ = conn.Close()
+					break
+				}
+			} else {
+				break
 			}
 		}
 	}()
