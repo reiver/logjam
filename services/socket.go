@@ -45,7 +45,7 @@ func NewSocketService(logger contracts.ILogger) contracts.ISocketService {
 		lastId:      0,
 		sockets:     make(map[*websocket.Conn]*SocketKeeper),
 		socketsById: make(map[uint64]*websocket.Conn),
-		pingTimeout: 4 * time.Second,
+		pingTimeout: 5 * time.Second,
 	}
 }
 
@@ -132,10 +132,10 @@ func (s *socketService) GetNewID() uint64 {
 }
 
 func (s *socketService) OnDisconnect(conn *websocket.Conn, code int, error string) error {
-	s.logger.Log("socket_svc", contracts.LDebug, "a socket got disconnected", strconv.Itoa(code), ":", error)
 	s.Lock()
 	defer s.Unlock()
 	if keeper, exists := s.sockets[conn]; exists {
+		_ = s.logger.Log("socket_svc", contracts.LDebug, "a socket got disconnected ["+strconv.FormatUint(keeper.ID, 10)+"]", strconv.Itoa(code), ":", error)
 		delete(s.socketsById, keeper.ID)
 		delete(s.sockets, conn)
 	}
