@@ -692,15 +692,17 @@ export class SparkRTC {
       } catch (error) {
         console.error('Error sending message:', error)
       }
-    }
-    if(!!this.lastPong){
+      if(!!this.lastPong){
         let lastResponse= new Date(this.lastPong);
         lastResponse.setSeconds(lastResponse.getSeconds() + this.pingTimeout);
         let maxTime = new Date();
-        maxTime.setSeconds(maxTime.getSeconds()-1)
+        maxTime.setSeconds(maxTime.getSeconds()-2)
         if(lastResponse<maxTime){
-            this.startProcedure?.(true);
+          this.lastPong = null;
+          console.log("[timeout] pong timed out, restarting.")
+          this.startProcedure?.(true);
         }
+      }
     }
   }
 
@@ -741,7 +743,7 @@ export class SparkRTC {
       if (this.pingInterval) {
         clearInterval(this.pingInterval)
         this.pingInterval = null
-        this.lastPong=null;
+        this.lastPong = null;
       }
 
       this.myName = myName || this.myName
