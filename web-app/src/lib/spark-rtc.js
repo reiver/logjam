@@ -17,6 +17,7 @@ export class SparkRTC {
   socketURL = ''
   remoteStreamNotified = false
   remoteStreams = []
+  /** @type {WebSocket} */
   socket
   myName = 'NoName'
   roomName = 'SparkRTC'
@@ -2589,22 +2590,16 @@ export class SparkRTC {
 
     //reset few variables
     this.resetVariables(false)
-
     //close the web socket
     if (closeSocket && this.socket) {
-      this.socket.onclose = async () => {
-        this.updateTheStatus(`socket is closed in restart`)
-        this.socket = null
-
-        //waiting to websocket to close then repoen again
-        if (this.startAgain) {
-          this.startAgain()
-        }
-      } //on close callback
-
-      //[zaid] close socket after setting callback
+      this.updateTheStatus(`socket is closed in restart`)
+      this.socket.onclose = null;
       this.socket.close()
+      this.socket = null
 
+      if (this.startAgain) {
+        this.startAgain()
+      }
     } else {
       //else condition [zaid] test
       if(!this.checkSocketStatus()){
