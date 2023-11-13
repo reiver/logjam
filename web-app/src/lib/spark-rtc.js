@@ -260,7 +260,7 @@ export class SparkRTC {
    *
    * It parses message and based on message Type make decisions
    *
-   * @param {*} event
+   * @param {MessageEvent} event
    * @returns
    */
   handleMessage = async (event) => {
@@ -696,9 +696,9 @@ export class SparkRTC {
       if(!!this.lastPong){
         let lastResponse= new Date(this.lastPong);
         lastResponse.setSeconds(lastResponse.getSeconds() + this.pingTimeout);
-        let maxTime = new Date();
-        maxTime.setSeconds(maxTime.getSeconds()-2)
-        if(lastResponse<maxTime){
+        let now = new Date();
+        // console.log(`lastPong:${this.lastPong} +5sec => is ${lastResponse} before ${now}`);
+        if(lastResponse<now){
           this.lastPong = null;
           console.log("[timeout] pong timed out, restarting.")
           this.startProcedure?.(true);
@@ -766,7 +766,7 @@ export class SparkRTC {
           })
         )
 
-        this.pingInterval = setInterval(this.ping, this.pingTimeout*1000)
+        this.pingInterval = setInterval(this.ping, ((this.pingTimeout*1000)/2))
         this.updateTheStatus(`[setupSignalingSocket] socket onopen and sent start`)
         resolve(socket)
       }
