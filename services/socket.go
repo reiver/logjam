@@ -142,3 +142,10 @@ func (s *socketService) OnDisconnect(conn *websocket.Conn, code int, error strin
 
 	return nil
 }
+
+func (s *socketService) Disconnect(socketId uint64) error {
+	if conn, exists := s.socketsById[socketId]; exists {
+		return conn.Close()
+	}
+	return nil
+}
