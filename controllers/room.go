@@ -280,6 +280,11 @@ func (c *RoomWSController) Role(ctx *models.WSContext) {
 				c.log(contracts.LError, err.Error())
 				return
 			}
+			if ggid == nil {
+				c.socketSVC.Disconnect(ctx.SocketID) // so aud will reconnect
+				go c.roomRepo.RemoveMember(ctx.RoomId, *parentId)
+				return
+			}
 			err = c.ggRepo.CreatePeer(ctx.RoomId, ctx.SocketID, true, false, *ggid)
 			if err != nil {
 				_ = c.socketSVC.Send(models.MessageContract{
