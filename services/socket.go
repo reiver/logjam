@@ -102,7 +102,9 @@ func (s *socketService) OnConnect(conn *websocket.Conn) (uint64, error) {
 	})
 	go func() {
 		for {
+			s.Lock()
 			if keeper, exists := s.sockets[conn]; exists {
+				s.Unlock()
 				err := keeper.WriteMessage(websocket.PingMessage, []byte("keepalive"))
 				if err != nil {
 					return
@@ -113,6 +115,7 @@ func (s *socketService) OnConnect(conn *websocket.Conn) (uint64, error) {
 					break
 				}
 			} else {
+				s.Unlock()
 				break
 			}
 		}
