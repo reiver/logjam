@@ -1,42 +1,42 @@
-import { SparkRTC } from "./spark-rtc.js";
+import { SparkRTC } from './spark-rtc.js'
 
 //enum for Roles
 export const Roles = {
-  BROADCAST: "broadcast",
-  AUDIENCE: "audience",
-  BROADCASTER: "broadcaster",
-};
+  BROADCAST: 'broadcast',
+  AUDIENCE: 'audience',
+  BROADCASTER: 'broadcaster',
+}
 
 export const isMobile = async () => {
-  return window.innerWidth <= 800 && window.innerHeight <= 600;
-};
+  return window.innerWidth <= 800 && window.innerHeight <= 600
+}
 
 // TODO: set base url
 export function getWsUrl(host = null) {
-  let baseUrl = "";
+  let baseUrl = ''
 
   if (host) {
-    baseUrl = host;
+    baseUrl = host
   } else {
-    baseUrl = window.location.href.split("//")[1].split("/")[0];
+    baseUrl = window.location.href.split('//')[1].split('/')[0]
   }
 
-  const protocol =
-    window.location.href.split("//")[0] === "http:" ? "ws" : "wss";
-  return `${protocol}://${baseUrl}/ws`;
+  const protocol = window.location.href.split('//')[0] === 'http:' ? 'ws' : 'wss'
+  return `${protocol}://${baseUrl}/ws`
 }
 
 export function createSparkRTC(role, options) {
   // TODO: set role
   if (role === Roles.BROADCAST) {
-    return createBroadcastSpartRTC(role, options);
+    return createBroadcastSpartRTC(role, options)
   } else {
-    return createAudienceSpartRTC(role, options);
+    return createAudienceSpartRTC(role, options)
   }
 }
 
 export const createBroadcastSpartRTC = (role, props) => {
   return new SparkRTC(role, {
+    onSocketStateChange: props.onSocketStateChange,
     localStreamChangeCallback: props.localStreamChangeCallback,
     remoteStreamCallback: props.remoteStreamCallback,
     remoteStreamDCCallback: props.remoteStreamDCCallback,
@@ -54,11 +54,12 @@ export const createBroadcastSpartRTC = (role, props) => {
     onAudioStatusChange: props.onAudioStatusChange,
     userLoweredHand: props.userLoweredHand,
     invitationToJoinStage: props.invitationToJoinStage,
-  });
-};
+  })
+}
 
 export const createAudienceSpartRTC = (role, props) => {
   return new SparkRTC(role, {
+    onSocketStateChange: props.onSocketStateChange,
     remoteStreamCallback: props.remoteStreamCallback,
     remoteStreamDCCallback: props.remoteStreamDCCallback,
     startProcedure: props.onStart,
@@ -74,5 +75,5 @@ export const createAudienceSpartRTC = (role, props) => {
     parentDcMessage: props.parentDcMessage,
     onAudioStatusChange: props.onAudioStatusChange,
     invitationToJoinStage: props.invitationToJoinStage,
-  });
-};
+  })
+}

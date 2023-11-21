@@ -1,5 +1,5 @@
+import debounce from 'lodash.debounce'
 import { iceServers } from './config.js'
-
 /** Your class description
  *
  * SparkRTC class is main class to setUP RTC client
@@ -505,6 +505,7 @@ export class SparkRTC {
       case 'user-event':
         this.updateTheStatus(`[handleMessage] ${msg.type}`)
         this.getMetadata()
+        console.log('narix', 'here shit')
         setTimeout(() => {
           const users = JSON.parse(msg.data).map((u) => {
             // this.updateTheStatus('user', u);
@@ -706,7 +707,36 @@ export class SparkRTC {
       this.socket.send(message)
     }
   }
-
+  maxReconnections = 5
+  numberOfRetries = 1
+  socketState = null
+  onSocketStateChange = (state) => {}
+  changeSocketState = (state) => {
+    if (state === 'connected') this.numberOfRetries = 1
+    this.socketState = state
+    this.onSocketStateChange(state)
+  }
+  reconnectSocket = debounce(() => {
+    this.changeSocketState('disconnected')
+    if (this.numberOfRetries <= this.maxReconnections) {
+      if (this.startProcedure && !this.leftMeeting && this.startAgain) {
+        ++this.numberOfRetries
+        this.changeSocketState('connecting')
+        this.startAgain()
+      }
+    } else {
+      this.changeSocketState('disconnected')
+      alert('Server is not responding, please try again later')
+      window.location.reload()
+    }
+  }, 2000)
+  onSocketClosed = async () => {
+    this.updateTheStatus(`socket is closed in setupSignalingSocket`)
+    this.remoteStreamNotified = false
+    this.myPeerConnectionArray = {}
+    this.started = false
+    this.reconnectSocket()
+  }
   /**
    * Function to setup Signaling WebSocket with backend
    *
@@ -732,6 +762,7 @@ export class SparkRTC {
       this.socketURL = url + '?room=' + this.roomName
 
       const socket = new WebSocket(this.socketURL)
+      window.ss = socket
       socket.onmessage = this.handleMessage
 
       socket.onopen = () => {
@@ -741,29 +772,24 @@ export class SparkRTC {
             data: myName,
           })
         )
-
+        this.changeSocketState('connected')
         this.pingInterval = setInterval(this.ping, 5000)
         this.updateTheStatus(`[setupSignalingSocket] socket onopen and sent start`)
         resolve(socket)
       }
-      socket.onclose = async () => {
-        this.updateTheStatus(`socket is closed in setupSignalingSocket`)
-        this.remoteStreamNotified = false
-        this.myPeerConnectionArray = {}
-        this.started = false
-        if (this.startProcedure && !this.leftMeeting) {
-          this.startProcedure()
-        }
-      }
+
       socket.onerror = (error) => {
         this.updateTheStatus(`WebSocket error in setupSignalingSocket`, error)
-        reject(error)
-        if (!this.leftMeeting) {
-          window.location.reload() //reload before, alert because alert blocks the reload
-          alert('Can not connect to server')
-        }
+        // reject(error)
+        // this.changeSocketState('error')
+        // this.reconnectSocket()
+        // window.location.reload() //reload before, alert because alert blocks the reload
+        // alert('Can not connect to server')
       }
 
+      socket.onclose = this.onSocketClosed
+      // close the previous sockets
+      if (this.socket && this.socket.readyState < 2) this.socket.close()
       this.socket = socket
     })
   }
@@ -1799,6 +1825,7 @@ export class SparkRTC {
    */
   registerUserListCallback2() {
     this.userListCallback = async (users) => {
+      console.log('narix', 'updating users', users)
       if (users && users.length > 0) {
         const matchedStreamMap = new Map()
         var unmatchedStreams = []
@@ -1807,6 +1834,7 @@ export class SparkRTC {
         // Find the broadcaster in the user list and retrieve the name
         const broadcaster = users.find((user) => user.role === this.Roles.BROADCASTER)
         if (broadcaster) {
+          console.log('narix', 'here1')
           const data = JSON.parse(broadcaster.name)
           broadcasterName = data.name
           this.lastBroadcasterId = broadcaster.id
@@ -1814,6 +1842,7 @@ export class SparkRTC {
 
         this.remoteStreams.forEach((stream) => {
           const user = users.find((user) => user?.video?.id === stream.id)
+          console.log('narix', '2')
 
           if (user != undefined) {
             matchedStreamMap.set(stream, user)
@@ -1838,6 +1867,7 @@ export class SparkRTC {
           } else {
             stream.role = this.Roles.AUDIENCE
           }
+          console.log('narix', 'x1')
 
           if (this.remoteStreamCallback) {
             this.remoteStreamCallback(stream)
@@ -1856,11 +1886,11 @@ export class SparkRTC {
             }
           } else {
             //remove the stream from the list because it must be the disconnected audience
-            unmatchedStreams = unmatchedStreams.filter((s) => !!s.userId);
+            unmatchedStreams = unmatchedStreams.filter((s) => !!s.userId)
             this.remoteStreams = this.remoteStreams.filter((STR) => STR.id !== stream.id)
 
             //remove stream from screen
-            if(this.remoteStreamDCCallback){
+            if (this.remoteStreamDCCallback) {
               this.remoteStreamDCCallback(stream)
             }
           }
@@ -2360,7 +2390,7 @@ export class SparkRTC {
 
       let i = 0
       while (this.broadcasterStatus === '' && i < max) {
-        this.wait()
+        await this.wait()
         i++
       }
 
@@ -2368,7 +2398,7 @@ export class SparkRTC {
         return reject(new Error('No response'))
       }
 
-      if (reconnect) this.startProcedure()
+      if (reconnect) this.reconnectSocket()
       resolve(this.broadcasterStatus)
     })
   }
@@ -2549,19 +2579,23 @@ export class SparkRTC {
 
     //reset few variables
     this.resetVariables(false)
-
+    console.log('narix', '33')
     //close the web socket
     if (closeSocket && this.socket) {
-      this.socket.close()
-      this.socket.onclose = async () => {
-        this.updateTheStatus(`socket is closed in restart`)
-        this.socket = null
+      console.log('narix', 'hh')
+      // this.socket.onclose = this.onSocketClosed
+      // this.socket.close()
+      this.onSocketClosed()
+      console.log('narix', 'dd')
+      // this.socket.onclose = async () => {
+      //   this.updateTheStatus(`socket is closed in restart`)
+      //   this.socket = null
 
-        //waiting to websocket to close then repoen again
-        if (this.startAgain) {
-          this.startAgain()
-        }
-      } //on close callback
+      //   //waiting to websocket to close then repoen again
+      //   // if (this.startAgain) {
+      //   this.reconnectSocket()
+      //   // }
+      // } //on close callback
     } else {
       this.updateTheStatus(`socket closing is not required`)
     }
@@ -2767,7 +2801,7 @@ export class SparkRTC {
     this.onAudioStatusChange = options.onAudioStatusChange
     this.userLoweredHand = options.userLoweredHand
     this.invitationToJoinStage = options.invitationToJoinStage
-
+    this.onSocketStateChange = options.onSocketStateChange
     this.checkBrowser() //detect browser
     this.getSupportedCodecs()
   }

@@ -16,6 +16,7 @@
     "clipboard-copy": "^4.0.1",
     "clsx": "^2.0.0",
     "htm": "^3.1.1",
+    "lodash.debounce": "^4.0.8",
     "lodash.throttle": "^4.1.1",
     "preact": "^10.13.1",
     "preact-css-styled": "^1.1.9",

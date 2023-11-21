@@ -2,11 +2,11 @@ import { computed, signal } from '@preact/signals'
 import { BottomBar, Button, MeetingBody, TopBar, attendees, attendeesBadge, isMoreOptionsOpen, makeDialog, streamers } from 'components'
 import { isAttendeesOpen } from 'components/Attendees'
 import { ToastProvider, destroyDialog, makePreviewDialog } from 'components/Dialog'
+import { fullScreenedStream } from 'components/MeetingBody/Stage'
 import { Roles, createSparkRTC, getWsUrl } from 'lib/common.js'
 import { detectKeyPress } from 'lib/controls'
 import { lazy } from 'preact-iso'
 import { useEffect } from 'preact/compat'
-import {fullScreenedStream} from 'components/MeetingBody/Stage'
 
 let displayIdCounter = 2
 
@@ -33,7 +33,9 @@ export const setUserActionLoading = (userId, actionLoading) => {
 }
 
 //hashmap for stream and display id
-let streamMap = new Map<any,any>()
+let streamMap = new Map<any, any>()
+
+export const socketState = signal('connecting')
 
 // const url = `stats/index.html`;
 // var targetWindow = window.open(url, '_blank');
@@ -81,11 +83,9 @@ export const onStartShareScreen = (stream) => {
       hasCamera: false,
       stream,
       isShareScreen: true,
-      displayId:2,
+      displayId: 2,
     },
   }
-
-
 }
 
 const displayStream = async (stream, toggleFull = false) => {
@@ -98,54 +98,44 @@ const displayStream = async (stream, toggleFull = false) => {
 
   setUserActionLoading(stream.userId, false)
 
-  
-  let dId = 0;
-  if(!toggleFull 
-      && stream.hasOwnProperty('isShareScreen')
-      && stream.hasOwnProperty('role')){
-
-    if(stream.role === Roles.BROADCAST){
-      if(stream.isShareScreen===true){
+  let dId = 0
+  if (!toggleFull && stream.hasOwnProperty('isShareScreen') && stream.hasOwnProperty('role')) {
+    if (stream.role === Roles.BROADCAST) {
+      if (stream.isShareScreen === true) {
         //share screen
-        dId = 2;
-      }else{
+        dId = 2
+      } else {
         //host camera feed
-        dId = 1;
+        dId = 1
       }
-
-    }else{
+    } else {
       //this stream is from Audince and it exists in map with HOST key (1 or 2)
 
-      if(streamMap.has(stream.id) && (streamMap.get(stream.id)===1 || streamMap.get(stream.id)===2)){
+      if (streamMap.has(stream.id) && (streamMap.get(stream.id) === 1 || streamMap.get(stream.id) === 2)) {
         streamMap.delete(stream.id)
       }
 
-      if(!streamMap.has(stream.id)){
-        let usedValues = Array.from(streamMap.values());
+      if (!streamMap.has(stream.id)) {
+        let usedValues = Array.from(streamMap.values())
 
         // Loop through the values from 3 to 9
         for (let i = 3; i <= 9; i++) {
           if (!usedValues.includes(i)) {
-              dId = i;
-              break; // Exit the loop once a missing value is found
+            dId = i
+            break // Exit the loop once a missing value is found
           }
         }
-  
+
         if (dId === 0) {
-            // If no missing value was found, increment the counter
-            displayIdCounter++;
-            dId = displayIdCounter;
+          // If no missing value was found, increment the counter
+          displayIdCounter++
+          dId = displayIdCounter
         }
-  
-  
       }
-
     }
-    if(dId!=0){
-      streamMap.set(stream.id,dId)
+    if (dId != 0) {
+      streamMap.set(stream.id, dId)
     }
-
-
   }
 
   streamers.value = {
@@ -162,7 +152,7 @@ const displayStream = async (stream, toggleFull = false) => {
       isLocalStream: local,
       isShareScreen: stream.isShareScreen || false,
       toggleScreenId: toggleFull ? stream.id : null,
-      displayId:streamMap.get(stream.id),
+      displayId: streamMap.get(stream.id),
     },
   }
 }
@@ -179,7 +169,6 @@ export const onStopStream = async (stream) => {
   streamers.value = streamersTmp
 
   streamMap.delete(stream.id) //remove stream display id from stream map
-
 }
 
 export const onStopShareScreen = async (stream) => {
@@ -256,30 +245,27 @@ export const getUserRaiseHandStatus = (userId) => {
   return attendees.value[userId]?.raisedHand || false
 }
 
-function keyPressCallback(key){  
- 
+function keyPressCallback(key) {
   // Iterate over the properties of the streamers object
   for (const userId in streamers.value) {
-    const id = userId;
+    const id = userId
     if (streamers.value.hasOwnProperty(userId)) {
-        const streamer = streamers.value[id];
-      
-        const stream = streamer.stream;
-        const displayId = streamer.displayId;
+      const streamer = streamers.value[id]
 
-        if(displayId.toString()===key){
-          if (fullScreenedStream.value === stream.id) {
-            fullScreenedStream.value = null
-          } else fullScreenedStream.value = stream.id
-        }
+      const stream = streamer.stream
+      const displayId = streamer.displayId
+
+      if (displayId.toString() === key) {
+        if (fullScreenedStream.value === stream.id) {
+          fullScreenedStream.value = null
+        } else fullScreenedStream.value = stream.id
+      }
     }
   }
- 
 }
-const Meeting = ({ params: { room, displayName, name } }: { params?: { room?: string; displayName?: string; name?: string } }) => {  
-  
+const Meeting = ({ params: { room, displayName, name } }: { params?: { room?: string; displayName?: string; name?: string } }) => {
   detectKeyPress(keyPressCallback)
-  
+
   if (displayName && room) {
     if (displayName[0] !== '@') return <PageNotFound />
   }
@@ -332,10 +318,9 @@ const Meeting = ({ params: { room, displayName, name } }: { params?: { room?: st
               stream,
               isLocalStream: true,
               isShareScreen: stream.isShareScreen || false,
-              displayId:1,
+              displayId: 1,
             },
           }
-
         },
         remoteStreamCallback: async (stream) => {
           log(`remoteStreamCallback`, stream)
@@ -590,6 +575,9 @@ const Meeting = ({ params: { room, displayName, name } }: { params?: { room?: st
             variant: 'danger',
           })
         },
+        onSocketStateChange: (state: string) => {
+          socketState.value = state
+        },
         userLoweredHand: (data, name) => {
           //@ts-ignore
           onUserRaisedHand(data, false, false)
@@ -693,8 +681,9 @@ const Meeting = ({ params: { room, displayName, name } }: { params?: { room?: st
     <div class="flex flex-col justify-between min-h-[--doc-height] dark:bg-secondary-1-a bg-white-f-9 text-medium-12 text-gray-800 dark:text-gray-200">
       <TopBar />
       {meetingStatus.value ? (
-      <>
+        <>
           <MeetingBody />
+          {/* {socketState.value} */}
           <BottomBar />
         </>
       ) : (
