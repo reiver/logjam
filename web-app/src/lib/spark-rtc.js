@@ -722,6 +722,11 @@ export class SparkRTC {
       if (this.startProcedure && !this.leftMeeting && this.startAgain) {
         ++this.numberOfRetries
         this.changeSocketState('connecting')
+        if (this.socket && this.socket.readyState < 2) {
+          this.socket.onclose = () => {}
+          this.socket.close()
+          this.socket = null
+        }
         this.startAgain()
       }
     } else {
@@ -730,12 +735,12 @@ export class SparkRTC {
       window.location.reload()
     }
   }, 2000)
-  onSocketClosed = async () => {
+  onSocketClosed = async (e) => {
     this.updateTheStatus(`socket is closed in setupSignalingSocket`)
     this.remoteStreamNotified = false
     this.myPeerConnectionArray = {}
     this.started = false
-    this.reconnectSocket()
+    this.reconnectSocket(e)
   }
   /**
    * Function to setup Signaling WebSocket with backend
@@ -746,7 +751,7 @@ export class SparkRTC {
    * @returns
    */
   setupSignalingSocket = (url, myName, roomName, debug) => {
-    this.updateTheStatus(`[setupSignalingSocket] url=${url} myName=${myName} roomName=${roomName}`)
+    this.updateTheStatus('xxxxx', `[setupSignalingSocket] url=${url} myName=${myName} roomName=${roomName}`)
     return new Promise((resolve, reject) => {
       if (this.pingInterval) {
         clearInterval(this.pingInterval)
@@ -762,7 +767,6 @@ export class SparkRTC {
       this.socketURL = url + '?room=' + this.roomName
 
       const socket = new WebSocket(this.socketURL)
-      window.ss = socket
       socket.onmessage = this.handleMessage
 
       socket.onopen = () => {
@@ -779,16 +783,11 @@ export class SparkRTC {
       }
       socket.onerror = (error) => {
         this.updateTheStatus(`WebSocket error in setupSignalingSocket`, error)
-        // reject(error)
-        // this.changeSocketState('error')
-        // this.reconnectSocket()
-        // window.location.reload() //reload before, alert because alert blocks the reload
-        // alert('Can not connect to server')
       }
 
       socket.onclose = this.onSocketClosed
       // close the previous sockets
-      if (this.socket && this.socket.readyState < 2) this.socket.close()
+
       this.socket = socket
     })
   }
@@ -2591,15 +2590,12 @@ export class SparkRTC {
 
     //reset few variables
     this.resetVariables(false)
-    console.log('narix', '33')
     //close the web socket
     if (closeSocket && this.socket) {
       // <<<<<<< HEAD
-      console.log('narix', 'hh')
       // this.socket.onclose = this.onSocketClosed
       // this.socket.close()
       this.onSocketClosed()
-      console.log('narix', 'dd')
       // this.socket.onclose = async () => {
       //   this.updateTheStatus(`socket is closed in restart`)
       //   this.socket = null
@@ -2677,7 +2673,8 @@ export class SparkRTC {
         this.socket.onclose = () => {
           this.updateTheStatus(`socket is closed after leaveMeeting`)
           this.resetVariables()
-        } //empty on close callback
+        } // empty on close callback
+        this.socket.onclose = () => {}
         this.socket.close()
         this.socket = null
       }
