@@ -4,9 +4,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"github.com/sparkscience/logjam/models/contracts"
-	"github.com/sparkscience/logjam/models/dto"
+	"io"
 	"net/http"
+	"sourcecode.social/greatape/logjam/models/contracts"
+	"sourcecode.social/greatape/logjam/models/dto"
 	"time"
 )
 
@@ -15,12 +16,12 @@ type HTTPRepository struct {
 	svcAddr string
 }
 
-func NewHTTPRepository() contracts.IGoldGorillaServiceRepository {
+func NewHTTPRepository(svcAddr string) contracts.IGoldGorillaServiceRepository {
 	return &HTTPRepository{
 		client: &http.Client{
 			Timeout: 8 * time.Second,
 		},
-		svcAddr: "",
+		svcAddr: svcAddr,
 	}
 }
 
@@ -33,7 +34,7 @@ func (a *HTTPRepository) isConfigured() bool {
 	return len(a.svcAddr) > 0
 }
 
-func (a *HTTPRepository) CreatePeer(roomId string, id uint64, canPublish bool, isCaller bool) error {
+func (a *HTTPRepository) CreatePeer(roomId string, id uint64, canPublish bool, isCaller bool, ggid uint64) error {
 	if !a.isConfigured() {
 		return errors.New("gg repository not initialized yet")
 	}
@@ -45,6 +46,7 @@ func (a *HTTPRepository) CreatePeer(roomId string, id uint64, canPublish bool, i
 			},
 			CanPublish: canPublish,
 			IsCaller:   isCaller,
+			GGID:       ggid,
 		})
 	if err != nil {
 		return err
@@ -157,33 +159,44 @@ func (a *HTTPRepository) ClosePeer(roomId string, id uint64) error {
 	return nil
 }
 
-func (a *HTTPRepository) ResetRoom(roomId string) error {
+func (a *HTTPRepository) ResetRoom(roomId string) (*uint64, error) {
 	if !a.isConfigured() {
-		return errors.New("gg repository not initialized yet")
+		return nil, errors.New("gg repository not initialized yet")
 	}
 	body, err := getReader(map[string]interface{}{"roomId": roomId})
 	if err != nil {
-		return err
+		return nil, err
 	}
 	req, err := http.NewRequest(http.MethodDelete, a.svcAddr+"/room/", body)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	resp, err := a.client.Do(req)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if resp.StatusCode > 204 {
-		return errors.New(resp.Status)
+		return nil, errors.New(resp.Status)
 	}
-	return nil
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		println(err.Error())
+	}
+	defer resp.Body.Close()
+	respModel := struct {
+		GGID uint64 `json:"ggid"`
+	}{}
+	err = json.Unmarshal(respBody, &respModel)
+	return &respModel.GGID, err
 }
 
-func (a *HTTPRepository) Start() error {
+func (a *HTTPRepository) Start(roomId string) error {
 	if a.svcAddr == "" {
 		return errors.New("HTTPRepository instance is not initialized yet(waiting for goldgorilla hook)...")
 	}
-	resp, err := a.client.Post(a.svcAddr+"/room/", "application/json", nil)
+
+	body, _ := getReader(map[string]string{"roomId": roomId})
+	resp, err := a.client.Post(a.svcAddr+"/room/", "application/json", body)
 	if err != nil {
 		return err
 	}

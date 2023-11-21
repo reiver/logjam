@@ -2,9 +2,9 @@ package roomRepository
 
 import (
 	"errors"
-	"github.com/sparkscience/logjam/models"
-	"github.com/sparkscience/logjam/models/contracts"
-	"github.com/sparkscience/logjam/models/dto"
+	"sourcecode.social/greatape/logjam/models"
+	"sourcecode.social/greatape/logjam/models/contracts"
+	"sourcecode.social/greatape/logjam/models/dto"
 	"strconv"
 	"sync"
 )
@@ -111,7 +111,7 @@ func (r *roomRepository) ClearBroadcasterSeat(roomId string) error {
 	return nil
 }
 
-func (r *roomRepository) AddMember(roomId string, id uint64, name, email, streamId string) error {
+func (r *roomRepository) AddMember(roomId string, id uint64, name, email, streamId string, isGoldGorilla bool) error {
 	r.Lock()
 	defer r.Unlock()
 	if !r.doesRoomExists(roomId) {
@@ -125,6 +125,7 @@ func (r *roomRepository) AddMember(roomId string, id uint64, name, email, stream
 		Email:          email,
 		MetaData:       map[string]interface{}{"streamId": streamId},
 		CanAcceptChild: false,
+		IsGoldGorilla:  isGoldGorilla,
 	}
 	return nil
 }
@@ -460,10 +461,12 @@ start:
 				for _, parentLostChild := range nodeChild.Children {
 					nodeChildrenIdList = append(nodeChildrenIdList, parentLostChild.ID)
 				}
-				(*node).Children = append((*node).Children[:i], (*node).Children[i+1:]...)
-				if memberId == models.GoldGorillaId {
+				//if memberId == models.GetGoldGorillaId() {
+				if nodeChild.IsGoldGorilla {
 					r.rooms[roomId].GoldGorilla = nil
 				}
+				(*node).Children = append((*node).Children[:i], (*node).Children[i+1:]...)
+
 				found = true
 				break
 			}
@@ -514,4 +517,39 @@ start:
 	}
 
 	return list, nil
+}
+
+func (r *roomRepository) IsGGInstance(roomId string, id uint64) bool {
+	if !r.DoesRoomExists(roomId) {
+		return false
+	}
+	r.Lock()
+	room := r.rooms[roomId]
+	r.Unlock()
+
+	room.Lock()
+	defer room.Unlock()
+
+	if member, exists := room.Members[id]; exists {
+		return member.IsGoldGorilla
+	}
+
+	return false
+}
+
+func (r *roomRepository) GetRoomGoldGorillaId(roomId string) (*uint64, error) {
+	r.Lock()
+	defer r.Unlock()
+	if !r.doesRoomExists(roomId) {
+		return nil, errors.New("room doesn't exists")
+	}
+
+	r.rooms[roomId].Lock()
+	defer r.rooms[roomId].Unlock()
+
+	if r.rooms[roomId].GoldGorilla != nil {
+		return &(*r.rooms[roomId].GoldGorilla).ID, nil
+	}
+
+	return nil, nil
 }

@@ -777,7 +777,6 @@ export class SparkRTC {
         this.updateTheStatus(`[setupSignalingSocket] socket onopen and sent start`)
         resolve(socket)
       }
-
       socket.onerror = (error) => {
         this.updateTheStatus(`WebSocket error in setupSignalingSocket`, error)
         // reject(error)
@@ -916,7 +915,7 @@ export class SparkRTC {
 
       this.updateTheStatus(`Request Broadcast Role`)
 
-      if (await this.checkSocketStatus())
+      if (await this.checkSocketStatus()) {
         this.socket.send(
           JSON.stringify({
             type: 'role',
@@ -924,7 +923,16 @@ export class SparkRTC {
             streamId: this.localStream.id,
           })
         )
-      this.updateTheStatus(`[startBroadcasting] send role`)
+        this.updateTheStatus(`[startBroadcasting] send role`)
+      } else {
+        //no socket is active need to create on [zaid]
+        if (this.startProcedure) {
+          this.startProcedure(true)
+        }
+
+        return
+      }
+
       return this.localStream
     } catch (e) {
       this.updateTheStatus(`Error Start Broadcasting`)
@@ -982,9 +990,13 @@ export class SparkRTC {
             data: this.Roles.AUDIENCE,
           })
         )
+        this.updateTheStatus(`[startReadingBroadcast] send role audience`)
+      } else {
+        this.updateTheStatus(`[startReadingBroadcast] socket is not avtive`)
+        if (this.startProcedure) {
+          this.startProcedure(true)
+        }
       }
-
-      this.updateTheStatus(`[startReadingBroadcast] send role audience`)
     } catch (error) {
       this.updateTheStatus(`[startReadingBroadcast] Error: ${error}`)
     }
@@ -2582,6 +2594,7 @@ export class SparkRTC {
     console.log('narix', '33')
     //close the web socket
     if (closeSocket && this.socket) {
+      // <<<<<<< HEAD
       console.log('narix', 'hh')
       // this.socket.onclose = this.onSocketClosed
       // this.socket.close()
@@ -2596,8 +2609,33 @@ export class SparkRTC {
       //   this.reconnectSocket()
       //   // }
       // } //on close callback
+
+      // =======
+      // this.socket.onclose = async () => {
+      //   this.updateTheStatus(`socket is closed in restart`)
+      //   this.socket = null
+
+      //   //waiting to websocket to close then repoen again
+      //   if (this.startAgain) {
+      //     this.startAgain()
+      //   }
+      // } //on close callback
+
+      // //[zaid] close socket after setting callback
+      // this.socket.close()
+
+      // >>>>>>> develop
     } else {
-      this.updateTheStatus(`socket closing is not required`)
+      //else condition [zaid] test
+      if (!this.checkSocketStatus()) {
+        this.updateTheStatus(`socket is closed already`)
+        if (this.startAgain) {
+          this.startAgain()
+        }
+      } else {
+        this.updateTheStatus(`socket is not closed`)
+        await this.start()
+      }
     }
 
     //update the UI (Controllers)

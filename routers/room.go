@@ -4,10 +4,10 @@ import (
 	"encoding/json"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
-	"github.com/sparkscience/logjam/controllers"
-	"github.com/sparkscience/logjam/models"
-	"github.com/sparkscience/logjam/models/contracts"
 	"net/http"
+	"sourcecode.social/greatape/logjam/controllers"
+	"sourcecode.social/greatape/logjam/models"
+	"sourcecode.social/greatape/logjam/models/contracts"
 	"strconv"
 )
 
@@ -174,7 +174,7 @@ func (r *roomWSRouter) handleEvent(ctx *models.WSContext) {
 				println(err.Error())
 			} else if room != nil {
 				if room.GoldGorilla != nil {
-					if ctx.ParsedMessage.Target == strconv.FormatUint(models.GoldGorillaId, 10) {
+					if ctx.ParsedMessage.Target == strconv.FormatUint((*room.GoldGorilla).ID, 10) {
 						switch ctx.ParsedMessage.Type {
 						case "video-answer":
 							{

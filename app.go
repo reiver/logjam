@@ -1,14 +1,14 @@
 package main
 
 import (
-	"github.com/sparkscience/logjam/controllers"
-	"github.com/sparkscience/logjam/models"
-	"github.com/sparkscience/logjam/models/contracts"
-	"github.com/sparkscience/logjam/models/repositories/goldgorilla"
-	roomRepository "github.com/sparkscience/logjam/models/repositories/room"
-	"github.com/sparkscience/logjam/routers"
-	"github.com/sparkscience/logjam/services"
-	"github.com/sparkscience/logjam/services/logger"
+	"sourcecode.social/greatape/logjam/controllers"
+	"sourcecode.social/greatape/logjam/models"
+	"sourcecode.social/greatape/logjam/models/contracts"
+	"sourcecode.social/greatape/logjam/models/repositories/goldgorilla"
+	roomRepository "sourcecode.social/greatape/logjam/models/repositories/room"
+	"sourcecode.social/greatape/logjam/routers"
+	"sourcecode.social/greatape/logjam/services"
+	"sourcecode.social/greatape/logjam/services/logger"
 )
 
 type App struct {
@@ -18,14 +18,14 @@ type App struct {
 	config *models.ConfigModel
 }
 
-func (app *App) Init(srcListenAddr string, prodMode bool) {
+func (app *App) Init(srcListenAddr string, prodMode bool, goldGorillaSVCAddr string) {
 	app.Logger = logger.NewSTDOUTLogger(prodMode)
 	_ = app.Logger.Log("app", contracts.LInfo, "initializing logjam ..")
 	app.config = &models.ConfigModel{
-		GoldGorillaSVCAddr: "",
+		GoldGorillaSVCAddr: goldGorillaSVCAddr,
 		SrcListenAddr:      srcListenAddr,
 	}
-	ggSVCRepo := GoldGorillaRepository.NewHTTPRepository()
+	ggSVCRepo := GoldGorillaRepository.NewHTTPRepository(goldGorillaSVCAddr)
 	roomRepo := roomRepository.NewRoomRepository()
 	socketSVC := services.NewSocketService(app.Logger)
 	roomWSCtrl := controllers.NewRoomWSController(socketSVC, roomRepo, ggSVCRepo, app.Logger)

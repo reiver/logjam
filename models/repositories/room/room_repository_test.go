@@ -1,7 +1,7 @@
 package roomRepository
 
 import (
-	"github.com/sparkscience/logjam/helpers"
+	"sourcecode.social/greatape/logjam/helpers"
 	"testing"
 )
 
@@ -20,7 +20,7 @@ func Test_CreationAndExistence(t *testing.T) {
 	if !repo.DoesRoomExists(roomId) {
 		t.Error("room doesn't exists after creation")
 	}
-	err = repo.AddMember(roomId, memberId, memberName, memberEmail, memberStreamId)
+	err = repo.AddMember(roomId, memberId, memberName, memberEmail, memberStreamId, false)
 	if err != nil {
 		t.Error(err)
 		return
@@ -97,7 +97,7 @@ func Test_Tree(t *testing.T) {
 		t.Error(err)
 		return
 	}
-	err = repo.AddMember(roomId, uint64(0), helpers.GetRandomString(8), "", "")
+	err = repo.AddMember(roomId, uint64(0), helpers.GetRandomString(8), "", "", false)
 	if err != nil {
 		t.Error(err)
 		return
@@ -113,7 +113,7 @@ func Test_Tree(t *testing.T) {
 		return
 	}
 
-	err = repo.AddMember(roomId, uint64(1), helpers.GetRandomString(8), "", "")
+	err = repo.AddMember(roomId, uint64(1), helpers.GetRandomString(8), "", "", false)
 	if err != nil {
 		t.Error(err)
 		return
@@ -123,7 +123,7 @@ func Test_Tree(t *testing.T) {
 		t.Error(err)
 		return
 	}
-	err = repo.AddMember(roomId, uint64(2), helpers.GetRandomString(8), "", "")
+	err = repo.AddMember(roomId, uint64(2), helpers.GetRandomString(8), "", "", false)
 	if err != nil {
 		t.Error(err)
 		return
@@ -133,7 +133,7 @@ func Test_Tree(t *testing.T) {
 		t.Error(err)
 		return
 	}
-	err = repo.AddMember(roomId, uint64(3), helpers.GetRandomString(8), "", "")
+	err = repo.AddMember(roomId, uint64(3), helpers.GetRandomString(8), "", "", false)
 	if err != nil {
 		t.Error(err)
 		return

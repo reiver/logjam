@@ -2,8 +2,8 @@ package controllers
 
 import (
 	"encoding/json"
-	"github.com/sparkscience/logjam/models"
-	"github.com/sparkscience/logjam/models/contracts"
+	"sourcecode.social/greatape/logjam/models"
+	"sourcecode.social/greatape/logjam/models/contracts"
 	"strconv"
 	"time"
 )
@@ -51,12 +51,14 @@ func (c *RoomWSController) OnDisconnect(ctx *models.WSContext) {
 			Data: strconv.FormatUint(ctx.SocketID, 10),
 		}
 		_ = c.socketSVC.Send(brDCEvent, membersIdList...)
-		err = c.ggRepo.ResetRoom(ctx.RoomId)
+		oldggId, err := c.ggRepo.ResetRoom(ctx.RoomId)
 		if err != nil {
 			c.log(contracts.LError, err.Error())
 			//return
 		}
-		c.roomRepo.RemoveMember(ctx.RoomId, models.GoldGorillaId)
+		if oldggId != nil {
+			c.roomRepo.RemoveMember(ctx.RoomId, *oldggId)
+		}
 	} else {
 		parentDCEvent := models.MessageContract{
 			Type: "event-parent-dc",
@@ -64,24 +66,22 @@ func (c *RoomWSController) OnDisconnect(ctx *models.WSContext) {
 		}
 		_ = c.socketSVC.Send(parentDCEvent, childrenIdList...)
 
-		if c.roomRepo.HadGoldGorillaInTreeBefore(ctx.RoomId) {
-			for _, id := range childrenIdList {
-				if id == models.GoldGorillaId {
-					err = c.ggRepo.ResetRoom(ctx.RoomId)
+		for _, id := range childrenIdList {
+			if c.roomRepo.IsGGInstance(ctx.RoomId, id) {
+				_, err := c.ggRepo.ResetRoom(ctx.RoomId)
+				if err != nil {
+					c.log(contracts.LError, err.Error())
+					//return
+				}
+				c.roomRepo.RemoveMember(ctx.RoomId, id)
+				go func() {
+					err := c.ggRepo.Start(ctx.RoomId)
 					if err != nil {
 						c.log(contracts.LError, err.Error())
-						//return
+						return
 					}
-					c.roomRepo.RemoveMember(ctx.RoomId, models.GoldGorillaId)
-					go func() {
-						err := c.ggRepo.Start()
-						if err != nil {
-							c.log(contracts.LError, err.Error())
-							return
-						}
-					}()
-					break
-				}
+				}()
+				break
 			}
 		}
 	}
@@ -96,7 +96,7 @@ func (c *RoomWSController) OnDisconnect(ctx *models.WSContext) {
 			c.log(contracts.LError, err.Error())
 		}
 	} else if len(membersIdList) == 1 {
-		if membersIdList[0] == models.GoldGorillaId {
+		if c.roomRepo.IsGGInstance(ctx.RoomId, membersIdList[0]) {
 			err = c.roomRepo.ClearMessageHistory(ctx.RoomId)
 			if err != nil {
 				c.log(contracts.LError, err.Error())
@@ -113,7 +113,7 @@ func (c *RoomWSController) Start(ctx *models.WSContext) {
 		Name:   "",
 	}
 	_ = c.roomRepo.CreateRoom(ctx.RoomId)
-	err := c.roomRepo.AddMember(ctx.RoomId, ctx.SocketID, "", "", "")
+	err := c.roomRepo.AddMember(ctx.RoomId, ctx.SocketID, "", "", "", false)
 	if err != nil {
 		c.log(contracts.LError, err.Error())
 		return
@@ -125,7 +125,7 @@ func (c *RoomWSController) Start(ctx *models.WSContext) {
 	_ = c.socketSVC.Send(resultEvent, ctx.SocketID)
 }
 func (c *RoomWSController) Role(ctx *models.WSContext) {
-	var eventData map[string]string
+	var eventData map[string]interface{}
 	err := json.Unmarshal(ctx.PureMessage, &eventData)
 	if err != nil {
 
@@ -134,7 +134,7 @@ func (c *RoomWSController) Role(ctx *models.WSContext) {
 	streamId, exists := eventData["streamId"]
 	defer c.emitUserList(ctx.RoomId)
 	if exists {
-		err = c.roomRepo.UpdateMemberMeta(ctx.RoomId, ctx.SocketID, "streamId", streamId)
+		err = c.roomRepo.UpdateMemberMeta(ctx.RoomId, ctx.SocketID, "streamId", streamId.(string))
 		if err != nil {
 			c.log(contracts.LError, err.Error())
 			return
@@ -176,6 +176,7 @@ func (c *RoomWSController) Role(ctx *models.WSContext) {
 			c.log(contracts.LError, err.Error())
 			return
 		}
+
 		err = c.socketSVC.Send(models.MessageContract{
 			Type: "broadcasting",
 			Data: strconv.FormatUint(ctx.SocketID, 10),
@@ -184,10 +185,14 @@ func (c *RoomWSController) Role(ctx *models.WSContext) {
 			c.log(contracts.LError, err.Error())
 		}
 		_ = c.socketSVC.Send(resultEvent, ctx.SocketID)
-		hadGoldGorillaInTreeBefore := c.roomRepo.HadGoldGorillaInTreeBefore(ctx.RoomId)
-		if hadGoldGorillaInTreeBefore {
+		ggEnabled := true
+		ggEnabledInReqBody, exists := eventData["ggEnabled"]
+		if exists && ggEnabledInReqBody == false {
+			ggEnabled = false
+		}
+		if ggEnabled == true {
 			go func() {
-				err := c.ggRepo.Start()
+				err := c.ggRepo.Start(ctx.RoomId)
 				if err != nil {
 					println(err.Error())
 					return
@@ -252,13 +257,18 @@ func (c *RoomWSController) Role(ctx *models.WSContext) {
 			}, ctx.SocketID)
 			return
 		}
-		if *parentId != models.GoldGorillaId {
+		if !c.roomRepo.IsGGInstance(ctx.RoomId, *parentId) {
 			_ = c.socketSVC.Send(models.MessageContract{
 				Type: "add_audience",
 				Data: strconv.FormatUint(ctx.SocketID, 10),
 			}, *parentId)
 		} else {
-			err := c.ggRepo.CreatePeer(ctx.RoomId, ctx.SocketID, true, false)
+			ggid, err := c.roomRepo.GetRoomGoldGorillaId(ctx.RoomId)
+			if err != nil {
+				c.log(contracts.LError, err.Error())
+				return
+			}
+			err = c.ggRepo.CreatePeer(ctx.RoomId, ctx.SocketID, true, false, *ggid)
 			if err != nil {
 				_ = c.socketSVC.Send(models.MessageContract{
 					Type: "error",
@@ -403,7 +413,7 @@ func (c *RoomWSController) emitUserList(roomId string) {
 	}
 	index := -1
 	for i, v := range list {
-		if v.Id == models.GoldGorillaId {
+		if c.roomRepo.IsGGInstance(roomId, v.Id) {
 			index = i
 			break
 		}
@@ -505,8 +515,8 @@ func (c *RoomWSController) DefaultHandler(ctx *models.WSContext) {
 		c.log(contracts.LError, err.Error())
 		return
 	}
-	if id == models.GoldGorillaId {
-		return // as there is no GoldGorilla in tree, we ignore messages that targets it
+	if c.roomRepo.IsGGInstance(ctx.RoomId, id) {
+		return // as there is no GoldGorilla in tree(as a browser user!!), we ignore messages that targets it
 	}
 	targetMember, err := c.roomRepo.GetMember(ctx.RoomId, id)
 	if err != nil {
