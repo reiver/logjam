@@ -778,7 +778,7 @@ export class SparkRTC {
         if (this.startProcedure && !this.leftMeeting) {
           this.startProcedure(true)
         }
-        if(this.iamDc){
+        if(this.iamDc && this.role===this.Roles.BROADCAST){
           this.iamDc()
         }
       }
@@ -786,7 +786,7 @@ export class SparkRTC {
         this.updateTheStatus(`WebSocket error in setupSignalingSocket`, error)
         reject(error)
         if (!this.leftMeeting) {
-          if(this.iamDc){
+          if(this.iamDc && this.role===this.Roles.BROADCAST){
             await this.iamDc()
           }
           alert('Can not connect to server')
