@@ -7,6 +7,7 @@ import { detectKeyPress } from 'lib/controls'
 import { lazy } from 'preact-iso'
 import { useEffect } from 'preact/compat'
 import {fullScreenedStream} from 'components/MeetingBody/Stage'
+import DCAudio from "assets/audio/dc.mp3"
 
 let displayIdCounter = 2
 
@@ -86,6 +87,21 @@ export const onStartShareScreen = (stream) => {
   }
 
 
+}
+
+const playYouGotDCAudioMessage = async()=>{
+  // Create an audio context
+  const audioContext = new (window.AudioContext)();
+
+  // Create an audio element
+  const audioElement = new Audio(DCAudio);
+
+  // Connect the audio element to the audio context
+  const audioSource = audioContext.createMediaElementSource(audioElement);
+  audioSource.connect(audioContext.destination);
+
+  // Play the audio
+  audioElement.play();
 }
 
 const displayStream = async (stream, toggleFull = false) => {
@@ -324,6 +340,7 @@ const Meeting = ({ params: { room, displayName, name } }: { params?: { room?: st
 
         },
         localStreamChangeCallback: (stream) => {
+
           log('[Local Stream Callback]', stream)
           streamers.value = {
             ...streamers.value,
@@ -675,6 +692,10 @@ const Meeting = ({ params: { room, displayName, name } }: { params?: { room?: st
               sparkRTC.value.onRaiseHandRejected()
             }
           )
+        },
+        iamDc: async()=>{
+          console.log("I am dc..")
+          await playYouGotDCAudioMessage()
         },
       })
 

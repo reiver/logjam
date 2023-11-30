@@ -778,13 +778,19 @@ export class SparkRTC {
         if (this.startProcedure && !this.leftMeeting) {
           this.startProcedure(true)
         }
+        if(this.iamDc){
+          this.iamDc()
+        }
       }
-      socket.onerror = (error) => {
+      socket.onerror = async (error) => {
         this.updateTheStatus(`WebSocket error in setupSignalingSocket`, error)
         reject(error)
         if (!this.leftMeeting) {
-          window.location.reload() //reload before, alert because alert blocks the reload
+          if(this.iamDc){
+            await this.iamDc()
+          }
           alert('Can not connect to server')
+          window.location.reload() //reload before, alert because alert blocks the reload
         }
       }
 
@@ -2815,6 +2821,7 @@ export class SparkRTC {
     this.onAudioStatusChange = options.onAudioStatusChange
     this.userLoweredHand = options.userLoweredHand
     this.invitationToJoinStage = options.invitationToJoinStage
+    this.iamDc = options.iamDc;
 
     this.checkBrowser() //detect browser
     this.getSupportedCodecs()
