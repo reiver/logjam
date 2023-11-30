@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"github.com/gorilla/websocket"
 	"sourcecode.social/greatape/logjam/models/contracts"
+	"strconv"
 	"sync"
+	"time"
 )
 
 type SocketKeeper struct {
@@ -13,10 +15,17 @@ type SocketKeeper struct {
 	ID     uint64
 }
 
-func (s *SocketKeeper) WriteMessage(data []byte) error {
+func (s *SocketKeeper) WriteTextMessage(data []byte) error {
 	s.Lock()
 	defer s.Unlock()
 	err := s.wsConn.WriteMessage(websocket.TextMessage, data)
+	return err
+}
+
+func (s *SocketKeeper) WriteMessage(messageType int, data []byte) error {
+	s.Lock()
+	defer s.Unlock()
+	err := s.wsConn.WriteMessage(messageType, data)
 	return err
 }
 
@@ -26,6 +35,7 @@ type socketService struct {
 	lastId      uint64
 	sockets     map[*websocket.Conn]*SocketKeeper
 	socketsById map[uint64]*websocket.Conn
+	pingTimeout time.Duration
 }
 
 func NewSocketService(logger contracts.ILogger) contracts.ISocketService {
@@ -35,6 +45,7 @@ func NewSocketService(logger contracts.ILogger) contracts.ISocketService {
 		lastId:      0,
 		sockets:     make(map[*websocket.Conn]*SocketKeeper),
 		socketsById: make(map[uint64]*websocket.Conn),
+		pingTimeout: 5 * time.Second,
 	}
 }
 
@@ -62,7 +73,7 @@ func (s *socketService) Send(data interface{}, receiverIds ...uint64) error {
 	for _, id := range receiverIds {
 		if socket, exists := s.socketsById[id]; exists {
 			keeper := s.sockets[socket]
-			_ = keeper.WriteMessage(jsonData)
+			_ = keeper.WriteTextMessage(jsonData)
 		}
 	}
 	return nil
@@ -80,7 +91,35 @@ func (s *socketService) OnConnect(conn *websocket.Conn) (uint64, error) {
 		ID:     id,
 	}
 	s.socketsById[id] = conn
-
+	conn.SetCloseHandler(func(code int, text string) error {
+		_ = s.OnDisconnect(conn, code, text)
+		return nil
+	})
+	lastPong := time.Now()
+	conn.SetPongHandler(func(appData string) error {
+		lastPong = time.Now()
+		return nil
+	})
+	go func() {
+		for {
+			s.Lock()
+			if keeper, exists := s.sockets[conn]; exists {
+				s.Unlock()
+				err := keeper.WriteMessage(websocket.PingMessage, []byte("keepalive"))
+				if err != nil {
+					return
+				}
+				time.Sleep(s.pingTimeout / 2)
+				if time.Since(lastPong) > s.pingTimeout {
+					_ = conn.Close()
+					break
+				}
+			} else {
+				s.Unlock()
+				break
+			}
+		}
+	}()
 	return id, nil
 }
 
@@ -95,14 +134,21 @@ func (s *socketService) GetNewID() uint64 {
 	return s.getNewId()
 }
 
-func (s *socketService) OnDisconnect(conn *websocket.Conn) error {
-	s.logger.Log("socket_svc", contracts.LDebug, "a socket got disconnected")
+func (s *socketService) OnDisconnect(conn *websocket.Conn, code int, error string) error {
 	s.Lock()
 	defer s.Unlock()
 	if keeper, exists := s.sockets[conn]; exists {
+		_ = s.logger.Log("socket_svc", contracts.LDebug, "a socket got disconnected ["+strconv.FormatUint(keeper.ID, 10)+"]", strconv.Itoa(code), ":", error)
 		delete(s.socketsById, keeper.ID)
 		delete(s.sockets, conn)
 	}
 
+	return nil
+}
+
+func (s *socketService) Disconnect(socketId uint64) error {
+	if conn, exists := s.socketsById[socketId]; exists {
+		return conn.Close()
+	}
 	return nil
 }

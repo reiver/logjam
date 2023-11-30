@@ -67,9 +67,11 @@ func (r *roomWSRouter) startReadingFromWS(wsConn *websocket.Conn, socketId uint6
 				PureMessage:   nil,
 				ParsedMessage: nil,
 			})
+			_ = wsConn.CloseHandler()(1001, readErr.Error())
 			break
 		}
 		if messageType != websocket.TextMessage {
+			r.logger.Log("ws_router", contracts.LDebug, "ignoring a message of type: ", strconv.Itoa(messageType))
 			continue
 		}
 

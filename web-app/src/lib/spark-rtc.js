@@ -17,12 +17,17 @@ export class SparkRTC {
   socketURL = ''
   remoteStreamNotified = false
   remoteStreams = []
+  /** @type {WebSocket} */
   socket
   myName = 'NoName'
   roomName = 'SparkRTC'
   myUsername = 'NoUsername'
   debug = false
   lastBroadcasterId = ''
+  /**@type {Date} */
+  lastPong = null;
+  /** ping timeout in seconds */
+  pingTimeout = 5;
   broadcastingApproved = false
   /**@type {{[key:string]:RTCPeerConnection}}*/
   myPeerConnectionArray = {}
@@ -255,7 +260,7 @@ export class SparkRTC {
    *
    * It parses message and based on message Type make decisions
    *
-   * @param {*} event
+   * @param {MessageEvent} event
    * @returns
    */
   handleMessage = async (event) => {
@@ -594,6 +599,12 @@ export class SparkRTC {
         console.log('left-stage', msg)
         break
 
+      case 'pong':
+      {
+        this.lastPong = new Date();
+        break
+      }
+
       default:
         // this.updateTheStatus(
         //     `[handleMessage] default ${JSON.stringify(msg)}`
@@ -675,11 +686,23 @@ export class SparkRTC {
     if (await this.checkSocketStatus()) {
       try {
         const message = {
-          type: this.treeCallback ? 'tree' : 'ping',
+          // type: this.treeCallback ? 'tree' : 'ping',
+          type: 'ping'
         }
         this.socket.send(JSON.stringify(message))
       } catch (error) {
         console.error('Error sending message:', error)
+      }
+      if(!!this.lastPong){
+        let lastResponse= new Date(this.lastPong);
+        lastResponse.setSeconds(lastResponse.getSeconds() + this.pingTimeout);
+        let now = new Date();
+        // console.log(`lastPong:${this.lastPong} +5sec => is ${lastResponse} before ${now}`);
+        if(lastResponse<now){
+          this.lastPong = null;
+          console.log("[timeout] pong timed out, restarting.")
+          this.startProcedure?.(true);
+        }
       }
     }
   }
@@ -721,6 +744,7 @@ export class SparkRTC {
       if (this.pingInterval) {
         clearInterval(this.pingInterval)
         this.pingInterval = null
+        this.lastPong = null;
       }
 
       this.myName = myName || this.myName
@@ -742,7 +766,7 @@ export class SparkRTC {
           })
         )
 
-        this.pingInterval = setInterval(this.ping, 5000)
+        this.pingInterval = setInterval(this.ping, ((this.pingTimeout*1000)/2))
         this.updateTheStatus(`[setupSignalingSocket] socket onopen and sent start`)
         resolve(socket)
       }
@@ -908,7 +932,7 @@ export class SparkRTC {
 
         return
       }
-        
+
       return this.localStream
     } catch (e) {
       this.updateTheStatus(`Error Start Broadcasting`)
@@ -2532,6 +2556,7 @@ export class SparkRTC {
     if (this.pingInterval) {
       clearInterval(this.pingInterval)
       this.pingInterval = null
+      this.lastPong=null;
     }
     if (this.socket) {
       this.socket.close()
@@ -2565,22 +2590,16 @@ export class SparkRTC {
 
     //reset few variables
     this.resetVariables(false)
-
     //close the web socket
     if (closeSocket && this.socket) {
-      this.socket.onclose = async () => {
-        this.updateTheStatus(`socket is closed in restart`)
-        this.socket = null
-
-        //waiting to websocket to close then repoen again
-        if (this.startAgain) {
-          this.startAgain()
-        }
-      } //on close callback
-
-      //[zaid] close socket after setting callback
+      this.updateTheStatus(`socket is closed in restart`)
+      this.socket.onclose = null;
       this.socket.close()
+      this.socket = null
 
+      if (this.startAgain) {
+        this.startAgain()
+      }
     } else {
       //else condition [zaid] test
       if(!this.checkSocketStatus()){
@@ -2663,6 +2682,7 @@ export class SparkRTC {
 
     clearTimeout(this.networkSpeedInterval)
     clearInterval(this.pingInterval)
+    this.lastPong=null;
   }
 
   getStatsForPC = (peerConnection, userid) => {

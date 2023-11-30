@@ -154,11 +154,23 @@ func (c *RoomWSController) Role(ctx *models.WSContext) {
 			return
 		}
 		if br != nil {
-			_ = c.socketSVC.Send(models.MessageContract{
-				Type: "role",
-				Data: "no:broadcast",
-			}, ctx.SocketID)
-			return
+			currentUser, err := c.roomRepo.GetMember(ctx.RoomId, ctx.SocketID)
+			if err != nil {
+				c.log(contracts.LError, err.Error())
+				_ = c.socketSVC.Send(models.MessageContract{
+					Type: "role",
+					Data: "no:broadcast",
+				}, ctx.SocketID)
+				return
+			}
+			if currentUser.Name != br.Name {
+				_ = c.socketSVC.Send(models.MessageContract{
+					Type: "role",
+					Data: "no:broadcast",
+				}, ctx.SocketID)
+				return
+			}
+			go c.socketSVC.Disconnect(br.ID)
 		}
 		resultEvent.Data = "yes:broadcast"
 		err = c.roomRepo.UpdateCanConnect(ctx.RoomId, ctx.SocketID, true)
@@ -266,6 +278,11 @@ func (c *RoomWSController) Role(ctx *models.WSContext) {
 			ggid, err := c.roomRepo.GetRoomGoldGorillaId(ctx.RoomId)
 			if err != nil {
 				c.log(contracts.LError, err.Error())
+				return
+			}
+			if ggid == nil {
+				c.socketSVC.Disconnect(ctx.SocketID) // so aud will reconnect
+				go c.roomRepo.RemoveMember(ctx.RoomId, *parentId)
 				return
 			}
 			err = c.ggRepo.CreatePeer(ctx.RoomId, ctx.SocketID, true, false, *ggid)
