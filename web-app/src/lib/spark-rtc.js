@@ -1350,6 +1350,14 @@ export class SparkRTC {
       if (this.connectionStatus) {
         this.connectionStatus(peerConnection.connectionState)
       }
+
+      if(peerConnection.connectionState === 'failed'){
+        //reconnect
+
+        this.removeFromRaiseHandList(target)
+
+        this.restartEverything(peerConnection, target, isAudience)
+      }
     }
 
     peerConnection.onicecandidateerror = async (event) => {
