@@ -1453,6 +1453,14 @@ export class SparkRTC {
       if (this.connectionStatus) {
         this.connectionStatus(peerConnection.connectionState);
       }
+
+      if(peerConnection.connectionState === 'failed'){
+        //reconnect
+
+        this.removeFromRaiseHandList(target)
+
+        this.restartEverything(peerConnection, target, isAudience)
+      }
     };
 
     peerConnection.onicecandidateerror = async (event) => {
@@ -2832,14 +2840,22 @@ export class SparkRTC {
     //else Close the socket and restart..
 
     this.updateTheStatus(`restarting.. close socket: `, closeSocket);
-    //check for local stream and stop tracks
-    if (this.localStream) {
-      this.localStream.getTracks().forEach(function (track) {
-        track.stop();
-      });
-      this.localStream = null;
-    }
 
+    //check for local stream and stop tracks
+    if(this.role===this.Roles.AUDIENCE){
+      await this.leaveStage()
+      if(this.updateUserControls){
+        this.updateUserControls()
+      }
+    }else{
+      if (this.localStream) {
+        this.localStream.getTracks().forEach(function (track) {
+          track.stop();
+        });
+        this.localStream = null;
+      }
+    }
+   
     //close all the peer connections
     let idList = [];
     if (this.myPeerConnectionArray && this.myPeerConnectionArray.length > 0) {
@@ -3088,6 +3104,7 @@ export class SparkRTC {
     this.onAudioStatusChange = options.onAudioStatusChange;
     this.userLoweredHand = options.userLoweredHand;
     this.invitationToJoinStage = options.invitationToJoinStage;
+    this.updateUserControls=options.updateUserControls;
 
     this.checkBrowser(); //detect browser
     this.getSupportedCodecs();

@@ -677,6 +677,15 @@ const Meeting = ({ params: { room, displayName, name } }: { params?: { room?: st
             }
           )
         },
+        updateUserControls:()=>{
+          //chane ui to normal Audience Mode
+          updateUser({
+            isStreamming: false,
+            ableToRaiseHand: true,
+            isMicrophoneOn: true,
+            isCameraOn: true,
+          })
+        }
       })
 
       if (sparkRTC.value) {
