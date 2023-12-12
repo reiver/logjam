@@ -1456,10 +1456,16 @@ export class SparkRTC {
 
       if(peerConnection.connectionState === 'failed'){
         //reconnect
+        this.updateTheStatus(`PC is failed so restarting everything...`)
 
-        this.removeFromRaiseHandList(target)
-
-        this.restartEverything(peerConnection, target, isAudience)
+        if(this.role===this.Roles.BROADCAST){
+          //restart for Broadcaster too
+          this.restartEverything(peerConnection, target, isAudience)
+          this.startProcedure(true)
+        }else{
+          this.removeFromRaiseHandList(target)
+          this.restartEverything(peerConnection, target, isAudience)
+        }
       }
     };
 
