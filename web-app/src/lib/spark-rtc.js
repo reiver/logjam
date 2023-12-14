@@ -497,6 +497,7 @@ export class SparkRTC {
         break;
       case "event-reconnect":
       case "event-broadcaster-disconnected":
+        //Broadcaster Lost connection from GG But Audience are connected with GG
         this.updateTheStatus(`broadcaster dc ${msg.type}`);
         this.broadcasterDC = true;
         const broadcasterId = this.broadcasterUserId();
@@ -521,6 +522,7 @@ export class SparkRTC {
         this.startedRaiseHand = false;
         break;
       case "event-parent-dc":
+        //lost connection of Audience with GG or With Direct Parent
         this.updateTheStatus(`parentDC ${msg.type}`);
         this.parentDC = true;
 
@@ -1454,17 +1456,17 @@ export class SparkRTC {
         this.connectionStatus(peerConnection.connectionState);
       }
 
-      if(peerConnection.connectionState === 'failed'){
+      if (peerConnection.connectionState === "failed") {
         //reconnect
-        this.updateTheStatus(`PC is failed so restarting everything...`)
+        this.updateTheStatus(`PC is failed so restarting everything...`);
 
-        if(this.role===this.Roles.BROADCAST){
+        if (this.role === this.Roles.BROADCAST) {
           //restart for Broadcaster too
-          this.restartEverything(peerConnection, target, isAudience)
-          this.startProcedure(true)
-        }else{
-          this.removeFromRaiseHandList(target)
-          this.restartEverything(peerConnection, target, isAudience)
+          this.restartEverything(peerConnection, target, isAudience);
+          this.startProcedure(true);
+        } else {
+          this.removeFromRaiseHandList(target);
+          this.restartEverything(peerConnection, target, isAudience);
         }
       }
     };
@@ -2722,33 +2724,39 @@ export class SparkRTC {
 
     this.updateTheStatus("[leaveStage] start");
     if (!this.localStream) return;
-    let apeerConnection;
+    let apeerConnection = null;
     for (const id in this.myPeerConnectionArray) {
       apeerConnection = this.myPeerConnectionArray[id];
       break;
     }
-    const trackIds = this.localStream
-      .getTracks()
-      .map((receiver) => receiver.id);
-    this.updateTheStatus("[leaveStage] trackIds", trackIds);
-    const allSenders = apeerConnection.getSenders();
-    this.updateTheStatus(`[leaveStage] allSenders`, allSenders);
-    for (const trackId of trackIds)
-      for (const sender of allSenders) {
-        this.updateTheStatus(`[leaveStage] sender`, sender);
-        if (!sender.track) continue;
-        if (sender.track.id === trackId) {
-          this.updateTheStatus(`[leaveStage] DC sender`);
-          try {
-            apeerConnection.removeTrack(sender);
-          } catch (e) {
-            this.updateTheStatus(e);
+    if (apeerConnection != null) {
+      const trackIds = this.localStream
+        .getTracks()
+        .map((receiver) => receiver.id);
+      this.updateTheStatus("[leaveStage] trackIds", trackIds);
+      const allSenders = apeerConnection.getSenders();
+      this.updateTheStatus(`[leaveStage] allSenders`, allSenders);
+      for (const trackId of trackIds)
+        for (const sender of allSenders) {
+          this.updateTheStatus(`[leaveStage] sender`, sender);
+          if (!sender.track) continue;
+          if (sender.track.id === trackId) {
+            this.updateTheStatus(`[leaveStage] DC sender`);
+            try {
+              apeerConnection.removeTrack(sender);
+            } catch (e) {
+              this.updateTheStatus(e);
+            }
           }
         }
-      }
-    this.localStream.getTracks().forEach((track) => {
-      track.stop();
-    });
+    }
+
+    if (this.localStream != null) {
+      this.localStream.getTracks().forEach((track) => {
+        track.stop();
+      });
+    }
+
     this.startedRaiseHand = false;
 
     //notify host I am leaving, so host can remove from invitation list
@@ -2848,12 +2856,12 @@ export class SparkRTC {
     this.updateTheStatus(`restarting.. close socket: `, closeSocket);
 
     //check for local stream and stop tracks
-    if(this.role===this.Roles.AUDIENCE){
-      await this.leaveStage()
-      if(this.updateUserControls){
-        this.updateUserControls()
+    if (this.role === this.Roles.AUDIENCE) {
+      await this.leaveStage();
+      if (this.updateUserControls) {
+        this.updateUserControls();
       }
-    }else{
+    } else {
       if (this.localStream) {
         this.localStream.getTracks().forEach(function (track) {
           track.stop();
@@ -2861,7 +2869,7 @@ export class SparkRTC {
         this.localStream = null;
       }
     }
-   
+
     //close all the peer connections
     let idList = [];
     if (this.myPeerConnectionArray && this.myPeerConnectionArray.length > 0) {
@@ -3110,7 +3118,7 @@ export class SparkRTC {
     this.onAudioStatusChange = options.onAudioStatusChange;
     this.userLoweredHand = options.userLoweredHand;
     this.invitationToJoinStage = options.invitationToJoinStage;
-    this.updateUserControls=options.updateUserControls;
+    this.updateUserControls = options.updateUserControls;
 
     this.checkBrowser(); //detect browser
     this.getSupportedCodecs();

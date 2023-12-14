@@ -386,7 +386,7 @@ const Meeting = ({ params: { room, displayName, name } }: { params?: { room?: st
                   isCameraOn: true,
                 })
                 sparkRTC.value.resetAudioVideoState()
-                log(`broadcasterDC...`)
+                log(`broadcasterDC...${sparkRTC.value.broadcasterDC}`,stream)
               }
             }
           }, 1000)
