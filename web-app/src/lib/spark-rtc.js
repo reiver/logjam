@@ -840,6 +840,9 @@ export class SparkRTC {
         resolve(socket);
       };
       socket.onclose = async () => {
+        if (this.iamDc) {
+          this.iamDc();
+        }
         this.updateTheStatus(`socket is closed in setupSignalingSocket`);
         this.remoteStreamNotified = false;
         this.myPeerConnectionArray = {};
@@ -847,19 +850,16 @@ export class SparkRTC {
         if (this.startProcedure && !this.leftMeeting) {
           this.startProcedure(true);
         }
-        if(this.iamDc && this.role===this.Roles.BROADCAST){
-          this.iamDc()
-        }
-      }
+      };
       socket.onerror = async (error) => {
-        this.updateTheStatus(`WebSocket error in setupSignalingSocket`, error)
-        reject(error)
+        this.updateTheStatus(`WebSocket error in setupSignalingSocket`, error);
+        reject(error);
         if (!this.leftMeeting) {
-          if(this.iamDc && this.role===this.Roles.BROADCAST){
-            await this.iamDc()
+          if (this.iamDc) {
+            await this.iamDc();
           }
-          alert('Can not connect to server')
-          window.location.reload() //reload before, alert because alert blocks the reload
+          alert("Can not connect to server");
+          window.location.reload(); //reload before, alert because alert blocks the reload
         }
       };
 
@@ -1461,9 +1461,12 @@ export class SparkRTC {
         this.connectionStatus(peerConnection.connectionState);
       }
 
-      if(peerConnection.connectionState === 'failed' && this.role===this.Roles.BROADCAST){
-        if(this.iamDc){
-          this.iamDc()
+      if (
+        peerConnection.connectionState === "failed" &&
+        this.role === this.Roles.BROADCAST
+      ) {
+        if (this.iamDc) {
+          this.iamDc();
         }
       }
 
@@ -1480,10 +1483,8 @@ export class SparkRTC {
           this.restartEverything(peerConnection, target, isAudience);
         }
       }
+    };
 
-    }
-      
-  
     peerConnection.onicecandidateerror = async (event) => {
       this.updateTheStatus(`Peer Connection ice candidate error`, event);
     };
@@ -2024,12 +2025,22 @@ export class SparkRTC {
 
     setTimeout(() => {
       if (!peerConnection._iceIsConnected) {
+        if (this.role === this.Roles.BROADCAST) {
+          if (this.iamDc) {
+            this.iamDc();
+          }
+        }
         console.log("ice not connected yet, restarting ice");
 
         peerConnection.restartIce();
       }
       setTimeout(() => {
         if (peerConnection.iceConnectionState === "new") {
+          if (this.role === this.Roles.BROADCAST) {
+            if (this.iamDc) {
+              this.iamDc();
+            }
+          }
           console.log(
             "iceConnectionState is new after 8 seconds. restarting everything .."
           );
@@ -3109,28 +3120,28 @@ export class SparkRTC {
    * @param {*} options
    */
   constructor(role, options = {}) {
-    this.role = role
-    this.localStreamChangeCallback = options.localStreamChangeCallback
-    this.remoteStreamCallback = options.remoteStreamCallback
-    this.remoteStreamDCCallback = options.remoteStreamDCCallback
-    this.treeCallback = options.treeCallback
-    this.raiseHandConfirmation = options.raiseHandConfirmation
-    this.altBroadcastApprove = options.altBroadcastApprove
-    this.newTrackCallback = options.newTrackCallback
-    this.startProcedure = options.startProcedure
-    this.constraintResults = options.constraintResults
-    this.updateStatus = options.updateStatus
-    this.userListUpdated = options.userListUpdated
-    this.maxLimitReached = options.maxLimitReached
-    this.disableBroadcasting = options.disableBroadcasting
-    this.connectionStatus = options.connectionStatus
-    this.userInitialized = options.userInitialized
-    this.startAgain = options.startAgain
-    this.updateUi = options.updateUi
-    this.parentDcMessage = options.parentDcMessage
-    this.onAudioStatusChange = options.onAudioStatusChange
-    this.userLoweredHand = options.userLoweredHand
-    this.invitationToJoinStage = options.invitationToJoinStage
+    this.role = role;
+    this.localStreamChangeCallback = options.localStreamChangeCallback;
+    this.remoteStreamCallback = options.remoteStreamCallback;
+    this.remoteStreamDCCallback = options.remoteStreamDCCallback;
+    this.treeCallback = options.treeCallback;
+    this.raiseHandConfirmation = options.raiseHandConfirmation;
+    this.altBroadcastApprove = options.altBroadcastApprove;
+    this.newTrackCallback = options.newTrackCallback;
+    this.startProcedure = options.startProcedure;
+    this.constraintResults = options.constraintResults;
+    this.updateStatus = options.updateStatus;
+    this.userListUpdated = options.userListUpdated;
+    this.maxLimitReached = options.maxLimitReached;
+    this.disableBroadcasting = options.disableBroadcasting;
+    this.connectionStatus = options.connectionStatus;
+    this.userInitialized = options.userInitialized;
+    this.startAgain = options.startAgain;
+    this.updateUi = options.updateUi;
+    this.parentDcMessage = options.parentDcMessage;
+    this.onAudioStatusChange = options.onAudioStatusChange;
+    this.userLoweredHand = options.userLoweredHand;
+    this.invitationToJoinStage = options.invitationToJoinStage;
     this.iamDc = options.iamDc;
     this.updateUserControls = options.updateUserControls;
 
