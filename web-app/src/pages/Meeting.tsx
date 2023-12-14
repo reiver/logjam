@@ -7,7 +7,7 @@ import { detectKeyPress } from 'lib/controls'
 import { lazy } from 'preact-iso'
 import { useEffect } from 'preact/compat'
 import {fullScreenedStream} from 'components/MeetingBody/Stage'
-import DCAudio from "assets/audio/dc.mp3"
+import DCAudio from "assets/audio/Call_Ends.mp3"
 
 let displayIdCounter = 2
 

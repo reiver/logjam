@@ -1356,6 +1356,12 @@ export class SparkRTC {
       if (this.connectionStatus) {
         this.connectionStatus(peerConnection.connectionState)
       }
+
+      if(peerConnection.connectionState === 'failed' && this.role===this.Roles.BROADCAST){
+        if(this.iamDc){
+          this.iamDc()
+        }
+      }
     }
 
     peerConnection.onicecandidateerror = async (event) => {
