@@ -4,3 +4,4 @@ logjam.exe
 logjam
 web-app/node_modules
 web-app/dist
+.vercel

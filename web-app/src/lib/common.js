@@ -76,5 +76,6 @@ export const createAudienceSpartRTC = (role, props) => {
     onAudioStatusChange: props.onAudioStatusChange,
     invitationToJoinStage: props.invitationToJoinStage,
     iamDc:props.iamDc,
+    updateUserControls:props.updateUserControls,
   });
 };

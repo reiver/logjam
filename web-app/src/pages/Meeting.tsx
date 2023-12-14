@@ -219,7 +219,8 @@ const log = (tag, data?: any) => {
     console.log('[', date, '] ', tag)
   }
 }
-const setupSignalingSocket = async (host, name, room, debug) => {
+const setupSignalingSocket = async (host, name, room, debug,message) => {
+  log("setup new socket from: ",message)
   await sparkRTC.value.setupSignalingSocket(getWsUrl(host), JSON.stringify({ name, email: '' }), room, debug)
 }
 const start = async () => {
@@ -402,7 +403,7 @@ const Meeting = ({ params: { room, displayName, name } }: { params?: { room?: st
                   isCameraOn: true,
                 })
                 sparkRTC.value.resetAudioVideoState()
-                log(`broadcasterDC...`)
+                log(`broadcasterDC...${sparkRTC.value.broadcasterDC}`,stream)
               }
             }
           }, 1000)
@@ -449,7 +450,7 @@ const Meeting = ({ params: { room, displayName, name } }: { params?: { room?: st
             //restart for broadcaster [zaid]
             if(role === Roles.BROADCAST){
               if(closeSocket){
-                await setupSignalingSocket(host, name, room, isDebugMode.value)
+                await setupSignalingSocket(host, name, room, isDebugMode.value,"onStart")
               }
               else{
                 await start()
@@ -461,7 +462,7 @@ const Meeting = ({ params: { room, displayName, name } }: { params?: { room?: st
         startAgain: async () => {
           if (sparkRTC.value) {
             //Init socket and start sparkRTC
-            await setupSignalingSocket(host, name, room, isDebugMode.value)
+            await setupSignalingSocket(host, name, room, isDebugMode,"startAgain")
           }
         },
         altBroadcastApprove: async (isStreamming, data) => {
@@ -697,11 +698,20 @@ const Meeting = ({ params: { room, displayName, name } }: { params?: { room?: st
           console.log("I am dc..")
           await playYouGotDCAudioMessage()
         },
+        updateUserControls:()=>{
+          //chane ui to normal Audience Mode
+          updateUser({
+            isStreamming: false,
+            ableToRaiseHand: true,
+            isMicrophoneOn: true,
+            isCameraOn: true,
+          })
+        }
       })
 
       if (sparkRTC.value) {
         //Init socket and start sparkRTC
-        await setupSignalingSocket(host, name, room, isDebugMode.value)
+        await setupSignalingSocket(host, name, room, isDebugMode.value,"InitalSetup")
       }
     }
 
