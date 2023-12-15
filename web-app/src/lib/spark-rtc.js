@@ -856,10 +856,19 @@ export class SparkRTC {
         reject(error);
         if (!this.leftMeeting) {
           if (this.iamDc) {
-            await this.iamDc();
+            if (await this.iamDc()) {
+              this.updateTheStatus(`Audio played`);
+              alert("Can not connect to server");
+              window.location.reload(); //reload before, alert because alert blocks the reload
+              return;
+            } else {
+              this.updateTheStatus(`Audio not played`);
+            }
           }
+
           alert("Can not connect to server");
-          window.location.reload(); //reload before, alert because alert blocks the reload
+          window.location.reload();
+          return;
         }
       };
 

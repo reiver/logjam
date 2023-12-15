@@ -93,18 +93,25 @@ export const onStartShareScreen = (stream) => {
 }
 
 const playYouGotDCAudioMessage = async () => {
-  // Create an audio context
-  const audioContext = new (window.AudioContext)();
+  try {
+    // Create an audio context
+    const audioContext = new (window.AudioContext)();
 
-  // Create an audio element
-  const audioElement = new Audio(DCAudio);
+    // Create an audio element
+    const audioElement = new Audio(DCAudio);
 
-  // Connect the audio element to the audio context
-  const audioSource = audioContext.createMediaElementSource(audioElement);
-  audioSource.connect(audioContext.destination);
+    // Connect the audio element to the audio context
+    const audioSource = audioContext.createMediaElementSource(audioElement);
+    audioSource.connect(audioContext.destination);
 
-  // Play the audio
-  audioElement.play();
+    // Play the audio
+    await audioElement.play()
+
+    return true
+  } catch (e) {
+    return false
+  }
+
 }
 
 const displayStream = async (stream, toggleFull = false) => {
@@ -699,7 +706,7 @@ const Meeting = ({ params: { room, displayName, name } }: { params?: { room?: st
         },
         iamDc: async () => {
           console.log("I am dc..")
-          await playYouGotDCAudioMessage()
+          return await playYouGotDCAudioMessage()
         },
         updateUserControls: () => {
           //chane ui to normal Audience Mode
