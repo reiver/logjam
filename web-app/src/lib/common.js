@@ -54,6 +54,7 @@ export const createBroadcastSpartRTC = (role, props) => {
     onAudioStatusChange: props.onAudioStatusChange,
     userLoweredHand: props.userLoweredHand,
     invitationToJoinStage: props.invitationToJoinStage,
+    iamDc:props.iamDc,
   });
 };
 
@@ -74,5 +75,7 @@ export const createAudienceSpartRTC = (role, props) => {
     parentDcMessage: props.parentDcMessage,
     onAudioStatusChange: props.onAudioStatusChange,
     invitationToJoinStage: props.invitationToJoinStage,
+    iamDc:props.iamDc,
+    updateUserControls:props.updateUserControls,
   });
 };

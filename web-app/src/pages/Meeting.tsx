@@ -6,7 +6,8 @@ import { Roles, createSparkRTC, getWsUrl } from 'lib/common.js'
 import { detectKeyPress } from 'lib/controls'
 import { lazy } from 'preact-iso'
 import { useEffect } from 'preact/compat'
-import {fullScreenedStream} from 'components/MeetingBody/Stage'
+import { fullScreenedStream } from 'components/MeetingBody/Stage'
+import DCAudio from "assets/audio/Call_Ends.mp3"
 
 let displayIdCounter = 2
 
@@ -33,7 +34,7 @@ export const setUserActionLoading = (userId, actionLoading) => {
 }
 
 //hashmap for stream and display id
-let streamMap = new Map<any,any>()
+let streamMap = new Map<any, any>()
 
 // const url = `stats/index.html`;
 // var targetWindow = window.open(url, '_blank');
@@ -61,30 +62,55 @@ export const updateUser = (props) => {
 export const onStartShareScreen = (stream) => {
   log(`ScreenShareStram: ${stream}`)
 
-  stream.getTracks()[0].onended = async () => {
-    await sparkRTC.value.stopShareScreen(stream)
-    updateUser({
-      sharingScreenStream: null,
-    })
-    onStopStream(stream)
+  if (stream) {
+    stream.getTracks()[0].onended = async () => {
+      await sparkRTC.value.stopShareScreen(stream)
+      updateUser({
+        sharingScreenStream: null,
+      })
+      onStopStream(stream)
+    }
+
+    isMoreOptionsOpen.value = false
+
+    streamers.value = {
+      ...streamers.value,
+      [stream.id]: {
+        name: stream.name,
+        isHost: true,
+        avatar: '',
+        raisedHand: false,
+        hasCamera: false,
+        stream,
+        isShareScreen: true,
+        displayId: 2,
+      },
+    }
+
   }
 
-  isMoreOptionsOpen.value = false
 
-  streamers.value = {
-    ...streamers.value,
-    [stream.id]: {
-      name: stream.name,
-      isHost: true,
-      avatar: '',
-      raisedHand: false,
-      hasCamera: false,
-      stream,
-      isShareScreen: true,
-      displayId:2,
-    },
+}
+
+const playYouGotDCAudioMessage = async () => {
+  try {
+    // Create an audio context
+    const audioContext = new (window.AudioContext)();
+
+    // Create an audio element
+    const audioElement = new Audio(DCAudio);
+
+    // Connect the audio element to the audio context
+    const audioSource = audioContext.createMediaElementSource(audioElement);
+    audioSource.connect(audioContext.destination);
+
+    // Play the audio
+    await audioElement.play()
+
+    return true
+  } catch (e) {
+    return false
   }
-
 
 }
 
@@ -98,51 +124,51 @@ const displayStream = async (stream, toggleFull = false) => {
 
   setUserActionLoading(stream.userId, false)
 
-  
-  let dId = 0;
-  if(!toggleFull 
-      && stream.hasOwnProperty('isShareScreen')
-      && stream.hasOwnProperty('role')){
 
-    if(stream.role === Roles.BROADCAST){
-      if(stream.isShareScreen===true){
+  let dId = 0;
+  if (!toggleFull
+    && stream.hasOwnProperty('isShareScreen')
+    && stream.hasOwnProperty('role')) {
+
+    if (stream.role === Roles.BROADCAST) {
+      if (stream.isShareScreen === true) {
         //share screen
         dId = 2;
-      }else{
+      } else {
         //host camera feed
         dId = 1;
       }
 
-    }else{
+    } else {
       //this stream is from Audince and it exists in map with HOST key (1 or 2)
 
-      if(streamMap.has(stream.id) && (streamMap.get(stream.id)===1 || streamMap.get(stream.id)===2)){
+      if (streamMap.has(stream.id) && (streamMap.get(stream.id) === 1 || streamMap.get(stream.id) === 2)) {
         streamMap.delete(stream.id)
       }
 
-      if(!streamMap.has(stream.id)){
+      if (!streamMap.has(stream.id)) {
         let usedValues = Array.from(streamMap.values());
 
         // Loop through the values from 3 to 9
         for (let i = 3; i <= 9; i++) {
           if (!usedValues.includes(i)) {
-              dId = i;
-              break; // Exit the loop once a missing value is found
+            dId = i;
+            break; // Exit the loop once a missing value is found
           }
         }
-  
+
         if (dId === 0) {
-            // If no missing value was found, increment the counter
-            displayIdCounter++;
-            dId = displayIdCounter;
+          // If no missing value was found, increment the counter
+          displayIdCounter++;
+          dId = displayIdCounter;
         }
-  
-  
+
+
       }
 
     }
-    if(dId!=0){
-      streamMap.set(stream.id,dId)
+    if (dId != 0) {
+      streamMap.set(stream.id, dId)
     }
 
 
@@ -162,7 +188,7 @@ const displayStream = async (stream, toggleFull = false) => {
       isLocalStream: local,
       isShareScreen: stream.isShareScreen || false,
       toggleScreenId: toggleFull ? stream.id : null,
-      displayId:streamMap.get(stream.id),
+      displayId: streamMap.get(stream.id),
     },
   }
 }
@@ -203,7 +229,8 @@ const log = (tag, data?: any) => {
     console.log('[', date, '] ', tag)
   }
 }
-const setupSignalingSocket = async (host, name, room, debug) => {
+const setupSignalingSocket = async (host, name, room, debug, message) => {
+  log("setup new socket from: ", message)
   await sparkRTC.value.setupSignalingSocket(getWsUrl(host), JSON.stringify({ name, email: '' }), room, debug)
 }
 const start = async () => {
@@ -256,30 +283,30 @@ export const getUserRaiseHandStatus = (userId) => {
   return attendees.value[userId]?.raisedHand || false
 }
 
-function keyPressCallback(key){  
- 
+function keyPressCallback(key) {
+
   // Iterate over the properties of the streamers object
   for (const userId in streamers.value) {
     const id = userId;
     if (streamers.value.hasOwnProperty(userId)) {
-        const streamer = streamers.value[id];
-      
-        const stream = streamer.stream;
-        const displayId = streamer.displayId;
+      const streamer = streamers.value[id];
 
-        if(displayId.toString()===key){
-          if (fullScreenedStream.value === stream.id) {
-            fullScreenedStream.value = null
-          } else fullScreenedStream.value = stream.id
-        }
+      const stream = streamer.stream;
+      const displayId = streamer.displayId;
+
+      if (displayId.toString() === key) {
+        if (fullScreenedStream.value === stream.id) {
+          fullScreenedStream.value = null
+        } else fullScreenedStream.value = stream.id
+      }
     }
   }
- 
+
 }
-const Meeting = ({ params: { room, displayName, name } }: { params?: { room?: string; displayName?: string; name?: string } }) => {  
-  
+const Meeting = ({ params: { room, displayName, name } }: { params?: { room?: string; displayName?: string; name?: string } }) => {
+
   detectKeyPress(keyPressCallback)
-  
+
   if (displayName && room) {
     if (displayName[0] !== '@') return <PageNotFound />
   }
@@ -324,6 +351,7 @@ const Meeting = ({ params: { room, displayName, name } }: { params?: { room?: st
 
         },
         localStreamChangeCallback: (stream) => {
+
           log('[Local Stream Callback]', stream)
           streamers.value = {
             ...streamers.value,
@@ -336,7 +364,7 @@ const Meeting = ({ params: { room, displayName, name } }: { params?: { room?: st
               stream,
               isLocalStream: true,
               isShareScreen: stream.isShareScreen || false,
-              displayId:1,
+              displayId: 1,
             },
           }
 
@@ -385,7 +413,7 @@ const Meeting = ({ params: { room, displayName, name } }: { params?: { room?: st
                   isCameraOn: true,
                 })
                 sparkRTC.value.resetAudioVideoState()
-                log(`broadcasterDC...`)
+                log(`broadcasterDC...${sparkRTC.value.broadcasterDC}`, stream)
               }
             }
           }, 1000)
@@ -393,7 +421,7 @@ const Meeting = ({ params: { room, displayName, name } }: { params?: { room?: st
         onRaiseHand: (user) => {
           log(`[On Raise Hand Request]`, user)
 
-          let raiseHandCallback: (values: any) => void = () => {}
+          let raiseHandCallback: (values: any) => void = () => { }
           const handler = new Promise((resolve, reject) => {
             raiseHandCallback = (value) => {
               setUserActionLoading(user.userId, true)
@@ -430,21 +458,21 @@ const Meeting = ({ params: { room, displayName, name } }: { params?: { room?: st
             }
 
             //restart for broadcaster [zaid]
-            if(role === Roles.BROADCAST){
-              if(closeSocket){
-                await setupSignalingSocket(host, name, room, isDebugMode.value)
+            if (role === Roles.BROADCAST) {
+              if (closeSocket) {
+                await setupSignalingSocket(host, name, room, isDebugMode.value, "onStart")
               }
-              else{
+              else {
                 await start()
               }
             }
-            
+
           }
         },
         startAgain: async () => {
           if (sparkRTC.value) {
             //Init socket and start sparkRTC
-            await setupSignalingSocket(host, name, room, isDebugMode.value)
+            await setupSignalingSocket(host, name, room, isDebugMode, "startAgain")
           }
         },
         altBroadcastApprove: async (isStreamming, data) => {
@@ -676,11 +704,24 @@ const Meeting = ({ params: { room, displayName, name } }: { params?: { room?: st
             }
           )
         },
+        iamDc: async () => {
+          console.log("I am dc..")
+          return await playYouGotDCAudioMessage()
+        },
+        updateUserControls: () => {
+          //chane ui to normal Audience Mode
+          updateUser({
+            isStreamming: false,
+            ableToRaiseHand: true,
+            isMicrophoneOn: true,
+            isCameraOn: true,
+          })
+        }
       })
 
       if (sparkRTC.value) {
         //Init socket and start sparkRTC
-        await setupSignalingSocket(host, name, room, isDebugMode.value)
+        await setupSignalingSocket(host, name, room, isDebugMode.value, "InitalSetup")
       }
     }
 
@@ -701,7 +742,7 @@ const Meeting = ({ params: { room, displayName, name } }: { params?: { room?: st
     <div class="flex flex-col justify-between min-h-[--doc-height] dark:bg-secondary-1-a bg-white-f-9 text-medium-12 text-gray-800 dark:text-gray-200">
       <TopBar />
       {meetingStatus.value ? (
-      <>
+        <>
           <MeetingBody />
           <BottomBar />
         </>

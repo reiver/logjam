@@ -152,7 +152,9 @@ export const Participant = ({ participant }) => {
 
   return (
     <div
-      class={clsx('flex w-full justify-between items-center rounded-md px-2 py-1 max-w-full gap-2 group', 'cursor-pointer')}
+      class={clsx('flex w-full justify-between items-center rounded-md px-2 py-1 max-w-full gap-2 group', 
+      {'cursor-pointer': currentUser.value.isHost && participant.userId != currentUser.value.userId 
+      && !participant.hasCamera && !participant.actionLoading})}
       onClick={() => {
         handleRowClick(participant)
       }}
