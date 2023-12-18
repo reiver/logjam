@@ -6,7 +6,7 @@ import { Roles, createSparkRTC, getWsUrl } from 'lib/common.js'
 import { detectKeyPress } from 'lib/controls'
 import { lazy } from 'preact-iso'
 import { useEffect } from 'preact/compat'
-import {fullScreenedStream} from 'components/MeetingBody/Stage'
+import { fullScreenedStream } from 'components/MeetingBody/Stage'
 
 let displayIdCounter = 2
 
@@ -33,7 +33,7 @@ export const setUserActionLoading = (userId, actionLoading) => {
 }
 
 //hashmap for stream and display id
-let streamMap = new Map<any,any>()
+let streamMap = new Map<any, any>()
 
 // const url = `stats/index.html`;
 // var targetWindow = window.open(url, '_blank');
@@ -81,7 +81,7 @@ export const onStartShareScreen = (stream) => {
       hasCamera: false,
       stream,
       isShareScreen: true,
-      displayId:2,
+      displayId: 2,
     },
   }
 
@@ -98,51 +98,51 @@ const displayStream = async (stream, toggleFull = false) => {
 
   setUserActionLoading(stream.userId, false)
 
-  
-  let dId = 0;
-  if(!toggleFull 
-      && stream.hasOwnProperty('isShareScreen')
-      && stream.hasOwnProperty('role')){
 
-    if(stream.role === Roles.BROADCAST){
-      if(stream.isShareScreen===true){
+  let dId = 0;
+  if (!toggleFull
+    && stream.hasOwnProperty('isShareScreen')
+    && stream.hasOwnProperty('role')) {
+
+    if (stream.role === Roles.BROADCAST) {
+      if (stream.isShareScreen === true) {
         //share screen
         dId = 2;
-      }else{
+      } else {
         //host camera feed
         dId = 1;
       }
 
-    }else{
+    } else {
       //this stream is from Audince and it exists in map with HOST key (1 or 2)
 
-      if(streamMap.has(stream.id) && (streamMap.get(stream.id)===1 || streamMap.get(stream.id)===2)){
+      if (streamMap.has(stream.id) && (streamMap.get(stream.id) === 1 || streamMap.get(stream.id) === 2)) {
         streamMap.delete(stream.id)
       }
 
-      if(!streamMap.has(stream.id)){
+      if (!streamMap.has(stream.id)) {
         let usedValues = Array.from(streamMap.values());
 
         // Loop through the values from 3 to 9
         for (let i = 3; i <= 9; i++) {
           if (!usedValues.includes(i)) {
-              dId = i;
-              break; // Exit the loop once a missing value is found
+            dId = i;
+            break; // Exit the loop once a missing value is found
           }
         }
-  
+
         if (dId === 0) {
-            // If no missing value was found, increment the counter
-            displayIdCounter++;
-            dId = displayIdCounter;
+          // If no missing value was found, increment the counter
+          displayIdCounter++;
+          dId = displayIdCounter;
         }
-  
-  
+
+
       }
 
     }
-    if(dId!=0){
-      streamMap.set(stream.id,dId)
+    if (dId != 0) {
+      streamMap.set(stream.id, dId)
     }
 
 
@@ -162,7 +162,7 @@ const displayStream = async (stream, toggleFull = false) => {
       isLocalStream: local,
       isShareScreen: stream.isShareScreen || false,
       toggleScreenId: toggleFull ? stream.id : null,
-      displayId:streamMap.get(stream.id),
+      displayId: streamMap.get(stream.id),
     },
   }
 }
@@ -256,230 +256,400 @@ export const getUserRaiseHandStatus = (userId) => {
   return attendees.value[userId]?.raisedHand || false
 }
 
-function keyPressCallback(key){  
- 
+function keyPressCallback(key) {
+
   // Iterate over the properties of the streamers object
   for (const userId in streamers.value) {
     const id = userId;
     if (streamers.value.hasOwnProperty(userId)) {
-        const streamer = streamers.value[id];
-      
-        const stream = streamer.stream;
-        const displayId = streamer.displayId;
+      const streamer = streamers.value[id];
 
-        if(displayId.toString()===key){
-          if (fullScreenedStream.value === stream.id) {
-            fullScreenedStream.value = null
-          } else fullScreenedStream.value = stream.id
-        }
+      const stream = streamer.stream;
+      const displayId = streamer.displayId;
+
+      if (displayId.toString() === key) {
+        if (fullScreenedStream.value === stream.id) {
+          fullScreenedStream.value = null
+        } else fullScreenedStream.value = stream.id
+      }
     }
   }
- 
+
 }
-const Meeting = ({ params: { room, displayName, name } }: { params?: { room?: string; displayName?: string; name?: string } }) => {  
-  
+const Meeting = ({ params: { room, displayName, name } }: { params?: { room?: string; displayName?: string; name?: string } }) => {
+
   detectKeyPress(keyPressCallback)
-  
+
   if (displayName && room) {
     if (displayName[0] !== '@') return <PageNotFound />
   }
   const isHost = !!displayName
   useEffect(() => {
-    const queryParams = new URLSearchParams(window.location.search)
 
-    var role = isHost ? 'broadcast' : 'audience'
-    const host = queryParams.get('host')
-    var previewDialogId = null
+    const fetchData = async () => {
 
-    if (role === null || role === '') {
-      role = Roles.AUDIENCE //by default set role to Audience
-    }
+      const queryParams = new URLSearchParams(window.location.search)
 
-    updateUser({
-      name,
-      role,
-      isStreamming: role === Roles.BROADCAST,
-      isHost: role === Roles.BROADCAST,
-    })
+      var role = isHost ? 'broadcast' : 'audience'
+      const host = queryParams.get('host')
+      var previewDialogId = null
 
-    const setupSparkRTC = async () => {
-      log(`Setup SparkRTC`)
+      if (role === null || role === '') {
+        role = Roles.AUDIENCE //by default set role to Audience
+      }
 
-      sparkRTC.value = createSparkRTC(role, {
-        onAudioStatusChange: (message) => {
-          log('audioStatus: ', message)
-          if (message.stream != undefined && message.type != undefined && streamers.value != undefined) {
-            if (streamers.value[message.stream] != undefined) {
-              streamers.value[message.stream][message.type] = message.value
-              streamers.value = { ...streamers.value }
+      updateUser({
+        name,
+        role,
+        isStreamming: role === Roles.BROADCAST,
+        isHost: role === Roles.BROADCAST,
+      })
+
+      const setupSparkRTC = async () => {
+        log(`Setup SparkRTC`)
+
+        sparkRTC.value = createSparkRTC(role, {
+          onAudioStatusChange: (message) => {
+            log('audioStatus: ', message)
+            if (message.stream != undefined && message.type != undefined && streamers.value != undefined) {
+              if (streamers.value[message.stream] != undefined) {
+                streamers.value[message.stream][message.type] = message.value
+                streamers.value = { ...streamers.value }
+              }
             }
-          }
-        },
-        onUserInitialized: async (userId) => {
-          //@ts-ignore
-          currentUser.value.userId = userId
+          },
+          onUserInitialized: async (userId) => {
+            //@ts-ignore
+            currentUser.value.userId = userId
 
-          //request for role [zaid]
-          await start()
+            //request for role [zaid]
+            await start()
 
-        },
-        localStreamChangeCallback: (stream) => {
-          log('[Local Stream Callback]', stream)
-          streamers.value = {
-            ...streamers.value,
-            [stream.id]: {
-              name: stream.name,
-              isHost: role === Roles.BROADCAST,
-              avatar: '',
-              raisedHand: false,
-              hasCamera: false,
-              stream,
-              isLocalStream: true,
-              isShareScreen: stream.isShareScreen || false,
-              displayId:1,
-            },
-          }
+          },
+          localStreamChangeCallback: (stream) => {
+            log('[Local Stream Callback]', stream)
+            streamers.value = {
+              ...streamers.value,
+              [stream.id]: {
+                name: stream.name,
+                isHost: role === Roles.BROADCAST,
+                avatar: '',
+                raisedHand: false,
+                hasCamera: false,
+                stream,
+                isLocalStream: true,
+                isShareScreen: stream.isShareScreen || false,
+                displayId: 1,
+              },
+            }
 
-        },
-        remoteStreamCallback: async (stream) => {
-          log(`remoteStreamCallback`, stream)
-          log(`remoteStreamCallback-Name`, stream.name)
+          },
+          remoteStreamCallback: async (stream) => {
+            log(`remoteStreamCallback`, stream)
+            log(`remoteStreamCallback-Name`, stream.name)
 
-          await displayStream(stream)
+            await displayStream(stream)
 
-          if (!sparkRTC.value.broadcasterDC && role === Roles.AUDIENCE) {
-            broadcastIsInTheMeeting.value = true
-          }
-        },
-        remoteStreamDCCallback: async (stream) => {
-          sparkRTC.value.getLatestUserList(`remote stream DC`)
+            if (!sparkRTC.value.broadcasterDC && role === Roles.AUDIENCE) {
+              broadcastIsInTheMeeting.value = true
+            }
+          },
+          remoteStreamDCCallback: async (stream) => {
+            sparkRTC.value.getLatestUserList(`remote stream DC`)
 
-          log(`remoteStreamDCCallback`, stream)
+            log(`remoteStreamDCCallback`, stream)
 
-          if (stream != 'no-stream') {
-            onStopStream(stream)
-          } else {
-            //get all remote streams and stop them
-            const streams = sparkRTC.value.remoteStreams
-            streams.forEach((str) => {
-              onStopStream(str)
+            if (stream != 'no-stream') {
+              onStopStream(stream)
+            } else {
+              //get all remote streams and stop them
+              const streams = sparkRTC.value.remoteStreams
+              streams.forEach((str) => {
+                onStopStream(str)
+              })
+
+              sparkRTC.value.remoteStreams = []
+            }
+
+            //display broadcaster not in the meeting message after 1 sec, to avoid any issues
+            setTimeout(() => {
+              if (role === Roles.AUDIENCE) {
+                if (sparkRTC.value.broadcasterDC || stream === 'no-stream') {
+                  //destroy preview Dialog
+                  if (previewDialogId !== null) {
+                    destroyDialog(previewDialogId)
+                  }
+
+                  broadcastIsInTheMeeting.value = false
+                  updateUser({
+                    isStreamming: false,
+                    ableToRaiseHand: true,
+                    isMicrophoneOn: true,
+                    isCameraOn: true,
+                  })
+                  sparkRTC.value.resetAudioVideoState()
+                  log(`broadcasterDC...`)
+                }
+              }
+            }, 1000)
+          },
+          onRaiseHand: (user) => {
+            log(`[On Raise Hand Request]`, user)
+
+            let raiseHandCallback: (values: any) => void = () => { }
+            const handler = new Promise((resolve, reject) => {
+              raiseHandCallback = (value) => {
+                setUserActionLoading(user.userId, true)
+                resolve(value)
+              }
             })
 
-            sparkRTC.value.remoteStreams = []
-          }
+            //only show message when limit is not reached
+            if (sparkRTC.value.raiseHands.length < sparkRTC.value.maxRaisedHands) {
+              attendeesBadge.value = true
 
-          //display broadcaster not in the meeting message after 1 sec, to avoid any issues
-          setTimeout(() => {
-            if (role === Roles.AUDIENCE) {
-              if (sparkRTC.value.broadcasterDC || stream === 'no-stream') {
-                //destroy preview Dialog
-                if (previewDialogId !== null) {
-                  destroyDialog(previewDialogId)
+              makeDialog(
+                'info',
+                {
+                  message: 'Someone has raised their hand!',
+                  icon: 'Clock',
+                },
+                null,
+                () => {
+                  isAttendeesOpen.value = true
+                  attendeesBadge.value = false
                 }
-
-                broadcastIsInTheMeeting.value = false
-                updateUser({
-                  isStreamming: false,
-                  ableToRaiseHand: true,
-                  isMicrophoneOn: true,
-                  isCameraOn: true,
-                })
-                sparkRTC.value.resetAudioVideoState()
-                log(`broadcasterDC...`)
-              }
-            }
-          }, 1000)
-        },
-        onRaiseHand: (user) => {
-          log(`[On Raise Hand Request]`, user)
-
-          let raiseHandCallback: (values: any) => void = () => {}
-          const handler = new Promise((resolve, reject) => {
-            raiseHandCallback = (value) => {
-              setUserActionLoading(user.userId, true)
-              resolve(value)
-            }
-          })
-
-          //only show message when limit is not reached
-          if (sparkRTC.value.raiseHands.length < sparkRTC.value.maxRaisedHands) {
-            attendeesBadge.value = true
-
-            makeDialog(
-              'info',
-              {
-                message: 'Someone has raised their hand!',
-                icon: 'Clock',
-              },
-              null,
-              () => {
-                isAttendeesOpen.value = true
-                attendeesBadge.value = false
-              }
-            )
-          }
-
-          onUserRaisedHand(user.userId, new Date(), false, raiseHandCallback)
-
-          return handler
-        },
-        onStart: async (closeSocket = false) => {
-          if (meetingStatus.value) {
-            if (role === Roles.AUDIENCE) {
-              await sparkRTC.value.restart(closeSocket)
+              )
             }
 
-            //restart for broadcaster [zaid]
-            if(role === Roles.BROADCAST){
-              if(closeSocket){
-                await setupSignalingSocket(host, name, room, isDebugMode.value)
+            onUserRaisedHand(user.userId, new Date(), false, raiseHandCallback)
+
+            return handler
+          },
+          onStart: async (closeSocket = false) => {
+            if (meetingStatus.value) {
+              if (role === Roles.AUDIENCE) {
+                await sparkRTC.value.restart(closeSocket)
               }
-              else{
-                await start()
+
+              //restart for broadcaster [zaid]
+              if (role === Roles.BROADCAST) {
+                if (closeSocket) {
+                  await setupSignalingSocket(host, name, room, isDebugMode.value)
+                }
+                else {
+                  await start()
+                }
               }
+
             }
-            
-          }
-        },
-        startAgain: async () => {
-          if (sparkRTC.value) {
-            //Init socket and start sparkRTC
-            await setupSignalingSocket(host, name, room, isDebugMode.value)
-          }
-        },
-        altBroadcastApprove: async (isStreamming, data) => {
-          //@ts-ignore
-          setUserActionLoading(currentUser.value.userId, false)
+          },
+          startAgain: async () => {
+            if (sparkRTC.value) {
+              //Init socket and start sparkRTC
+              await setupSignalingSocket(host, name, room, isDebugMode.value)
+            }
+          },
+          altBroadcastApprove: async (isStreamming, data) => {
+            //@ts-ignore
+            setUserActionLoading(currentUser.value.userId, false)
 
-          console.log('altBroadcastApprove: data: ', data)
+            console.log('altBroadcastApprove: data: ', data)
 
-          if (!isStreamming) {
-            sparkRTC.value.onRaiseHandRejected()
+            if (!isStreamming) {
+              sparkRTC.value.onRaiseHandRejected()
+              makeDialog('info', {
+                message: 'You’ve been Rejected',
+                icon: 'Close',
+                variant: 'danger',
+              })
+              updateUser({
+                ableToRaiseHand: true,
+              })
+            } else {
+              const localStream = await sparkRTC.value.getAccessToLocalStream()
+
+              previewDialogId = makePreviewDialog(
+                'preview',
+                localStream,
+                {
+                  message: 'Set the default state of your “Video” and “Audio” before joining the stage please',
+                  title: 'Join The Stage',
+                },
+                () => {
+                  //onOk
+                  updateUser({
+                    isStreamming,
+                    ableToRaiseHand: true,
+                  })
+                  sparkRTC.value.joinStage(data)
+                  makeDialog('info', {
+                    message: 'You’ve been added to the stage',
+                    icon: 'Check',
+                  })
+
+                  //send user mute status to everyone to update the Ui
+                  setTimeout(() => {
+                    if (sparkRTC.value.lastAudioState === sparkRTC.value.LastState.DISABLED) {
+                      sparkRTC.value.sendAudioStatus(false)
+                    } else {
+                      sparkRTC.value.sendAudioStatus(true)
+                    }
+                  }, 2000)
+                },
+                () => {
+                  //onClose
+                  updateUser({
+                    ableToRaiseHand: true,
+                    isMicrophoneOn: true,
+                    isCameraOn: true,
+                  })
+
+                  sparkRTC.value.resetAudioVideoState()
+                  sparkRTC.value.cancelJoinStage(data)
+                  sparkRTC.value.onRaiseHandRejected()
+                }
+              )
+            }
+          },
+          disableBroadcasting: () => {
+            updateUser({
+              isStreamming: false,
+              ableToRaiseHand: true,
+              isMicrophoneOn: true,
+              isCameraOn: true,
+            })
             makeDialog('info', {
-              message: 'You’ve been Rejected',
+              message: 'You just removed from stage',
               icon: 'Close',
               variant: 'danger',
             })
+            sparkRTC.value.resetAudioVideoState()
+            sparkRTC.value.onRaiseHandRejected()
+          },
+          maxLimitReached: (message) => {
+            makeDialog('info', { message, icon: 'Close' })
             updateUser({
+              isStreamming: false,
+              ableToRaiseHand: true,
+              isMicrophoneOn: true,
+              isCameraOn: true,
+            })
+            sparkRTC.value.resetAudioVideoState()
+          },
+          onUserListUpdate: (users) => {
+            // log(`[On Users List Update]`, users);
+            const usersTmp = {}
+            for (const { name: userInfo, role, video, id: userId } of users) {
+              const { name, email } = JSON.parse(userInfo)
+              usersTmp[userId] = {
+                ...(attendees.value[userId] || {}),
+                name,
+                email,
+                isHost: role === Roles.BROADCASTER,
+                avatar: '',
+                raisedHand: getUserRaiseHandStatus(userId),
+                hasCamera: !!video,
+                userId,
+                video,
+              }
+            }
+            //get latest raise hand count from sparkRTC
+            if (sparkRTC.value.role === sparkRTC.value.Roles.BROADCAST) {
+              raisedHandsCount.value = sparkRTC.value.raiseHands.length
+            } else {
+              //@ts-ignore
+              raisedHandsCount.value = Object.values(usersTmp).reduce((prev, user) => {
+                //@ts-ignore
+                if (!user.isHost && user.video) return prev + 1
+                return prev
+              }, 0)
+            }
+
+            attendees.value = usersTmp
+          },
+          constraintResults: (constraints) => {
+            if (!constraints.audio) {
+              //remove mic button
+              updateUser({ hasMic: false })
+            }
+
+            if (!constraints.video) {
+              //remove video button
+              updateUser({ hasCamera: false })
+            }
+          },
+          updateStatus: (tag, data) => {
+            log(tag, data)
+          },
+          treeCallback: (tree) => {
+            log(`tree`, tree)
+          },
+          connectionStatus: (status) => {
+            log(`Connection Status: `, status)
+          },
+          updateUi: () => {
+            updateUser({
+              showControllers: true,
+              isStreamming: false,
               ableToRaiseHand: true,
             })
-          } else {
+          },
+          parentDcMessage: () => {
+            makeDialog('info', {
+              message: `For some unexpected reason, you've gotten disconnected. please wait some seconds to reconnect again.`,
+              icon: 'Close',
+              variant: 'danger',
+            })
+          },
+          userLoweredHand: (data, name) => {
+            //@ts-ignore
+            onUserRaisedHand(data, false, false)
+            log('userLoweredHand: ', data)
+            sparkRTC.value.getLatestUserList('UserLowerHand')
+
+            //get raise hand count from attendees list
+            const rC = Object.values(attendees.value).reduce((prev, user) => {
+              //@ts-ignore
+              if (!user.isHost && user.raisedHand) return prev + 1
+              return prev
+            }, 0)
+            console.log('raiseHandCount:', rC)
+
+            if (rC === 0) {
+              attendeesBadge.value = false
+            }
+
+            if (name) {
+              makeDialog('info', {
+                message: `${name} has rejected your request to join stage.`,
+                icon: 'Close',
+                variant: 'danger',
+              })
+            }
+          },
+
+          invitationToJoinStage: async (msg) => {
+            console.log('invitationToJoinStage: ', msg)
+            //show preview dialog to Join stage
             const localStream = await sparkRTC.value.getAccessToLocalStream()
 
             previewDialogId = makePreviewDialog(
               'preview',
               localStream,
               {
-                message: 'Set the default state of your “Video” and “Audio” before joining the stage please',
+                message: 'The host has requested you to come on stage. Set the default state of your “Video” and “Audio” before joining please.',
                 title: 'Join The Stage',
+                yesButton: 'Join The Stage!',
+                noButton: 'Not Now!',
               },
               () => {
                 //onOk
                 updateUser({
-                  isStreamming,
+                  isStreamming: true,
                   ableToRaiseHand: true,
                 })
-                sparkRTC.value.joinStage(data)
+                sparkRTC.value.joinStage(msg.data)
                 makeDialog('info', {
                   message: 'You’ve been added to the stage',
                   icon: 'Check',
@@ -495,6 +665,7 @@ const Meeting = ({ params: { room, displayName, name } }: { params?: { room?: st
                 }, 2000)
               },
               () => {
+                console.log('audience-broadcasting cancelling..')
                 //onClose
                 updateUser({
                   ableToRaiseHand: true,
@@ -503,190 +674,31 @@ const Meeting = ({ params: { room, displayName, name } }: { params?: { room?: st
                 })
 
                 sparkRTC.value.resetAudioVideoState()
-                sparkRTC.value.cancelJoinStage(data)
+                sparkRTC.value.cancelJoinStage(msg.data, true)
                 sparkRTC.value.onRaiseHandRejected()
               }
             )
-          }
-        },
-        disableBroadcasting: () => {
-          updateUser({
-            isStreamming: false,
-            ableToRaiseHand: true,
-            isMicrophoneOn: true,
-            isCameraOn: true,
-          })
-          makeDialog('info', {
-            message: 'You just removed from stage',
-            icon: 'Close',
-            variant: 'danger',
-          })
-          sparkRTC.value.resetAudioVideoState()
-          sparkRTC.value.onRaiseHandRejected()
-        },
-        maxLimitReached: (message) => {
-          makeDialog('info', { message, icon: 'Close' })
-          updateUser({
-            isStreamming: false,
-            ableToRaiseHand: true,
-            isMicrophoneOn: true,
-            isCameraOn: true,
-          })
-          sparkRTC.value.resetAudioVideoState()
-        },
-        onUserListUpdate: (users) => {
-          // log(`[On Users List Update]`, users);
-          const usersTmp = {}
-          for (const { name: userInfo, role, video, id: userId } of users) {
-            const { name, email } = JSON.parse(userInfo)
-            usersTmp[userId] = {
-              ...(attendees.value[userId] || {}),
-              name,
-              email,
-              isHost: role === Roles.BROADCASTER,
-              avatar: '',
-              raisedHand: getUserRaiseHandStatus(userId),
-              hasCamera: !!video,
-              userId,
-              video,
-            }
-          }
-          //get latest raise hand count from sparkRTC
-          if (sparkRTC.value.role === sparkRTC.value.Roles.BROADCAST) {
-            raisedHandsCount.value = sparkRTC.value.raiseHands.length
-          } else {
-            //@ts-ignore
-            raisedHandsCount.value = Object.values(usersTmp).reduce((prev, user) => {
-              //@ts-ignore
-              if (!user.isHost && user.video) return prev + 1
-              return prev
-            }, 0)
-          }
+          },
+        })
 
-          attendees.value = usersTmp
-        },
-        constraintResults: (constraints) => {
-          if (!constraints.audio) {
-            //remove mic button
-            updateUser({ hasMic: false })
-          }
+        if (sparkRTC.value && role == Roles.AUDIENCE) {
+          //Init socket and start sparkRTC
+          await setupSignalingSocket(host, name, room, isDebugMode.value)
+        }
+      }
 
-          if (!constraints.video) {
-            //remove video button
-            updateUser({ hasCamera: false })
-          }
-        },
-        updateStatus: (tag, data) => {
-          log(tag, data)
-        },
-        treeCallback: (tree) => {
-          log(`tree`, tree)
-        },
-        connectionStatus: (status) => {
-          log(`Connection Status: `, status)
-        },
-        updateUi: () => {
-          updateUser({
-            showControllers: true,
-            isStreamming: false,
-            ableToRaiseHand: true,
-          })
-        },
-        parentDcMessage: () => {
-          makeDialog('info', {
-            message: `For some unexpected reason, you've gotten disconnected. please wait some seconds to reconnect again.`,
-            icon: 'Close',
-            variant: 'danger',
-          })
-        },
-        userLoweredHand: (data, name) => {
-          //@ts-ignore
-          onUserRaisedHand(data, false, false)
-          log('userLoweredHand: ', data)
-          sparkRTC.value.getLatestUserList('UserLowerHand')
+      if (meetingStatus.value) {
+        await setupSparkRTC()
+        if (sparkRTC.value && role === Roles.BROADCAST) {
+          let stream = await sparkRTC.value.getAccessToLocalStream()
+          showPreviewDialog(stream, host, name, room)
+        }
 
-          //get raise hand count from attendees list
-          const rC = Object.values(attendees.value).reduce((prev, user) => {
-            //@ts-ignore
-            if (!user.isHost && user.raisedHand) return prev + 1
-            return prev
-          }, 0)
-          console.log('raiseHandCount:', rC)
-
-          if (rC === 0) {
-            attendeesBadge.value = false
-          }
-
-          if (name) {
-            makeDialog('info', {
-              message: `${name} has rejected your request to join stage.`,
-              icon: 'Close',
-              variant: 'danger',
-            })
-          }
-        },
-
-        invitationToJoinStage: async (msg) => {
-          console.log('invitationToJoinStage: ', msg)
-          //show preview dialog to Join stage
-          const localStream = await sparkRTC.value.getAccessToLocalStream()
-
-          previewDialogId = makePreviewDialog(
-            'preview',
-            localStream,
-            {
-              message: 'The host has requested you to come on stage. Set the default state of your “Video” and “Audio” before joining please.',
-              title: 'Join The Stage',
-              yesButton: 'Join The Stage!',
-              noButton: 'Not Now!',
-            },
-            () => {
-              //onOk
-              updateUser({
-                isStreamming: true,
-                ableToRaiseHand: true,
-              })
-              sparkRTC.value.joinStage(msg.data)
-              makeDialog('info', {
-                message: 'You’ve been added to the stage',
-                icon: 'Check',
-              })
-
-              //send user mute status to everyone to update the Ui
-              setTimeout(() => {
-                if (sparkRTC.value.lastAudioState === sparkRTC.value.LastState.DISABLED) {
-                  sparkRTC.value.sendAudioStatus(false)
-                } else {
-                  sparkRTC.value.sendAudioStatus(true)
-                }
-              }, 2000)
-            },
-            () => {
-              console.log('audience-broadcasting cancelling..')
-              //onClose
-              updateUser({
-                ableToRaiseHand: true,
-                isMicrophoneOn: true,
-                isCameraOn: true,
-              })
-
-              sparkRTC.value.resetAudioVideoState()
-              sparkRTC.value.cancelJoinStage(msg.data, true)
-              sparkRTC.value.onRaiseHandRejected()
-            }
-          )
-        },
-      })
-
-      if (sparkRTC.value) {
-        //Init socket and start sparkRTC
-        await setupSignalingSocket(host, name, room, isDebugMode.value)
       }
     }
 
-    if (meetingStatus.value) {
-      setupSparkRTC()
-    }
+    fetchData()
+
   }, [meetingStatus.value])
 
   const rejoinMeeting = () => {
@@ -701,7 +713,7 @@ const Meeting = ({ params: { room, displayName, name } }: { params?: { room?: st
     <div class="flex flex-col justify-between min-h-[--doc-height] dark:bg-secondary-1-a bg-white-f-9 text-medium-12 text-gray-800 dark:text-gray-200">
       <TopBar />
       {meetingStatus.value ? (
-      <>
+        <>
           <MeetingBody />
           <BottomBar />
         </>
@@ -721,6 +733,35 @@ const Meeting = ({ params: { room, displayName, name } }: { params?: { room?: st
 
       <ToastProvider />
     </div>
+  )
+}
+
+function showPreviewDialog(str, host, name, room) {
+  makePreviewDialog(
+    'preview',
+    str,
+    {
+      message: 'Set the default state of your “Video” and “Audio” before joining the stage please',
+      title: 'Join The Stage',
+    },
+    async () => {
+      //onOK
+
+      await setupSignalingSocket(host, name, room, null)
+
+      //send user mute status to everyone to update the Ui
+      setTimeout(() => {
+        if (sparkRTC.value.lastAudioState === sparkRTC.value.LastState.DISABLED) {
+          sparkRTC.value.sendAudioStatus(false)
+        } else {
+          sparkRTC.value.sendAudioStatus(true)
+        }
+      }, 2000)
+    },
+    async () => {
+      //onClose
+      await setupSignalingSocket(host, name, room, null)
+    }
   )
 }
 
