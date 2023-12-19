@@ -763,7 +763,12 @@ function showPreviewDialog(str, host, name, room) {
     },
     async () => {
       //onClose
+      updateUser({
+        isMicrophoneOn: true,
+        isCameraOn: true,
+      })
       await sparkRTC.value.closeCamera(); //reset io devices
+      await sparkRTC.value.resetAudioVideoState()
       await setupSignalingSocket(host, name, room, null)
     }
   )
