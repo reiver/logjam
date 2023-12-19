@@ -328,12 +328,12 @@ export const IODevicesDialog = ({ onClose, message: { message, title }, devices,
                     isBuiltInDevice(deviceType, device)
                       ? Smartphone
                       : deviceType === 'microphone'
-                      ? MicrophoneLight
-                      : deviceType === 'camera'
-                      ? CameraLight
-                      : deviceType === 'speaker'
-                      ? Headphone
-                      : Fragment
+                        ? MicrophoneLight
+                        : deviceType === 'camera'
+                          ? CameraLight
+                          : deviceType === 'speaker'
+                            ? Headphone
+                            : Fragment
                   }
                   class="ml-5"
                   width="20px"
@@ -356,6 +356,7 @@ export const PreviewDialog = ({
   onOk,
   onClose,
   videoStream,
+  showCaneclButton,
   message: { message, title, yesButton, noButton },
   okText = yesButton ? yesButton : 'Sounds Good',
   cancelText = noButton ? noButton : 'Cancel',
@@ -422,7 +423,7 @@ export const PreviewDialog = ({
           console.log('No video ref')
         }
       }, //ok
-      () => {} //close
+      () => { } //close
     )
   }
 
@@ -478,7 +479,7 @@ export const PreviewDialog = ({
 
         {showButtons && (
           <div class="flex justify-end gap-2 p-5 pt-0">
-            <Button
+            {showCaneclButton && (<Button
               size="lg"
               variant="outline"
               class="w-full flex-grow-1"
@@ -487,7 +488,8 @@ export const PreviewDialog = ({
               }}
             >
               {cancelText}
-            </Button>
+            </Button>)}
+
             <Button size="lg" variant={okButtonVariant} class="w-full flex-grow-1" onClick={onOk}>
               {okText}
             </Button>
@@ -698,7 +700,7 @@ export const destroyDialog = (id) => {
   dialogs.value = dialogsTmp
 }
 
-export const makePreviewDialog = (type, videoStream, message, onOk, onClose, options = {}) => {
+export const makePreviewDialog = (showCaneclButton=true,type, videoStream, message, onOk, onClose, options = {}) => {
   const id = uuidv4()
   const destroy = () => {
     const dialogsTmp = { ...dialogs.value }
@@ -712,6 +714,7 @@ export const makePreviewDialog = (type, videoStream, message, onOk, onClose, opt
       id,
       type,
       videoStream,
+      showCaneclButton,
       message,
       pointer: !!onClose,
       onOk: () => {

@@ -470,6 +470,7 @@ const Meeting = ({ params: { room, displayName, name } }: { params?: { room?: st
               const localStream = await sparkRTC.value.getAccessToLocalStream()
 
               previewDialogId = makePreviewDialog(
+                true,
                 'preview',
                 localStream,
                 {
@@ -635,6 +636,7 @@ const Meeting = ({ params: { room, displayName, name } }: { params?: { room?: st
             const localStream = await sparkRTC.value.getAccessToLocalStream()
 
             previewDialogId = makePreviewDialog(
+              true,
               'preview',
               localStream,
               {
@@ -738,6 +740,7 @@ const Meeting = ({ params: { room, displayName, name } }: { params?: { room?: st
 
 function showPreviewDialog(str, host, name, room) {
   makePreviewDialog(
+    false,
     'preview',
     str,
     {
@@ -760,6 +763,7 @@ function showPreviewDialog(str, host, name, room) {
     },
     async () => {
       //onClose
+      await sparkRTC.value.closeCamera(); //reset io devices
       await setupSignalingSocket(host, name, room, null)
     }
   )
