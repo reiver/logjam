@@ -366,9 +366,11 @@ export const PreviewDialog = ({
   className,
   contentClassName,
 }) => {
-  selectedCamera.value = null
-  selectedMic.value = null
-  selectedSpeaker.value = null
+  useEffect(() => {
+    selectedCamera.value = null;
+    selectedMic.value = null;
+    selectedSpeaker.value = null;
+  }, []);
 
   const videoRef = useRef<HTMLVideoElement>()
   const { hasCamera, hasMic, isCameraOn, isMicrophoneOn } = currentUser.value
@@ -393,6 +395,7 @@ export const PreviewDialog = ({
     updateUser({
       isCameraOn: !isCameraOn,
     })
+    console.log("Selected Camera: ", selectedCamera.value)
   }
 
   const toggleMicrophone = () => {
@@ -700,7 +703,7 @@ export const destroyDialog = (id) => {
   dialogs.value = dialogsTmp
 }
 
-export const makePreviewDialog = (showCaneclButton=true,type, videoStream, message, onOk, onClose, options = {}) => {
+export const makePreviewDialog = (showCaneclButton = true, type, videoStream, message, onOk, onClose, options = {}) => {
   const id = uuidv4()
   const destroy = () => {
     const dialogsTmp = { ...dialogs.value }

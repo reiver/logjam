@@ -2501,6 +2501,14 @@ export class SparkRTC {
       });
 
       console.log("new LocalStream: ", this.localStream);
+
+      if(this.lastAudioState===this.LastState.DISABLED){
+        await this.disableAudio()
+      }
+      if(this.lastVideoState===this.LastState.DISABLED){
+        await this.disableVideo()
+      }
+   
       return this.localStream;
     } catch (e) {
       console.error(e);
