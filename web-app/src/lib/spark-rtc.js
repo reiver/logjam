@@ -533,11 +533,21 @@ export class SparkRTC {
         }
         break;
       case "metadata-get":
+        this.updateTheStatus(`[handleMessage] metadata-get ${msg.type}`);
+        if (msg.data) {
+          this.metaData = JSON.parse(msg.data);
+          this.updateTheStatus(`MetaData: `, this.metaData);
+          if (this.metaData.muted && this.updateVideosMuteStatus) {
+            this.updateVideosMuteStatus(this.metaData.muted);
+          }
+        }
+
+        break;
       case "metadata-set":
-        this.updateTheStatus(`[handleMessage] ${msg.type}`);
-        this.metaData = JSON.parse(msg.data);
-        if (this.metaData.raiseHands) {
-          //this.raiseHands=JSON.parse(this.metaData.raiseHands);
+        this.updateTheStatus(`[handleMessage] metadata-set${msg.type}`);
+        if (msg.data) {
+          this.metaData = JSON.parse(msg.data);
+          this.updateTheStatus(`MetaData: `, this.metaData);
         }
         break;
       case "user-by-stream":
@@ -829,6 +839,7 @@ export class SparkRTC {
         this.updateTheStatus(
           `[setupSignalingSocket] socket onopen and sent start`
         );
+        this.getMetadata();
         resolve(socket);
       };
       socket.onclose = async () => {
@@ -2502,13 +2513,13 @@ export class SparkRTC {
 
       console.log("new LocalStream: ", this.localStream);
 
-      if(this.lastAudioState===this.LastState.DISABLED){
-        await this.disableAudio()
+      if (this.lastAudioState === this.LastState.DISABLED) {
+        await this.disableAudio();
       }
-      if(this.lastVideoState===this.LastState.DISABLED){
-        await this.disableVideo()
+      if (this.lastVideoState === this.LastState.DISABLED) {
+        await this.disableVideo();
       }
-   
+
       return this.localStream;
     } catch (e) {
       console.error(e);
@@ -2612,6 +2623,32 @@ export class SparkRTC {
     };
     if ((await this.checkSocketStatus()) === true) {
       this.socket.send(JSON.stringify(data));
+
+      //set meta data
+      this.getMetadata();
+      this.wait(3000);
+      const metaData = this.metaData;
+      // Ensure metaData.muted is initialized as an object
+      if (!metaData.muted) {
+        metaData.muted = {};
+      }
+
+      metaData.muted[this.localStream.id] = !enable;
+      this.setMetadata(metaData);
+    } else {
+      //wait 10 sec and try again
+      setTimeout(() => {
+        this.getMetadata();
+        this.wait(3000);
+        const metaData = this.metaData;
+        // Ensure metaData.muted is initialized as an object
+        if (!metaData.muted) {
+          metaData.muted = {};
+        }
+
+        metaData.muted[this.localStream.id] = !enable;
+        this.setMetadata(metaData);
+      }, 10000);
     }
   };
 
@@ -2782,13 +2819,14 @@ export class SparkRTC {
     return null;
   };
   setMetadata = async (metadata) => {
-    if (await this.checkSocketStatus())
+    if (await this.checkSocketStatus()) {
       this.socket.send(
         JSON.stringify({
           type: "metadata-set",
           data: JSON.stringify(metadata),
         })
       );
+    }
   };
   getMetadata = async () => {
     if (await this.checkSocketStatus())
@@ -2851,7 +2889,7 @@ export class SparkRTC {
       }
     } else {
       //else condition [zaid] test
-      if (!await this.checkSocketStatus()) {
+      if (!(await this.checkSocketStatus())) {
         this.updateTheStatus(`socket is closed already`);
         if (this.startAgain) {
           this.startAgain();
@@ -3074,6 +3112,7 @@ export class SparkRTC {
     this.onAudioStatusChange = options.onAudioStatusChange;
     this.userLoweredHand = options.userLoweredHand;
     this.invitationToJoinStage = options.invitationToJoinStage;
+    this.updateVideosMuteStatus = options.updateVideosMuteStatus;
 
     this.checkBrowser(); //detect browser
     this.getSupportedCodecs();

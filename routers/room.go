@@ -2,13 +2,14 @@ package routers
 
 import (
 	"encoding/json"
+	"net/http"
+	"strconv"
+
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
-	"net/http"
 	"sourcecode.social/greatape/logjam/controllers"
 	"sourcecode.social/greatape/logjam/models"
 	"sourcecode.social/greatape/logjam/models/contracts"
-	"strconv"
 )
 
 type roomWSRouter struct {
