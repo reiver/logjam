@@ -991,7 +991,9 @@ export class SparkRTC {
     this.updateTheStatus(`[startBroadcasting]`, data);
     try {
       //reset room mata data
-      this.setMetadata({})
+      if (data === this.Roles.BROADCAST) {
+        this.setMetadata({});
+      }
 
       if (!this.localStream) {
         await this.getAccessToLocalStream();
