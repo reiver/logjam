@@ -24,6 +24,14 @@ var selectedCamera = signal(null)
 const builtInLabel = 'Built-in'
 const builtInThisDevice = 'Built-in (This Device)'
 
+export const isIphone = () => {
+  const userAgent = navigator.userAgent
+  if (userAgent.match(/iPhone|iPad|iPod/i)) {
+    return true
+  }
+  return false
+}
+
 export const IOSettingsDialog = ({
   onOk,
   onClose,
@@ -35,7 +43,7 @@ export const IOSettingsDialog = ({
   showButtons = true,
   className,
 }) => {
-  
+
   const selectAudioOutputDevice = async () => {
     const io = new IODevices()
     await io.initDevices()
@@ -107,13 +115,7 @@ export const IOSettingsDialog = ({
     )
   }
 
-  const isIphone = () => {
-    const userAgent = navigator.userAgent
-    if (userAgent.match(/iPhone|iPad|iPod/i)) {
-      return true
-    }
-    return false
-  }
+
 
   console.log('Resetting..')
 
@@ -408,6 +410,12 @@ export const PreviewDialog = ({
 
   const toggleCamera = () => {
     sparkRTC.value.disableVideo(!isCameraOn)
+
+    if (isIphone() && videoRef.current && videoRef.current.srcObject === null) {
+      videoRef.current.srcObject = videoStream
+      videoRef.current.style.backgroundColor = '';
+    }
+
     updateUser({
       isCameraOn: !isCameraOn,
     })
@@ -434,13 +442,24 @@ export const PreviewDialog = ({
         //now change the Audio, Video and Speaker devices
         const stream = await sparkRTC.value.changeIODevices(mic, cam, speaker)
 
-        console.log('New Stream: ', stream)
+        console.log('New Stream: ', stream.getTracks())
+        //check if video is enable or disabled
         videoStream = stream
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream
+
+        if (sparkRTC.value.lastVideoState === sparkRTC.value.LastState.DISABLED && isIphone()) {
+          if (videoRef.current) {
+            videoRef.current.srcObject = null
+            videoRef.current.style.backgroundColor = 'black';
+          }
         } else {
-          console.log('No video ref')
+          if (videoRef.current) {
+            videoRef.current.srcObject = stream
+          } else {
+            console.log('No video ref')
+          }
         }
+
+
       }, //ok
       () => { } //close
     )

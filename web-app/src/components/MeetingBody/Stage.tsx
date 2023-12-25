@@ -7,16 +7,18 @@ import clsx from 'clsx'
 import { Icon, IconButton, attendeesWidth, makeDialog } from 'components'
 import throttle from 'lodash.throttle'
 import { memo, useEffect, useRef, useState } from 'preact/compat'
+import { isIphone } from 'components/Dialog/index'
 import { userInteractedWithDom } from '../..'
 import { getDeviceConfig } from '../../hooks/use-breakpoint.js'
 import { IODevices } from '../../lib/io-devices.js'
 import { broadcastIsInTheMeeting, currentUser, sparkRTC } from '../../pages/Meeting'
+import { E } from '../../../dist/assets/index-1792d287'
 let timeOut
 export const bottomBarVisible = signal(true)
 export const fullScreenedStream = signal(null)
 export const hasShareScreenStream = computed(() => !!Object.values(streamers.value).find((s) => s.isShareScreen))
 export const hasFullScreenedStream = computed(() => !!fullScreenedStream.value)
-export const streamers = signal<Record<string, { isHost: boolean; isShareScreen: boolean; isLocalStream: boolean; stream: any; userId: any; muted: boolean; name: string; toggleScreenId: any; displayId:string}>>({})
+export const streamers = signal<Record<string, { isHost: boolean; isShareScreen: boolean; isLocalStream: boolean; stream: any; userId: any; muted: boolean; name: string; toggleScreenId: any; displayId: string }>>({})
 export const streamersLength = computed(() => Object.keys(streamers.value).length)
 export const deviceSize = signal(getDeviceConfig(window.innerWidth))
 const topBarBottomBarHeight = () => document.getElementById('top-bar').offsetHeight + (bottomBarVisible.value ? document.getElementById('bottom-bar').offsetHeight : 0) + 32
@@ -225,13 +227,38 @@ export const Video = memo(({ stream, isMuted, isHostStream, name, userId, isUser
 
   //toggle screen back to normal mode, when stream is stopped
   if ((toggleScreen && hasFullScreenedStream.value && fullScreenedStream.value === stream.id)) {
-      console.log('toggleFullScreen finally')
-      toggleFullScreen()
-      toggleScreen = null
+    console.log('toggleFullScreen finally')
+    toggleFullScreen()
+    toggleScreen = null
+  }
+
+  const isVideoTrackDisabled = (str) => {
+    if (str) {
+      str.getTracks().forEach((track) => {
+        if (track.kind === "video" && track.enabled === false) {
+          return true
+        }
+      })
+    }
+    return false
   }
 
   useEffect(() => {
-    videoRef.current.srcObject = stream
+
+    if (isIphone() && sparkRTC.value.localStream && sparkRTC.value.localStream.id === stream.id) {
+      //localstream on Iphone only
+      if (isVideoTrackDisabled(stream) === true) {
+        videoRef.current.srcObject = null
+        videoRef.current.style.backgroundColor = 'black';
+      } else {
+        videoRef.current.srcObject = stream
+        videoRef.current.style.backgroundColor = '';
+      }
+    } else {
+      //every other stream anywhere
+      console.log("Not Iphone display normal stream")
+      videoRef.current.srcObject = stream
+    }
     //set default speaker
     if (sparkRTC.value.defaultSpeaker) {
       console.log('Changing speaker')
@@ -259,7 +286,7 @@ export const Video = memo(({ stream, isMuted, isHostStream, name, userId, isUser
       () => {
         sparkRTC.value.disableAudienceBroadcast(String(userId))
       },
-      () => {},
+      () => { },
       {
         okText: 'Kick',
         okButtonVariant: 'red',
@@ -311,7 +338,7 @@ export const Video = memo(({ stream, isMuted, isHostStream, name, userId, isUser
       <div class="absolute top-0 left-0 flex justify-between w-full px-2 gap-2">
         <div class="flex truncate justify-center items-center">
           <div class="px-4 py-1 bg-black bg-opacity-50 text-white rounded-full text-medium-12 truncate">
-            {name} {isHostStream && isShareScreen?'(Shared Screen)':isHostStream ? ' (Host)' :''}
+            {name} {isHostStream && isShareScreen ? '(Shared Screen)' : isHostStream ? ' (Host)' : ''}
           </div>
         </div>
         <div class={clsx('h-[48px] gap-0 flex justify-center items-center')}>
@@ -328,18 +355,18 @@ export const Video = memo(({ stream, isMuted, isHostStream, name, userId, isUser
                 flex: menuOpen || isHover,
               })}
             >
-              <IconButton variant="nothing" class="w-[30px] h-[30px] p-0" onClick={()=>{
+              <IconButton variant="nothing" class="w-[30px] h-[30px] p-0" onClick={() => {
                 toggleFullScreen()
               }}
-              onMouseEnter = {()=>{setHoveredOnFullScreenIcon(true)}}
-              onMouseLeave = {()=>{setHoveredOnFullScreenIcon(false)}}
+                onMouseEnter={() => { setHoveredOnFullScreenIcon(true) }}
+                onMouseLeave={() => { setHoveredOnFullScreenIcon(false) }}
               >
                 <Icon
                   key={stream && fullScreenedStream.value === stream.id ? ScreenNormal : ScreenFull}
                   icon={stream && fullScreenedStream.value === stream.id ? ScreenNormal : ScreenFull}
                   width="20px"
                   height="20px"
-                  
+
                 />
               </IconButton>
               {isHost && !isHostStream && (
@@ -362,35 +389,35 @@ export const Video = memo(({ stream, isMuted, isHostStream, name, userId, isUser
         </div>
       </div>
       <div class="absolute top-8 left-0 flex justify-between w-full px-2 gap-2">
-          <div class={clsx('h-[48px] gap-0 flex justify-end items-center flex-grow')}> 
-            <div
-              className={clsx('sm:flex:hidden',{
-                hidden:!isHoveredOnFullScreenIcon || menuOpen
-              })}
-            >
-              <div class="flex justify-center items-center">
-                <div className="px-4 py-1 bg-gray-0 text-gray-2 rounded-full text-medium-12">
-                  {fullScreenedStream.value!=stream.id?'Maximize':'Minimize'}{' shortcut key='}{displayId}
-                </div>
+        <div class={clsx('h-[48px] gap-0 flex justify-end items-center flex-grow')}>
+          <div
+            className={clsx('sm:flex:hidden', {
+              hidden: !isHoveredOnFullScreenIcon || menuOpen
+            })}
+          >
+            <div class="flex justify-center items-center">
+              <div className="px-4 py-1 bg-gray-0 text-gray-2 rounded-full text-medium-12">
+                {fullScreenedStream.value != stream.id ? 'Maximize' : 'Minimize'}{' shortcut key='}{displayId}
               </div>
             </div>
           </div>
+        </div>
       </div>
 
       <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-          <div class={clsx('h-[48px] gap-0 flex justify-end items-center flex-grow')}> 
-            <div
-              className={clsx('sm:flex:hidden',{
-                hidden:!isHoveredOnFullScreenIcon || menuOpen
-              })}
-            >
-              <div class="flex justify-center items-center">
-                <div className="px-4 py-1 bg-black bg-opacity-50 text-white rounded-[16px] text-semi-bold-32">
-                  {displayId}
-                </div>
+        <div class={clsx('h-[48px] gap-0 flex justify-end items-center flex-grow')}>
+          <div
+            className={clsx('sm:flex:hidden', {
+              hidden: !isHoveredOnFullScreenIcon || menuOpen
+            })}
+          >
+            <div class="flex justify-center items-center">
+              <div className="px-4 py-1 bg-black bg-opacity-50 text-white rounded-[16px] text-semi-bold-32">
+                {displayId}
               </div>
             </div>
           </div>
+        </div>
       </div>
     </div>
   )
