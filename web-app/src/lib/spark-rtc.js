@@ -2494,6 +2494,14 @@ export class SparkRTC {
     return this.startReadingBroadcast();
   };
 
+  isIphone = () => {
+    const userAgent = navigator.userAgent;
+    if (userAgent.match(/iPhone|iPad|iPod/i)) {
+      return true;
+    }
+    return false;
+  };
+
   getUserMediaWithDevices = async (mic, cam) => {
     try {
       const audioConstraints = {
@@ -2505,7 +2513,7 @@ export class SparkRTC {
       };
 
       //close the original stream
-      if (this.localStream) {
+      if (this.localStream && !this.isIphone()) {
         this.localStream.getTracks().forEach((track) => {
           track.stop();
         });
