@@ -87,8 +87,8 @@ export class VideoBackground {
   }
 
   constructor() {
-    this._height = 480;
-    this._width = 270;
+    this._height = 1920;
+    this._width = 1200;
     // the background image
     this.bgImage = new Image(this._height, this._width);
 

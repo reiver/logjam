@@ -719,10 +719,7 @@ const Meeting = ({ params: { room, displayName, name } }: { params?: { room?: st
         if (sparkRTC.value && role === Roles.BROADCAST) {
           let stream = await sparkRTC.value.getAccessToLocalStream()
 
-          const videoBackGround = new VideoBackground()
-          let processedStr = await videoBackGround.setBackVideoBackground(backImage, stream.getVideoTracks()[0], stream.getAudioTracks()[0])
-          sparkRTC.value.localStream = processedStr
-          showPreviewDialog(processedStr, host, name, room)
+          showPreviewDialog(stream, host, name, room)
         }
 
       }

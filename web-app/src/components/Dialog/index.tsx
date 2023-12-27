@@ -16,6 +16,8 @@ import { Fragment } from 'preact'
 import { useEffect, useRef } from 'preact/compat'
 import { v4 as uuidv4 } from 'uuid'
 import { IODevices } from '../../lib/io-devices.js'
+import backImage from 'assets/images/blur.jpg'
+import { VideoBackground } from 'lib/videoBackground'
 
 const dialogs = signal([])
 var selectedMic = signal(null)
@@ -429,7 +431,15 @@ export const PreviewDialog = ({
     })
   }
 
-  const openDeviceSettings = () => {
+  const openDeviceSettings = async () => {
+    //update video background
+    const videoBackGround = new VideoBackground()
+    let processedStr = await videoBackGround.setBackVideoBackground(backImage, videoStream.getVideoTracks()[0], videoStream.getAudioTracks()[0])
+    sparkRTC.value.localStream = processedStr
+    videoStream = processedStr
+    videoRef.current.srcObject = videoStream
+
+
     makeIOSettingsDialog(
       'io-settings',
       {
