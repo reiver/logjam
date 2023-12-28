@@ -2,10 +2,11 @@ package controllers
 
 import (
 	"encoding/json"
-	"sourcecode.social/greatape/logjam/models"
-	"sourcecode.social/greatape/logjam/models/contracts"
 	"strconv"
 	"time"
+
+	"sourcecode.social/greatape/logjam/models"
+	"sourcecode.social/greatape/logjam/models/contracts"
 )
 
 type RoomWSController struct {
@@ -377,7 +378,16 @@ func (c *RoomWSController) MetadataGet(ctx *models.WSContext) {
 		c.log(contracts.LError, err.Error())
 		return
 	}
-	_ = c.socketSVC.Send(meta, ctx.SocketID)
+	jsonBytes, err := json.Marshal(meta)
+	if err != nil {
+		c.log(contracts.LError, err.Error())
+		return
+	}
+	resultEvent := models.MessageContract{
+		Type: "metadata-get",
+		Data: string(jsonBytes),
+	}
+	_ = c.socketSVC.Send(resultEvent, ctx.SocketID)
 }
 
 func (c *RoomWSController) UserByStream(ctx *models.WSContext) {

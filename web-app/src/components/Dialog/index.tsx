@@ -24,6 +24,14 @@ var selectedCamera = signal(null)
 const builtInLabel = 'Built-in'
 const builtInThisDevice = 'Built-in (This Device)'
 
+export const isIphone = () => {
+  const userAgent = navigator.userAgent
+  if (userAgent.match(/iPhone|iPad|iPod/i)) {
+    return true
+  }
+  return false
+}
+
 export const IOSettingsDialog = ({
   onOk,
   onClose,
@@ -35,6 +43,7 @@ export const IOSettingsDialog = ({
   showButtons = true,
   className,
 }) => {
+
   const selectAudioOutputDevice = async () => {
     const io = new IODevices()
     await io.initDevices()
@@ -106,13 +115,7 @@ export const IOSettingsDialog = ({
     )
   }
 
-  const isIphone = () => {
-    const userAgent = navigator.userAgent
-    if (userAgent.match(/iPhone|iPad|iPod/i)) {
-      return true
-    }
-    return false
-  }
+
 
   console.log('Resetting..')
 
@@ -136,7 +139,7 @@ export const IOSettingsDialog = ({
             <div class="sm:py-4 py-2 flex rounded-md mx-2 cursor-pointer" onClick={selectAudioOutputDevice}>
               <div class="text-left text-bold-12 px-5 flex-1">Audio Output</div>
               <div id="selectedSpeaker" class="text-right text-bold-12 px-5 flex-1 text-gray-1 cursor-pointer">
-                {selectedSpeaker.value ? selectedSpeaker.value.label : builtInLabel}
+                {selectedSpeaker.value && selectedSpeaker.value.label ? isDefaultSpeaker(selectedSpeaker.value.label) ? builtInLabel : selectedSpeaker.value.label : builtInLabel}
               </div>
             </div>
           )}
@@ -144,14 +147,14 @@ export const IOSettingsDialog = ({
           <div class="sm:py-4 py-2 rounded-md mx-2 flex cursor-pointer" onClick={selectAudioInputDevice}>
             <div class="text-left text-bold-12 px-5 flex-1">Microphone</div>
             <div id="selectedMic" class="text-right text-bold-12 px-5 flex-1 text-gray-1">
-              {selectedMic.value ? selectedMic.value.label : builtInLabel}
+              {selectedMic.value && selectedMic.value.label ? isDefaultMic(selectedMic.value.label) ? builtInLabel : selectedMic.value.label : builtInLabel}
             </div>
           </div>
 
           <div class="sm:py-4 py-2 rounded-md mx-2 flex cursor-pointer" onClick={selectVideoInputDevice}>
             <div class="text-left text-bold-12 px-5 flex-1">Video Input</div>
             <div id="selectedCamera" class="text-right text-bold-12 px-5 flex-1 text-gray-1">
-              {selectedCamera.value ? selectedCamera.value.label : builtInLabel}
+              {selectedCamera.value && selectedCamera.value.label ? isDefaultCamera(selectedCamera.value.label) ? builtInLabel : selectedCamera.value.label : builtInLabel}
             </div>
           </div>
         </div>
@@ -185,6 +188,21 @@ export const IOSettingsDialog = ({
     </div>
   )
 }
+
+const isDefaultCamera = (label) => {
+  const lowerLabel = label.toLowerCase();
+  return ["default", "front", "(", "integrated"].some(keyword => lowerLabel.includes(keyword));
+};
+
+const isDefaultMic = (label) => {
+  const lowerLabel = label.toLowerCase();
+  return ["default", "iphone microphone"].some(keyword => lowerLabel.includes(keyword));
+};
+
+const isDefaultSpeaker = (label) => {
+  const lowerLabel = label.toLowerCase();
+  return ["default"].some(keyword => lowerLabel.includes(keyword));
+};
 
 export const IODevicesDialog = ({ onClose, message: { message, title }, devices, deviceType, className, contentClassName }) => {
   let selectedDeviceIndex = -1
@@ -366,9 +384,11 @@ export const PreviewDialog = ({
   className,
   contentClassName,
 }) => {
-  selectedCamera.value = null
-  selectedMic.value = null
-  selectedSpeaker.value = null
+  useEffect(() => {
+    selectedCamera.value = null;
+    selectedMic.value = null;
+    selectedSpeaker.value = null;
+  }, []);
 
   const videoRef = useRef<HTMLVideoElement>()
   const { hasCamera, hasMic, isCameraOn, isMicrophoneOn } = currentUser.value
@@ -390,9 +410,16 @@ export const PreviewDialog = ({
 
   const toggleCamera = () => {
     sparkRTC.value.disableVideo(!isCameraOn)
+
+    if (isIphone() && videoRef.current && videoRef.current.srcObject === null) {
+      videoRef.current.srcObject = videoStream
+      videoRef.current.style.backgroundColor = '';
+    }
+
     updateUser({
       isCameraOn: !isCameraOn,
     })
+    console.log("Selected Camera: ", selectedCamera.value)
   }
 
   const toggleMicrophone = () => {
@@ -415,13 +442,24 @@ export const PreviewDialog = ({
         //now change the Audio, Video and Speaker devices
         const stream = await sparkRTC.value.changeIODevices(mic, cam, speaker)
 
-        console.log('New Stream: ', stream)
+        console.log('New Stream: ', stream.getTracks())
+        //check if video is enable or disabled
         videoStream = stream
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream
+
+        if (sparkRTC.value.lastVideoState === sparkRTC.value.LastState.DISABLED && isIphone()) {
+          if (videoRef.current) {
+            videoRef.current.srcObject = null
+            videoRef.current.style.backgroundColor = 'black';
+          }
         } else {
-          console.log('No video ref')
+          if (videoRef.current) {
+            videoRef.current.srcObject = stream
+          } else {
+            console.log('No video ref')
+          }
         }
+
+
       }, //ok
       () => { } //close
     )
@@ -700,7 +738,7 @@ export const destroyDialog = (id) => {
   dialogs.value = dialogsTmp
 }
 
-export const makePreviewDialog = (showCaneclButton=true,type, videoStream, message, onOk, onClose, options = {}) => {
+export const makePreviewDialog = (showCaneclButton = true, type, videoStream, message, onOk, onClose, options = {}) => {
   const id = uuidv4()
   const destroy = () => {
     const dialogsTmp = { ...dialogs.value }

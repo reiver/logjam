@@ -681,6 +681,30 @@ const Meeting = ({ params: { room, displayName, name } }: { params?: { room?: st
               }
             )
           },
+          updateVideosMuteStatus: (muted) => {
+            if (muted) {
+              console.log("MutedMap: ", muted)
+              for (const [streamID, isMuted] of Object.entries(muted)) {
+
+                if (sparkRTC.value.localStream && streamID === sparkRTC.value.localStream.id) {
+                  //we need to skip the Localstream
+                  continue
+                }
+
+                if (streamers.value[streamID]) {
+                  streamers.value = {
+                    ...streamers.value,
+                    [streamID]: {
+                      ...streamers.value[streamID],  // Copy the existing properties
+                      muted: isMuted,  // Update only the 'muted' property
+                    },
+                  };
+                }
+
+              }
+
+            }
+          }
         })
 
         if (sparkRTC.value && role == Roles.AUDIENCE) {
