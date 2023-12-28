@@ -96,9 +96,17 @@ func (c *RoomWSController) OnDisconnect(ctx *models.WSContext) {
 		if err != nil {
 			c.log(contracts.LError, err.Error())
 		}
+		err = c.roomRepo.SetRoomMetaData(ctx.RoomId, map[string]interface{}{})
+		if err != nil {
+			c.log(contracts.LError, err.Error())
+		}
 	} else if len(membersIdList) == 1 {
 		if c.roomRepo.IsGGInstance(ctx.RoomId, membersIdList[0]) {
 			err = c.roomRepo.ClearMessageHistory(ctx.RoomId)
+			if err != nil {
+				c.log(contracts.LError, err.Error())
+			}
+			err = c.roomRepo.SetRoomMetaData(ctx.RoomId, map[string]interface{}{})
 			if err != nil {
 				c.log(contracts.LError, err.Error())
 			}
