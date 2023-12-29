@@ -16,7 +16,6 @@ import { Fragment } from 'preact'
 import { useEffect, useRef } from 'preact/compat'
 import { v4 as uuidv4 } from 'uuid'
 import { IODevices } from '../../lib/io-devices.js'
-import backImage from 'assets/images/blur.jpg'
 import back1 from 'assets/images/back1.jpg'
 import back2 from 'assets/images/back2.jpg'
 import back3 from 'assets/images/back3.jpg'
@@ -28,6 +27,8 @@ import blurIcon from 'assets/icons/Blur.svg'
 import noBackgroundIcon from 'assets/icons/NoBackground.svg'
 import { VideoBackground } from 'lib/videoBackground'
 
+const blurTxt = "Blur";
+const noneTxt = "None"
 const dialogs = signal([])
 var selectedMic = signal(null)
 var selectedSpeaker = signal(null)
@@ -197,11 +198,19 @@ export const IOSettingsDialog = ({
               {selectedCamera.value && selectedCamera.value.label ? isDefaultCamera(selectedCamera.value.label) ? builtInLabel : selectedCamera.value.label : builtInLabel}
             </div>
           </div>
-
           <div class="sm:py-4 py-2 rounded-md mx-2 flex cursor-pointer" onClick={selectVideoBackground}>
             <div class="text-left text-bold-12 px-5 flex-1">Background</div>
             <div id="selectedBackground" class="text-right text-bold-12 px-5 flex-1 text-gray-1">
-              {selectedBackground.value ? selectedBackground.value : "none"}
+              {(() => {
+                if (selectedBackground.value != null) {
+                  if (selectedBackground.value === blurTxt) {
+                    return blurTxt
+                  }
+                  return selectedBackground.value + 1
+                } else {
+                  return noneTxt
+                }
+              })()}
             </div>
           </div>
         </div>
@@ -224,7 +233,7 @@ export const IOSettingsDialog = ({
               variant={okButtonVariant}
               class="w-full flex-grow-1"
               onClick={() => {
-                console.log("selectedBackground.value onOK : ",selectedBackground.value)
+                console.log("selectedBackground.value onOK : ", selectedBackground.value)
                 onOk(selectedMic.value, selectedCamera.value, selectedSpeaker.value, selectedBackground.value)
               }}
             >
@@ -587,7 +596,7 @@ export const PreviewDialog = ({
         title: 'Input and Output Settings',
       },
       async (mic, cam, speaker, backgroundIndex) => {
-        console.log('mic: ', mic, 'cam: ', cam, 'speaker: ', speaker, 'background: ',backgroundIndex)
+        console.log('mic: ', mic, 'cam: ', cam, 'speaker: ', speaker, 'background: ', backgroundIndex)
 
         //now change the Audio, Video and Speaker devices
         const stream = await sparkRTC.value.changeIODevices(mic, cam, speaker)
