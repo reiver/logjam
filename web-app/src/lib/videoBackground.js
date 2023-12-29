@@ -1,11 +1,10 @@
 export class VideoBackground {
-  setBackVideoBackground = async (
-    image,
-    videoTrack,
-    audioTrack,
-    blur = false
-  ) => {
+  setBackVideoBackground = async (image, videoStream, blur = false) => {
     this.bgImage.src = image;
+    this.blur = blur;
+
+    const videoTrack = videoStream.getVideoTracks()[0];
+    const audioTrack = videoStream.getAudioTracks()[0];
 
     // instance of SelfieSegmentation object
     const selfieSegmentation = new SelfieSegmentation({
@@ -26,7 +25,6 @@ export class VideoBackground {
     const trackProcessor = new MediaStreamTrackProcessor({ track: videoTrack });
     const trackGenerator = new MediaStreamTrackGenerator({ kind: "video" });
 
-    const _canv = this.canvas;
     const _this = this; //save ref to this
 
     // transform function
@@ -34,24 +32,13 @@ export class VideoBackground {
       async transform(videoFrame, controller) {
         const timestamp = videoFrame.timestamp; //save the time stamp
         var newFrame = null;
-        var blurFrame = null;
 
-        if (blur === true) {
-          // Apply a blur effect to the video frame
-          blurFrame = await _this.blurBackground(videoFrame, 5); // Adjust blur amount as needed
-          // console.log("Blured Video Frame: ", blurFrame);
-        } else {
-          // we send the video frame to MediaPipe
-          videoFrame.width = videoFrame.displayWidth;
-          videoFrame.height = videoFrame.displayHeight;
-          await selfieSegmentation.send({ image: videoFrame });
-        }
-        if (blurFrame != null) {
-          newFrame = new VideoFrame(blurFrame, { timestamp });
-        } else {
-          newFrame = new VideoFrame(_canv, { timestamp });
-        }
-        // we close the current videoFrame and queue the new one
+        // we send the video frame to MediaPipe
+        videoFrame.width = videoFrame.displayWidth;
+        videoFrame.height = videoFrame.displayHeight;
+        await selfieSegmentation.send({ image: videoFrame });
+        newFrame = new VideoFrame(_this.canvas, { timestamp });
+
         videoFrame.close();
         controller.enqueue(newFrame);
       },
@@ -70,28 +57,16 @@ export class VideoBackground {
     return processedStream;
   };
 
-  blurBackground = async (videoFrame, blurAmount) => {
-    const offscreenCanvas = new OffscreenCanvas(
-      videoFrame.displayWidth,
-      videoFrame.displayHeight
-    );
-    const ctx = offscreenCanvas.getContext("2d");
-    ctx.drawImage(videoFrame, 0, 0);
-
-    // Apply blur effect
-    ctx.filter = `blur(${blurAmount}px)`;
-    ctx.drawImage(offscreenCanvas, 0, 0);
-
-    // // Reset the filter to remove blur for subsequent drawings
-    // ctx.filter = "none";
-
-    return offscreenCanvas.transferToImageBitmap();
-  };
-
   onResults(results) {
     if (this.ctx != undefined) {
       this.ctx.save();
       this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+      //set blur filter
+      if (this.blur) {
+        this.ctx.filter = "blur(0)";
+      }
+
       this.ctx.drawImage(
         results.segmentationMask,
         0,
@@ -100,13 +75,30 @@ export class VideoBackground {
         this.canvas.height
       );
 
-      this.ctx.globalCompositeOperation = "source-out";
-      const pat = this.ctx.createPattern(this.bgImage, "no-repeat");
-      this.ctx.fillStyle = pat;
-      this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+      //if blur enabled, blur background
+      if (this.blur) {
+        this.ctx.globalCompositeOperation = "source-in";
+        this.ctx.drawImage(
+          results.image,
+          0,
+          0,
+          this.canvas.width,
+          this.canvas.height
+        );
+      } else {
+        this.ctx.globalCompositeOperation = "source-out";
+        const pat = this.ctx.createPattern(this.bgImage, "no-repeat");
+        this.ctx.fillStyle = pat;
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+      }
 
       // Only overwrite missing pixels.
       this.ctx.globalCompositeOperation = "destination-atop";
+
+      //set blur amount the higher value, more blur is
+      if (this.blur) {
+        this.ctx.filter = "blur(70px)";
+      }
       this.ctx.drawImage(
         results.image,
         0,
@@ -130,6 +122,6 @@ export class VideoBackground {
     // an OffscreenCanvas that combines background and human pixels
     this.canvas = new OffscreenCanvas(this._height, this._width);
     this.ctx = this.canvas.getContext("2d");
-    console.log("ctx: ", this.ctx);
+    this.blur = false;
   }
 }
