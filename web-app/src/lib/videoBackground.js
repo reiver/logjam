@@ -1,5 +1,10 @@
 export class VideoBackground {
-  setBackVideoBackground = async (image, videoTrack, audioTrack) => {
+  setBackVideoBackground = async (
+    image,
+    videoTrack,
+    audioTrack,
+    blur = false
+  ) => {
     this.bgImage.src = image;
 
     // instance of SelfieSegmentation object
@@ -22,18 +27,30 @@ export class VideoBackground {
     const trackGenerator = new MediaStreamTrackGenerator({ kind: "video" });
 
     const _canv = this.canvas;
+    const _this = this; //save ref to this
+
     // transform function
     const transformer = new TransformStream({
       async transform(videoFrame, controller) {
-        // we send the video frame to MediaPipe
-        videoFrame.width = videoFrame.displayWidth;
-        videoFrame.height = videoFrame.displayHeight;
-        await selfieSegmentation.send({ image: videoFrame });
+        const timestamp = videoFrame.timestamp; //save the time stamp
+        var newFrame = null;
+        var blurFrame = null;
 
-        // we create a new videoFrame
-        const timestamp = videoFrame.timestamp;
-        const newFrame = new VideoFrame(_canv, { timestamp });
-
+        if (blur === true) {
+          // Apply a blur effect to the video frame
+          blurFrame = await _this.blurBackground(videoFrame, 5); // Adjust blur amount as needed
+          // console.log("Blured Video Frame: ", blurFrame);
+        } else {
+          // we send the video frame to MediaPipe
+          videoFrame.width = videoFrame.displayWidth;
+          videoFrame.height = videoFrame.displayHeight;
+          await selfieSegmentation.send({ image: videoFrame });
+        }
+        if (blurFrame != null) {
+          newFrame = new VideoFrame(blurFrame, { timestamp });
+        } else {
+          newFrame = new VideoFrame(_canv, { timestamp });
+        }
         // we close the current videoFrame and queue the new one
         videoFrame.close();
         controller.enqueue(newFrame);
@@ -51,6 +68,24 @@ export class VideoBackground {
     processedStream.addTrack(trackGenerator);
 
     return processedStream;
+  };
+
+  blurBackground = async (videoFrame, blurAmount) => {
+    const offscreenCanvas = new OffscreenCanvas(
+      videoFrame.displayWidth,
+      videoFrame.displayHeight
+    );
+    const ctx = offscreenCanvas.getContext("2d");
+    ctx.drawImage(videoFrame, 0, 0);
+
+    // Apply blur effect
+    ctx.filter = `blur(${blurAmount}px)`;
+    ctx.drawImage(offscreenCanvas, 0, 0);
+
+    // // Reset the filter to remove blur for subsequent drawings
+    // ctx.filter = "none";
+
+    return offscreenCanvas.transferToImageBitmap();
   };
 
   onResults(results) {

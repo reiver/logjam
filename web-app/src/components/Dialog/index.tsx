@@ -606,11 +606,20 @@ export const PreviewDialog = ({
         videoStream = stream
 
         if (selectedBackground.value != null) {
-          //set background to video
-          const videoBackGround = new VideoBackground()
-          let processedStr = await videoBackGround.setBackVideoBackground(backgroundsList[selectedBackground.value], videoStream.getVideoTracks()[0], videoStream.getAudioTracks()[0])
-          sparkRTC.value.localStream = processedStr
-          videoStream = processedStr
+          if (selectedBackground.value === blurTxt) {
+            //set background to video
+            const videoBackGround = new VideoBackground()
+            let processedStr = await videoBackGround.setBackVideoBackground(backgroundsList[selectedBackground.value], videoStream.getVideoTracks()[0], videoStream.getAudioTracks()[0], true)
+            sparkRTC.value.localStream = processedStr
+            videoStream = processedStr
+          } else {
+            //set background to video
+            const videoBackGround = new VideoBackground()
+            let processedStr = await videoBackGround.setBackVideoBackground(backgroundsList[selectedBackground.value], videoStream.getVideoTracks()[0], videoStream.getAudioTracks()[0])
+            sparkRTC.value.localStream = processedStr
+            videoStream = processedStr
+          }
+
         }
 
         if (sparkRTC.value.lastVideoState === sparkRTC.value.LastState.DISABLED && isIphone()) {
