@@ -594,7 +594,7 @@ export const PreviewDialog = ({
       'io-settings',
       {
         message: '',
-        title: 'Input and Output Settings',
+        title: 'Settings',
       },
       async (mic, cam, speaker, backgroundIndex) => {
         console.log('mic: ', mic, 'cam: ', cam, 'speaker: ', speaker, 'background: ', backgroundIndex)
