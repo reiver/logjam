@@ -36,6 +36,7 @@ export class VideoBackground {
         // we send the video frame to MediaPipe
         videoFrame.width = videoFrame.displayWidth;
         videoFrame.height = videoFrame.displayHeight;
+
         await selfieSegmentation.send({ image: videoFrame });
         newFrame = new VideoFrame(_this.canvas, { timestamp });
 
@@ -113,9 +114,16 @@ export class VideoBackground {
     }
   }
 
-  constructor() {
-    this._height = 1920;
-    this._width = 1200;
+  constructor(isMobile) {
+    console.log("IsMobile: ", isMobile);
+    if (isMobile === true) {
+      this._height = 1080;
+      this._width = 1920;
+    } else {
+      this._height = 1920;
+      this._width = 1080;
+    }
+
     // the background image
     this.bgImage = new Image(this._height, this._width);
 

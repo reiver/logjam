@@ -26,6 +26,7 @@ import back6 from 'assets/images/back6.jpg'
 import blurIcon from 'assets/icons/Blur.svg'
 import noBackgroundIcon from 'assets/icons/NoBackground.svg'
 import { VideoBackground } from 'lib/videoBackground'
+import { isMobile } from 'lib/common.js'
 
 const blurTxt = "Blur";
 const noneTxt = "None"
@@ -607,7 +608,17 @@ export const PreviewDialog = ({
 
         //Update Video Background
         if (selectedBackground.value != null) {
-          const videoBackGround = new VideoBackground()
+
+          //if camera is turned Off, TURN it ON
+          if (sparkRTC.value.lastVideoState === sparkRTC.value.LastState.DISABLED) {
+            videoStream = await sparkRTC.value.disableVideo(true)
+            updateUser({
+              isCameraOn: true,
+            })
+          }
+
+          const _mobile = await isMobile()
+          const videoBackGround = new VideoBackground((_mobile))
           var processedStr = null;
           if (selectedBackground.value === blurTxt) {
             //Blur the Video Background

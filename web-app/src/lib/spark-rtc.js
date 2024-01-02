@@ -2608,6 +2608,8 @@ export class SparkRTC {
         if (track.kind === "video") track.enabled = enabled;
       });
     }
+
+    return this.localStream;
   };
 
   /**
