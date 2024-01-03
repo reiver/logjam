@@ -318,17 +318,21 @@ export const VideoBackgroundDialog = ({ onClose, message: { title }, type, backg
 
           <div className="sm:pb-2 pb-1 mx-3 flex">
             {/* Image 1 */}
-            <div className="max-w-80px max-h-80px mx-2 cursor-pointer bg-gray-200 rounded-md"> {/* Add bg-gray-200 for a light gray background */}
+            <div className={`max-w-80px max-h-80px mx-2 cursor-pointer bg-gray-200 rounded-md
+            ${selectedBackground.value == null ? "border border-black border-2" : ""}
+            `}> {/* Add bg-gray-200 for a light gray background */}
               <img
                 src={noBackgroundIcon}
-                alt="Second Image"
+                alt="First Image"
                 className="w-full h-full p-2"
                 onClick={handleClickNoBackgroundIcon}
               />
             </div>
 
             {/* Image 2 */}
-            <div className="max-w-80px max-h-80px mx-2 cursor-pointer bg-gray-200 rounded-md"> {/* Add bg-gray-200 for a light gray background */}
+            <div className={`max-w-80px max-h-80px mx-2 cursor-pointer bg-gray-200 rounded-md
+            ${selectedBackground.value && selectedBackground.value === blurTxt ? "border border-black border-2" : ""}
+            `}> {/* Add bg-gray-200 for a light gray background */}
               <img
                 src={blurIcon}
                 alt="Second Image"
@@ -350,7 +354,9 @@ export const VideoBackgroundDialog = ({ onClose, message: { title }, type, backg
                 onClick={() => {
                   handleClickBackgroundImage(index)
                 }}
-                className="w-full h-auto max-w-369px max-h-207px mb-2 cursor-pointer rounded-md"  // Adjusted mx-20 to mx-4
+                className={`w-full h-auto max-w-369px max-h-207px mb-2 cursor-pointer rounded-md
+                ${selectedBackground.value === index ? "border border-black border-2" : ""}
+                `}
               />
             ))}
           </div>
