@@ -354,8 +354,9 @@ export const VideoBackgroundDialog = ({ onClose, message: { title }, type, backg
                 onClick={() => {
                   handleClickBackgroundImage(index)
                 }}
-                className={`w-full h-auto max-w-369px max-h-207px mb-2 cursor-pointer rounded-md
-                ${selectedBackground.value === index ? "border border-black border-2" : ""}
+                style={{ width: '100%', height: 'auto', maxWidth: '369px', maxHeight: '207px' }}
+                className={`mb-2 cursor-pointer rounded-md
+                  ${selectedBackground.value === index ? "border border-black border-2" : ""}
                 `}
               />
             ))}
