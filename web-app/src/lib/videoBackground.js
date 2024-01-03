@@ -117,11 +117,11 @@ export class VideoBackground {
   constructor(isMobile) {
     console.log("IsMobile: ", isMobile);
     if (isMobile === true) {
-      this._height = 1080;
+      this._height = 1440;
       this._width = 1920;
     } else {
       this._height = 1920;
-      this._width = 1080;
+      this._width = 1440;
     }
 
     // the background image
