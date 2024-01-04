@@ -40,6 +40,8 @@ export class VideoBackground {
         await selfieSegmentation.send({ image: videoFrame });
         newFrame = new VideoFrame(_this.canvas, { timestamp });
 
+        newFrame = await _this.flipVideoFrame(newFrame);
+
         videoFrame.close();
         controller.enqueue(newFrame);
       },
@@ -131,5 +133,64 @@ export class VideoBackground {
     this.canvas = new OffscreenCanvas(this._height, this._width);
     this.ctx = this.canvas.getContext("2d");
     this.blur = false;
+  }
+
+  flipVideoStream = (videoStream) => {
+    const videoTrack = videoStream.getVideoTracks()[0];
+    const audioTrack = videoStream.getAudioTracks()[0];
+
+    const trackProcessor = new MediaStreamTrackProcessor({ track: videoTrack });
+    const trackGenerator = new MediaStreamTrackGenerator({ kind: "video" });
+
+    const _this = this;
+
+    const transformer = new TransformStream({
+      async transform(videoFrame, controller) {
+        const timestamp = videoFrame.timestamp;
+        const flippedFrame = await _this.flipVideoFrame(videoFrame);
+
+        controller.enqueue(new VideoFrame(flippedFrame, { timestamp }));
+        videoFrame.close();
+      },
+    });
+
+    trackProcessor.readable
+      .pipeThrough(transformer)
+      .pipeTo(trackGenerator.writable);
+
+    const flippedStream = new MediaStream();
+    flippedStream.addTrack(audioTrack);
+    flippedStream.addTrack(trackGenerator);
+
+    return flippedStream;
+  };
+
+  // Function to flip a single video frame
+  async flipVideoFrame(videoFrame) {
+    const _this = this;
+    return new Promise((resolve) => {
+      try {
+        // Flip the image horizontally
+        _this.ctx.scale(-1, 1);
+        _this.ctx.drawImage(
+          videoFrame,
+          -_this.canvas.width,
+          0,
+          _this.canvas.width,
+          _this.canvas.height
+        );
+        _this.ctx.scale(-1, 1); // Reset scaling
+
+        const flippedFrame = new VideoFrame(_this.canvas, {
+          timestamp: videoFrame.timestamp,
+        });
+        resolve(flippedFrame);
+      } catch (error) {
+        console.error("Error flipping video frame:", error);
+        resolve(null); // Resolve with null if an error occurs
+      } finally {
+        videoFrame.close(); // Ensure that close is always called
+      }
+    });
   }
 }
