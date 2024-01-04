@@ -7,8 +7,9 @@ export const Roles = {
   BROADCASTER: "broadcaster",
 };
 
-export const isMobile = async () => {
-  return window.innerWidth <= 800 && window.innerHeight <= 600;
+export const isMobile = () => {
+  let res = window.innerWidth <= 800 && window.innerHeight <= 1000;
+  return res;
 };
 
 // TODO: set base url
@@ -74,6 +75,6 @@ export const createAudienceSpartRTC = (role, props) => {
     parentDcMessage: props.parentDcMessage,
     onAudioStatusChange: props.onAudioStatusChange,
     invitationToJoinStage: props.invitationToJoinStage,
-    updateVideosMuteStatus:props.updateVideosMuteStatus,
+    updateVideosMuteStatus: props.updateVideosMuteStatus,
   });
 };

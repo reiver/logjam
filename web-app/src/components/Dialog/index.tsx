@@ -199,7 +199,7 @@ export const IOSettingsDialog = ({
               {selectedCamera.value && selectedCamera.value.label ? isDefaultCamera(selectedCamera.value.label) ? builtInLabel : selectedCamera.value.label : builtInLabel}
             </div>
           </div>
-          <div class="sm:py-4 py-2 rounded-md mx-2 flex cursor-pointer" onClick={selectVideoBackground}>
+          {isMobile() === false && (<div class="sm:py-4 py-2 rounded-md mx-2 flex cursor-pointer" onClick={selectVideoBackground}>
             <div class="text-left text-bold-12 px-5 flex-1">Background</div>
             <div id="selectedBackground" class="text-right text-bold-12 px-5 flex-1 text-gray-1">
               {(() => {
@@ -213,7 +213,8 @@ export const IOSettingsDialog = ({
                 }
               })()}
             </div>
-          </div>
+          </div>)}
+
         </div>
 
         {showButtons && (
@@ -624,7 +625,7 @@ export const PreviewDialog = ({
             })
           }
 
-          const _mobile = await isMobile()
+          const _mobile = isMobile()
           const videoBackGround = new VideoBackground((_mobile))
           var processedStr = null;
           if (selectedBackground.value === blurTxt) {
