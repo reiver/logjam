@@ -517,8 +517,7 @@ export class SparkRTC {
           if (this.remoteStreamDCCallback)
             this.remoteStreamDCCallback("no-stream");
         } catch {}
-        this.localStream?.getTracks()?.forEach((track) => track.stop());
-        this.localStream = null;
+        await this.closeCamera();
         this.startedRaiseHand = false;
         break;
       case "event-parent-dc":
@@ -2742,6 +2741,9 @@ export class SparkRTC {
   };
 
   closeCamera = async () => {
+    console.log("Closing camera");
+    await videoBackGround.stopProcessing();
+
     if (this.localStream) {
       this.localStream.getTracks().forEach((track) => {
         track.stop();
@@ -2790,9 +2792,9 @@ export class SparkRTC {
           }
         }
       }
-    this.localStream.getTracks().forEach((track) => {
-      track.stop();
-    });
+
+    await this.closeCamera();
+
     this.startedRaiseHand = false;
 
     //notify host I am leaving, so host can remove from invitation list
@@ -2943,8 +2945,6 @@ export class SparkRTC {
     //stop all the sender tracks
     if (this.localStream) {
       this.leftMeeting = true;
-
-      videoBackGround.stopProcessing();
 
       if (this.role === this.Roles.BROADCAST) {
         await this.closeCamera();
