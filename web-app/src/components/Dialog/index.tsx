@@ -202,7 +202,7 @@ export const IOSettingsDialog = ({
               {selectedCamera.value && selectedCamera.value.label ? isDefaultCamera(selectedCamera.value.label) ? builtInLabel : selectedCamera.value.label : builtInLabel}
             </div>
           </div>
-          {isMobile() === false && (<div class="sm:py-4 py-2 rounded-md mx-2 flex cursor-pointer" onClick={selectVideoBackground}>
+          {isMobile() === false && (<div class="sm:py-4 py-2 rounded-md mx-2 flex cursor-pointer items-center" onClick={selectVideoBackground}>
             <div class="text-left text-bold-12 px-5 flex-1">Background</div>
             <div id="selectedBackground" class="text-right text-bold-12 px-5 flex-1 text-gray-1">
               {(() => {
@@ -216,7 +216,7 @@ export const IOSettingsDialog = ({
                       <img
                         src={backgroundsList[selectedBackground.value]}
                         alt="Selected Background Image"
-                        className="w-6 h-6 inline-block mr-2"
+                        className="w-11 h-8 rounded-md float-right"
                       />
 
                     </>
@@ -631,7 +631,7 @@ export const PreviewDialog = ({
       },
       async (mic, cam, speaker, backgroundIndex) => {
         console.log('mic: ', mic, 'cam: ', cam, 'speaker: ', speaker, 'background: ', backgroundIndex)
-
+  
         //now change the Audio, Video and Speaker devices
         const stream = await sparkRTC.value.changeIODevices(mic, cam, speaker)
 

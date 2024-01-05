@@ -2512,7 +2512,7 @@ export class SparkRTC {
       const videoConstraints = {
         deviceId: cam && cam.deviceId ? { exact: cam.deviceId } : undefined,
       };
-
+      
       //close the original stream
       if (this.localStream && !this.isIphone()) {
         this.localStream.getTracks().forEach((track) => {
