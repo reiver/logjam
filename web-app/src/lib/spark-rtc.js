@@ -1,4 +1,5 @@
 import { iceServers } from "./config.js";
+import { videoBackGround } from "./common.js";
 
 /** Your class description
  *
@@ -2634,7 +2635,7 @@ export class SparkRTC {
     const data = {
       type: "muted",
       value: !enable,
-      stream: this.localStream.id,
+      stream: this.localStream ? this.localStream.id : "",
     };
     if ((await this.checkSocketStatus()) === true) {
       this.socket.send(JSON.stringify(data));
@@ -2942,6 +2943,8 @@ export class SparkRTC {
     //stop all the sender tracks
     if (this.localStream) {
       this.leftMeeting = true;
+
+      videoBackGround.stopProcessing();
 
       if (this.role === this.Roles.BROADCAST) {
         await this.closeCamera();

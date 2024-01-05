@@ -12,6 +12,7 @@ import Smartphone from 'assets/icons/Smartphone.svg?react'
 import { clsx } from 'clsx'
 import { Button, Icon, IconButton, Tooltip } from 'components'
 import { currentUser, sparkRTC, updateUser } from 'pages/Meeting.js'
+import { videoBackGround } from 'lib/common.js'
 import { Fragment } from 'preact'
 import { useEffect, useRef } from 'preact/compat'
 import { v4 as uuidv4 } from 'uuid'
@@ -625,8 +626,7 @@ export const PreviewDialog = ({
             })
           }
 
-          const _mobile = isMobile()
-          const videoBackGround = new VideoBackground((_mobile))
+          
           var processedStr = null;
           if (selectedBackground.value === blurTxt) {
             //Blur the Video Background

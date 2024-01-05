@@ -1,4 +1,5 @@
 import { SparkRTC } from "./spark-rtc.js";
+import { VideoBackground } from "./videoBackground.js";
 
 //enum for Roles
 export const Roles = {
@@ -35,6 +36,7 @@ export function createSparkRTC(role, options) {
     return createAudienceSpartRTC(role, options);
   }
 }
+export const videoBackGround = new VideoBackground()
 
 export const createBroadcastSpartRTC = (role, props) => {
   return new SparkRTC(role, {

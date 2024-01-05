@@ -2,24 +2,25 @@ export class VideoBackground {
   setBackVideoBackground = async (image, videoStream, blur = false) => {
     this.bgImage.src = image;
     this.blur = blur;
+    this.originalStream = videoStream;
 
     const videoTrack = videoStream.getVideoTracks()[0];
     const audioTrack = videoStream.getAudioTracks()[0];
 
     // instance of SelfieSegmentation object
-    const selfieSegmentation = new SelfieSegmentation({
+    this.selfieSegmentation = new SelfieSegmentation({
       locateFile: (file) =>
         `https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/${file}`,
     });
 
     // set the model and mode
-    selfieSegmentation.setOptions({
+    this.selfieSegmentation.setOptions({
       modelSelection: 1,
       selfieMode: true,
     });
 
     // set the callback function for when it finishes segmenting
-    selfieSegmentation.onResults(this.onResults.bind(this));
+    this.selfieSegmentation.onResults(this.onResults.bind(this));
 
     // definition of track processor and generator
     const trackProcessor = new MediaStreamTrackProcessor({ track: videoTrack });
@@ -37,7 +38,7 @@ export class VideoBackground {
         videoFrame.width = videoFrame.displayWidth;
         videoFrame.height = videoFrame.displayHeight;
 
-        await selfieSegmentation.send({ image: videoFrame });
+        await _this.selfieSegmentation.send({ image: videoFrame });
         newFrame = new VideoFrame(_this.canvas, { timestamp });
 
         newFrame = await _this.flipVideoFrame(newFrame);
@@ -53,11 +54,11 @@ export class VideoBackground {
       .pipeTo(trackGenerator.writable);
 
     // add the new mediastream to video element
-    const processedStream = new MediaStream();
-    processedStream.addTrack(audioTrack);
-    processedStream.addTrack(trackGenerator);
+    this.processedStream = new MediaStream();
+    this.processedStream.addTrack(audioTrack);
+    this.processedStream.addTrack(trackGenerator);
 
-    return processedStream;
+    return this.processedStream;
   };
 
   onResults(results) {
@@ -116,15 +117,9 @@ export class VideoBackground {
     }
   }
 
-  constructor(isMobile) {
-    console.log("IsMobile: ", isMobile);
-    if (isMobile === true) {
-      this._height = 1440;
-      this._width = 1920;
-    } else {
-      this._height = 1920;
-      this._width = 1440;
-    }
+  constructor() {
+    this._height = 1920;
+    this._width = 1440;
 
     // the background image
     this.bgImage = new Image(this._height, this._width);
@@ -133,7 +128,48 @@ export class VideoBackground {
     this.canvas = new OffscreenCanvas(this._height, this._width);
     this.ctx = this.canvas.getContext("2d");
     this.blur = false;
+
+    this.stopProcess = false;
+    this.selfieSegmentation = null;
+
+    this.originalStream = null;
+    this.processedStream = null;
+    this.flippedStream = null;
   }
+
+  stopProcessing = () => {
+    this.stopProcess = true;
+    if (this.selfieSegmentation) {
+      this.selfieSegmentation.close();
+    }
+
+    // Stop the processed stream tracks
+    if (this.processedStream) {
+      const audioTrack = this.processedStream.getAudioTracks()[0];
+      const videoTrack = this.processedStream.getVideoTracks()[0];
+
+      if (audioTrack) {
+        audioTrack.stop();
+      }
+
+      if (videoTrack) {
+        videoTrack.stop();
+      }
+    }
+
+    if (this.originalStream) {
+      const audioTrack = this.originalStream.getAudioTracks()[0];
+      const videoTrack = this.originalStream.getVideoTracks()[0];
+
+      if (audioTrack) {
+        audioTrack.stop();
+      }
+
+      if (videoTrack) {
+        videoTrack.stop();
+      }
+    }
+  };
 
   flipVideoStream = (videoStream) => {
     const videoTrack = videoStream.getVideoTracks()[0];
@@ -158,11 +194,11 @@ export class VideoBackground {
       .pipeThrough(transformer)
       .pipeTo(trackGenerator.writable);
 
-    const flippedStream = new MediaStream();
-    flippedStream.addTrack(audioTrack);
-    flippedStream.addTrack(trackGenerator);
+    this.flippedStream = new MediaStream();
+    this.flippedStream.addTrack(audioTrack);
+    this.flippedStream.addTrack(trackGenerator);
 
-    return flippedStream;
+    return this.flippedStream;
   };
 
   // Function to flip a single video frame
