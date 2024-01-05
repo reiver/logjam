@@ -1,9 +1,14 @@
 export class VideoBackground {
   setBackVideoBackground = async (image, videoStream, blur = false) => {
+    //init var
     this.bgImage.src = image;
     this.blur = blur;
+
+    //stop previous Original stream
+    await this.stopStream(this.originalStream);
     this.originalStream = videoStream;
 
+    //get Tracks
     const videoTrack = videoStream.getVideoTracks()[0];
     const audioTrack = videoStream.getAudioTracks()[0];
 
@@ -41,6 +46,7 @@ export class VideoBackground {
         await _this.selfieSegmentation.send({ image: videoFrame });
         newFrame = new VideoFrame(_this.canvas, { timestamp });
 
+        //flip the video frame Horizontally
         newFrame = await _this.flipVideoFrame(newFrame);
 
         videoFrame.close();
@@ -132,43 +138,21 @@ export class VideoBackground {
     this.stopProcess = false;
     this.selfieSegmentation = null;
 
+    //streams
     this.originalStream = null;
     this.processedStream = null;
     this.flippedStream = null;
   }
 
-  stopProcessing = () => {
+  stopProcessing = async () => {
     this.stopProcess = true;
     if (this.selfieSegmentation) {
       this.selfieSegmentation.close();
     }
 
-    // Stop the processed stream tracks
-    if (this.processedStream) {
-      const audioTrack = this.processedStream.getAudioTracks()[0];
-      const videoTrack = this.processedStream.getVideoTracks()[0];
-
-      if (audioTrack) {
-        audioTrack.stop();
-      }
-
-      if (videoTrack) {
-        videoTrack.stop();
-      }
-    }
-
-    if (this.originalStream) {
-      const audioTrack = this.originalStream.getAudioTracks()[0];
-      const videoTrack = this.originalStream.getVideoTracks()[0];
-
-      if (audioTrack) {
-        audioTrack.stop();
-      }
-
-      if (videoTrack) {
-        videoTrack.stop();
-      }
-    }
+    // Stop streams
+    await this.stopStream(this.processedStream);
+    await this.stopStream(this.originalStream);
   };
 
   flipVideoStream = (videoStream) => {
@@ -202,7 +186,7 @@ export class VideoBackground {
   };
 
   // Function to flip a single video frame
-  async flipVideoFrame(videoFrame) {
+  flipVideoFrame = async (videoFrame) => {
     const _this = this;
     return new Promise((resolve) => {
       try {
@@ -228,5 +212,23 @@ export class VideoBackground {
         videoFrame.close(); // Ensure that close is always called
       }
     });
-  }
+  };
+
+  stopStream = async (stream) => {
+    if (stream) {
+      const audioTrack = stream.getAudioTracks()[0];
+      const videoTrack = stream.getVideoTracks()[0];
+
+      if (audioTrack) {
+        audioTrack.stop();
+      }
+
+      if (videoTrack) {
+        videoTrack.stop();
+      }
+      stream = null;
+    }
+
+    return stream;
+  };
 }
