@@ -24,6 +24,8 @@ import back4 from 'assets/images/back4.jpg'
 import back5 from 'assets/images/back5.jpg'
 import back6 from 'assets/images/back6.jpg'
 
+import CheckCircle from 'assets/icons/CheckCircle.svg'
+
 import blurIcon from 'assets/icons/Blur.svg'
 import noBackgroundIcon from 'assets/icons/NoBackground.svg'
 import { VideoBackground } from 'lib/videoBackground'
@@ -349,19 +351,31 @@ export const VideoBackgroundDialog = ({ onClose, message: { title }, type, backg
           {/* Display images dynamically */}
           <div className="flex flex-col items-center mx-4 mb-1">
             {backgroundsList.map((background, index) => (
-              <img
-                key={index}
-                src={background}
-                alt={`Background ${index + 1}`}
-                onClick={() => {
-                  handleClickBackgroundImage(index)
-                }}
+              <div
                 style={{ width: '100%', height: 'auto', maxWidth: '369px', maxHeight: '207px' }}
-                className={`mb-2 cursor-pointer rounded-md
+                className={"mb-3 relative"}
+              >
+                {selectedBackground.value === index && (<img
+                  src={CheckCircle}
+                  alt="Check Icon"
+                  className="w-6 h-6 ml-80 -mt-3 absolute"
+                />)}
+                <img
+                  key={index}
+                  src={background}
+                  alt={`Background ${index + 1}`}
+                  onClick={() => {
+                    handleClickBackgroundImage(index)
+                  }}
+                  style={{ width: '100%', height: 'auto', maxWidth: '369px', maxHeight: '207px' }}
+                  className={`cursor-pointer rounded-md
                   ${selectedBackground.value === index ? "border border-black border-2" : ""}
                 `}
-              />
+                />
+
+              </div>
             ))}
+
           </div>
         </div>
       </div>
@@ -626,7 +640,7 @@ export const PreviewDialog = ({
             })
           }
 
-          
+
           var processedStr = null;
           if (selectedBackground.value === blurTxt) {
             //Blur the Video Background
