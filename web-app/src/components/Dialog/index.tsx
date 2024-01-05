@@ -210,7 +210,17 @@ export const IOSettingsDialog = ({
                   if (selectedBackground.value === blurTxt) {
                     return blurTxt
                   }
-                  return selectedBackground.value + 1
+                  return (
+                    <>
+                      {/* Display image if selectedBackground.value is not blurTxt */}
+                      <img
+                        src={backgroundsList[selectedBackground.value]}
+                        alt="Selected Background Image"
+                        className="w-6 h-6 inline-block mr-2"
+                      />
+
+                    </>
+                  );
                 } else {
                   return noneTxt
                 }
