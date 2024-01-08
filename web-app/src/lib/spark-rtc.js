@@ -2742,7 +2742,9 @@ export class SparkRTC {
 
   closeCamera = async () => {
     console.log("Closing camera");
-    await videoBackGround.stopProcessing();
+    if (videoBackGround) {
+      await videoBackGround.stopProcessing();
+    }
 
     if (this.localStream) {
       this.localStream.getTracks().forEach((track) => {
@@ -2943,24 +2945,28 @@ export class SparkRTC {
   leaveMeeting = async () => {
     //check for local stream and stop tracks
     //stop all the sender tracks
-    if (this.localStream) {
-      this.leftMeeting = true;
+    try {
+      if (this.localStream) {
+        this.leftMeeting = true;
 
-      if (this.role === this.Roles.BROADCAST) {
-        await this.closeCamera();
+        if (this.role === this.Roles.BROADCAST) {
+          await this.closeCamera();
+        } else {
+          await this.leaveStage();
+        }
       } else {
-        await this.leaveStage();
+        //close websocket if not streaming anything
+        if (this.socket) {
+          this.socket.onclose = () => {
+            this.updateTheStatus(`socket is closed after leaveMeeting`);
+            this.resetVariables();
+          }; //empty on close callback
+          this.socket.close();
+          this.socket = null;
+        }
       }
-    } else {
-      //close websocket if not streaming anything
-      if (this.socket) {
-        this.socket.onclose = () => {
-          this.updateTheStatus(`socket is closed after leaveMeeting`);
-          this.resetVariables();
-        }; //empty on close callback
-        this.socket.close();
-        this.socket = null;
-      }
+    } catch (error) {
+      console.log("Error 1 while leaving: ", error);
     }
 
     if (this.role === this.Roles.BROADCAST) {

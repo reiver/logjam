@@ -631,7 +631,7 @@ export const PreviewDialog = ({
       },
       async (mic, cam, speaker, backgroundIndex) => {
         console.log('mic: ', mic, 'cam: ', cam, 'speaker: ', speaker, 'background: ', backgroundIndex)
-  
+
         //now change the Audio, Video and Speaker devices
         const stream = await sparkRTC.value.changeIODevices(mic, cam, speaker)
 
@@ -977,7 +977,10 @@ export const makePreviewDialog = (showCaneclButton = true, type, videoStream, me
         onOk && onOk()
         destroy()
       },
-      onClose: () => {
+      onClose: async () => {
+        if (sparkRTC.value.role === sparkRTC.value.Roles.AUDIENCE) {
+          await sparkRTC.value.closeCamera()
+        }
         onClose && onClose()
         destroy()
       },

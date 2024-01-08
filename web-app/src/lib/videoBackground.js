@@ -1,70 +1,81 @@
 export class VideoBackground {
   setBackVideoBackground = async (image, videoStream, blur = false) => {
-    //init var
-    this.bgImage.src = image;
-    this.blur = blur;
+    try {
+      //init var
+      this.bgImage.src = image;
+      this.blur = blur;
 
-    //stop previous Original stream
-    await this.stopStream(this.originalStream);
-    this.originalStream = videoStream;
+      //stop previous Original stream
+      await this.stopStream(this.originalStream);
+      this.originalStream = videoStream;
 
-    //get Tracks
-    const videoTrack = videoStream.getVideoTracks()[0];
-    const audioTrack = videoStream.getAudioTracks()[0];
+      if (this.selfieSegmentation) {
+        this.selfieSegmentation.close();
+        this.selfieSegmentation = null;
+      }
 
-    // instance of SelfieSegmentation object
-    this.selfieSegmentation = new SelfieSegmentation({
-      locateFile: (file) =>
-        `https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/${file}`,
-    });
+      //get Tracks
+      const videoTrack = videoStream.getVideoTracks()[0];
+      const audioTrack = videoStream.getAudioTracks()[0];
 
-    // set the model and mode
-    this.selfieSegmentation.setOptions({
-      modelSelection: 1,
-      selfieMode: true,
-    });
+      // instance of SelfieSegmentation object
+      this.selfieSegmentation = new SelfieSegmentation({
+        locateFile: (file) =>
+          `https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/${file}`,
+      });
 
-    // set the callback function for when it finishes segmenting
-    this.selfieSegmentation.onResults(this.onResults.bind(this));
+      // set the model and mode
+      this.selfieSegmentation.setOptions({
+        modelSelection: 1,
+        selfieMode: true,
+      });
 
-    // definition of track processor and generator
-    const trackProcessor = new MediaStreamTrackProcessor({ track: videoTrack });
-    const trackGenerator = new MediaStreamTrackGenerator({ kind: "video" });
+      // set the callback function for when it finishes segmenting
+      this.selfieSegmentation.onResults(this.onResults.bind(this));
 
-    const _this = this; //save ref to this
+      // definition of track processor and generator
+      const trackProcessor = new MediaStreamTrackProcessor({
+        track: videoTrack,
+      });
+      const trackGenerator = new MediaStreamTrackGenerator({ kind: "video" });
 
-    // transform function
-    const transformer = new TransformStream({
-      async transform(videoFrame, controller) {
-        const timestamp = videoFrame.timestamp; //save the time stamp
-        var newFrame = null;
+      const _this = this; //save ref to this
 
-        // we send the video frame to MediaPipe
-        videoFrame.width = videoFrame.displayWidth;
-        videoFrame.height = videoFrame.displayHeight;
+      // transform function
+      const transformer = new TransformStream({
+        async transform(videoFrame, controller) {
+          const timestamp = videoFrame.timestamp; //save the time stamp
+          var newFrame = null;
 
-        await _this.selfieSegmentation.send({ image: videoFrame });
-        newFrame = new VideoFrame(_this.canvas, { timestamp });
+          // we send the video frame to MediaPipe
+          videoFrame.width = videoFrame.displayWidth;
+          videoFrame.height = videoFrame.displayHeight;
 
-        //flip the video frame Horizontally
-        newFrame = await _this.flipVideoFrame(newFrame);
+          await _this.selfieSegmentation.send({ image: videoFrame });
+          newFrame = new VideoFrame(_this.canvas, { timestamp });
 
-        videoFrame.close();
-        controller.enqueue(newFrame);
-      },
-    });
+          //flip the video frame Horizontally
+          newFrame = await _this.flipVideoFrame(newFrame);
 
-    // we pipe the stream through the transform function
-    trackProcessor.readable
-      .pipeThrough(transformer)
-      .pipeTo(trackGenerator.writable);
+          videoFrame.close();
+          controller.enqueue(newFrame);
+        },
+      });
 
-    // add the new mediastream to video element
-    this.processedStream = new MediaStream();
-    this.processedStream.addTrack(audioTrack);
-    this.processedStream.addTrack(trackGenerator);
+      // we pipe the stream through the transform function
+      trackProcessor.readable
+        .pipeThrough(transformer)
+        .pipeTo(trackGenerator.writable);
 
-    return this.processedStream;
+      // add the new mediastream to video element
+      this.processedStream = new MediaStream();
+      this.processedStream.addTrack(audioTrack);
+      this.processedStream.addTrack(trackGenerator);
+
+      return this.processedStream;
+    } catch (error) {
+      console.log("Error while setting background: ", error);
+    }
   };
 
   onResults(results) {
@@ -135,7 +146,6 @@ export class VideoBackground {
     this.ctx = this.canvas.getContext("2d");
     this.blur = false;
 
-    this.stopProcess = false;
     this.selfieSegmentation = null;
 
     //streams
@@ -145,14 +155,37 @@ export class VideoBackground {
   }
 
   stopProcessing = async () => {
-    this.stopProcess = true;
-    if (this.selfieSegmentation) {
-      this.selfieSegmentation.close();
+    try {
+      if (this.selfieSegmentation) {
+        this.selfieSegmentation.close();
+        this.selfieSegmentation = null;
+      }
+    } catch (error) {
+      console.log("Error while closing selfi: ", error);
     }
 
     // Stop streams
     await this.stopStream(this.processedStream);
     await this.stopStream(this.originalStream);
+
+    //reset variables
+    this._height = 1920;
+    this._width = 1440;
+
+    // the background image
+    this.bgImage = new Image(this._height, this._width);
+
+    // an OffscreenCanvas that combines background and human pixels
+    this.canvas = new OffscreenCanvas(this._height, this._width);
+    this.ctx = this.canvas.getContext("2d");
+    this.blur = false;
+
+    this.selfieSegmentation = null;
+
+    //streams
+    this.originalStream = null;
+    this.processedStream = null;
+    this.flippedStream = null;
   };
 
   flipVideoStream = (videoStream) => {
