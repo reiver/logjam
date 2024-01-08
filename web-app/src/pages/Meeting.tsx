@@ -526,8 +526,7 @@ const Meeting = ({ params: { room, displayName, name } }: { params?: { room?: st
               icon: 'Close',
               variant: 'danger',
             })
-            sparkRTC.value.resetAudioVideoState()
-            sparkRTC.value.onRaiseHandRejected()
+            sparkRTC.value.leaveStage()
           },
           maxLimitReached: (message) => {
             makeDialog('info', { message, icon: 'Close' })
