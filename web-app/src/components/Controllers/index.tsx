@@ -44,7 +44,7 @@ export const Controllers = () => {
     }
   }
   const toggleCamera = () => {
-    sparkRTC.value.disableVideo(!isCameraOn)
+    sparkRTC.value.disableVideo(!isCameraOn,true)
     updateUser({
       isCameraOn: !isCameraOn,
     })

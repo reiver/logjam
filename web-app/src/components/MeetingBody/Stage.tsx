@@ -244,7 +244,7 @@ export const Video = memo(({ stream, isMuted, isHostStream, name, userId, isUser
   }
 
   useEffect(() => {
-
+    console.log("Video ref user effect")
     if (isIphone() && sparkRTC.value.localStream && sparkRTC.value.localStream.id === stream.id) {
       //localstream on Iphone only
       if (isVideoTrackDisabled(stream) === true) {
