@@ -7,7 +7,8 @@ import { detectKeyPress } from 'lib/controls'
 import { lazy } from 'preact-iso'
 import { useEffect } from 'preact/compat'
 import { fullScreenedStream } from 'components/MeetingBody/Stage'
-
+import backImage from 'assets/images/blur.jpg'
+import { VideoBackground } from 'lib/videoBackground'
 let displayIdCounter = 2
 
 const PageNotFound = lazy(() => import('./_404'))
@@ -525,8 +526,7 @@ const Meeting = ({ params: { room, displayName, name } }: { params?: { room?: st
               icon: 'Close',
               variant: 'danger',
             })
-            sparkRTC.value.resetAudioVideoState()
-            sparkRTC.value.onRaiseHandRejected()
+            sparkRTC.value.leaveStage()
           },
           maxLimitReached: (message) => {
             makeDialog('info', { message, icon: 'Close' })
@@ -717,6 +717,7 @@ const Meeting = ({ params: { room, displayName, name } }: { params?: { room?: st
         await setupSparkRTC()
         if (sparkRTC.value && role === Roles.BROADCAST) {
           let stream = await sparkRTC.value.getAccessToLocalStream()
+
           showPreviewDialog(stream, host, name, room)
         }
 

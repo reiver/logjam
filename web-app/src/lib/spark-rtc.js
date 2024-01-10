@@ -1,4 +1,5 @@
 import { iceServers } from "./config.js";
+import { videoBackGround } from "./common.js";
 
 /** Your class description
  *
@@ -516,8 +517,7 @@ export class SparkRTC {
           if (this.remoteStreamDCCallback)
             this.remoteStreamDCCallback("no-stream");
         } catch {}
-        this.localStream?.getTracks()?.forEach((track) => track.stop());
-        this.localStream = null;
+        await this.closeCamera();
         this.startedRaiseHand = false;
         break;
       case "event-parent-dc":
@@ -2608,6 +2608,8 @@ export class SparkRTC {
         if (track.kind === "video") track.enabled = enabled;
       });
     }
+
+    return this.localStream;
   };
 
   /**
@@ -2632,7 +2634,7 @@ export class SparkRTC {
     const data = {
       type: "muted",
       value: !enable,
-      stream: this.localStream.id,
+      stream: this.localStream ? this.localStream.id : "",
     };
     if ((await this.checkSocketStatus()) === true) {
       this.socket.send(JSON.stringify(data));
@@ -2739,6 +2741,11 @@ export class SparkRTC {
   };
 
   closeCamera = async () => {
+    console.log("Closing camera");
+    if (videoBackGround) {
+      await videoBackGround.stopProcessing();
+    }
+
     if (this.localStream) {
       this.localStream.getTracks().forEach((track) => {
         track.stop();
@@ -2787,9 +2794,9 @@ export class SparkRTC {
           }
         }
       }
-    this.localStream.getTracks().forEach((track) => {
-      track.stop();
-    });
+
+    await this.closeCamera();
+
     this.startedRaiseHand = false;
 
     //notify host I am leaving, so host can remove from invitation list
@@ -2938,24 +2945,28 @@ export class SparkRTC {
   leaveMeeting = async () => {
     //check for local stream and stop tracks
     //stop all the sender tracks
-    if (this.localStream) {
-      this.leftMeeting = true;
+    try {
+      if (this.localStream) {
+        this.leftMeeting = true;
 
-      if (this.role === this.Roles.BROADCAST) {
-        await this.closeCamera();
+        if (this.role === this.Roles.BROADCAST) {
+          await this.closeCamera();
+        } else {
+          await this.leaveStage();
+        }
       } else {
-        await this.leaveStage();
+        //close websocket if not streaming anything
+        if (this.socket) {
+          this.socket.onclose = () => {
+            this.updateTheStatus(`socket is closed after leaveMeeting`);
+            this.resetVariables();
+          }; //empty on close callback
+          this.socket.close();
+          this.socket = null;
+        }
       }
-    } else {
-      //close websocket if not streaming anything
-      if (this.socket) {
-        this.socket.onclose = () => {
-          this.updateTheStatus(`socket is closed after leaveMeeting`);
-          this.resetVariables();
-        }; //empty on close callback
-        this.socket.close();
-        this.socket = null;
-      }
+    } catch (error) {
+      console.log("Error 1 while leaving: ", error);
     }
 
     if (this.role === this.Roles.BROADCAST) {

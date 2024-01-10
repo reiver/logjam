@@ -1,4 +1,5 @@
 import { SparkRTC } from "./spark-rtc.js";
+import { VideoBackground } from "./videoBackground.js";
 
 //enum for Roles
 export const Roles = {
@@ -7,8 +8,9 @@ export const Roles = {
   BROADCASTER: "broadcaster",
 };
 
-export const isMobile = async () => {
-  return window.innerWidth <= 800 && window.innerHeight <= 600;
+export const isMobile = () => {
+  let res = window.innerWidth <= 800 && window.innerHeight <= 1000;
+  return res;
 };
 
 // TODO: set base url
@@ -34,6 +36,7 @@ export function createSparkRTC(role, options) {
     return createAudienceSpartRTC(role, options);
   }
 }
+export const videoBackGround = new VideoBackground()
 
 export const createBroadcastSpartRTC = (role, props) => {
   return new SparkRTC(role, {
@@ -74,6 +77,6 @@ export const createAudienceSpartRTC = (role, props) => {
     parentDcMessage: props.parentDcMessage,
     onAudioStatusChange: props.onAudioStatusChange,
     invitationToJoinStage: props.invitationToJoinStage,
-    updateVideosMuteStatus:props.updateVideosMuteStatus,
+    updateVideosMuteStatus: props.updateVideosMuteStatus,
   });
 };
