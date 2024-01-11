@@ -664,6 +664,69 @@ export class SparkRTC {
         break;
       }
 
+      case "update-stream": {
+        console.log("update-stream: ", msg);
+
+        console.log('Before filter:', this.remoteStreams);
+        let newArray = this.remoteStreams.filter((STR) => STR.id !== msg.oldStream.id);
+        this.remoteStreams = newArray
+        console.log('After filter:', this.remoteStreams);
+
+        this.remoteStreamDCCallback(msg.oldStream);
+
+        /*
+        //get updated stream id
+        let strId = msg.streamId;
+        //add str id to remote streams
+
+        //get remote streams from all of the PC and check if any one match with above str id
+        for (const id in this.myPeerConnectionArray) {
+          let peerConnection = this.myPeerConnectionArray[id];
+
+          //override getRemotestreams for Iphone safari support
+          if (!peerConnection.getRemoteStreams) {
+            peerConnection.getRemoteStreams = function () {
+              var stream = new MediaStream();
+              peerConnection.getReceivers().forEach(function (receiver) {
+                stream.addTrack(receiver.track);
+              });
+              return [stream];
+            };
+          }
+
+          // Get all remote streams from the PeerConnection
+          let streams = peerConnection.getRemoteStreams();
+
+          console.log("PC RemoteStreams: ",streams)
+
+          //find strean with above id
+          const getStreamById = (id) => {
+            for (const streamObject of streams) {
+              if (streamObject.id === id) {
+                return streamObject;
+              }
+            }
+            // If no stream with the specified ID is found
+            return null;
+          };
+
+          const foundStream = getStreamById(strId);
+          console.log("Found stream; ",foundStream)
+
+          console.log("RemoteStreams: ",this.remoteStreams)
+
+          if (foundStream && !this.remoteStreams.includes(foundStream)) {
+            console.log("Inside foundstream check")
+            // If not present, push it to the array
+            this.remoteStreams.push(foundStream);
+            this.getLatestUserList("")
+          }
+        }
+
+        */
+        break;
+      }
+
       default:
         // this.updateTheStatus(
         //     `[handleMessage] default ${JSON.stringify(msg)}`
@@ -1006,7 +1069,9 @@ export class SparkRTC {
         await this.getAccessToLocalStream();
       }
 
-      this.remoteStreams.push(this.localStream);
+      if (!this.isStreamWithIdExists(this.localStream.id)) {
+        this.remoteStreams.push(this.localStream);
+      }
 
       this.updateTheStatus(`Request Broadcast Role`);
 
@@ -1909,7 +1974,9 @@ export class SparkRTC {
           this.remoteStreamCallback(stream);
         }
 
-        this.remoteStreams.push(stream);
+        if (!this.isStreamWithIdExists(stream.id)) {
+          this.remoteStreams.push(stream);
+        }
 
         // await this.remoteStreamsQueue.enqueue(stream);
 
@@ -2034,6 +2101,11 @@ export class SparkRTC {
 
     return peerConnection;
   };
+
+  isStreamWithIdExists = (id) => {
+    return this.remoteStreams.some((streamObject) => streamObject.id === id);
+  };
+
   checkBrowser() {
     // Get the user-agent string
     const userAgentString = navigator.userAgent;
@@ -2070,12 +2142,14 @@ export class SparkRTC {
         }
 
         this.remoteStreams.forEach((stream) => {
-          const user = users.find((user) => user?.video?.id === stream.id);
+          if (stream.active) {
+            const user = users.find((user) => user?.video?.id === stream.id);
 
-          if (user != undefined) {
-            matchedStreamMap.set(stream, user);
-          } else {
-            unmatchedStreams.push(stream);
+            if (user != undefined) {
+              matchedStreamMap.set(stream, user);
+            } else {
+              unmatchedStreams.push(stream);
+            }
           }
         });
 
@@ -2103,7 +2177,7 @@ export class SparkRTC {
 
         // display unmatched stream .a.k.a Screen share stream
         unmatchedStreams.forEach((stream) => {
-          if (!!!stream.userId) {
+          if (!!!stream.userId && stream.active) {
             stream.role = this.Roles.BROADCAST;
             stream.name = broadcasterName;
             stream.isShareScreen = true;
@@ -2528,6 +2602,8 @@ export class SparkRTC {
         });
       }
 
+      this.localStream = null;
+
       this.localStream = await navigator.mediaDevices.getUserMedia({
         audio: audioConstraints,
         video: videoConstraints,
@@ -2628,12 +2704,27 @@ export class SparkRTC {
 
         //save name
         var name = this.localStream.name;
-        var refToOldStream = this.localStream;
 
         ///Enable video inside the meeting
         if (togglingCamInMeeting) {
-          this.localStream = await this.getUserMediaWithDevices(mic, cam);
+          //remove old stream from remoteStreams List
+          let newArray = this.remoteStreams.filter(
+            (STR) => STR.id !== this.localStream.id
+          );
+
+          this.remoteStreams = newArray
+
+          var refToOldStream = this.localStream;
           this.remoteStreamDCCallback(refToOldStream);
+
+          //stop all the tracks of LocalStream
+          this.localStream.getTracks().forEach((track) => {
+            track.stop();
+          });
+          this.localStream = null;
+          videoBackGround.stopProcessing()
+
+          this.localStream = await this.getUserMediaWithDevices(mic, cam);
 
           if (selectedBackground.value != null) {
             var processedStr = null;
@@ -2656,11 +2747,21 @@ export class SparkRTC {
             }
 
             this.localStream = processedStr;
-            this.localStream.name = name;
-            this.localStreamChangeCallback(this.localStream);
+
+            if (this.role === this.Roles.BROADCAST) {
+              this.localStream.name = name;
+              this.localStreamChangeCallback(this.localStream);
+            }
           } else {
-            this.localStream.name = name;
-            this.localStreamChangeCallback(this.localStream);
+            if (this.role === this.Roles.BROADCAST) {
+              this.localStream.name = name;
+              this.localStreamChangeCallback(this.localStream);
+            }
+          }
+
+          //add new stream to remote streams
+          if (!this.isStreamWithIdExists(this.localStream.id)) {
+            this.remoteStreams.push(this.localStream);
           }
 
           //check peer connections
@@ -2669,29 +2770,57 @@ export class SparkRTC {
               console.log("PC: ", this.myPeerConnectionArray[u]);
               //update media stream in pc
               let pc = this.myPeerConnectionArray[u];
-
-              const existingSenders = pc.getSenders();
-              if (existingSenders) {
-                console.log("Senders list: ", existingSenders);
-                this.localStream.getTracks().forEach((newTrack) => {
-                  const existingSender = existingSenders.find(
-                    (sender) => sender.track.kind === newTrack.kind
-                  );
-
-                  if (existingSender) {
-                    console.log("Replacing track");
-                    existingSender.replaceTrack(newTrack);
-                  } else {
-                    console.log("Adding new Track to PC");
-                    // If the track kind doesn't exist, add the new track
-                    pc.addTrack(newTrack, this.localStream);
+              if (pc.isAudience) {
+                const existingSenders = pc.getSenders();
+                existingSenders.forEach((sender) => {
+                 
+                  if (sender.track) {
+                    pc.removeTrack(sender);
                   }
                 });
-              } else {
-                console.log("No senders exists");
+
+              
+                this.localStream.getTracks().forEach((track) => {
+                  pc.addTrack(track, this.localStream);
+                });
               }
+
+              // if (existingSenders) {
+              //   console.log("Senders list: ", existingSenders);
+              //   this.localStream.getTracks().forEach((newTrack) => {
+              //     const existingSender = existingSenders.find(
+              //       (sender) => sender.track.kind === newTrack.kind
+              //     );
+
+              //     if (existingSender) {
+              //       console.log("Replacing track");
+              //       existingSender.replaceTrack(newTrack);
+              //     } else {
+              //       console.log("Adding new Track to PC");
+              //       // If the track kind doesn't exist, add the new track
+              //       pc.addTrack(newTrack, this.localStream);
+              //     }
+              //   });
+              // } else {
+              //   console.log("No senders exists");
+              // }
             }
           }
+
+          //send update stream to all the users
+          this.users.forEach(async (user) => {
+            if (await this.checkSocketStatus()) {
+              this.socket.send(
+                JSON.stringify({
+                  type: "update-stream",
+                  streamId: this.localStream.id,
+                  oldStream: refToOldStream.id,
+                  target: String(user.id),
+                })
+              );
+              this.updateTheStatus(`Update Stream ID in backend`);
+            }
+          });
         } else {
           //enable video inside Preview Modal
           this.localStream = await this.getUserMediaWithDevices(mic, cam);

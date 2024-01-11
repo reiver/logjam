@@ -111,6 +111,11 @@ func (r *roomWSRouter) handleEvent(ctx *models.WSContext) {
 			r.roomCtrl.Role(ctx)
 			break
 		}
+	case "update-stream":
+		{
+			r.roomCtrl.UpdateStream(ctx)
+			r.roomCtrl.DefaultHandler(ctx)
+		}
 	case "stream":
 		{
 			r.roomCtrl.Stream(ctx)
