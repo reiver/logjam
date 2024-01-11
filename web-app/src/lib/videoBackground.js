@@ -1,12 +1,12 @@
 export class VideoBackground {
-  setBackVideoBackground = async (image, videoStream, blur = false) => {
+  setBackVideoBackground = async (image, videoStream, blur = false,videoOnly = false) => {
     try {
       //init var
       this.bgImage.src = image;
       this.blur = blur;
 
       //stop previous Original stream
-      await this.stopStream(this.originalStream);
+      await this.stopStream(this.originalStream,videoOnly);
       this.originalStream = videoStream;
 
       if (this.selfieSegmentation) {
@@ -154,7 +154,7 @@ export class VideoBackground {
     this.flippedStream = null;
   }
 
-  stopProcessing = async () => {
+  stopProcessing = async (videoOnly = false) => {
     try {
       if (this.selfieSegmentation) {
         this.selfieSegmentation.close();
@@ -165,8 +165,8 @@ export class VideoBackground {
     }
 
     // Stop streams
-    await this.stopStream(this.processedStream);
-    await this.stopStream(this.originalStream);
+    await this.stopStream(this.processedStream, true);
+    await this.stopStream(this.originalStream, true);
 
     //reset variables
     this._height = 1920;
@@ -247,19 +247,21 @@ export class VideoBackground {
     });
   };
 
-  stopStream = async (stream) => {
+  stopStream = async (stream, videoOnly = false) => {
     if (stream) {
       const audioTrack = stream.getAudioTracks()[0];
       const videoTrack = stream.getVideoTracks()[0];
 
-      if (audioTrack) {
-        audioTrack.stop();
-      }
-
       if (videoTrack) {
         videoTrack.stop();
       }
-      stream = null;
+
+      if (!videoOnly) {
+        if (audioTrack) {
+          audioTrack.stop();
+        }
+        stream = null;
+      }
     }
 
     return stream;

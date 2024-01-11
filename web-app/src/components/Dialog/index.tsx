@@ -31,16 +31,16 @@ import noBackgroundIcon from 'assets/icons/NoBackground.svg'
 import { VideoBackground } from 'lib/videoBackground'
 import { isMobile } from 'lib/common.js'
 
-const blurTxt = "Blur";
+export const blurTxt = "Blur";
 const noneTxt = "None"
 const dialogs = signal([])
 var selectedMic = signal(null)
 var selectedSpeaker = signal(null)
 var selectedCamera = signal(null)
-var selectedBackground = signal(null)
+export var selectedBackground = signal(null)
 const builtInLabel = 'Built-in'
 const builtInThisDevice = 'Built-in (This Device)'
-const backgroundsList = [back1, back2, back3, back4, back5, back6];
+export const backgroundsList = [back1, back2, back3, back4, back5, back6];
 
 export const isIphone = () => {
   const userAgent = navigator.userAgent
@@ -599,17 +599,47 @@ export const PreviewDialog = ({
     }
   }, [])
 
-  const toggleCamera = () => {
-    sparkRTC.value.disableVideo(!isCameraOn)
+  const toggleCamera = async () => {
+    updateUser({
+      isCameraOn: !isCameraOn,
+    })
+
+    videoStream = await sparkRTC.value.disableVideo(!isCameraOn)
 
     if (isIphone() && videoRef.current && videoRef.current.srcObject === null) {
       videoRef.current.srcObject = videoStream
       videoRef.current.style.backgroundColor = '';
+    } else {
+      if (!isCameraOn) {
+        //set video background
+        if (selectedBackground.value != null) {
+          var processedStr = null;
+          if (selectedBackground.value === blurTxt) {
+            //Blur the Video Background
+            processedStr = await videoBackGround.setBackVideoBackground(
+              backgroundsList[0],
+              videoStream,
+              true,
+              true
+            );
+          } else {
+            //Set background to video
+            processedStr = await videoBackGround.setBackVideoBackground(
+              backgroundsList[selectedBackground.value],
+              videoStream,
+              false,
+              true
+            );
+          }
+
+          videoStream = processedStr
+          
+        } 
+        sparkRTC.value.localStream = videoStream
+        videoRef.current.srcObject = videoStream
+      }
     }
 
-    updateUser({
-      isCameraOn: !isCameraOn,
-    })
     console.log("Selected Camera: ", selectedCamera.value)
   }
 

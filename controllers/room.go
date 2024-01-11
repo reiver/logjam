@@ -133,6 +133,23 @@ func (c *RoomWSController) Start(ctx *models.WSContext) {
 	}
 	_ = c.socketSVC.Send(resultEvent, ctx.SocketID)
 }
+func (c *RoomWSController) UpdateStream(ctx *models.WSContext) {
+	var eventData map[string]interface{}
+	err := json.Unmarshal(ctx.PureMessage, &eventData)
+	if err != nil {
+
+		return
+	}
+	streamId, exists := eventData["streamId"]
+	defer c.emitUserList(ctx.RoomId)
+	if exists {
+		err = c.roomRepo.UpdateMemberMeta(ctx.RoomId, ctx.SocketID, "streamId", streamId.(string))
+		if err != nil {
+			c.log(contracts.LError, err.Error())
+			return
+		}
+	}
+}
 func (c *RoomWSController) Role(ctx *models.WSContext) {
 	var eventData map[string]interface{}
 	err := json.Unmarshal(ctx.PureMessage, &eventData)
