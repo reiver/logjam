@@ -277,7 +277,7 @@ function keyPressCallback(key) {
   }
 
 }
-const Meeting = ({ params: { room, displayName, name } }: { params?: { room?: string; displayName?: string; name?: string } }) => {
+const Meeting = ({ params: { room, displayName, name, customStyles } }: { params?: { room?: string; displayName?: string; name?: string, customStyles?: any } }) => {
 
   detectKeyPress(keyPressCallback)
 
@@ -741,7 +741,7 @@ const Meeting = ({ params: { room, displayName, name } }: { params?: { room?: st
       <TopBar />
       {meetingStatus.value ? (
         <>
-          <MeetingBody />
+          <MeetingBody customStyles={customStyles} />
           <BottomBar />
         </>
       ) : (

@@ -11,6 +11,7 @@ import { useState } from 'preact/compat'
 import { useForm } from 'react-hook-form'
 import { makePreviewDialog } from 'components/Dialog'
 import z from 'zod'
+import { parse } from 'postcss'
 
 const PageNotFound = lazy(() => import('../_404'))
 
@@ -27,6 +28,77 @@ const generateHostUrl = (displayName: string) => {
 const generateAudienceUrl = (roomName: string) => {
   return `${window.location.origin}/log/${roomName}`
 }
+
+const setCustomCssContent = (event, setContentCallback) => {
+  const file = event.target.files[0];
+
+  if (file) {
+    const reader = new FileReader();
+
+    reader.onload = (e) => {
+      const content = e.target.result;
+      setContentCallback(content);
+    };
+
+    reader.readAsText(file);
+  } else {
+    // Handle the case where no file is selected
+    setContentCallback(null);
+  }
+};
+
+var customStyles = null;
+
+const handleCssFileUpload = async (event) => {
+  setCustomCssContent(event, (content) => {
+    console.log("Content: ", content)
+    if (content) {
+
+      const classes = {};
+      parse(content).walkRules((rule) => {
+        const className = rule.selector.replace(/^\./, ''); // Remove the dot from the class name
+        const properties = {};
+
+        rule.walkDecls((decl) => {
+          properties[decl.prop] = decl.value;
+        });
+
+        classes[className] = properties;
+      });
+
+      // // Regular expression to match CSS class definitions
+      // const classRegex = /\.([a-zA-Z0-9_-]+)\s*{([^}]*)}/g;
+
+      // let match;
+      // const classes = {};
+
+      // // Iterate through matches in the CSS content
+      // while ((match = classRegex.exec(content)) !== null) {
+      //   const className = match[1];
+      //   const classProperties = match[2];
+
+      //   // Split class properties into an object
+      //   const properties = classProperties.split(';').reduce((acc, prop) => {
+      //     const [key, value] = prop.split(':').map((s) => s.trim());
+      //     if (key && value) {
+      //       acc[key] = value;
+      //     }
+      //     return acc;
+      //   }, {});
+
+      // Store className and properties in the classes object
+      // classes[className] = properties;
+      // }
+
+      // Log or use the classes object as needed
+      customStyles = classes;
+      console.log("CSS Classes and Properties:", classes);
+    }
+  });
+};
+
+
+
 
 export const HostPage = ({ params: { displayName } }: { params?: { displayName?: string } }) => {
   const [started, setStarted] = useState(false)
@@ -54,6 +126,8 @@ export const HostPage = ({ params: { displayName } }: { params?: { displayName?:
       }
     })
   }
+
+
 
   if (!started)
     return (
@@ -91,6 +165,14 @@ export const HostPage = ({ params: { displayName } }: { params?: { displayName?:
                   helperText={form.formState.errors.description?.message}
                 />
               </FormControl>
+              <FormControl className="w-full">
+                <TextField
+                  variant="outlined"
+                  size="small"
+                  type="file"
+                  onChange={(event) => handleCssFileUpload(event)}
+                />
+              </FormControl>
               <div class="flex gap-2 w-full flex-col-reverse md:flex-row">
                 <Button onClick={handleCreateLink} variant="outlined" className="w-full normal-case" sx={{ textTransform: 'none' }}>
                   Create Link
@@ -121,6 +203,7 @@ export const HostPage = ({ params: { displayName } }: { params?: { displayName?:
           ...form.getValues(),
           displayName: `@${form.getValues('displayName')}`,
           name: `${form.getValues('displayName')}`,
+          customStyles: customStyles
         }}
       />
     )

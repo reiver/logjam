@@ -26,6 +26,8 @@ const windowWidth = signal(window.innerWidth)
 const windowHeight = signal(window.innerHeight)
 const stageWidth = computed(() => windowWidth.value - attendeesWidth.value - (deviceSize.value !== 'xs' ? 140 : 32))
 
+
+
 const itemsWidth = computed(() => {
   let sw = stageWidth.value
   if (deviceSize.value !== 'xs' && hasShareScreenStream.value) {
@@ -94,7 +96,9 @@ export const getVideoWidth = (attendee, index) => {
   return `${iw}px;height: ${height}px;`
 }
 
-export const Stage = () => {
+export const Stage = ({ customStyles }) => {
+  console.log("Custom Styles: ", customStyles.background);
+
   useEffect(() => {
     const onResize = throttle(() => {
       windowWidth.value = window.innerWidth
@@ -139,11 +143,12 @@ export const Stage = () => {
   }
 
   return (
-    <div class="transition-all h-full lg:px-0 relative" style={`width: calc(100% - ${attendeesWidth.value}px);`}>
+    <div class={`transition-all h-full lg:px-0 relative`} style={{ width: `calc(100% - ${attendeesWidth.value}px)` }}>
       {broadcastIsInTheMeeting.value ? (
         <div class={clsx('relative h-full flex justify-end')}>
           <div
             class={clsx('flex flex-wrap justify-start sm:justify-center items-center h-full transition-all', {
+              'custom-styles video-container': !hasFullScreenedStream.value,
               'gap-4': !hasFullScreenedStream.value,
               'gap-0': hasFullScreenedStream.value,
               'w-1/2': !hasFullScreenedStream.value && hasShareScreenStream.value && deviceSize.value !== 'xs',
@@ -177,7 +182,8 @@ export const Stage = () => {
                     style={clsx(`width: ${getVideoWidth(attendee, i)}`, {
                       [`position: absolute; left: 25px;`]: !hasFullScreenedStream.value && deviceSize.value !== 'xs' && attendee.isShareScreen,
                     })}
-                    class={clsx('group transition-all aspect-video relative max-w-full text-white-f-9', 'bg-gray-1 rounded-lg min-w-10', 'dark:bg-gray-3 overflow-hidden')}
+                    class={clsx('custom-styles video-container',
+                      'group transition-all aspect-video relative max-w-full text-white-f-9', 'bg-gray-1 rounded-lg min-w-10', 'dark:bg-gray-3 overflow-hidden')}
                     onClick={(e) => handleOnClick(e, attendee.stream.id)}
                   >
                     <Video
@@ -191,6 +197,10 @@ export const Stage = () => {
                       toggleScreen={attendee.toggleScreenId}
                       displayId={attendee.displayId}
                     />
+                    <div class="custom-styles video-overlay">
+                      {/* Custom Styles for Video Name */}
+                      <div class="custom-styles video-name">{attendee.name}</div>
+                    </div>
                   </div>
                 )
               })}
