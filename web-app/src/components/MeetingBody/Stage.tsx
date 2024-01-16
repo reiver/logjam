@@ -49,12 +49,6 @@ const itemsWidth = computed(() => {
   return width
 })
 
-// navigator.mediaDevices.addEventListener('devicechange', function (event) {
-//     navigator.mediaDevices.enumerateDevices().then((devices) => {
-//         sparkRTC.value.onMediaDevicesChange(devices);
-//     });
-// });
-
 export const getVideoWidth = (attendee, index) => {
   if (deviceSize.value === 'xs') {
     let availableHeight = windowHeight.value - topBarBottomBarHeight()
@@ -96,8 +90,68 @@ export const getVideoWidth = (attendee, index) => {
   return `${iw}px;height: ${height}px;`
 }
 
+const calculateVideoHeight = (attendee, index) => {
+  if (deviceSize.value === 'xs') {
+    let availableHeight = windowHeight.value - topBarBottomBarHeight();
+    if (hasFullScreenedStream.value) {
+      if (attendee.stream.id === fullScreenedStream.value) {
+        return availableHeight;
+      } else {
+        return 0;
+      }
+    }
+
+    const lines = Math.ceil(streamersLength.value / 2);
+    const gapHeight = (lines - 1) * 16 + 16;
+    availableHeight -= gapHeight;
+
+    if (index === 0) {
+      if (streamersLength.value === 1) {
+        return availableHeight;
+      } else {
+        return availableHeight / 2;
+      }
+    } else {
+      const lines = Math.ceil((streamersLength.value - 1) / 2);
+      availableHeight = availableHeight / 2;
+      let rowHeight = availableHeight / lines;
+      const columns = streamersLength.value - 1 > 1 && lines >= 1 ? 2 : 1;
+
+      return rowHeight;
+    }
+  }
+
+  let availableHeight = windowHeight.value - topBarBottomBarHeight();
+  if (hasFullScreenedStream.value) {
+    if (attendee.stream != undefined && attendee.stream.id === fullScreenedStream.value) {
+      return availableHeight;
+    } else {
+      return 0;
+    }
+  }
+
+  let iw = itemsWidth.value;
+  if (attendee.isShareScreen) {
+    iw = stageWidth.value / 2;
+  }
+
+  let height = (iw * 9) / 16;
+  return height;
+};
+
+
 export const Stage = ({ customStyles }) => {
-  console.log("Custom Styles: ", customStyles.background);
+
+  useEffect(() => {
+    if (customStyles) {
+      // Create a style element and append it to the head of the document
+      const styleElement = document.createElement('style');
+      document.head.appendChild(styleElement);
+
+      // Set the CSS content of the style element
+      styleElement.textContent = customStyles;
+    }
+  }, [])
 
   useEffect(() => {
     const onResize = throttle(() => {
@@ -148,7 +202,6 @@ export const Stage = ({ customStyles }) => {
         <div class={clsx('relative h-full flex justify-end')}>
           <div
             class={clsx('flex flex-wrap justify-start sm:justify-center items-center h-full transition-all', {
-              'custom-styles video-container': !hasFullScreenedStream.value,
               'gap-4': !hasFullScreenedStream.value,
               'gap-0': hasFullScreenedStream.value,
               'w-1/2': !hasFullScreenedStream.value && hasShareScreenStream.value && deviceSize.value !== 'xs',
@@ -179,10 +232,19 @@ export const Stage = ({ customStyles }) => {
                 return (
                   <div
                     key={i}
-                    style={clsx(`width: ${getVideoWidth(attendee, i)}`, {
-                      [`position: absolute; left: 25px;`]: !hasFullScreenedStream.value && deviceSize.value !== 'xs' && attendee.isShareScreen,
-                    })}
-                    class={clsx('custom-styles video-container',
+                    style={clsx(
+                      customStyles
+                        ? (attendee.isHost ? `width: var(--hostVideoWidth); height: var(--hostVideoHeight);` :
+                          `width: var(--videoWidth); height: var(--videoHeight);`)
+                        : `width: ${getVideoWidth(attendee, i)}`,
+
+                      customStyles ?
+                        `border:var(--videoBorder); border-radius:var(--videoBorderRadius)` : ``,
+                      {
+                        [`position: absolute; left: 25px;`]: !hasFullScreenedStream.value && deviceSize.value !== 'xs' && attendee.isShareScreen,
+                      })}
+
+                    class={clsx(
                       'group transition-all aspect-video relative max-w-full text-white-f-9', 'bg-gray-1 rounded-lg min-w-10', 'dark:bg-gray-3 overflow-hidden')}
                     onClick={(e) => handleOnClick(e, attendee.stream.id)}
                   >
@@ -196,11 +258,8 @@ export const Stage = ({ customStyles }) => {
                       isShareScreen={attendee.isShareScreen}
                       toggleScreen={attendee.toggleScreenId}
                       displayId={attendee.displayId}
+                      customStyles={customStyles}
                     />
-                    <div class="custom-styles video-overlay">
-                      {/* Custom Styles for Video Name */}
-                      <div class="custom-styles video-name">{attendee.name}</div>
-                    </div>
                   </div>
                 )
               })}
@@ -208,18 +267,30 @@ export const Stage = ({ customStyles }) => {
         </div>
       ) : (
         <span class="inline-block w-full text-center">The host has not arrived yet. Please stand by.</span>
-      )}
-    </div>
+      )
+      }
+    </div >
   )
 }
 
-export const Video = memo(({ stream, isMuted, isHostStream, name, userId, isUserMuted, isShareScreen, toggleScreen, displayId }: any) => {
+export const Video = memo(({ stream, isMuted, isHostStream, name, userId, isUserMuted, isShareScreen, toggleScreen, displayId, customStyles }: any) => {
   const [muted, setMuted] = useState(true)
   const { isHost } = currentUser.value
   const menu = useRef<any>()
   const videoRef = useRef<HTMLVideoElement>()
   const [menuOpen, setMenuOpen] = useState(false)
   const [isHoveredOnFullScreenIcon, setHoveredOnFullScreenIcon] = useState(false)
+
+  useEffect(() => {
+    if (customStyles) {
+      // Create a style element and append it to the head of the document
+      const styleElement = document.createElement('style');
+      document.head.appendChild(styleElement);
+
+      // Set the CSS content of the style element
+      styleElement.textContent = customStyles;
+    }
+  }, [])
 
   const toggleFullScreen = (e?: any) => {
     if (fullScreenedStream.value === stream.id) {
@@ -347,7 +418,10 @@ export const Video = memo(({ stream, isMuted, isHostStream, name, userId, isUser
       />
       <div class="absolute top-0 left-0 flex justify-between w-full px-2 gap-2">
         <div class="flex truncate justify-center items-center">
-          <div class="px-4 py-1 bg-black bg-opacity-50 text-white rounded-full text-medium-12 truncate">
+          <div class="px-4 py-1 bg-black bg-opacity-50 text-white rounded-full text-medium-12 truncate"
+            style={customStyles ? { backgroundColor: 'var(--nameBackgroundColor)', color: 'var(--nameColor)', fontSize: 'var(--nameFontSize)' } : {}}
+          >
+
             {name} {isHostStream && isShareScreen ? '(Shared Screen)' : isHostStream ? ' (Host)' : ''}
           </div>
         </div>

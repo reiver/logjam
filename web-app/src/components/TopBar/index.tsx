@@ -2,10 +2,11 @@ import { Button, Container, Logo } from 'components'
 
 import { leaveMeeting, meetingStatus } from 'pages/Meeting'
 
-export const TopBar = () => {
+export const TopBar = ({ customStyles }) => {
   const handleLeaveMeeting = leaveMeeting
   return (
-    <div class="w-full bg-white dark:bg-black py-3" id="top-bar">
+    <div class="w-full bg-white dark:bg-black py-3" style={customStyles ?
+      "background-color: rgba(255, 255, 255, 0);" : ""} id="top-bar">
       <Container>
         <div class="grid grid-cols-12">
           <div class="col-span-3 flex items-center">

@@ -32,6 +32,7 @@ const generateAudienceUrl = (roomName: string) => {
 const setCustomCssContent = (event, setContentCallback) => {
   const file = event.target.files[0];
 
+
   if (file) {
     const reader = new FileReader();
 
@@ -53,6 +54,9 @@ const handleCssFileUpload = async (event) => {
   setCustomCssContent(event, (content) => {
     console.log("Content: ", content)
     if (content) {
+
+      customStyles = content
+      return
 
       const classes = {};
       parse(content).walkRules((rule) => {

@@ -5,7 +5,7 @@ import { ToastProvider, destroyDialog, makePreviewDialog } from 'components/Dial
 import { Roles, createSparkRTC, getWsUrl } from 'lib/common.js'
 import { detectKeyPress } from 'lib/controls'
 import { lazy } from 'preact-iso'
-import { useEffect } from 'preact/compat'
+import { useEffect, useState } from 'preact/compat'
 import { fullScreenedStream } from 'components/MeetingBody/Stage'
 import backImage from 'assets/images/blur.jpg'
 import { VideoBackground } from 'lib/videoBackground'
@@ -736,12 +736,23 @@ const Meeting = ({ params: { room, displayName, name, customStyles } }: { params
     window.parent.postMessage('leave', '*')
   }
 
+  useEffect(() => {
+    if (customStyles) {
+      // Create a style element and append it to the head of the document
+      const styleElement = document.createElement('style');
+      document.head.appendChild(styleElement);
+
+      // Set the CSS content of the style element
+      styleElement.textContent = customStyles;
+    }
+  }, [])
+
   return (
-    <div class="flex flex-col justify-between min-h-[--doc-height] dark:bg-secondary-1-a bg-white-f-9 text-medium-12 text-gray-800 dark:text-gray-200">
-      <TopBar />
+    <div class="flex flex-col justify-between min-h-[--doc-height] dark:bg-secondary-1-a bg-white-f-9 text-medium-12 text-gray-800 dark:text-gray-200" style={`background-image: var(--background)`}>
+      <TopBar customStyles={customStyles ? customStyles : null} />
       {meetingStatus.value ? (
         <>
-          <MeetingBody customStyles={customStyles} />
+          <MeetingBody customStyles={customStyles ? customStyles : null} />
           <BottomBar />
         </>
       ) : (

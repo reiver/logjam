@@ -5,18 +5,21 @@ import { useState, useEffect } from 'preact/compat'
 export { streamers }
 
 export const MeetingBody = ({ customStyles }) => {
-  const [backgroundColor, setBackgroundColor] = useState(customStyles.background.color); // Set initial color
-  const [backgroundImage, setBackgroundImage] = useState(customStyles.background.image); // Set initial color
 
   useEffect(() => {
-    console.log("image: ", customStyles.background.background),
-    setBackgroundColor(customStyles.background.color)
-    setBackgroundImage(customStyles.background.background)
-    //background-color: ${backgroundColor}; 
+    if (customStyles) {
+      // Create a style element and append it to the head of the document
+      const styleElement = document.createElement('style');
+      document.head.appendChild(styleElement);
+
+      // Set the CSS content of the style element
+      styleElement.textContent = customStyles;
+    }
   }, [])
+
   return (
     <>
-      <Container class="relative h-full flex-grow overflow-hidden py-4 flex items-center" style={`background-image: ${backgroundImage}`} id="meeting-body">
+      <Container class="relative h-full flex-grow overflow-hidden py-4 flex items-center"  id="meeting-body">
         <Stage customStyles={customStyles} />
         <Attendees />
       </Container>
