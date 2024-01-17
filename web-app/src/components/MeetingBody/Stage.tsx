@@ -199,14 +199,18 @@ export const Stage = ({ customStyles }) => {
   return (
     <div class={`transition-all h-full lg:px-0 relative`} style={{ width: `calc(100% - ${attendeesWidth.value}px)` }}>
       {broadcastIsInTheMeeting.value ? (
-        <div class={clsx('relative h-full flex justify-end')}>
+        <div class={clsx('relative h-full justify-end'
+          , {
+            'flex': !customStyles,
+          })}>
           <div
-            class={clsx('flex flex-wrap justify-start sm:justify-center items-center h-full transition-all', {
+            class={clsx('flex justify-start sm:justify-center items-center h-full transition-all', {
+              'flex-wrap': !customStyles,
               'gap-4': !hasFullScreenedStream.value,
               'gap-0': hasFullScreenedStream.value,
-              'w-1/2': !hasFullScreenedStream.value && hasShareScreenStream.value && deviceSize.value !== 'xs',
+              'w-1/2': !hasFullScreenedStream.value && hasShareScreenStream.value && deviceSize.value !== 'xs' && !customStyles,
               'w-full': hasFullScreenedStream.value || !hasShareScreenStream.value || deviceSize.value === 'xs',
-            })}
+            }, 'GreatApeGapInVideos')}
           >
             {Object.values(streamers.value)
               .sort((a, b) => {
@@ -234,18 +238,15 @@ export const Stage = ({ customStyles }) => {
                     key={i}
                     style={clsx(
                       customStyles
-                        ? (attendee.isHost ? `width: var(--hostVideoWidth); height: var(--hostVideoHeight);` :
-                          `width: var(--videoWidth); height: var(--videoHeight);`)
+                        ? ``
                         : `width: ${getVideoWidth(attendee, i)}`,
-
-                      customStyles ?
-                        `border:var(--videoBorder); border-radius:var(--videoBorderRadius)` : ``,
                       {
-                        [`position: absolute; left: 25px;`]: !hasFullScreenedStream.value && deviceSize.value !== 'xs' && attendee.isShareScreen,
+                        [`position: absolute; left: 25px;`]: !hasFullScreenedStream.value && deviceSize.value !== 'xs' && attendee.isShareScreen && !customStyles,
                       })}
 
                     class={clsx(
-                      'group transition-all aspect-video relative max-w-full text-white-f-9', 'bg-gray-1 rounded-lg min-w-10', 'dark:bg-gray-3 overflow-hidden')}
+                      'group transition-all aspect-video relative max-w-full text-white-f-9', 'bg-gray-1 rounded-lg min-w-10', 'dark:bg-gray-3 overflow-hidden',
+                      `${attendee.isHost ? (attendee.isShareScreen ? `GreatApeShareScreenVideo` : `GreatApeHostVideo`) : `GreatApeAudienceVideo`}`)}
                     onClick={(e) => handleOnClick(e, attendee.stream.id)}
                   >
                     <Video
@@ -417,11 +418,8 @@ export const Video = memo(({ stream, isMuted, isHostStream, name, userId, isUser
                          rounded-lg`}
       />
       <div class="absolute top-0 left-0 flex justify-between w-full px-2 gap-2">
-        <div class="flex truncate justify-center items-center">
-          <div class="px-4 py-1 bg-black bg-opacity-50 text-white rounded-full text-medium-12 truncate"
-            style={customStyles ? { backgroundColor: 'var(--nameBackgroundColor)', color: 'var(--nameColor)', fontSize: 'var(--nameFontSize)' } : {}}
-          >
-
+        <div class="flex truncate justify-center items-center GreatApeVideoNameBackground">
+          <div class="px-4 py-1 bg-black bg-opacity-50 text-white rounded-full text-medium-12 truncate GreatApeVideoName ">
             {name} {isHostStream && isShareScreen ? '(Shared Screen)' : isHostStream ? ' (Host)' : ''}
           </div>
         </div>
