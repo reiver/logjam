@@ -305,6 +305,7 @@ func (c *RoomWSController) Role(ctx *models.WSContext) {
 		go c.emitUserList(ctx.RoomId)
 	}
 }
+
 func (c *RoomWSController) Stream(ctx *models.WSContext) {
 	payload := make(map[string]string)
 	err := json.Unmarshal(ctx.PureMessage, &payload)
@@ -324,6 +325,24 @@ func (c *RoomWSController) Stream(ctx *models.WSContext) {
 	if err != nil {
 		c.log(contracts.LError, err.Error())
 		return
+	}
+}
+
+func (c *RoomWSController) UpdateStreamId(ctx *models.WSContext) {
+	payload := make(map[string]interface{})
+	err := json.Unmarshal(ctx.PureMessage, &payload)
+	if err != nil {
+		c.log(contracts.LError, err.Error())
+		return
+	}
+	streamId, exists := payload["streamId"]
+	defer c.emitUserList(ctx.RoomId)
+	if exists {
+		err = c.roomRepo.UpdateMemberMeta(ctx.RoomId, ctx.SocketID, "streamId", streamId.(string))
+		if err != nil {
+			c.log(contracts.LError, err.Error())
+			return
+		}
 	}
 }
 
