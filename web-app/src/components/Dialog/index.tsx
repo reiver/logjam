@@ -12,17 +12,43 @@ import Smartphone from 'assets/icons/Smartphone.svg?react'
 import { clsx } from 'clsx'
 import { Button, Icon, IconButton, Tooltip } from 'components'
 import { currentUser, sparkRTC, updateUser } from 'pages/Meeting.js'
+import { videoBackGround } from 'lib/common.js'
 import { Fragment } from 'preact'
 import { useEffect, useRef } from 'preact/compat'
 import { v4 as uuidv4 } from 'uuid'
 import { IODevices } from '../../lib/io-devices.js'
+import back1 from 'assets/images/back1.jpg'
+import back2 from 'assets/images/back2.jpg'
+import back3 from 'assets/images/back3.jpg'
+import back4 from 'assets/images/back4.jpg'
+import back5 from 'assets/images/back5.jpg'
+import back6 from 'assets/images/back6.jpg'
 
+import CheckCircle from 'assets/icons/CheckCircle.svg'
+
+import blurIcon from 'assets/icons/Blur.svg'
+import noBackgroundIcon from 'assets/icons/NoBackground.svg'
+import { VideoBackground } from 'lib/videoBackground'
+import { isMobile } from 'lib/common.js'
+
+const blurTxt = "Blur";
+const noneTxt = "None"
 const dialogs = signal([])
 var selectedMic = signal(null)
 var selectedSpeaker = signal(null)
 var selectedCamera = signal(null)
+var selectedBackground = signal(null)
 const builtInLabel = 'Built-in'
 const builtInThisDevice = 'Built-in (This Device)'
+const backgroundsList = [back1, back2, back3, back4, back5, back6];
+
+export const isIphone = () => {
+  const userAgent = navigator.userAgent
+  if (userAgent.match(/iPhone|iPad|iPod/i)) {
+    return true
+  }
+  return false
+}
 
 export const IOSettingsDialog = ({
   onOk,
@@ -35,6 +61,7 @@ export const IOSettingsDialog = ({
   showButtons = true,
   className,
 }) => {
+
   const selectAudioOutputDevice = async () => {
     const io = new IODevices()
     await io.initDevices()
@@ -106,13 +133,34 @@ export const IOSettingsDialog = ({
     )
   }
 
-  const isIphone = () => {
-    const userAgent = navigator.userAgent
-    if (userAgent.match(/iPhone|iPad|iPod/i)) {
-      return true
-    }
-    return false
+
+  const selectVideoBackground = async () => {
+    //fetch All the Video Backgrounds from Assets
+
+
+    makeVideoBackgroundDialog(
+      'video-background',
+      {
+        title: 'Background'
+      },
+      backgroundsList,
+      (backgroundMode, index) => {
+        console.log("backgroundMode: ", backgroundMode);
+
+        console.log("backgroundImage: ", backgroundsList[index])
+
+        if (backgroundMode === "backgroundimage") {
+          selectedBackground.value = index
+        } else if (backgroundMode === "blurbackground") {
+          selectedBackground.value = "Blur"
+        } else if (backgroundMode === "nobackground") {
+          selectedBackground.value = null
+        }
+        //on Close
+      }
+    )
   }
+
 
   console.log('Resetting..')
 
@@ -136,7 +184,7 @@ export const IOSettingsDialog = ({
             <div class="sm:py-4 py-2 flex rounded-md mx-2 cursor-pointer" onClick={selectAudioOutputDevice}>
               <div class="text-left text-bold-12 px-5 flex-1">Audio Output</div>
               <div id="selectedSpeaker" class="text-right text-bold-12 px-5 flex-1 text-gray-1 cursor-pointer">
-                {selectedSpeaker.value ? selectedSpeaker.value.label : builtInLabel}
+                {selectedSpeaker.value && selectedSpeaker.value.label ? isDefaultSpeaker(selectedSpeaker.value.label) ? builtInLabel : selectedSpeaker.value.label : builtInLabel}
               </div>
             </div>
           )}
@@ -144,16 +192,42 @@ export const IOSettingsDialog = ({
           <div class="sm:py-4 py-2 rounded-md mx-2 flex cursor-pointer" onClick={selectAudioInputDevice}>
             <div class="text-left text-bold-12 px-5 flex-1">Microphone</div>
             <div id="selectedMic" class="text-right text-bold-12 px-5 flex-1 text-gray-1">
-              {selectedMic.value ? selectedMic.value.label : builtInLabel}
+              {selectedMic.value && selectedMic.value.label ? isDefaultMic(selectedMic.value.label) ? builtInLabel : selectedMic.value.label : builtInLabel}
             </div>
           </div>
 
           <div class="sm:py-4 py-2 rounded-md mx-2 flex cursor-pointer" onClick={selectVideoInputDevice}>
             <div class="text-left text-bold-12 px-5 flex-1">Video Input</div>
             <div id="selectedCamera" class="text-right text-bold-12 px-5 flex-1 text-gray-1">
-              {selectedCamera.value ? selectedCamera.value.label : builtInLabel}
+              {selectedCamera.value && selectedCamera.value.label ? isDefaultCamera(selectedCamera.value.label) ? builtInLabel : selectedCamera.value.label : builtInLabel}
             </div>
           </div>
+          {isMobile() === false && (<div class="sm:py-4 py-2 rounded-md mx-2 flex cursor-pointer items-center" onClick={selectVideoBackground}>
+            <div class="text-left text-bold-12 px-5 flex-1">Background</div>
+            <div id="selectedBackground" class="text-right text-bold-12 px-5 flex-1 text-gray-1">
+              {(() => {
+                if (selectedBackground.value != null) {
+                  if (selectedBackground.value === blurTxt) {
+                    return blurTxt
+                  }
+                  return (
+                    <>
+                      {/* Display image if selectedBackground.value is not blurTxt */}
+                      <img
+                        src={backgroundsList[selectedBackground.value]}
+                        alt="Selected Background Image"
+                        className="w-11 h-8 rounded-md float-right"
+                      />
+
+                    </>
+                  );
+                } else {
+                  return noneTxt
+                }
+              })()}
+            </div>
+          </div>)}
+
         </div>
 
         {showButtons && (
@@ -174,7 +248,8 @@ export const IOSettingsDialog = ({
               variant={okButtonVariant}
               class="w-full flex-grow-1"
               onClick={() => {
-                onOk(selectedMic.value, selectedCamera.value, selectedSpeaker.value)
+                console.log("selectedBackground.value onOK : ", selectedBackground.value)
+                onOk(selectedMic.value, selectedCamera.value, selectedSpeaker.value, selectedBackground.value)
               }}
             >
               {okText}
@@ -185,6 +260,140 @@ export const IOSettingsDialog = ({
     </div>
   )
 }
+
+const isDefaultCamera = (label) => {
+  const lowerLabel = label.toLowerCase();
+  return ["default", "front", "(", "integrated"].some(keyword => lowerLabel.includes(keyword));
+};
+
+const isDefaultMic = (label) => {
+  const lowerLabel = label.toLowerCase();
+  return ["default", "iphone microphone"].some(keyword => lowerLabel.includes(keyword));
+};
+
+const isDefaultSpeaker = (label) => {
+  const lowerLabel = label.toLowerCase();
+  return ["default"].some(keyword => lowerLabel.includes(keyword));
+};
+
+export const VideoBackgroundDialog = ({ onClose, message: { title }, type, backgroundsList, className, contentClassName }) => {
+
+  var selectedBackgroundMode = "nobackground"
+  var selectedBackgroundImageIndex = null
+
+  const handleClickNoBackgroundIcon = () => {
+    selectedBackgroundMode = "nobackground"
+    onClose(selectedBackgroundMode, selectedBackgroundImageIndex)
+  }
+
+  const handleClickBlurIcon = () => {
+    selectedBackgroundMode = "blurbackground"
+    onClose(selectedBackgroundMode, selectedBackgroundImageIndex)
+  }
+
+  const handleClickBackgroundImage = (index) => {
+    selectedBackgroundMode = "backgroundimage"
+    selectedBackgroundImageIndex = index
+    onClose(selectedBackgroundMode, selectedBackgroundImageIndex)
+  }
+
+  return (
+    <div className="absolute top-0 left-0 w-full h-full">
+      <div className="z-20 absolute w-full h-full bg-black bg-opacity-60" />
+      <div
+        className={clsx(
+          className,
+          'absolute -translate-y-full z-20 top-full left-0 right-0 sm:right-unset sm:top-1/2 sm:left-1/2 transform sm:-translate-x-1/2 sm:-translate-y-1/2 dark:bg-gray-3 dark:text-gray-0 bg-white text-gray-2 sm:rounded-lg rounded-t-lg w-full sm:max-w-[400px] sm:border dark:border-gray-1 border-gray-0'
+        )}
+      >
+        <div className="flex justify-center items-center p-5 relative">
+          <span className="dark:text-white text-black text-bold-12">{title}</span>
+          <Icon className="absolute top-1/2 sm:right-5 right-[unset] left-5 sm:left-[unset] transform -translate-y-1/2 cursor-pointer" icon={Close} onClick={onClose} />
+        </div>
+        <div className="overflow-y-auto h-96">
+          <style>
+            {`
+            /* Customizing scrollbar styles for WebKit browsers */
+            ::-webkit-scrollbar {
+              width: 3px; /* Adjust the width as needed */
+            }
+
+            ::-webkit-scrollbar-thumb {
+              background-color: #A8A8A8; /* Adjust the color as needed */
+            }
+
+            ::-webkit-scrollbar-track {
+              background-color: #EBEBEB; /* Adjust the color as needed */
+            }
+          `}
+          </style>
+          <hr className="dark:border-gray-2 border-gray-0 sm:block hidden" />
+          <div className={clsx(contentClassName, 'text-left text-bold-12 sm:pt-8 pt-5 p-5')} dangerouslySetInnerHTML={{ __html: "No Background - Blur Background" }}></div>
+
+          <div className="sm:pb-2 pb-1 mx-3 flex">
+            {/* Image 1 */}
+            <div className={`max-w-80px max-h-80px mx-2 cursor-pointer bg-gray-200 rounded-md
+            ${selectedBackground.value == null ? "border border-black border-2" : ""}
+            `}> {/* Add bg-gray-200 for a light gray background */}
+              <img
+                src={noBackgroundIcon}
+                alt="First Image"
+                className="w-full h-full p-2"
+                onClick={handleClickNoBackgroundIcon}
+              />
+            </div>
+
+            {/* Image 2 */}
+            <div className={`max-w-80px max-h-80px mx-2 cursor-pointer bg-gray-200 rounded-md
+            ${selectedBackground.value && selectedBackground.value === blurTxt ? "border border-black border-2" : ""}
+            `}> {/* Add bg-gray-200 for a light gray background */}
+              <img
+                src={blurIcon}
+                alt="Second Image"
+                className="w-full h-full p-2"
+                onClick={handleClickBlurIcon}
+              />
+            </div>
+          </div>
+
+          <div className={clsx(contentClassName, 'text-left text-bold-12 p-5')} dangerouslySetInnerHTML={{ __html: "Backgrounds:" }}></div>
+
+          {/* Display images dynamically */}
+          <div className="flex flex-col items-center mx-4 mb-1">
+            {backgroundsList.map((background, index) => (
+              <div
+                style={{ width: '100%', height: 'auto', maxWidth: '369px', maxHeight: '207px' }}
+                className={"mb-3 relative"}
+              >
+                {selectedBackground.value === index && (<img
+                  src={CheckCircle}
+                  alt="Check Icon"
+                  className="w-6 h-6 ml-80 -mt-3 absolute"
+                />)}
+                <img
+                  key={index}
+                  src={background}
+                  alt={`Background ${index + 1}`}
+                  onClick={() => {
+                    handleClickBackgroundImage(index)
+                  }}
+                  style={{ width: '100%', height: 'auto', maxWidth: '369px', maxHeight: '207px' }}
+                  className={`cursor-pointer rounded-md
+                  ${selectedBackground.value === index ? "border border-black border-2" : ""}
+                `}
+                />
+
+              </div>
+            ))}
+
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+
 
 export const IODevicesDialog = ({ onClose, message: { message, title }, devices, deviceType, className, contentClassName }) => {
   let selectedDeviceIndex = -1
@@ -328,12 +537,12 @@ export const IODevicesDialog = ({ onClose, message: { message, title }, devices,
                     isBuiltInDevice(deviceType, device)
                       ? Smartphone
                       : deviceType === 'microphone'
-                      ? MicrophoneLight
-                      : deviceType === 'camera'
-                      ? CameraLight
-                      : deviceType === 'speaker'
-                      ? Headphone
-                      : Fragment
+                        ? MicrophoneLight
+                        : deviceType === 'camera'
+                          ? CameraLight
+                          : deviceType === 'speaker'
+                            ? Headphone
+                            : Fragment
                   }
                   class="ml-5"
                   width="20px"
@@ -356,6 +565,7 @@ export const PreviewDialog = ({
   onOk,
   onClose,
   videoStream,
+  showCaneclButton,
   message: { message, title, yesButton, noButton },
   okText = yesButton ? yesButton : 'Sounds Good',
   cancelText = noButton ? noButton : 'Cancel',
@@ -365,9 +575,11 @@ export const PreviewDialog = ({
   className,
   contentClassName,
 }) => {
-  selectedCamera.value = null
-  selectedMic.value = null
-  selectedSpeaker.value = null
+  useEffect(() => {
+    selectedCamera.value = null;
+    selectedMic.value = null;
+    selectedSpeaker.value = null;
+  }, []);
 
   const videoRef = useRef<HTMLVideoElement>()
   const { hasCamera, hasMic, isCameraOn, isMicrophoneOn } = currentUser.value
@@ -389,9 +601,16 @@ export const PreviewDialog = ({
 
   const toggleCamera = () => {
     sparkRTC.value.disableVideo(!isCameraOn)
+
+    if (isIphone() && videoRef.current && videoRef.current.srcObject === null) {
+      videoRef.current.srcObject = videoStream
+      videoRef.current.style.backgroundColor = '';
+    }
+
     updateUser({
       isCameraOn: !isCameraOn,
     })
+    console.log("Selected Camera: ", selectedCamera.value)
   }
 
   const toggleMicrophone = () => {
@@ -401,28 +620,65 @@ export const PreviewDialog = ({
     })
   }
 
-  const openDeviceSettings = () => {
+  const openDeviceSettings = async () => {
+    //update video background
+
     makeIOSettingsDialog(
       'io-settings',
       {
         message: '',
-        title: 'Input and Output Settings',
+        title: 'Settings',
       },
-      async (mic, cam, speaker) => {
-        console.log('mic: ', mic, 'cam: ', cam, 'speaker: ', speaker)
+      async (mic, cam, speaker, backgroundIndex) => {
+        console.log('mic: ', mic, 'cam: ', cam, 'speaker: ', speaker, 'background: ', backgroundIndex)
 
         //now change the Audio, Video and Speaker devices
         const stream = await sparkRTC.value.changeIODevices(mic, cam, speaker)
 
-        console.log('New Stream: ', stream)
+        console.log('New Stream: ', stream.getTracks())
+        //check if video is enable or disabled
         videoStream = stream
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream
-        } else {
-          console.log('No video ref')
+
+        //Update Video Background
+        if (selectedBackground.value != null) {
+
+          //if camera is turned Off, TURN it ON
+          if (sparkRTC.value.lastVideoState === sparkRTC.value.LastState.DISABLED) {
+            videoStream = await sparkRTC.value.disableVideo(true)
+            updateUser({
+              isCameraOn: true,
+            })
+          }
+
+
+          var processedStr = null;
+          if (selectedBackground.value === blurTxt) {
+            //Blur the Video Background
+            processedStr = await videoBackGround.setBackVideoBackground(backgroundsList[0], videoStream, true)
+          } else {
+            //Set background to video
+            processedStr = await videoBackGround.setBackVideoBackground(backgroundsList[selectedBackground.value], videoStream)
+          }
+          sparkRTC.value.localStream = processedStr
+          videoStream = processedStr
         }
+
+        if (sparkRTC.value.lastVideoState === sparkRTC.value.LastState.DISABLED && isIphone()) {
+          if (videoRef.current) {
+            videoRef.current.srcObject = null
+            videoRef.current.style.backgroundColor = 'black';
+          }
+        } else {
+          if (videoRef.current) {
+            videoRef.current.srcObject = videoStream
+          } else {
+            console.log('No video ref')
+          }
+        }
+
+
       }, //ok
-      () => {} //close
+      () => { } //close
     )
   }
 
@@ -478,7 +734,7 @@ export const PreviewDialog = ({
 
         {showButtons && (
           <div class="flex justify-end gap-2 p-5 pt-0">
-            <Button
+            {showCaneclButton && (<Button
               size="lg"
               variant="outline"
               class="w-full flex-grow-1"
@@ -487,7 +743,8 @@ export const PreviewDialog = ({
               }}
             >
               {cancelText}
-            </Button>
+            </Button>)}
+
             <Button size="lg" variant={okButtonVariant} class="w-full flex-grow-1" onClick={onOk}>
               {okText}
             </Button>
@@ -628,6 +885,7 @@ export const DialogPool = () => {
         else if (dialog.type === 'preview') return <PreviewDialog {...dialog} />
         else if (dialog.type === 'io-settings') return <IOSettingsDialog {...dialog} />
         else if (dialog.type === 'io-devices') return <IODevicesDialog {...dialog} />
+        else if (dialog.type === 'video-background') return <VideoBackgroundDialog {...dialog} />
         else if (dialog.type === 'invite') return <InviteDialog {...dialog} />
       })}
     </>
@@ -698,7 +956,7 @@ export const destroyDialog = (id) => {
   dialogs.value = dialogsTmp
 }
 
-export const makePreviewDialog = (type, videoStream, message, onOk, onClose, options = {}) => {
+export const makePreviewDialog = (showCaneclButton = true, type, videoStream, message, onOk, onClose, options = {}) => {
   const id = uuidv4()
   const destroy = () => {
     const dialogsTmp = { ...dialogs.value }
@@ -712,13 +970,17 @@ export const makePreviewDialog = (type, videoStream, message, onOk, onClose, opt
       id,
       type,
       videoStream,
+      showCaneclButton,
       message,
       pointer: !!onClose,
       onOk: () => {
         onOk && onOk()
         destroy()
       },
-      onClose: () => {
+      onClose: async () => {
+        if (sparkRTC.value.role === sparkRTC.value.Roles.AUDIENCE) {
+          await sparkRTC.value.closeCamera()
+        }
         onClose && onClose()
         destroy()
       },
@@ -727,6 +989,30 @@ export const makePreviewDialog = (type, videoStream, message, onOk, onClose, opt
   }
 
   return id
+}
+
+export const makeVideoBackgroundDialog = (type, message, backgroundsList, onClose, options = {}) => {
+  const id = uuidv4()
+  const destroy = () => {
+    const dialogsTmp = { ...dialogs.value }
+    delete dialogsTmp[id]
+    dialogs.value = dialogsTmp
+  }
+
+  dialogs.value = {
+    ...dialogs.value,
+    [id]: {
+      id,
+      type,
+      message,
+      backgroundsList,
+      onClose: (backgroundMode, image) => {
+        onClose && onClose(backgroundMode, image)
+        destroy()
+      },
+      ...options,
+    },
+  }
 }
 
 export const makeIODevicesDialog = (type, message, devices, deviceType, onClose, options = {}) => {

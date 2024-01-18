@@ -2,13 +2,14 @@ package routers
 
 import (
 	"encoding/json"
+	"net/http"
+	"strconv"
+
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
-	"net/http"
 	"sourcecode.social/greatape/logjam/controllers"
 	"sourcecode.social/greatape/logjam/models"
 	"sourcecode.social/greatape/logjam/models/contracts"
-	"strconv"
 )
 
 type roomWSRouter struct {
@@ -115,7 +116,11 @@ func (r *roomWSRouter) handleEvent(ctx *models.WSContext) {
 			r.roomCtrl.Stream(ctx)
 			break
 		}
-
+	case "updateStreamId":
+		{
+			r.roomCtrl.UpdateStreamId(ctx)
+			break
+		}
 	case "ping":
 		{
 			r.roomCtrl.Ping(ctx)
