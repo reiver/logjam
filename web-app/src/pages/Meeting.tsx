@@ -5,11 +5,13 @@ import { ToastProvider, destroyDialog, makePreviewDialog } from 'components/Dial
 import { Roles, createSparkRTC, getWsUrl } from 'lib/common.js'
 import { detectKeyPress } from 'lib/controls'
 import { lazy } from 'preact-iso'
+import clsx from 'clsx'
 import { useEffect, useState } from 'preact/compat'
-import { fullScreenedStream } from 'components/MeetingBody/Stage'
+import { fullScreenedStream, hasHostStream, hasShareScreenStream } from 'components/MeetingBody/Stage'
 import backImage from 'assets/images/blur.jpg'
 import { VideoBackground } from 'lib/videoBackground'
 let displayIdCounter = 2
+import { streamersLength } from '../components/MeetingBody/Stage'
 
 const PageNotFound = lazy(() => import('./_404'))
 
@@ -748,7 +750,13 @@ const Meeting = ({ params: { room, displayName, name, customStyles } }: { params
   }, [])
 
   return (
-    <div class="flex flex-col justify-between min-h-[--doc-height] dark:bg-secondary-1-a bg-white-f-9 text-medium-12 text-gray-800 dark:text-gray-200 GreatApeBackground">
+    <div class={clsx('flex flex-col justify-between min-h-[--doc-height] dark:bg-secondary-1-a bg-white-f-9 text-medium-12 text-gray-800 dark:text-gray-200', {
+      'greatape-stage-host': streamersLength.value === 1 && hasHostStream.value && customStyles,
+      'greatape-stage-host-audience-1':streamersLength.value === 2 && hasHostStream.value && !hasShareScreenStream.value && customStyles,
+      'greatape-stage-host-screenshare': streamersLength.value === 2 && hasShareScreenStream.value && hasHostStream.value && customStyles,
+      'greatape-stage-host-screenshare-audience-1': streamersLength.value === 3 && hasHostStream.value && hasShareScreenStream.value && customStyles,
+      'greatape-stage-host-audience-2':streamersLength.value === 3 && hasHostStream.value && !hasShareScreenStream.value && customStyles,
+    })}>
       <TopBar customStyles={customStyles ? customStyles : null} />
       {meetingStatus.value ? (
         <>

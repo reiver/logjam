@@ -17,6 +17,7 @@ let timeOut
 export const bottomBarVisible = signal(true)
 export const fullScreenedStream = signal(null)
 export const hasShareScreenStream = computed(() => !!Object.values(streamers.value).find((s) => s.isShareScreen))
+export const hasHostStream = computed(() => !!Object.values(streamers.value).find((s) => s.isHost && !s.isShareScreen))
 export const hasFullScreenedStream = computed(() => !!fullScreenedStream.value)
 export const streamers = signal<Record<string, { isHost: boolean; isShareScreen: boolean; isLocalStream: boolean; stream: any; userId: any; muted: boolean; name: string; toggleScreenId: any; displayId: string }>>({})
 export const streamersLength = computed(() => Object.keys(streamers.value).length)
@@ -210,7 +211,7 @@ export const Stage = ({ customStyles }) => {
               'gap-0': hasFullScreenedStream.value,
               'w-1/2': !hasFullScreenedStream.value && hasShareScreenStream.value && deviceSize.value !== 'xs' && !customStyles,
               'w-full': hasFullScreenedStream.value || !hasShareScreenStream.value || deviceSize.value === 'xs',
-            }, 'GreatApeGapInVideos')}
+            }, 'greatape-gap-in-videos')}
           >
             {Object.values(streamers.value)
               .sort((a, b) => {
@@ -246,7 +247,7 @@ export const Stage = ({ customStyles }) => {
 
                     class={clsx(
                       'group transition-all aspect-video relative max-w-full text-white-f-9', 'bg-gray-1 rounded-lg min-w-10', 'dark:bg-gray-3 overflow-hidden',
-                      `${attendee.isHost ? (attendee.isShareScreen ? `GreatApeShareScreenVideo` : `GreatApeHostVideo`) : `GreatApeAudienceVideo`}`)}
+                      `${attendee.isHost ? (attendee.isShareScreen ? `greatape-share-screen-video` : `greatape-host-video`) : `greatape-audience-video`}`)}
                     onClick={(e) => handleOnClick(e, attendee.stream.id)}
                   >
                     <Video
@@ -418,8 +419,8 @@ export const Video = memo(({ stream, isMuted, isHostStream, name, userId, isUser
                          rounded-lg`}
       />
       <div class="absolute top-0 left-0 flex justify-between w-full px-2 gap-2">
-        <div class="flex truncate justify-center items-center GreatApeVideoNameBackground">
-          <div class="px-4 py-1 bg-black bg-opacity-50 text-white rounded-full text-medium-12 truncate GreatApeVideoName ">
+        <div class="flex truncate justify-center items-center greatape-video-name-background">
+          <div class="px-4 py-1 bg-black bg-opacity-50 text-white rounded-full text-medium-12 truncate greatape-video-name ">
             {name} {isHostStream && isShareScreen ? '(Shared Screen)' : isHostStream ? ' (Host)' : ''}
           </div>
         </div>
