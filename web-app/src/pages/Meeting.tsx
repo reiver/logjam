@@ -176,10 +176,14 @@ export const onStopStream = async (stream) => {
   await toggleFullScreen(stream)
 
   const streamersTmp = { ...streamers.value }
-  delete streamersTmp[stream.id]
-  streamers.value = streamersTmp
 
-  streamMap.delete(stream.id) //remove stream display id from stream map
+  if (streamersTmp.hasOwnProperty(stream.id)) {
+    delete streamersTmp[stream.id];
+    streamers.value = streamersTmp;
+
+    streamMap.delete(stream.id) //remove stream display id from stream map
+  }
+
 
 }
 
@@ -348,6 +352,12 @@ const Meeting = ({ params: { room, displayName, name } }: { params?: { room?: st
           remoteStreamCallback: async (stream) => {
             log(`remoteStreamCallback`, stream)
             log(`remoteStreamCallback-Name`, stream.name)
+
+            //if got inactive stream stop it.
+            if (!stream.active) {
+              onStopStream(stream)
+              return;
+            }
 
             await displayStream(stream)
 
