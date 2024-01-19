@@ -197,6 +197,31 @@ export const Stage = ({ customStyles }) => {
     }
   }
 
+  const sortStreamers = (a, b) => {
+    if (streamersLength.value == 2 && customStyles) {
+      console.log("Sorting host to end")
+      // Prioritize non-hosts
+      if (!a.isHost && b.isHost) return -1;
+      if (a.isHost && !b.isHost) return 1;
+
+      // Default sorting if neither is the host
+      return 0;
+
+    } else {
+      console.log("Original Sorting Logic")
+
+      //original Logic
+      let aScore = 0
+      let bScore = 0
+      if (a.isHost) aScore += 10
+      if (a.isShareScreen) aScore += 20
+      if (b.isHost) bScore += 10
+      if (b.isShareScreen) bScore += 20
+      return bScore - aScore
+    }
+
+  }
+
   return (
     <div class={`transition-all h-full lg:px-0 relative`} style={{ width: `calc(100% - ${attendeesWidth.value}px)` }}>
       {broadcastIsInTheMeeting.value ? (
@@ -214,15 +239,7 @@ export const Stage = ({ customStyles }) => {
             }, 'greatape-gap-in-videos')}
           >
             {Object.values(streamers.value)
-              .sort((a, b) => {
-                let aScore = 0
-                let bScore = 0
-                if (a.isHost) aScore += 10
-                if (a.isShareScreen) aScore += 20
-                if (b.isHost) bScore += 10
-                if (b.isShareScreen) bScore += 20
-                return bScore - aScore
-              })
+              .sort((a, b) => sortStreamers(a, b))
               .map((attendee, i) => {
                 let muted = false
 
