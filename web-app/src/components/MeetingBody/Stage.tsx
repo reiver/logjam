@@ -19,7 +19,7 @@ export const fullScreenedStream = signal(null)
 export const hasShareScreenStream = computed(() => !!Object.values(streamers.value).find((s) => s.isShareScreen))
 export const hasHostStream = computed(() => !!Object.values(streamers.value).find((s) => s.isHost && !s.isShareScreen))
 export const hasFullScreenedStream = computed(() => !!fullScreenedStream.value)
-export const streamers = signal<Record<string, { isHost: boolean; isShareScreen: boolean; isLocalStream: boolean; stream: any; userId: any; muted: boolean; name: string; toggleScreenId: any; displayId: string }>>({})
+export const streamers = signal<Record<string, { isHost: boolean; isShareScreen: boolean; isLocalStream: boolean; stream: any; userId: any; muted: boolean; name: string; toggleScreenId: any; displayId: string; position: any }>>({})
 export const streamersLength = computed(() => Object.keys(streamers.value).length)
 export const deviceSize = signal(getDeviceConfig(window.innerWidth))
 const topBarBottomBarHeight = () => document.getElementById('top-bar').offsetHeight + (bottomBarVisible.value ? document.getElementById('bottom-bar').offsetHeight : 0) + 32
@@ -197,16 +197,101 @@ export const Stage = ({ customStyles }) => {
     }
   }
 
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+
+      //get host video position
+      const hostVideoElement = document.querySelector('.greatape-host-video');
+      if (hostVideoElement) {
+        const computedStyles = getComputedStyle(hostVideoElement);
+
+        const positionValue = parseInt(computedStyles.getPropertyValue('--position'), 10);
+
+        //get Host Stream
+        const hostStream = () => {
+          const hostStreamer = Object.values(streamers.value).find((s) => s.isHost && !s.isShareScreen);
+          return hostStreamer ? hostStreamer.stream : null;
+        };
+
+        if (hostStream) {
+          let stream = hostStream()
+          streamers.value = {
+            ...streamers.value,
+            [stream.id]: {
+              ...streamers.value[stream.id],
+              position: positionValue,
+            },
+          };
+
+        }
+
+      }
+
+      //get screen share position
+      const screenShareVideoElement = document.querySelector('.greatape-share-screen-video');
+      if (screenShareVideoElement) {
+        const computedStyles = getComputedStyle(screenShareVideoElement);
+
+        const positionValue = parseInt(computedStyles.getPropertyValue('--position'), 10);
+
+        //get screen share Stream
+        const screenShareStream = () => {
+          const hostStreamer = Object.values(streamers.value).find((s) => s.isHost && s.isShareScreen);
+          return hostStreamer ? hostStreamer.stream : null;
+        };
+
+        if (screenShareStream) {
+          let stream = screenShareStream()
+
+          streamers.value = {
+            ...streamers.value,
+            [stream.id]: {
+              ...streamers.value[stream.id],
+              position: positionValue,
+            },
+          };
+        }
+
+      }
+
+      //get audience position
+      const audienceVideoElement = document.querySelector('.greatape-audience-video');
+      if (audienceVideoElement) {
+        const computedStyles = getComputedStyle(audienceVideoElement);
+
+        const positionValue = parseInt(computedStyles.getPropertyValue('--position'), 10);
+
+        //get audience Stream
+        const audienceStream = () => {
+          const hostStreamer = Object.values(streamers.value).find((s) => !s.isHost && !s.isShareScreen);
+          return hostStreamer ? hostStreamer.stream : null;
+        };
+
+        if (audienceStream) {
+          let stream = audienceStream()
+
+          streamers.value = {
+            ...streamers.value,
+            [stream.id]: {
+              ...streamers.value[stream.id],
+              position: positionValue,
+            },
+          };
+        }
+
+      }
+    }, 500); 
+
+    // Clear the interval when the component is unmounted
+    return () => clearInterval(intervalId);
+  }, []);
+
   const sortStreamers = (a, b) => {
-    if (streamersLength.value == 2 && customStyles) {
-      console.log("Sorting host to end")
-      // Prioritize non-hosts
-      if (!a.isHost && b.isHost) return -1;
-      if (a.isHost && !b.isHost) return 1;
-
-      // Default sorting if neither is the host
+    if (customStyles) {
+      if (a.position && b.position) {
+        return a.position - b.position;
+      }
       return 0;
-
     } else {
       console.log("Original Sorting Logic")
 

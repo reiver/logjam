@@ -14,6 +14,7 @@ let displayIdCounter = 2
 import { streamersLength } from '../components/MeetingBody/Stage'
 
 const PageNotFound = lazy(() => import('./_404'))
+const styleElement = document.createElement('style');
 
 export const isDebugMode = signal((new URLSearchParams(window.location.search).get('debug') || '').toLowerCase() === 'true')
 export const statsDataOpen = signal(false)
@@ -87,8 +88,6 @@ export const onStartShareScreen = (stream) => {
       displayId: 2,
     },
   }
-
-
 }
 
 const displayStream = async (stream, toggleFull = false) => {
@@ -150,6 +149,7 @@ const displayStream = async (stream, toggleFull = false) => {
 
 
   }
+
 
   streamers.value = {
     ...streamers.value,
@@ -331,6 +331,8 @@ const Meeting = ({ params: { room, displayName, name, customStyles } }: { params
           },
           localStreamChangeCallback: (stream) => {
             log('[Local Stream Callback]', stream)
+
+
             streamers.value = {
               ...streamers.value,
               [stream.id]: {
@@ -741,7 +743,6 @@ const Meeting = ({ params: { room, displayName, name, customStyles } }: { params
   useEffect(() => {
     if (customStyles) {
       // Create a style element and append it to the head of the document
-      const styleElement = document.createElement('style');
       document.head.appendChild(styleElement);
 
       // Set the CSS content of the style element
@@ -752,10 +753,10 @@ const Meeting = ({ params: { room, displayName, name, customStyles } }: { params
   return (
     <div class={clsx('flex flex-col justify-between min-h-[--doc-height] dark:bg-secondary-1-a bg-white-f-9 text-medium-12 text-gray-800 dark:text-gray-200', {
       'greatape-stage-host': streamersLength.value === 1 && hasHostStream.value && customStyles,
-      'greatape-stage-host-audience-1':streamersLength.value === 2 && hasHostStream.value && !hasShareScreenStream.value && customStyles,
+      'greatape-stage-host-audience-1': streamersLength.value === 2 && hasHostStream.value && !hasShareScreenStream.value && customStyles,
       'greatape-stage-host-screenshare': streamersLength.value === 2 && hasShareScreenStream.value && hasHostStream.value && customStyles,
       'greatape-stage-host-screenshare-audience-1': streamersLength.value === 3 && hasHostStream.value && hasShareScreenStream.value && customStyles,
-      'greatape-stage-host-audience-2':streamersLength.value === 3 && hasHostStream.value && !hasShareScreenStream.value && customStyles,
+      'greatape-stage-host-audience-2': streamersLength.value === 3 && hasHostStream.value && !hasShareScreenStream.value && customStyles,
     })}>
       <TopBar customStyles={customStyles ? customStyles : null} />
       {meetingStatus.value ? (

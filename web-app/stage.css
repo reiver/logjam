@@ -10,6 +10,7 @@
   border: 4px solid #000000;
   border-radius: 15px;
   background-color: #f96262;
+  --position: 1; 
 }
 
 /* /////////////// Only 2 Videos, Host + Screen Share /////////////////////////////////// */
@@ -24,6 +25,7 @@
   border: 4px solid #000000;
   border-radius: 15px;
   background-color: #d3f962;
+  --position: 2; 
 }
 
 .greatape-stage-host-screenshare .greatape-share-screen-video{
@@ -32,6 +34,7 @@
   border: 4px solid #000000;
   border-radius: 15px;
   background-color: #d3f962;
+  --position: 1; 
 }
 
 /* //////////////// Only 3 Videos , Host + Screen Share + 1 Audience ////////// */
@@ -46,6 +49,7 @@
   border: 4px solid #000000;
   border-radius: 15px;
   background-color: #62f98d;
+  --position: 3;
 }
 
 .greatape-stage-host-screenshare-audience-1 .greatape-share-screen-video{
@@ -54,6 +58,7 @@
   border: 4px solid #000000;
   border-radius: 15px;
   background-color: #62f98d;
+  --position: 2;
 }
 
 .greatape-stage-host-screenshare-audience-1 .greatape-audience-video{
@@ -62,6 +67,7 @@
   border: 4px solid #FFFFFF;
   border-radius: 15px;
   background-color: #62f98d;
+  --position:1;
 }
 
 /* ////////////////////// Only 3 Videos, Host + 2 Audiences*/
@@ -76,6 +82,7 @@
   border: 4px solid #000000;
   border-radius: 15px;
   background-color: #62abf9;
+  --position: 2;
 }
 
 .greatape-stage-host-audience-2 .greatape-audience-video{
@@ -84,6 +91,7 @@
   border: 4px solid #FFFFFF;
   border-radius: 15px;
   background-color: #62abf9;
+  --position: 1;
 }
 
 /* ///////////////////// Only 2 Vidoes, Host  + 1 Audience */
@@ -98,6 +106,7 @@
   border: 4px solid #000000;
   border-radius: 15px;
   background-color: #bf62f9;
+  --position: 2;
 }
 
 .greatape-stage-host-audience-1 .greatape-audience-video{
@@ -106,6 +115,7 @@
   border: 4px solid #FFFFFF;
   border-radius: 15px;
   background-color: #bf62f9;
+  --position: 1;
 }
 
 /* //////////////////////////////////// */
