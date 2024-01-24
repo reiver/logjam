@@ -23,11 +23,11 @@ export const BottomBar = () => {
                   class="transition-all select-none cursor-pointer flex items-center gap-2 rounded-md hover:bg-gray-0 hover:bg-opacity-10 hover:dark:bg-gray-2 hover:dark:bg-opacity-20 py-1 px-3"
                 >
                   <div class="relative">
-                    <Icon icon={AvatarIcon} />
+                    <Icon icon={AvatarIcon} class="greatape-attendees-count" />
 
                     {attendeesBadge.value && <span class="absolute top-0 -right-1 w-2 h-2 rounded-full bg-red-distructive"></span>}
                   </div>
-                  <span>
+                  <span class="greatape-attendees-count">
                     {attendeesCount} attendee{attendeesCount.value > 1 ? 's' : ''}
                   </span>
                 </div>
@@ -52,7 +52,7 @@ export const BottomBarBottomSheet = () => {
     <BottomSheet open={isMoreOptionsOpen.value} onClose={toggleMoreOptions} title="More">
       <div class="w-full h-full flex gap-3 py-6 flex-col pb-0">
         <span class="text-bold-14">{'Welcome to the Fediverse!'}</span>
-        <LinkCopyComponent link={generateAudienceUrl(sparkRTC.value ? sparkRTC.value.roomName : '')}  />
+        <LinkCopyComponent link={generateAudienceUrl(sparkRTC.value ? sparkRTC.value.roomName : '')} />
         <Tooltip label={isAttendeesOpen.value ? 'Hide Attendees' : 'Show Attendees'}>
           <div
             onClick={handleAttendeesOpen}

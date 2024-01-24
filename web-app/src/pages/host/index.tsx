@@ -54,49 +54,8 @@ const handleCssFileUpload = async (event) => {
   setCustomCssContent(event, (content) => {
     console.log("Content: ", content)
     if (content) {
-
       customStyles = content
       return
-
-      const classes = {};
-      parse(content).walkRules((rule) => {
-        const className = rule.selector.replace(/^\./, ''); // Remove the dot from the class name
-        const properties = {};
-
-        rule.walkDecls((decl) => {
-          properties[decl.prop] = decl.value;
-        });
-
-        classes[className] = properties;
-      });
-
-      // // Regular expression to match CSS class definitions
-      // const classRegex = /\.([a-zA-Z0-9_-]+)\s*{([^}]*)}/g;
-
-      // let match;
-      // const classes = {};
-
-      // // Iterate through matches in the CSS content
-      // while ((match = classRegex.exec(content)) !== null) {
-      //   const className = match[1];
-      //   const classProperties = match[2];
-
-      //   // Split class properties into an object
-      //   const properties = classProperties.split(';').reduce((acc, prop) => {
-      //     const [key, value] = prop.split(':').map((s) => s.trim());
-      //     if (key && value) {
-      //       acc[key] = value;
-      //     }
-      //     return acc;
-      //   }, {});
-
-      // Store className and properties in the classes object
-      // classes[className] = properties;
-      // }
-
-      // Log or use the classes object as needed
-      customStyles = classes;
-      console.log("CSS Classes and Properties:", classes);
     }
   });
 };
@@ -228,14 +187,14 @@ export const LinkCopyComponent = ({ title, link, className }) => {
   return (
     <div class={clsx('flex flex-col gap-1 w-full', className)}>
       {title && <span class="text-bold-12 text-gray-3">{title}</span>}
-      <div className="dark:bg-gray-2 dark:text-gray-0 w-full bg-gray-0 px-4 py-2 text-gray-2 flex justify-between rounded-full items-center">
+      <div className="greatape-meeting-link-background dark:bg-gray-2 dark:text-gray-0 w-full bg-gray-0 px-4 py-2 text-gray-2 flex justify-between rounded-full items-center">
         <div className="flex gap-2 items-center overflow-hidden">
-          <Icon icon={LinkIcon} />
-          <span class="text-medium-12 truncate">{link}</span>
+          <Icon icon={LinkIcon} class="greatape-meeting-link" />
+          <span class="text-medium-12 truncate greatape-meeting-link">{link}</span>
         </div>
         <Tooltip label={copyTooltipTitle} hideOnClick={false}>
           <button class="cursor-pointer" onClick={onCopy}>
-            <Icon icon={CopyIcon} />
+            <Icon icon={CopyIcon} class="greatape-meeting-link" />
           </button>
         </Tooltip>
       </div>
