@@ -280,7 +280,7 @@ export const Stage = ({ customStyles }) => {
         }
 
       }
-    }, 500); 
+    }, 500);
 
     // Clear the interval when the component is unmounted
     return () => clearInterval(intervalId);
@@ -338,6 +338,7 @@ export const Stage = ({ customStyles }) => {
 
                 return (
                   <div
+                    id={`video_${attendee.isShareScreen ? 'sc' : attendee.name}`}
                     key={i}
                     style={clsx(
                       customStyles
@@ -349,7 +350,13 @@ export const Stage = ({ customStyles }) => {
 
                     class={clsx(
                       'group transition-all aspect-video relative max-w-full text-white-f-9', 'bg-gray-1 rounded-lg min-w-10', 'dark:bg-gray-3 overflow-hidden',
-                      `${attendee.isHost ? (attendee.isShareScreen ? `greatape-share-screen-video` : `greatape-host-video`) : `greatape-audience-video`}`)}
+                      `${attendee.isHost ? (attendee.isShareScreen ? `greatape-share-screen-video` : `greatape-host-video`) : `greatape-audience-video`}`, {
+                      'greatape-stage-host': streamersLength.value === 1 && hasHostStream.value && customStyles,
+                      'greatape-stage-host-audience-1': streamersLength.value === 2 && hasHostStream.value && !hasShareScreenStream.value && customStyles,
+                      'greatape-stage-host-screenshare': streamersLength.value === 2 && hasShareScreenStream.value && hasHostStream.value && customStyles,
+                      'greatape-stage-host-screenshare-audience-1': streamersLength.value === 3 && hasHostStream.value && hasShareScreenStream.value && customStyles,
+                      'greatape-stage-host-audience-2': streamersLength.value === 3 && hasHostStream.value && !hasShareScreenStream.value && customStyles,
+                    })}
                     onClick={(e) => handleOnClick(e, attendee.stream.id)}
                   >
                     <Video
@@ -521,8 +528,8 @@ export const Video = memo(({ stream, isMuted, isHostStream, name, userId, isUser
                          rounded-lg`}
       />
       <div class="absolute top-0 left-0 flex justify-between w-full px-2 gap-2">
-        <div class="flex truncate justify-center items-center greatape-video-name-background">
-          <div class="px-4 py-1 bg-black bg-opacity-50 text-white rounded-full text-medium-12 truncate greatape-video-name ">
+        <div id={`video_name_bg_${isShareScreen ? 'sc' : name}`} class="flex truncate justify-center items-center greatape-video-name-background">
+          <div id={`video_name_${isShareScreen ? 'sc' : name}`} class="px-4 py-1 bg-black bg-opacity-50 text-white rounded-full text-medium-12 truncate greatape-video-name ">
             {name} {isHostStream && isShareScreen ? '(Shared Screen)' : isHostStream ? ' (Host)' : ''}
           </div>
         </div>
