@@ -52,7 +52,6 @@ var customStyles = null;
 
 const handleCssFileUpload = async (event) => {
   setCustomCssContent(event, (content) => {
-    console.log("Content: ", content)
     if (content) {
       customStyles = content
       return
@@ -166,7 +165,7 @@ export const HostPage = ({ params: { displayName } }: { params?: { displayName?:
           ...form.getValues(),
           displayName: `@${form.getValues('displayName')}`,
           name: `${form.getValues('displayName')}`,
-          customStyles: customStyles
+          _customStyles: customStyles
         }}
       />
     )

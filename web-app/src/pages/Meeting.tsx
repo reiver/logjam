@@ -279,9 +279,10 @@ function keyPressCallback(key) {
   }
 
 }
-const Meeting = ({ params: { room, displayName, name, customStyles } }: { params?: { room?: string; displayName?: string; name?: string, customStyles?: any } }) => {
-
+const Meeting = ({ params: { room, displayName, name, _customStyles } }: { params?: { room?: string; displayName?: string; name?: string, _customStyles?: any } }) => {
   detectKeyPress(keyPressCallback)
+
+  const [customStyles, setCustomStyles] = useState(_customStyles);
 
   if (displayName && room) {
     if (displayName[0] !== '@') return <PageNotFound />
@@ -327,6 +328,11 @@ const Meeting = ({ params: { room, displayName, name, customStyles } }: { params
 
             //request for role [zaid]
             await start()
+
+            //if host send Custom styles to room
+            if (sparkRTC.value.role === sparkRTC.value.Roles.BROADCAST) {
+              sparkRTC.value.sendCustomStylesToRoom(customStyles)
+            }
 
           },
           localStreamChangeCallback: (stream) => {
@@ -447,6 +453,11 @@ const Meeting = ({ params: { room, displayName, name, customStyles } }: { params
                 }
               }
 
+            }
+          },
+          updateMeetingUI: (styles) => {
+            if (sparkRTC.value.role == sparkRTC.value.Roles.AUDIENCE) {
+              setCustomStyles(styles)
             }
           },
           startAgain: async () => {
@@ -749,6 +760,7 @@ const Meeting = ({ params: { room, displayName, name, customStyles } }: { params
       styleElement.textContent = customStyles;
     }
   }, [])
+
 
   return (
     <div class={clsx('flex flex-col justify-between min-h-[--doc-height] dark:bg-secondary-1-a bg-white-f-9 text-medium-12 text-gray-800 dark:text-gray-200', {
