@@ -769,6 +769,7 @@ const Meeting = ({ params: { room, displayName, name, _customStyles } }: { param
       'greatape-stage-host-screenshare': streamersLength.value === 2 && hasShareScreenStream.value && hasHostStream.value && customStyles,
       'greatape-stage-host-screenshare-audience-1': streamersLength.value === 3 && hasHostStream.value && hasShareScreenStream.value && customStyles,
       'greatape-stage-host-audience-2': streamersLength.value === 3 && hasHostStream.value && !hasShareScreenStream.value && customStyles,
+      'greatape-stage-host-audience-3': streamersLength.value === 4 && hasHostStream.value && !hasShareScreenStream.value && customStyles,
     })}>
       <TopBar customStyles={customStyles ? customStyles : null} />
       {meetingStatus.value ? (
