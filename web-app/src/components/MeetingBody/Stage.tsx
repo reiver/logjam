@@ -140,6 +140,27 @@ const calculateVideoHeight = (attendee, index) => {
   return height;
 };
 
+// Function to check if customStyles contains a specific class
+const hasCustomStyleClass = (customStyles, className) => {
+  return customStyles && customStyles.includes(className);
+}
+
+export const getValidClass = (customStyles) => {
+  if (streamersLength.value === 1 && hasHostStream.value && hasCustomStyleClass(customStyles, 'greatape-stage-host')) {
+    return 'greatape-stage-host'
+  } else if (streamersLength.value === 2 && hasHostStream.value && !hasShareScreenStream.value && hasCustomStyleClass(customStyles, 'greatape-stage-host-audience-1')) {
+    return 'greatape-stage-host-audience-1'
+  } else if (streamersLength.value === 2 && hasShareScreenStream.value && hasHostStream.value && hasCustomStyleClass(customStyles, 'greatape-stage-host-screenshare')) {
+    return 'greatape-stage-host-screenshare'
+  } else if (streamersLength.value === 3 && hasHostStream.value && hasShareScreenStream.value && hasCustomStyleClass(customStyles, 'greatape-stage-host-screenshare-audience-1')) {
+    return 'greatape-stage-host-screenshare-audience-1'
+  } else if (streamersLength.value === 3 && hasHostStream.value && !hasShareScreenStream.value && hasCustomStyleClass(customStyles, 'greatape-stage-host-audience-2')) {
+    return 'greatape-stage-host-audience-2'
+  } else if (streamersLength.value === 4 && hasHostStream.value && !hasShareScreenStream.value && hasCustomStyleClass(customStyles, 'greatape-stage-host-audience-3')) {
+    return 'greatape-stage-host-audience-3'
+  }
+}
+
 
 export const Stage = ({ customStyles }) => {
 
@@ -288,7 +309,7 @@ export const Stage = ({ customStyles }) => {
 
   const sortStreamers = (a, b) => {
     if (customStyles) {
-      if (a.position && b.position) {
+      if (a.position && b.position && a.position != undefined && b.position != undefined) {
         return a.position - b.position;
       }
       return 0;
@@ -306,6 +327,11 @@ export const Stage = ({ customStyles }) => {
     }
 
   }
+
+
+
+
+
 
   return (
     <div class={`transition-all h-full lg:px-0 relative`} style={{ width: `calc(100% - ${attendeesWidth.value}px)` }}>
@@ -350,14 +376,9 @@ export const Stage = ({ customStyles }) => {
 
                     class={clsx(
                       'group transition-all aspect-video relative max-w-full text-white-f-9', 'bg-gray-1 rounded-lg min-w-10', 'dark:bg-gray-3 overflow-hidden',
-                      `${attendee.isHost ? (attendee.isShareScreen ? `greatape-share-screen-video` : `greatape-host-video`) : `greatape-audience-video`}`, {
-                      'greatape-stage-host': streamersLength.value === 1 && hasHostStream.value && customStyles,
-                      'greatape-stage-host-audience-1': streamersLength.value === 2 && hasHostStream.value && !hasShareScreenStream.value && customStyles,
-                      'greatape-stage-host-screenshare': streamersLength.value === 2 && hasShareScreenStream.value && hasHostStream.value && customStyles,
-                      'greatape-stage-host-screenshare-audience-1': streamersLength.value === 3 && hasHostStream.value && hasShareScreenStream.value && customStyles,
-                      'greatape-stage-host-audience-2': streamersLength.value === 3 && hasHostStream.value && !hasShareScreenStream.value && customStyles,
-                      'greatape-stage-host-audience-3': streamersLength.value === 4 && hasHostStream.value && !hasShareScreenStream.value && customStyles,
-                    })}
+                      `${attendee.isHost ? (attendee.isShareScreen && hasCustomStyleClass(customStyles, 'greatape-share-screen-video') ? `greatape-share-screen-video` : hasCustomStyleClass(customStyles, 'greatape-host-video') ? `greatape-host-video` : '') : hasCustomStyleClass(customStyles, 'greatape-audience-video') ? `greatape-audience-video` : ''}`,
+                      `${getValidClass(customStyles)}`,
+                    )}
                     onClick={(e) => handleOnClick(e, attendee.stream.id)}
                   >
                     <Video

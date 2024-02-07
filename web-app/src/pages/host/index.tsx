@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Button, FormControl, TextField } from '@mui/material'
+import { Button, FormControl, TextField, css } from '@mui/material'
 import CopyIcon from 'assets/icons/Copy.svg?react'
 import LinkIcon from 'assets/icons/Link.svg?react'
 import copy from 'clipboard-copy'
@@ -12,6 +12,7 @@ import { useForm } from 'react-hook-form'
 import { makePreviewDialog } from 'components/Dialog'
 import z from 'zod'
 import { parse } from 'postcss'
+import * as csstree from 'css-tree';
 
 const PageNotFound = lazy(() => import('../_404'))
 
@@ -52,12 +53,81 @@ var customStyles = null;
 
 const handleCssFileUpload = async (event) => {
   setCustomCssContent(event, (content) => {
-    if (content) {
-      customStyles = content
-      return
+
+    // Regular expression to match class names
+    const cssClassRegex = /\.([a-zA-Z0-9_-]+)/g;
+
+    // Match all class names in the CSS content and add them to the array
+    let match;
+    while ((match = cssClassRegex.exec(content)) !== null) {
+      if (!cssClassNames.includes(match[1])) {
+        cssClassNames.push(match[1]);
+      }
+    }
+    console.log("Css Class names: ", cssClassNames)
+
+    if (isValidCSS(content)) {
+      console.log("Is Valid true")
+      if (content) {
+        customStyles = content
+        return
+      }
+    } else {
+      console.log("Is Valid false")
     }
   });
 };
+
+// Define an array to store all the CSS class names from the provided CSS content
+const cssClassNames: string[] = [];
+
+// Check if all required classes are present in the CSS content
+const requiredClasses = [
+  'greatape-stage-host',
+  'greatape-stage-host-audience-1',
+  'greatape-stage-host-screenshare',
+  'greatape-stage-host-screenshare-audience-1',
+  'greatape-stage-host-audience-2',
+  'greatape-stage-host-audience-3',
+  'greatape-gap-in-videos',
+  'greatape-host-video',
+  'greatape-share-screen-video',
+  'greatape-audience-video',
+  'greatape-video-name',
+  'greatape-video-name-background',
+  'greatape-attendees-list',
+  'greatape-attendees-count',
+  'greatape-attendees-item',
+  'greatape-attendees-item-role',
+  'greatape-meeting-link',
+  'greatape-meeting-link-background'
+];
+
+function isValidCSS(cssContent: string): boolean {
+
+  const allClassesPresent = requiredClasses.every(className => cssClassNames.includes(className));
+
+  // Regular expression to match CSS rules
+  const cssRuleRegex = /[^{]*\{[^}]*\}/g;
+
+  // Match all CSS rules in the content
+  const matches = cssContent.match(cssRuleRegex);
+
+  // If matches are found and every match has a valid structure, and all required classes are present, return true
+  return (
+    matches !== null &&
+    matches.every(match => isValidCSSRule(match)) &&
+    allClassesPresent
+  );
+}
+
+function isValidCSSRule(cssRule: string): boolean {
+  // Regular expression to match a single CSS rule
+  const cssRuleStructureRegex = /^\s*([^\{\}]+)\s*\{([^\{\}]*)\}\s*$/;
+
+  // Check if the CSS rule matches the expected structure
+  return cssRuleStructureRegex.test(cssRule);
+}
 
 
 
