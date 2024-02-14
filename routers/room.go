@@ -116,7 +116,11 @@ func (r *roomWSRouter) handleEvent(ctx *models.WSContext) {
 			r.roomCtrl.Stream(ctx)
 			break
 		}
-
+	case "updateStreamId":
+		{
+			r.roomCtrl.UpdateStreamId(ctx)
+			break
+		}
 	case "ping":
 		{
 			r.roomCtrl.Ping(ctx)
