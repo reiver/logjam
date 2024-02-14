@@ -5,13 +5,16 @@ import { ToastProvider, destroyDialog, makePreviewDialog } from 'components/Dial
 import { Roles, createSparkRTC, getWsUrl } from 'lib/common.js'
 import { detectKeyPress } from 'lib/controls'
 import { lazy } from 'preact-iso'
-import { useEffect } from 'preact/compat'
-import { fullScreenedStream } from 'components/MeetingBody/Stage'
+import clsx from 'clsx'
+import { useEffect, useState } from 'preact/compat'
+import { fullScreenedStream, getValidClass, hasHostStream, hasShareScreenStream } from 'components/MeetingBody/Stage'
 import backImage from 'assets/images/blur.jpg'
 import { VideoBackground } from 'lib/videoBackground'
 let displayIdCounter = 2
+import { streamersLength } from '../components/MeetingBody/Stage'
 
 const PageNotFound = lazy(() => import('./_404'))
+const styleElement = document.createElement('style');
 
 export const isDebugMode = signal((new URLSearchParams(window.location.search).get('debug') || '').toLowerCase() === 'true')
 export const statsDataOpen = signal(false)
@@ -85,8 +88,6 @@ export const onStartShareScreen = (stream) => {
       displayId: 2,
     },
   }
-
-
 }
 
 const displayStream = async (stream, toggleFull = false) => {
@@ -148,6 +149,7 @@ const displayStream = async (stream, toggleFull = false) => {
 
 
   }
+
 
   streamers.value = {
     ...streamers.value,
@@ -281,9 +283,10 @@ function keyPressCallback(key) {
   }
 
 }
-const Meeting = ({ params: { room, displayName, name } }: { params?: { room?: string; displayName?: string; name?: string } }) => {
-
+const Meeting = ({ params: { room, displayName, name, _customStyles } }: { params?: { room?: string; displayName?: string; name?: string, _customStyles?: any } }) => {
   detectKeyPress(keyPressCallback)
+
+  const [customStyles, setCustomStyles] = useState(_customStyles);
 
   if (displayName && room) {
     if (displayName[0] !== '@') return <PageNotFound />
@@ -330,9 +333,16 @@ const Meeting = ({ params: { room, displayName, name } }: { params?: { room?: st
             //request for role [zaid]
             await start()
 
+            //if host send Custom styles to room
+            if (sparkRTC.value.role === sparkRTC.value.Roles.BROADCAST) {
+              sparkRTC.value.sendCustomStylesToRoom(customStyles)
+            }
+
           },
           localStreamChangeCallback: (stream) => {
             log('[Local Stream Callback]', stream)
+
+
             streamers.value = {
               ...streamers.value,
               [stream.id]: {
@@ -453,6 +463,11 @@ const Meeting = ({ params: { room, displayName, name } }: { params?: { room?: st
                 }
               }
 
+            }
+          },
+          updateMeetingUI: (styles) => {
+            if (sparkRTC.value.role == sparkRTC.value.Roles.AUDIENCE) {
+              setCustomStyles(styles)
             }
           },
           startAgain: async () => {
@@ -746,12 +761,25 @@ const Meeting = ({ params: { room, displayName, name } }: { params?: { room?: st
     window.parent.postMessage('leave', '*')
   }
 
+  useEffect(() => {
+    if (customStyles) {
+      // Create a style element and append it to the head of the document
+      document.head.appendChild(styleElement);
+
+      // Set the CSS content of the style element
+      styleElement.textContent = customStyles;
+    }
+  }, [])
+
   return (
-    <div class="flex flex-col justify-between min-h-[--doc-height] dark:bg-secondary-1-a bg-white-f-9 text-medium-12 text-gray-800 dark:text-gray-200">
-      <TopBar />
+    <div class={clsx('flex flex-col justify-between min-h-[--doc-height] dark:bg-secondary-1-a bg-white-f-9 text-medium-12 text-gray-800 dark:text-gray-200',
+      getValidClass(customStyles),
+    )}>
+
+      <TopBar customStyles={customStyles ? customStyles : null} />
       {meetingStatus.value ? (
         <>
-          <MeetingBody />
+          <MeetingBody customStyles={customStyles ? customStyles : null} />
           <BottomBar />
         </>
       ) : (

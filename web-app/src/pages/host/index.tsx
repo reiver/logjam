@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Button, FormControl, TextField } from '@mui/material'
+import { Button, FormControl, TextField, css } from '@mui/material'
 import CopyIcon from 'assets/icons/Copy.svg?react'
 import LinkIcon from 'assets/icons/Link.svg?react'
 import copy from 'clipboard-copy'
@@ -11,6 +11,8 @@ import { useState } from 'preact/compat'
 import { useForm } from 'react-hook-form'
 import { makePreviewDialog } from 'components/Dialog'
 import z from 'zod'
+import { parse } from 'postcss'
+import * as csstree from 'css-tree';
 
 const PageNotFound = lazy(() => import('../_404'))
 
@@ -27,6 +29,108 @@ const generateHostUrl = (displayName: string) => {
 const generateAudienceUrl = (roomName: string) => {
   return `${window.location.origin}/log/${roomName}`
 }
+
+const setCustomCssContent = (event, setContentCallback) => {
+  const file = event.target.files[0];
+
+
+  if (file) {
+    const reader = new FileReader();
+
+    reader.onload = (e) => {
+      const content = e.target.result;
+      setContentCallback(content);
+    };
+
+    reader.readAsText(file);
+  } else {
+    // Handle the case where no file is selected
+    setContentCallback(null);
+  }
+};
+
+var customStyles = null;
+
+const handleCssFileUpload = async (event) => {
+  setCustomCssContent(event, (content) => {
+
+    // Regular expression to match class names
+    const cssClassRegex = /\.([a-zA-Z0-9_-]+)/g;
+
+    // Match all class names in the CSS content and add them to the array
+    let match;
+    while ((match = cssClassRegex.exec(content)) !== null) {
+      if (!cssClassNames.includes(match[1])) {
+        cssClassNames.push(match[1]);
+      }
+    }
+    console.log("Css Class names: ", cssClassNames)
+
+    if (isValidCSS(content)) {
+      console.log("Is Valid true")
+      if (content) {
+        customStyles = content
+        return
+      }
+    } else {
+      console.log("Is Valid false")
+    }
+  });
+};
+
+// Define an array to store all the CSS class names from the provided CSS content
+const cssClassNames: string[] = [];
+
+// Check if all required classes are present in the CSS content
+const requiredClasses = [
+  'greatape-stage-host',
+  'greatape-stage-host-audience-1',
+  'greatape-stage-host-screenshare',
+  'greatape-stage-host-screenshare-audience-1',
+  'greatape-stage-host-audience-2',
+  'greatape-stage-host-audience-3',
+  'greatape-gap-in-videos',
+  'greatape-host-video',
+  'greatape-share-screen-video',
+  'greatape-audience-video',
+  'greatape-video-name',
+  'greatape-video-name-background',
+  'greatape-attendees-list',
+  'greatape-attendees-count',
+  'greatape-attendees-item',
+  'greatape-attendees-item-role',
+  'greatape-meeting-link',
+  'greatape-meeting-link-background'
+];
+
+function isValidCSS(cssContent: string): boolean {
+
+  const allClassesPresent = requiredClasses.every(className => cssClassNames.includes(className));
+
+  // Regular expression to match CSS rules
+  const cssRuleRegex = /[^{]*\{[^}]*\}/g;
+
+  // Match all CSS rules in the content
+  const matches = cssContent.match(cssRuleRegex);
+
+  // If matches are found and every match has a valid structure, and all required classes are present, return true
+  return (
+    matches !== null &&
+    matches.every(match => isValidCSSRule(match)) &&
+    allClassesPresent
+  );
+}
+
+function isValidCSSRule(cssRule: string): boolean {
+  // Regular expression to match a single CSS rule
+  const cssRuleStructureRegex = /^\s*([^\{\}]+)\s*\{([^\{\}]*)\}\s*$/;
+
+  // Check if the CSS rule matches the expected structure
+  return cssRuleStructureRegex.test(cssRule);
+}
+
+
+
 
 export const HostPage = ({ params: { displayName } }: { params?: { displayName?: string } }) => {
   const [started, setStarted] = useState(false)
@@ -54,6 +158,8 @@ export const HostPage = ({ params: { displayName } }: { params?: { displayName?:
       }
     })
   }
+
+
 
   if (!started)
     return (
@@ -91,6 +197,14 @@ export const HostPage = ({ params: { displayName } }: { params?: { displayName?:
                   helperText={form.formState.errors.description?.message}
                 />
               </FormControl>
+              <FormControl className="w-full">
+                <TextField
+                  variant="outlined"
+                  size="small"
+                  type="file"
+                  onChange={(event) => handleCssFileUpload(event)}
+                />
+              </FormControl>
               <div class="flex gap-2 w-full flex-col-reverse md:flex-row">
                 <Button onClick={handleCreateLink} variant="outlined" className="w-full normal-case" sx={{ textTransform: 'none' }}>
                   Create Link
@@ -121,6 +235,7 @@ export const HostPage = ({ params: { displayName } }: { params?: { displayName?:
           ...form.getValues(),
           displayName: `@${form.getValues('displayName')}`,
           name: `${form.getValues('displayName')}`,
+          _customStyles: customStyles
         }}
       />
     )
@@ -141,14 +256,14 @@ export const LinkCopyComponent = ({ title, link, className }) => {
   return (
     <div class={clsx('flex flex-col gap-1 w-full', className)}>
       {title && <span class="text-bold-12 text-gray-3">{title}</span>}
-      <div className="dark:bg-gray-2 dark:text-gray-0 w-full bg-gray-0 px-4 py-2 text-gray-2 flex justify-between rounded-full items-center">
+      <div className="greatape-meeting-link-background dark:bg-gray-2 dark:text-gray-0 w-full bg-gray-0 px-4 py-2 text-gray-2 flex justify-between rounded-full items-center">
         <div className="flex gap-2 items-center overflow-hidden">
-          <Icon icon={LinkIcon} />
-          <span class="text-medium-12 truncate">{link}</span>
+          <Icon icon={LinkIcon} class="greatape-meeting-link" />
+          <span class="text-medium-12 truncate greatape-meeting-link">{link}</span>
         </div>
         <Tooltip label={copyTooltipTitle} hideOnClick={false}>
           <button class="cursor-pointer" onClick={onCopy}>
-            <Icon icon={CopyIcon} />
+            <Icon icon={CopyIcon} class="greatape-meeting-link" />
           </button>
         </Tooltip>
       </div>

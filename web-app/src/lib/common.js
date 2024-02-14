@@ -36,7 +36,7 @@ export function createSparkRTC(role, options) {
     return createAudienceSpartRTC(role, options);
   }
 }
-export const videoBackGround = new VideoBackground()
+export const videoBackGround = new VideoBackground();
 
 export const createBroadcastSpartRTC = (role, props) => {
   return new SparkRTC(role, {
@@ -57,6 +57,7 @@ export const createBroadcastSpartRTC = (role, props) => {
     onAudioStatusChange: props.onAudioStatusChange,
     userLoweredHand: props.userLoweredHand,
     invitationToJoinStage: props.invitationToJoinStage,
+    updateMeetingUI: props.updateMeetingUI,
   });
 };
 
@@ -78,5 +79,6 @@ export const createAudienceSpartRTC = (role, props) => {
     onAudioStatusChange: props.onAudioStatusChange,
     invitationToJoinStage: props.invitationToJoinStage,
     updateVideosMuteStatus: props.updateVideosMuteStatus,
+    updateMeetingUI: props.updateMeetingUI,
   });
 };

@@ -540,6 +540,10 @@ export class SparkRTC {
           if (this.metaData.muted && this.updateVideosMuteStatus) {
             this.updateVideosMuteStatus(this.metaData.muted);
           }
+
+          if(this.metaData.styles){
+            this.updateMeetingUI(this.metaData.styles)
+          }
         }
 
         break;
@@ -3035,6 +3039,15 @@ export class SparkRTC {
     }
   };
 
+  sendCustomStylesToRoom = async(styles)=>{
+    this.getMetadata();
+    setTimeout(() => {
+      const metaData = this.metaData;
+      metaData.styles = styles
+      this.setMetadata(metaData);
+    }, 1000);
+  }
+
   checkNetworkSpeed = () => {
     if (this.debug) {
       var connection =
@@ -3137,6 +3150,7 @@ export class SparkRTC {
     this.userLoweredHand = options.userLoweredHand;
     this.invitationToJoinStage = options.invitationToJoinStage;
     this.updateVideosMuteStatus = options.updateVideosMuteStatus;
+    this.updateMeetingUI = options.updateMeetingUI;
 
     this.checkBrowser(); //detect browser
     this.getSupportedCodecs();
