@@ -10,6 +10,7 @@ const Home = lazy(() => import('./pages'))
 const HostPage = lazy(() => import('./pages/host'))
 const AudiencePage = lazy(() => import('./pages/audience'))
 const NotFound = lazy(() => import('./pages/_404.jsx'))
+const AppIcon = lazy(()=>import('./pages/appIcon.jsx'))
 
 export const userInteractedWithDom = signal(false)
 
@@ -45,6 +46,7 @@ export function App() {
               <Home path="/" />
               <AudiencePage path="/log/:room" />
               <HostPage path="/:displayName/host" />
+              <AppIcon path="/icon"/>
               <NotFound default />
             </Router>
           </ErrorBoundary>
