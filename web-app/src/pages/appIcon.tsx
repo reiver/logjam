@@ -1,6 +1,6 @@
 
 import Logo from 'assets/images/logo.svg?react'
-import logo from 'assets/images/logo.png'; // Import the image directly
+import logo from 'assets/images/metatagsLogo.png'; // Import the image directly
 
 
 export function AppIcon() {
