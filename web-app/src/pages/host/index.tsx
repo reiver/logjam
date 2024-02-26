@@ -2,19 +2,22 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { Button, FormControl, TextField, css } from '@mui/material'
 import CopyIcon from 'assets/icons/Copy.svg?react'
 import LinkIcon from 'assets/icons/Link.svg?react'
+import LogoIcon from 'assets/images/Greatapelogo.png'
 import copy from 'clipboard-copy'
 import clsx from 'clsx'
-import { Icon, ResponsiveModal, Tooltip } from 'components'
+import { Icon, Logo, ResponsiveModal, Tooltip } from 'components'
 import Meeting from 'pages/Meeting'
 import { lazy } from 'preact-iso'
 import { useState } from 'preact/compat'
 import { useForm } from 'react-hook-form'
-import { makePreviewDialog } from 'components/Dialog'
+import { HostToastProvider, makeMetaImageDialog } from '../host/hostDialogs'
 import z from 'zod'
 import { parse } from 'postcss'
 import * as csstree from 'css-tree';
+import { signal } from '@preact/signals'
 
 const PageNotFound = lazy(() => import('../_404'))
+const selectedImage = signal(null)
 
 const schema = z.object({
   room: z.string().min(1, 'This field is required'),
@@ -29,6 +32,8 @@ const generateHostUrl = (displayName: string) => {
 const generateAudienceUrl = (roomName: string) => {
   return `${window.location.origin}/log/${roomName}`
 }
+
+
 
 const setCustomCssContent = (event, setContentCallback) => {
   const file = event.target.files[0];
@@ -52,6 +57,20 @@ const setCustomCssContent = (event, setContentCallback) => {
 var customStyles = null;
 
 const handleCssFileUpload = async (event) => {
+
+  const fileInput = event.target;
+  const fileLabel = document.getElementById('fileLabel');
+
+  // Check if files were selected
+  if (fileInput.files.length > 0) {
+    // Update label with the first selected file's name
+    fileLabel.textContent = fileInput.files[0].name;
+  } else {
+    // No file selected, reset label text
+    fileLabel.textContent = "Choose CSS file";
+  }
+
+
   setCustomCssContent(event, (content) => {
 
     // Regular expression to match class names
@@ -148,6 +167,11 @@ export const HostPage = ({ params: { displayName } }: { params?: { displayName?:
   }
 
   const onSubmit = () => {
+    const { description } = form.getValues(); // Extracting values from the form
+
+    // Generating URLs and updating meta tags
+    // updateMetaTags("GreatApe", description, "/assets/metatagsLogo-3d1cffd4.png");
+
     setStarted(true)
   }
 
@@ -157,6 +181,24 @@ export const HostPage = ({ params: { displayName } }: { params?: { displayName?:
         setShowModal(v)
       }
     })
+  }
+
+  const showMetaImageDialog = (oldImage) => {
+    console.log("Inside showMetaImageDialog")
+
+    makeMetaImageDialog(
+      oldImage,
+      'meta-image',
+      {
+        title: 'Room Link Thumbnail',
+      },
+      async () => {
+
+      },
+      async (image) => {
+        selectedImage.value = image
+      }
+    )
   }
 
 
@@ -197,14 +239,24 @@ export const HostPage = ({ params: { displayName } }: { params?: { displayName?:
                   helperText={form.formState.errors.description?.message}
                 />
               </FormControl>
-              <FormControl className="w-full">
-                <TextField
-                  variant="outlined"
-                  size="small"
-                  type="file"
-                  onChange={(event) => handleCssFileUpload(event)}
-                />
-              </FormControl>
+
+              <div className="flex flex-col gap-3">
+
+                <div class="my-0 flex items-center justify-between relative h-8">
+                  <div class={clsx('text-bold-12 text-gray-3')}>Layout</div> <label id="fileLabel" for="cssFileInput" class={clsx('text-bold-12 text-gray-1 cursor-pointer')}>
+                    Choose CSS file
+                  </label>
+                  <input id="cssFileInput" type="file" class="hidden" onChange={(event) => handleCssFileUpload(event)} />
+
+                </div>
+                <hr class="h-px my-0" />
+
+                <div class="flex items-center justify-between relative h-8">
+                  <div class={clsx('text-bold-12 text-gray-3')}>Room Link Thumbnail</div>
+                  <img alt="Selected Background Image" className="w-8 h-8 rounded-md float-right cursor-pointer border border-black border-1" src={selectedImage.value ? selectedImage.value : LogoIcon} onClick={() => { showMetaImageDialog(selectedImage.value) }}></img>
+                </div>
+
+              </div>
               <div class="flex gap-2 w-full flex-col-reverse md:flex-row">
                 <Button onClick={handleCreateLink} variant="outlined" className="w-full normal-case" sx={{ textTransform: 'none' }}>
                   Create Link
@@ -214,6 +266,8 @@ export const HostPage = ({ params: { displayName } }: { params?: { displayName?:
                 </Button>
               </div>
             </div>
+
+
           </form>
           <ResponsiveModal open={showModal} onClose={setShowModal.bind(null, false)}>
             <span className="text-bold-12 text-black block text-center pt-5">Room Links</span>
@@ -225,6 +279,9 @@ export const HostPage = ({ params: { displayName } }: { params?: { displayName?:
             </div>
           </ResponsiveModal>
         </div>
+
+        <HostToastProvider />
+
       </div>
     )
 
@@ -242,6 +299,8 @@ export const HostPage = ({ params: { displayName } }: { params?: { displayName?:
   }
 }
 export default HostPage
+
+
 
 export const LinkCopyComponent = ({ title, link, className }) => {
   const [copyTooltipTitle, setCopyTooltipTitle] = useState('Copy Link')

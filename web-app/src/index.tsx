@@ -45,7 +45,7 @@ export function App() {
             <Router>
               <Home path="/" />
               <AudiencePage path="/log/:room" />
-              <HostPage path="/:displayName/host" />
+              <HostPage path="/:displayName/host"/>
               <AppIcon path="/icon"/>
               <NotFound default />
             </Router>
@@ -65,3 +65,14 @@ const documentHeight = () => {
 window.addEventListener('resize', documentHeight)
 documentHeight()
 setTimeout(documentHeight, 300)
+
+
+function updateMetaTags(title, description, image) {
+  document.querySelector('meta[property="og:title"]').setAttribute('content', title);
+  document.querySelector('meta[property="og:description"]').setAttribute('content', description);
+  // document.querySelector('meta[property="og:image"]').setAttribute('content', image);
+
+  document.querySelector('meta[name="twitter:title"]').setAttribute('content', title);
+  document.querySelector('meta[name="twitter:description"]').setAttribute('content', description);
+  // document.querySelector('meta[name="twitter:image"]').setAttribute('content', image);
+}
