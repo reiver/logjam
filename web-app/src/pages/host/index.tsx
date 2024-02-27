@@ -15,9 +15,43 @@ import z from 'zod'
 import { parse } from 'postcss'
 import * as csstree from 'css-tree';
 import { signal } from '@preact/signals'
+import { PocketBaseManager, HostData, RoomData, CSSData } from 'lib/helperAPI'
 
 const PageNotFound = lazy(() => import('../_404'))
 const selectedImage = signal(null)
+const pbApi = new PocketBaseManager()
+
+
+
+const createSampleData = async () => {
+
+  const sampleHost = new HostData('Muhammad Zaid Ali', '');
+
+  var res = await pbApi.createHost(sampleHost)
+  if (res instanceof Error) {
+    console.log("Error while creating Host", res)
+  } else {
+    console.log("Host Created: ", res)
+    var hostID = res.id
+    const sampleCSS = new CSSData('', 'Sample CSS', 'sample-style', hostID);
+    const sampleRoom = new RoomData('Sample Room', 'Sample description', 'sample-image-url', hostID, '');
+
+
+    var roomRes = await pbApi.createRoom(sampleRoom)
+    if (roomRes instanceof Error) {
+      console.log("Error while creating Room", roomRes)
+    } else {
+      console.log("Room Created: ", roomRes)
+    }
+
+    var cssRes = await pbApi.createCSS(sampleCSS)
+    if (cssRes instanceof Error) {
+      console.log("Error while creating css", cssRes)
+    } else {
+      console.log("Css Created: ", cssRes)
+    }
+  }
+}
 
 const schema = z.object({
   room: z.string().min(1, 'This field is required'),
@@ -171,7 +205,7 @@ export const HostPage = ({ params: { displayName } }: { params?: { displayName?:
 
     // Generating URLs and updating meta tags
     // updateMetaTags("GreatApe", description, "/assets/metatagsLogo-3d1cffd4.png");
-
+    createSampleData()
     setStarted(true)
   }
 
