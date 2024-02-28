@@ -20,37 +20,18 @@ import { PocketBaseManager, HostData, RoomData, CSSData } from 'lib/helperAPI'
 const PageNotFound = lazy(() => import('../_404'))
 const selectedImage = signal(null)
 const pbApi = new PocketBaseManager()
+var hostId = null
 
+const createNewHost = async (hostData) => {
+  var newHost = await pbApi.createHost(hostData)
+  console.log("new Host Created: ", newHost)
+  return newHost;
+}
 
-
-const createSampleData = async () => {
-
-  const sampleHost = new HostData('Muhammad Zaid Ali', '');
-
-  var res = await pbApi.createHost(sampleHost)
-  if (res instanceof Error) {
-    console.log("Error while creating Host", res)
-  } else {
-    console.log("Host Created: ", res)
-    var hostID = res.id
-    const sampleCSS = new CSSData('', 'Sample CSS', 'sample-style', hostID);
-    const sampleRoom = new RoomData('Sample Room', 'Sample description', 'sample-image-url', hostID, '');
-
-
-    var roomRes = await pbApi.createRoom(sampleRoom)
-    if (roomRes instanceof Error) {
-      console.log("Error while creating Room", roomRes)
-    } else {
-      console.log("Room Created: ", roomRes)
-    }
-
-    var cssRes = await pbApi.createCSS(sampleCSS)
-    if (cssRes instanceof Error) {
-      console.log("Error while creating css", cssRes)
-    } else {
-      console.log("Css Created: ", cssRes)
-    }
-  }
+const createNewCSS = async (cssData) => {
+  var newCSS = await pbApi.createCSS(cssData)
+  console.log("new CSS Created: ", newCSS)
+  return newCSS;
 }
 
 const schema = z.object({
@@ -123,6 +104,13 @@ const handleCssFileUpload = async (event) => {
       console.log("Is Valid true")
       if (content) {
         customStyles = content
+
+
+        //user uploaded valid css... Now save this css to DB
+        var cssData = new CSSData('', fileInput.files[0].name, customStyles, hostId)
+        createNewCSS(cssData)
+
+
         return
       }
     } else {
@@ -130,6 +118,8 @@ const handleCssFileUpload = async (event) => {
     }
   });
 };
+
+
 
 // Define an array to store all the CSS class names from the provided CSS content
 const cssClassNames: string[] = [];
@@ -196,16 +186,56 @@ export const HostPage = ({ params: { displayName } }: { params?: { displayName?:
     },
     resolver: zodResolver(schema),
   })
+
+  //fecth Host From DB
+  const fetchHostData = async () => {
+    var name = displayName.replace('@', '')
+    var hostByName = await pbApi.getHostByName(name)
+
+    if (hostByName.code != undefined && hostByName.code == 404) {
+      console.log("Coede: ", hostByName.code)
+
+      //no host Found with That name... Create New Host
+      var hostData = new HostData(name, '')
+      var host = await createNewHost(hostData)
+      hostId = host.id;
+
+
+    } else {
+      console.log("hostByName: ", hostByName)
+
+      hostId = hostByName.id
+      //fetch host Css files
+
+      var css = await pbApi.getCSSbyHostId(hostId)
+
+      if (css.code != undefined && css.code == 404) {
+        console.log("cssByHost: ", css.message)
+      } else {
+        console.log("cssByHost: ", css)
+
+        const fileLabel = document.getElementById('fileLabel');
+        fileLabel.textContent = css.name;
+        customStyles = css.style
+      }
+    }
+
+
+  }
+
+
   if (displayName) {
     if (displayName[0] !== '@') return <PageNotFound />
+
+    fetchHostData()
   }
+
 
   const onSubmit = () => {
     const { description } = form.getValues(); // Extracting values from the form
 
     // Generating URLs and updating meta tags
     // updateMetaTags("GreatApe", description, "/assets/metatagsLogo-3d1cffd4.png");
-    createSampleData()
     setStarted(true)
   }
 

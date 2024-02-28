@@ -87,4 +87,62 @@ export class PocketBaseManager {
       return error.data;
     }
   };
+
+  //list Data
+
+  getHostById = async (hostId) => {
+    try {
+      const host = await this.pocketBase
+        .collection("hosts")
+        .getFirstListItem(`id="${hostId}"`);
+      return host;
+    } catch (error) {
+      return error.data;
+    }
+  };
+
+  getHostByName = async (name) => {
+    try {
+      const host = await this.pocketBase
+        .collection("hosts")
+        .getFirstListItem(`name="${name}"`);
+      return host;
+    } catch (error) {
+      return error.data;
+    }
+  };
+
+  getFullListOfHosts = async () => {
+    try {
+      // you can also fetch all records at once via getFullList
+      const records = await this.pocketBase.collection("hosts").getFullList({
+        sort: "-created",
+      });
+      return records;
+    } catch (error) {
+      return error.data;
+    }
+  };
+
+  getRoomBYHostID = async (hostId) => {
+    try {
+      const room = await this.pocketBase
+        .collection("rooms")
+        .getFirstListItem(`hostId="${hostId}"`);
+      return room;
+    } catch (error) {
+      return error.data;
+    }
+  };
+
+  getCSSbyHostId = async (hostId) => {
+    try {
+      const css = await this.pocketBase
+        .collection("css")
+        .getFirstListItem(`hostId="${hostId}"`);
+      return css;
+    } catch (error) {
+      return error.data;
+    }
+  };
 }
