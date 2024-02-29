@@ -135,6 +135,18 @@ export class PocketBaseManager {
     }
   };
 
+  getFullListOfRoomsBYHostId = async (hostId) => {
+    try {
+      const room = await this.pocketBase.collection("rooms").getFullList({
+        sort: "-created",
+        hostId: `${hostId}`,
+      });
+      return room;
+    } catch (error) {
+      return error.data;
+    }
+  };
+
   getCSSbyHostId = async (hostId) => {
     try {
       const css = await this.pocketBase

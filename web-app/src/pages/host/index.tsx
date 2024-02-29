@@ -8,7 +8,7 @@ import clsx from 'clsx'
 import { Icon, Logo, ResponsiveModal, Tooltip } from 'components'
 import Meeting from 'pages/Meeting'
 import { lazy } from 'preact-iso'
-import { useState } from 'preact/compat'
+import { useEffect, useState } from 'preact/compat'
 import { useForm } from 'react-hook-form'
 import { HostToastProvider, makeMetaImageDialog } from '../host/hostDialogs'
 import z from 'zod'
@@ -32,6 +32,12 @@ const createNewCSS = async (cssData) => {
   var newCSS = await pbApi.createCSS(cssData)
   console.log("new CSS Created: ", newCSS)
   return newCSS;
+}
+
+const createNewRoom = async (roomData) => {
+  var newRoom = await pbApi.createRoom(roomData);
+  console.log("New Room Created: ", newRoom);
+  return newRoom
 }
 
 const schema = z.object({
@@ -178,8 +184,10 @@ function isValidCSSRule(cssRule: string): boolean {
 export const HostPage = ({ params: { displayName } }: { params?: { displayName?: string } }) => {
   const [started, setStarted] = useState(false)
   const [showModal, setShowModal] = useState(false)
+
   const form = useForm({
-    defaultValues: {
+    defaultValues:
+    {
       room: '',
       displayName: displayName.replace('@', ''),
       description: '',
@@ -220,6 +228,27 @@ export const HostPage = ({ params: { displayName } }: { params?: { displayName?:
       }
     }
 
+    //fetch host Room
+    var roomsList = await pbApi.getFullListOfRoomsBYHostId(hostId)
+    if (roomsList.code != undefined && roomsList.code == 404) {
+      console.log("roomByHost: ", roomsList.message)
+    } else {
+      var room = roomsList[0] //get top room created recently
+      console.log("roomByHost: ", room)
+      form.setValue('room', room.name);
+
+      // Programmatically trigger input event on the TextField to mimic user input
+      const roomInput = document.querySelector('input[name="room"]');
+      roomInput.dispatchEvent(new Event('input', { bubbles: true }));
+
+      form.setValue('description', room.description);
+
+      // Programmatically trigger input event on the TextField to mimic user input
+      const descInput = document.querySelector('input[name="description"]');
+      descInput.dispatchEvent(new Event('input', { bubbles: true }));
+
+    }
+
 
   }
 
@@ -243,6 +272,12 @@ export const HostPage = ({ params: { displayName } }: { params?: { displayName?:
     form.trigger().then((v) => {
       if (v) {
         setShowModal(v)
+
+        const { room, description } = form.getValues(); // Extracting values from the form
+        //create new Room
+        var roomData = new RoomData(room, description, "", hostId, "")
+        createNewRoom(roomData)
+
       }
     })
   }
@@ -293,7 +328,6 @@ export const HostPage = ({ params: { displayName } }: { params?: { displayName?:
               </FormControl>
               <FormControl className="w-full">
                 <TextField
-                  multiline
                   rows={4}
                   label="Room Description"
                   variant="outlined"
