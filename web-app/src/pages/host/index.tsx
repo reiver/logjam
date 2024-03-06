@@ -114,7 +114,7 @@ export const HostPage = ({ params: { displayName } }: { params?: { displayName?:
     } else {
       var room = roomsList[0] //get top room created recently
       console.log("roomByHost: ", room)
-      console.log("Room image: ", room.thumbnail)
+      // console.log("Room image: ", room.thumbnail)
       form.setValue('room', room.name);
 
       // Programmatically trigger input event on the TextField to mimic user input
@@ -155,10 +155,10 @@ export const HostPage = ({ params: { displayName } }: { params?: { displayName?:
 
         const { room, description } = form.getValues(); // Extracting values from the form
         //create new Room
-        var roomData = new RoomData(room, description, selectedImageFile.value, hostId, "")
-        var formData = convertRoomDataToFormData(roomData)
-        console.log("RoomData Thumbnail: ", formData.get('thumbnail'))
-        createNewRoom(formData)
+        var roomData = new RoomData(room, description,null, hostId, "")
+        // var formData = convertRoomDataToFormData(roomData)
+        // console.log("RoomData Thumbnail: ", formData.get('thumbnail'))
+        createNewRoom(roomData)
 
       }
     })
