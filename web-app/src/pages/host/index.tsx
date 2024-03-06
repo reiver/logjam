@@ -10,17 +10,21 @@ import Meeting from 'pages/Meeting'
 import { lazy } from 'preact-iso'
 import { useEffect, useState } from 'preact/compat'
 import { useForm } from 'react-hook-form'
-import { HostToastProvider, makeMetaImageDialog } from '../host/hostDialogs'
+import { HostToastProvider, makeCssFilesDialog, makeMetaImageDialog } from '../host/hostDialogs'
 import z from 'zod'
 import { parse } from 'postcss'
 import * as csstree from 'css-tree';
 import { signal } from '@preact/signals'
-import { PocketBaseManager, HostData, RoomData, CSSData } from 'lib/helperAPI'
+import { PocketBaseManager, HostData, RoomData, CSSData, convertRoomDataToFormData } from 'lib/helperAPI'
 
 const PageNotFound = lazy(() => import('../_404'))
 const selectedImage = signal(null)
+const selectedCssFile = signal(null)
+const selectedImageFile = signal(null)
 const pbApi = new PocketBaseManager()
+var oldIndex = -1;
 var hostId = null
+var cssList = null;
 
 const createNewHost = async (hostData) => {
   var newHost = await pbApi.createHost(hostData)
@@ -55,130 +59,7 @@ const generateAudienceUrl = (roomName: string) => {
 }
 
 
-
-const setCustomCssContent = (event, setContentCallback) => {
-  const file = event.target.files[0];
-
-
-  if (file) {
-    const reader = new FileReader();
-
-    reader.onload = (e) => {
-      const content = e.target.result;
-      setContentCallback(content);
-    };
-
-    reader.readAsText(file);
-  } else {
-    // Handle the case where no file is selected
-    setContentCallback(null);
-  }
-};
-
 var customStyles = null;
-
-const handleCssFileUpload = async (event) => {
-
-  const fileInput = event.target;
-  const fileLabel = document.getElementById('fileLabel');
-
-  // Check if files were selected
-  if (fileInput.files.length > 0) {
-    // Update label with the first selected file's name
-    fileLabel.textContent = fileInput.files[0].name;
-  } else {
-    // No file selected, reset label text
-    fileLabel.textContent = "Choose CSS file";
-  }
-
-
-  setCustomCssContent(event, (content) => {
-
-    // Regular expression to match class names
-    const cssClassRegex = /\.([a-zA-Z0-9_-]+)/g;
-
-    // Match all class names in the CSS content and add them to the array
-    let match;
-    while ((match = cssClassRegex.exec(content)) !== null) {
-      if (!cssClassNames.includes(match[1])) {
-        cssClassNames.push(match[1]);
-      }
-    }
-    console.log("Css Class names: ", cssClassNames)
-
-    if (isValidCSS(content)) {
-      console.log("Is Valid true")
-      if (content) {
-        customStyles = content
-
-
-        //user uploaded valid css... Now save this css to DB
-        var cssData = new CSSData('', fileInput.files[0].name, customStyles, hostId)
-        createNewCSS(cssData)
-
-
-        return
-      }
-    } else {
-      console.log("Is Valid false")
-    }
-  });
-};
-
-
-
-// Define an array to store all the CSS class names from the provided CSS content
-const cssClassNames: string[] = [];
-
-// Check if all required classes are present in the CSS content
-const requiredClasses = [
-  'greatape-stage-host',
-  'greatape-stage-host-audience-1',
-  'greatape-stage-host-screenshare',
-  'greatape-stage-host-screenshare-audience-1',
-  'greatape-stage-host-audience-2',
-  'greatape-stage-host-audience-3',
-  'greatape-gap-in-videos',
-  'greatape-host-video',
-  'greatape-share-screen-video',
-  'greatape-audience-video',
-  'greatape-video-name',
-  'greatape-video-name-background',
-  'greatape-attendees-list',
-  'greatape-attendees-count',
-  'greatape-attendees-item',
-  'greatape-attendees-item-role',
-  'greatape-meeting-link',
-  'greatape-meeting-link-background'
-];
-
-function isValidCSS(cssContent: string): boolean {
-
-  const allClassesPresent = requiredClasses.every(className => cssClassNames.includes(className));
-
-  // Regular expression to match CSS rules
-  const cssRuleRegex = /[^{]*\{[^}]*\}/g;
-
-  // Match all CSS rules in the content
-  const matches = cssContent.match(cssRuleRegex);
-
-  // If matches are found and every match has a valid structure, and all required classes are present, return true
-  return (
-    matches !== null &&
-    matches.every(match => isValidCSSRule(match)) &&
-    allClassesPresent
-  );
-}
-
-function isValidCSSRule(cssRule: string): boolean {
-  // Regular expression to match a single CSS rule
-  const cssRuleStructureRegex = /^\s*([^\{\}]+)\s*\{([^\{\}]*)\}\s*$/;
-
-  // Check if the CSS rule matches the expected structure
-  return cssRuleStructureRegex.test(cssRule);
-}
-
-
 
 
 export const HostPage = ({ params: { displayName } }: { params?: { displayName?: string } }) => {
@@ -215,26 +96,25 @@ export const HostPage = ({ params: { displayName } }: { params?: { displayName?:
       hostId = hostByName.id
       //fetch host Css files
 
-      var css = await pbApi.getCSSbyHostId(hostId)
-
-      if (css.code != undefined && css.code == 404) {
-        console.log("cssByHost: ", css.message)
+      cssList = await pbApi.getFullListOfCssBYHostId(hostId)
+      console.log("csslist: ", cssList)
+      var css = cssList[0];
+      if (cssList.code != undefined && cssList.code == 404) {
+        console.log("cssByHost: ", cssList.message)
       } else {
         console.log("cssByHost: ", css)
-
-        const fileLabel = document.getElementById('fileLabel');
-        fileLabel.textContent = css.name;
-        customStyles = css.style
       }
     }
 
     //fetch host Room
     var roomsList = await pbApi.getFullListOfRoomsBYHostId(hostId)
+    console.log("Rooms list: ", roomsList)
     if (roomsList.code != undefined && roomsList.code == 404) {
       console.log("roomByHost: ", roomsList.message)
     } else {
       var room = roomsList[0] //get top room created recently
       console.log("roomByHost: ", room)
+      console.log("Room image: ", room.thumbnail)
       form.setValue('room', room.name);
 
       // Programmatically trigger input event on the TextField to mimic user input
@@ -275,11 +155,44 @@ export const HostPage = ({ params: { displayName } }: { params?: { displayName?:
 
         const { room, description } = form.getValues(); // Extracting values from the form
         //create new Room
-        var roomData = new RoomData(room, description, "", hostId, "")
-        createNewRoom(roomData)
+        var roomData = new RoomData(room, description, selectedImageFile.value, hostId, "")
+        var formData = convertRoomDataToFormData(roomData)
+        console.log("RoomData Thumbnail: ", formData.get('thumbnail'))
+        createNewRoom(formData)
 
       }
     })
+  }
+
+
+  const showCssFilesDialog = (cssFiles) => {
+
+    console.log("inside showCssFilesDialog")
+    makeCssFilesDialog(
+      cssFiles,
+      hostId,
+      oldIndex,
+      'css-files',
+      {
+        title: 'Layout',
+      },
+      async () => {
+
+      },
+      async (cssFile, index) => {
+        oldIndex = index
+        selectedCssFile.value = cssFile
+        console.log("Selected CSS FILE: ", selectedCssFile.value)
+        if (selectedCssFile.value != null) {
+          customStyles = selectedCssFile.value.style
+        }else{
+          customStyles=null;
+        }
+
+        //fetch latest css files
+        cssList = await pbApi.getFullListOfCssBYHostId(hostId)
+      }
+    )
   }
 
   const showMetaImageDialog = (oldImage) => {
@@ -294,8 +207,9 @@ export const HostPage = ({ params: { displayName } }: { params?: { displayName?:
       async () => {
 
       },
-      async (image) => {
+      async (image, imageFile) => {
         selectedImage.value = image
+        selectedImageFile.value = imageFile
       }
     )
   }
@@ -341,11 +255,11 @@ export const HostPage = ({ params: { displayName } }: { params?: { displayName?:
               <div className="flex flex-col gap-3">
 
                 <div class="my-0 flex items-center justify-between relative h-8">
-                  <div class={clsx('text-bold-12 text-gray-3')}>Layout</div> <label id="fileLabel" for="cssFileInput" class={clsx('text-bold-12 text-gray-1 cursor-pointer')}>
-                    Choose CSS file
-                  </label>
-                  <input id="cssFileInput" type="file" class="hidden" onChange={(event) => handleCssFileUpload(event)} />
-
+                  <div class={clsx('text-bold-12 text-gray-3')}>Layout</div>
+                  <div className="text-bold-12 text-gray-1 cursor-pointer float-right cursor-pointer" onClick={() => {
+                    console.log("CSS LIST: ", cssList)
+                    showCssFilesDialog(cssList)
+                  }}>{selectedCssFile.value != null ? selectedCssFile.value.name : 'Default'} </div>
                 </div>
                 <hr class="h-px my-0" />
 

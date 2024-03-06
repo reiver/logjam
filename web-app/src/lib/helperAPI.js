@@ -27,6 +27,20 @@ export class RoomData {
   }
 }
 
+// Function to convert RoomData instance to FormData
+export function convertRoomDataToFormData(roomData) {
+  const formData = new FormData();
+  
+  // Assuming the properties of RoomData are directly accessible
+  formData.append('name', roomData.name);
+  formData.append('description', roomData.description);
+  formData.append('thumbnail', roomData.thumbnail); // Note: This should be a File object if you're uploading a file
+  formData.append('hostId', roomData.hostId);
+  formData.append('id', roomData.id);
+  
+  return formData;
+}
+
 // PocketBase manager
 
 export class PocketBaseManager {
@@ -70,18 +84,18 @@ export class PocketBaseManager {
   };
 
   createRoom = async (roomData) => {
-    const formattedRoomData = {
-      id: roomData.id,
-      name: roomData.name,
-      description: roomData.description,
-      hostId: roomData.hostId,
-      thumbnail: roomData.thumbnail,
-    };
+    // const formattedRoomData = {
+    //   id: roomData.id,
+    //   name: roomData.name,
+    //   description: roomData.description,
+    //   hostId: roomData.hostId,
+    //   thumbnail: roomData.thumbnail,
+    // };
 
     try {
       const response = await this.pocketBase
         .collection("rooms")
-        .create(formattedRoomData);
+        .create(roomData);
       return response;
     } catch (error) {
       return error.data;
@@ -139,7 +153,7 @@ export class PocketBaseManager {
     try {
       const room = await this.pocketBase.collection("rooms").getFullList({
         sort: "-created",
-        hostId: `${hostId}`,
+        filter: `hostId= '${hostId}'`,
       });
       return room;
     } catch (error) {
@@ -152,6 +166,18 @@ export class PocketBaseManager {
       const css = await this.pocketBase
         .collection("css")
         .getFirstListItem(`hostId="${hostId}"`);
+      return css;
+    } catch (error) {
+      return error.data;
+    }
+  };
+
+  getFullListOfCssBYHostId = async (hostId) => {
+    try {
+      const css = await this.pocketBase.collection("css").getFullList({
+        sort: "-created",
+        filter: `hostId= '${hostId}'`,
+      });
       return css;
     } catch (error) {
       return error.data;
