@@ -376,39 +376,65 @@ export const CssFilesDialog = ({
                 </div>
                 <hr class="dark:border-gray-2 border-gray-0 sm:block hidden" />
 
-                <div class="sm:p-4 p-2 flex items-center justify-between relative">
-                    <div class={clsx('text-bold-12 text-gray-3')}>Upload New</div> <label id="fileLabel" for="cssFileInput" class={clsx('text-bold-12 text-gray-1 cursor-pointer')}>
-                        Choose CSS file
-                    </label>
-                    <input id="cssFileInput" type="file" class="hidden" onChange={(event) => { handleCssFileUpload(event) }} />
+                <div class={clsx(
+                    "overflow-y-auto", `${cssFiles != null && cssFiles.length > 0 ? "h-64" : ""}`
+                )}>
+                    <style>
+                        {`
+                            /* Customizing scrollbar styles for WebKit browsers */
+                            ::-webkit-scrollbar {
+                            width: 3px; /* Adjust the width as needed */
+                            }
 
-                </div>
+                            ::-webkit-scrollbar-thumb {
+                            background-color: #A8A8A8; /* Adjust the color as needed */
+                            }
 
-                <form>
-                    <div class="sm:pb-4 pb-2">
+                            ::-webkit-scrollbar-track {
+                            background-color: #EBEBEB; /* Adjust the color as needed */
+                            }
+                        `}
+                    </style>
 
-                        <div class="sm:py-4 py-2 rounded-md mx-2 flex items-center cursor-pointer" onClick={() => handleFileClick(-1)}>
-                            <hr class="dark:border-gray-2 border-gray-0 sm:block hidden" />
+                    <div class="sm:py-4 py-2 sm:px-6 px-4 flex items-center justify-between relative">
+                        <div class={clsx('text-bold-12 text-gray-3')}>Upload New</div> <label id="fileLabel" for="cssFileInput" class={clsx('text-bold-12 text-gray-1 cursor-pointer')}>
+                            Choose CSS file
+                        </label>
+                        <input id="cssFileInput" type="file" class="hidden" onChange={(event) => { handleCssFileUpload(event) }} />
 
-                            <div class="text-left px-2 text-bold-12 flex-1">Default</div>
-                            <label class="flex items-right px-5 flex-0">
-                                <input type="radio" name="devices" checked={true} id={`file${-1}`} />
-                            </label>
-                        </div>
+                    </div>
+                    <hr class="dark:border-gray-2 border-gray-0 mx-4 my-1 sm:mx-6 sm:my-1" />
 
-                        {cssFiles != null && cssFiles.length > 0 && cssFiles.map((file, index) => (
-                            <div class="sm:py-4 py-2 rounded-md mx-2 flex items-center cursor-pointer" onClick={() => handleFileClick(index)}>
-                                <hr class="dark:border-gray-2 border-gray-0 sm:block hidden" />
+                    <form>
+                        <div class="sm:pb-4 pb-2">
 
-                                <div class="text-left px-2 text-bold-12 flex-1">{file.name}</div>
-                                <label class="flex items-right px-5 flex-0">
-                                    <input type="radio" name="devices" id={`file${index}`} />
+                            <div class="sm:py-4 py-2 sm:px-6 px-4 rounded-md flex items-center cursor-pointer" onClick={() => handleFileClick(-1)}>
+
+                                <div class="text-left text-bold-12 flex-1">Default</div>
+                                <label class="flex items-right flex-0">
+                                    <input type="radio" name="devices" checked={true} id={`file${-1}`} />
                                 </label>
                             </div>
 
-                        ))}
-                    </div>
-                </form>
+                            {cssFiles != null && cssFiles.length > 0 && cssFiles.map((file, index) => (
+
+                                <div>
+                                    <hr class="dark:border-gray-2 border-gray-0 mx-4 my-1 sm:mx-6 sm:my-1" />
+                                    <div class="sm:py-4 py-2 sm:px-6 px-4 rounded-md flex items-center cursor-pointer" onClick={() => handleFileClick(index)}>
+                                        <div class="text-left text-bold-12 flex-1">{file.name}</div>
+                                        <label class="flex items-right flex-0">
+                                            <input type="radio" name="devices" id={`file${index}`} />
+                                        </label>
+                                    </div>
+                                </div>
+
+
+                            ))}
+                        </div>
+                    </form>
+
+                </div>
+
             </div>
         </div>
     )
