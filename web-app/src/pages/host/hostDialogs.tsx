@@ -7,6 +7,7 @@ import { Button, Icon, IconButton, Logo, Tooltip } from 'components'
 import { useEffect, useRef, useState } from 'preact/compat'
 import Close from 'assets/icons/Close.svg?react'
 import metaTagsThumbnail from 'assets/images/metatagsLogo.png'
+import trashIcon from 'assets/images/trash_icon.svg'
 import reset from 'assets/images/Reset.png'
 import { RoundButton } from 'components/common/RoundButton'
 import imageFolder from 'assets/images/ImageFolder.png'
@@ -185,17 +186,23 @@ export const CssFilesDialog = ({
     showButtons = true,
     className,
 }) => {
-    let selectedFileIndex = oldIndex
+    const selectedFileIndex = signal(oldIndex)
     let customStyles = null
     let uploadedFile = null
 
     //set default selection
     setTimeout(() => {
-        const radioInput = document.getElementById(`file${selectedFileIndex}`) as HTMLInputElement
-        radioInput.checked = selectedFileIndex === selectedFileIndex
-        radioInput.style.accentColor = 'black'
-
+        const radioInput = document.getElementById(`file${selectedFileIndex.value}`) as HTMLInputElement
+        if (radioInput != null) {
+            radioInput.checked = selectedFileIndex.value === selectedFileIndex.value
+            radioInput.style.accentColor = 'black'
+        } else {
+            const defaultRadio = document.getElementById(`file-1`) as HTMLInputElement
+            defaultRadio.checked = selectedFileIndex.value === selectedFileIndex.value
+            defaultRadio.style.accentColor = 'black'
+        }
     }, 50);
+
 
     console.log("Inside MetaImageDialog")
 
@@ -204,12 +211,12 @@ export const CssFilesDialog = ({
         // Now, the 'index' variable will contain the index of the matching device (or -1 if none found).
 
         // Check if the clicked device is already selected
-        if (selectedFileIndex === index) {
+        if (selectedFileIndex.value === index) {
             // If it's already selected, deselect it by setting the selectedDeviceIndex to -1
-            selectedFileIndex = -1
+            selectedFileIndex.value = -1
         } else {
             // If it's not selected, select it by setting the selectedDeviceIndex to the clicked index
-            selectedFileIndex = index
+            selectedFileIndex.value = index
         }
 
         console.log('handleDeviceClick: ', index)
@@ -217,12 +224,12 @@ export const CssFilesDialog = ({
         const radioInput = document.getElementById(`file${index}`) as HTMLInputElement
         console.log('radioInput: ', radioInput)
         if (radioInput) {
-            radioInput.checked = selectedFileIndex === index
+            radioInput.checked = selectedFileIndex.value === index
             radioInput.style.accentColor = 'black'
             if (vanish) {
                 setTimeout(() => {
-                    console.log('Selected file: ', cssFiles[selectedFileIndex])
-                    onClose(cssFiles[selectedFileIndex], selectedFileIndex)
+                    console.log('Selected file: ', cssFiles.value[selectedFileIndex.value])
+                    onClose(cssFiles.value[selectedFileIndex.value], selectedFileIndex.value)
                 }, 200)
             }
         }
@@ -262,7 +269,8 @@ export const CssFilesDialog = ({
                 console.log("Is Valid true")
                 if (content) {
 
-                    // cssFiles.add(fileInput.files[0])
+                    cssFiles.value = [...cssFiles.value, fileInput.files[0]];
+                    selectedFileIndex.value = cssFiles.value.length - 1
 
                     customStyles = content
 
@@ -350,6 +358,20 @@ export const CssFilesDialog = ({
         return cssRuleStructureRegex.test(cssRule);
     }
 
+    async function deleteCssFile(index) {
+        const fileToDel = cssFiles.value[index]
+        console.log("File to Del: ", fileToDel)
+        const res = await pbApi.deleteCssRecord(fileToDel.id)
+        console.log("Filed Deleted: ", res)
+
+        if (res == true && index > -1) {
+
+            const updatedCssFiles = cssFiles.value.filter((_, i) => i !== index);
+            cssFiles.value = updatedCssFiles;
+            console.log("Updated cssFiles: ", cssFiles.value)
+        }
+    }
+
     return (
         <div class="absolute top-0 left-0 w-full h-full">
             <div class="z-10 absolute w-full h-full bg-black bg-opacity-60" />
@@ -363,13 +385,13 @@ export const CssFilesDialog = ({
                 <div class="flex justify-center items-center p-5 relative">
                     <span class="dark:text-white text-black text-bold-12">{title}</span>
                     <Icon icon={Close} class="absolute top-1/2 sm:right-5 right-[unset] left-5 sm:left-[unset] transform -translate-y-1/2 cursor-pointer" onClick={() => {
-                        if (selectedFileIndex == -1 && uploadedFile != null) {
+                        if (selectedFileIndex.value == -1 && uploadedFile != null) {
                             onClose(uploadedFile, 0)
                         } else {
-                            if (selectedFileIndex != -1) {
-                                onClose(cssFiles[selectedFileIndex], selectedFileIndex)
+                            if (selectedFileIndex.value != -1) {
+                                onClose(cssFiles.value[selectedFileIndex.value], selectedFileIndex.value)
                             } else {
-                                onClose(null, selectedFileIndex)
+                                onClose(null, selectedFileIndex.value)
                             }
                         }
                     }} />
@@ -377,7 +399,7 @@ export const CssFilesDialog = ({
                 <hr class="dark:border-gray-2 border-gray-0 sm:block hidden" />
 
                 <div class={clsx(
-                    "overflow-y-auto", `${cssFiles != null && cssFiles.length > 0 ? "h-64" : ""}`
+                    "overflow-y-auto", `${cssFiles.value != null && cssFiles.value.length > 0 ? "h-64" : ""}`
                 )}>
                     <style>
                         {`
@@ -405,7 +427,7 @@ export const CssFilesDialog = ({
                     </div>
                     <hr class="dark:border-gray-2 border-gray-0 mx-4 my-1 sm:mx-6 sm:my-1" />
 
-                    <form>
+                    {/* <form>
                         <div class="sm:pb-4 pb-2">
 
                             <div class="sm:py-4 py-2 sm:px-6 px-4 rounded-md flex items-center cursor-pointer" onClick={() => handleFileClick(-1)}>
@@ -420,18 +442,50 @@ export const CssFilesDialog = ({
 
                                 <div>
                                     <hr class="dark:border-gray-2 border-gray-0 mx-4 my-1 sm:mx-6 sm:my-1" />
-                                    <div class="sm:py-4 py-2 sm:px-6 px-4 rounded-md flex items-center cursor-pointer" onClick={() => handleFileClick(index)}>
-                                        <div class="text-left text-bold-12 flex-1">{file.name}</div>
-                                        <label class="flex items-right flex-0">
-                                            <input type="radio" name="devices" id={`file${index}`} />
-                                        </label>
+                                    <div class="flex items-center">
+                                        <img src={trashIcon} class="w-6 h-6 ml-4" />
+
+                                        <div class="sm:py-4 py-2 sm:px-6 px-4 rounded-md flex items-center cursor-pointer" onClick={() => handleFileClick(index)}>
+                                            <div class="text-left text-bold-12 flex-1">{file.name}</div>
+                                            <label class="flex items-center flex-0">
+                                                <input type="radio" name="devices" id={`file${index}`} />
+                                            </label>
+                                        </div>
                                     </div>
                                 </div>
 
 
                             ))}
                         </div>
+                    </form> */}
+
+                    <form>
+                        <div class="sm:pb-4 pb-2">
+                            <div class="sm:py-4 py-2 sm:px-6 px-4 rounded-md flex items-center cursor-pointer" onClick={() => handleFileClick(-1)}>
+                                <div class="text-left text-bold-12 flex-1">Default</div>
+                                <label class="flex items-center flex-0">
+                                    <input type="radio" name="devices" checked={true} id={`file${-1}`} />
+                                </label>
+                            </div>
+
+
+                            {cssFiles.value != null && cssFiles.value.length > 0 && cssFiles.value.map((file, index) => (
+                                <div class="w-full">
+                                    <hr class="dark:border-gray-2 border-gray-0 mx-4 my-1 sm:mx-6 sm:my-1" />
+                                    <div class="flex items-center ml-4">
+                                        <img src={trashIcon} class="w-6 h-6 mr-4" onClick={() => deleteCssFile(index)} />
+                                        <div class="sm:py-4 py-2 rounded-md flex items-center justify-between cursor-pointer" onClick={() => handleFileClick(index)}>
+                                            <div class="text-left text-bold-12">{file.name}</div>
+                                            <label class="text-right">
+                                                <input type="radio" name="devices" id={`file${index}`} checked={selectedFileIndex.value === index} onChange={() => { selectedFileIndex.value = index }} />
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
                     </form>
+
 
                 </div>
 

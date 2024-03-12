@@ -1,3 +1,4 @@
+import { css } from "@emotion/react";
 import PocketBase from "pocketbase";
 
 // Define data classes for hosts, css, and rooms
@@ -30,14 +31,14 @@ export class RoomData {
 // Function to convert RoomData instance to FormData
 export function convertRoomDataToFormData(roomData) {
   const formData = new FormData();
-  
+
   // Assuming the properties of RoomData are directly accessible
-  formData.append('name', roomData.name);
-  formData.append('description', roomData.description);
-  formData.append('thumbnail', roomData.thumbnail); // Note: This should be a File object if you're uploading a file
-  formData.append('hostId', roomData.hostId);
-  formData.append('id', roomData.id);
-  
+  formData.append("name", roomData.name);
+  formData.append("description", roomData.description);
+  formData.append("thumbnail", roomData.thumbnail); // Note: This should be a File object if you're uploading a file
+  formData.append("hostId", roomData.hostId);
+  formData.append("id", roomData.id);
+
   return formData;
 }
 
@@ -179,6 +180,15 @@ export class PocketBaseManager {
         filter: `hostId= '${hostId}'`,
       });
       return css;
+    } catch (error) {
+      return error.data;
+    }
+  };
+
+  deleteCssRecord = async (cssId) => {
+    try {
+      const res = await this.pocketBase.collection("css").delete(cssId);
+      return res;
     } catch (error) {
       return error.data;
     }

@@ -24,7 +24,7 @@ const selectedImageFile = signal(null)
 const pbApi = new PocketBaseManager()
 var oldIndex = -1;
 var hostId = null
-var cssList = null;
+const cssList = signal(null);
 
 const createNewHost = async (hostData) => {
   var newHost = await pbApi.createHost(hostData)
@@ -96,11 +96,11 @@ export const HostPage = ({ params: { displayName } }: { params?: { displayName?:
       hostId = hostByName.id
       //fetch host Css files
 
-      cssList = await pbApi.getFullListOfCssBYHostId(hostId)
-      console.log("csslist: ", cssList)
-      var css = cssList[0];
-      if (cssList.code != undefined && cssList.code == 404) {
-        console.log("cssByHost: ", cssList.message)
+      cssList.value = await pbApi.getFullListOfCssBYHostId(hostId)
+      console.log("csslist: ", cssList.value)
+      var css = cssList.value[0];
+      if (cssList.value.code != undefined && cssList.value.code == 404) {
+        console.log("cssByHost: ", cssList.value.message)
       } else {
         console.log("cssByHost: ", css)
       }
@@ -190,7 +190,7 @@ export const HostPage = ({ params: { displayName } }: { params?: { displayName?:
         }
 
         //fetch latest css files
-        cssList = await pbApi.getFullListOfCssBYHostId(hostId)
+        cssList.value = await pbApi.getFullListOfCssBYHostId(hostId)
       }
     )
   }
@@ -257,7 +257,7 @@ export const HostPage = ({ params: { displayName } }: { params?: { displayName?:
                 <div class="my-0 flex items-center justify-between relative h-8">
                   <div class={clsx('text-bold-12 text-gray-3')}>Layout</div>
                   <div className="text-bold-12 text-gray-1 cursor-pointer float-right cursor-pointer" onClick={() => {
-                    console.log("CSS LIST: ", cssList)
+                    console.log("CSS LIST: ", cssList.value)
                     showCssFilesDialog(cssList)
                   }}>{selectedCssFile.value != null ? selectedCssFile.value.name : 'Default'} </div>
                 </div>
