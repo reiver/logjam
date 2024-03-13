@@ -173,6 +173,7 @@ const createNewCSS = async (cssData) => {
     console.log("new CSS Created: ", newCSS)
     return newCSS;
 }
+var cssData = null;
 
 export const CssFilesDialog = ({
     onOk,
@@ -251,7 +252,7 @@ export const CssFilesDialog = ({
         }
 
 
-        setCustomCssContent(event, (content) => {
+        setCustomCssContent(event, async (content) => {
 
             // Regular expression to match class names
             const cssClassRegex = /\.([a-zA-Z0-9_-]+)/g;
@@ -269,16 +270,15 @@ export const CssFilesDialog = ({
                 console.log("Is Valid true")
                 if (content) {
 
-                    cssFiles.value = [...cssFiles.value, fileInput.files[0]];
-                    selectedFileIndex.value = cssFiles.value.length - 1
-
                     customStyles = content
 
 
                     // //user uploaded valid css... Now save this css to DB
-                    var cssData = new CSSData('', fileInput.files[0].name, customStyles, hostId)
-                    createNewCSS(cssData)
+                    var data = new CSSData('', fileInput.files[0].name, customStyles, hostId)
+                    cssData = await createNewCSS(data)
 
+                    cssFiles.value = [...cssFiles.value, cssData];
+                    selectedFileIndex.value = cssFiles.value.length - 1
 
                     return
                 }
@@ -385,12 +385,19 @@ export const CssFilesDialog = ({
                 <div class="flex justify-center items-center p-5 relative">
                     <span class="dark:text-white text-black text-bold-12">{title}</span>
                     <Icon icon={Close} class="absolute top-1/2 sm:right-5 right-[unset] left-5 sm:left-[unset] transform -translate-y-1/2 cursor-pointer" onClick={() => {
-                        if (selectedFileIndex.value == -1 && uploadedFile != null) {
-                            onClose(uploadedFile, 0)
+                        console.log("NEW CSS DATA: ", cssData)
+                        if (selectedFileIndex.value === -1 && cssData != null) {
+                        
+                            onClose(cssData, 0)
                         } else {
+                            console.log("Index type: ", typeof selectedFileIndex.value, " Value: ", selectedFileIndex.value)
                             if (selectedFileIndex.value != -1) {
+                                console.log("Index is not -1")
+
                                 onClose(cssFiles.value[selectedFileIndex.value], selectedFileIndex.value)
                             } else {
+                                console.log("Index is -1: ", selectedFileIndex.value)
+
                                 onClose(null, selectedFileIndex.value)
                             }
                         }

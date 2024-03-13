@@ -335,6 +335,7 @@ const Meeting = ({ params: { room, displayName, name, _customStyles } }: { param
 
             //if host send Custom styles to room
             if (sparkRTC.value.role === sparkRTC.value.Roles.BROADCAST) {
+              console.log("Send Meeting UI: ", customStyles)
               sparkRTC.value.sendCustomStylesToRoom(customStyles)
             }
 
@@ -373,6 +374,7 @@ const Meeting = ({ params: { room, displayName, name, _customStyles } }: { param
 
             if (!sparkRTC.value.broadcasterDC && role === Roles.AUDIENCE) {
               broadcastIsInTheMeeting.value = true
+              sparkRTC.value.getMetadata()
             }
           },
           remoteStreamDCCallback: async (stream) => {
@@ -402,6 +404,13 @@ const Meeting = ({ params: { room, displayName, name, _customStyles } }: { param
                   }
 
                   broadcastIsInTheMeeting.value = false
+
+                  var ele = document.getElementById('customStyles')
+                  console.log("styleEel: ", ele)
+                  if (ele) {
+                    ele.remove()
+                  }
+
                   updateUser({
                     isStreamming: false,
                     ableToRaiseHand: true,
@@ -467,6 +476,7 @@ const Meeting = ({ params: { room, displayName, name, _customStyles } }: { param
           },
           updateMeetingUI: (styles) => {
             if (sparkRTC.value.role == sparkRTC.value.Roles.AUDIENCE) {
+              console.log("Latest Meeting UI: ", styles)
               setCustomStyles(styles)
             }
           },
@@ -763,6 +773,7 @@ const Meeting = ({ params: { room, displayName, name, _customStyles } }: { param
 
   useEffect(() => {
     if (customStyles) {
+      styleElement.id = 'customStyles';
       // Create a style element and append it to the head of the document
       document.head.appendChild(styleElement);
 
