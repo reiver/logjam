@@ -772,6 +772,7 @@ const Meeting = ({ params: { room, displayName, name, _customStyles } }: { param
   }
 
   useEffect(() => {
+    console.log("customStyles effect")
     if (customStyles) {
       styleElement.id = 'customStyles';
       // Create a style element and append it to the head of the document
@@ -779,8 +780,10 @@ const Meeting = ({ params: { room, displayName, name, _customStyles } }: { param
 
       // Set the CSS content of the style element
       styleElement.textContent = customStyles;
+      console.log("Creating style elem Meeting.js")
+
     }
-  }, [])
+  }, [customStyles])
 
   return (
     <div class={clsx('flex flex-col justify-between min-h-[--doc-height] dark:bg-secondary-1-a bg-white-f-9 text-medium-12 text-gray-800 dark:text-gray-200',

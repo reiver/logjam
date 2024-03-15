@@ -16,6 +16,7 @@ export const MeetingBody = ({ customStyles }) => {
 
       // Set the CSS content of the style element
       styleElement.textContent = customStyles;
+      console.log("Creating style elem Index.js")
     }
   }, [])
 

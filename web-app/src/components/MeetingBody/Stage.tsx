@@ -173,6 +173,8 @@ export const Stage = ({ customStyles }) => {
 
       // Set the CSS content of the style element
       styleElement.textContent = customStyles;
+      console.log("Creating style elem Stage.js")
+
     }
   }, [])
 
@@ -424,6 +426,8 @@ export const Video = memo(({ stream, isMuted, isHostStream, name, userId, isUser
 
       // Set the CSS content of the style element
       styleElement.textContent = customStyles;
+      console.log("Creating style elem Stage.js 2")
+
     }
   }, [])
 
