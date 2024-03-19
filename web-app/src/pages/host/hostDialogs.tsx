@@ -97,7 +97,7 @@ export const MetaImageDialog = ({
 
     return (
         <div class="absolute top-0 left-0 w-full h-full">
-            <div class="z-10 absolute w-full h-full bg-black bg-opacity-60" />
+            <div class="z-10 absolute w-full h-full bg-black bg-opacity-40" />
             <div
                 class={clsx(
                     className,
@@ -374,7 +374,7 @@ export const CssFilesDialog = ({
 
     return (
         <div class="absolute top-0 left-0 w-full h-full">
-            <div class="z-10 absolute w-full h-full bg-black bg-opacity-60" />
+            <div class="z-10 absolute w-full h-full bg-black bg-opacity-40" />
             <div
                 class={clsx(
                     className,
@@ -426,7 +426,7 @@ export const CssFilesDialog = ({
                     </style>
 
                     <div class="sm:py-4 py-2 sm:px-6 px-4 flex items-center justify-between relative">
-                        <div class={clsx('text-bold-12 text-gray-3')}>Upload New</div> <label id="fileLabel" for="cssFileInput" class={clsx('text-bold-12 text-gray-1 cursor-pointer')}>
+                        <div class={clsx('dark:text-white text-bold-12 text-gray-3')}>Upload New</div> <label id="fileLabel" for="cssFileInput" class={clsx('dark:text-white text-bold-12 text-gray-1 cursor-pointer')}>
                             Choose CSS file
                         </label>
                         <input id="cssFileInput" type="file" class="hidden" onChange={(event) => { handleCssFileUpload(event) }} />
@@ -437,7 +437,7 @@ export const CssFilesDialog = ({
                     <form>
                         <div class="sm:pb-4 pb-2">
                             <div class="sm:py-4 py-2 sm:px-6 px-4 rounded-md flex items-center cursor-pointer" onClick={() => handleFileClick(-1)}>
-                                <div class="text-left text-bold-12 flex-1">Default</div>
+                                <div class="dark:text-white text-gray-3 text-left text-bold-12 flex-1">Default</div>
                                 <label class="flex items-center flex-0">
                                     <input type="radio" name="devices" checked={true} id={`file${-1}`} />
                                 </label>
@@ -450,7 +450,7 @@ export const CssFilesDialog = ({
                                     <div class="flex items-center sm:px-6 px-4">
                                         <img src={trashIcon} class="w-6 h-6 mr-4 cursor-pointer" onClick={() => deleteCssFile(index)} />
                                         <div class="flex-grow sm:py-4 py-2 rounded-md flex items-center justify-between cursor-pointer" onClick={() => handleFileClick(index)}>
-                                            <div class="text-left text-bold-12">{file.name}</div>
+                                            <div class="dark:text-white text-gray-3 text-left text-bold-12">{file.name}</div>
                                             <label class="text-right">
                                                 <input type="radio" name="devices" id={`file${index}`} checked={selectedFileIndex.value === index} onChange={() => { selectedFileIndex.value = index }} />
                                             </label>
