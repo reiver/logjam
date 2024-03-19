@@ -406,7 +406,7 @@ export const CssFilesDialog = ({
                 <hr class="dark:border-gray-2 border-gray-0 sm:block hidden" />
 
                 <div class={clsx(
-                    "overflow-y-auto", `${cssFiles.value != null && cssFiles.value.length > 0 ? "h-64" : ""}`
+                    "overflow-y-auto", `${cssFiles.value != null && cssFiles.value.length > 0 ? "max-h-64" : "auto"}`
                 )}>
                     <style>
                         {`
@@ -434,38 +434,6 @@ export const CssFilesDialog = ({
                     </div>
                     <hr class="dark:border-gray-2 border-gray-0 mx-4 my-1 sm:mx-6 sm:my-1" />
 
-                    {/* <form>
-                        <div class="sm:pb-4 pb-2">
-
-                            <div class="sm:py-4 py-2 sm:px-6 px-4 rounded-md flex items-center cursor-pointer" onClick={() => handleFileClick(-1)}>
-
-                                <div class="text-left text-bold-12 flex-1">Default</div>
-                                <label class="flex items-right flex-0">
-                                    <input type="radio" name="devices" checked={true} id={`file${-1}`} />
-                                </label>
-                            </div>
-
-                            {cssFiles != null && cssFiles.length > 0 && cssFiles.map((file, index) => (
-
-                                <div>
-                                    <hr class="dark:border-gray-2 border-gray-0 mx-4 my-1 sm:mx-6 sm:my-1" />
-                                    <div class="flex items-center">
-                                        <img src={trashIcon} class="w-6 h-6 ml-4" />
-
-                                        <div class="sm:py-4 py-2 sm:px-6 px-4 rounded-md flex items-center cursor-pointer" onClick={() => handleFileClick(index)}>
-                                            <div class="text-left text-bold-12 flex-1">{file.name}</div>
-                                            <label class="flex items-center flex-0">
-                                                <input type="radio" name="devices" id={`file${index}`} />
-                                            </label>
-                                        </div>
-                                    </div>
-                                </div>
-
-
-                            ))}
-                        </div>
-                    </form> */}
-
                     <form>
                         <div class="sm:pb-4 pb-2">
                             <div class="sm:py-4 py-2 sm:px-6 px-4 rounded-md flex items-center cursor-pointer" onClick={() => handleFileClick(-1)}>
@@ -479,9 +447,9 @@ export const CssFilesDialog = ({
                             {cssFiles.value != null && cssFiles.value.length > 0 && cssFiles.value.map((file, index) => (
                                 <div class="w-full">
                                     <hr class="dark:border-gray-2 border-gray-0 mx-4 my-1 sm:mx-6 sm:my-1" />
-                                    <div class="flex items-center ml-4">
-                                        <img src={trashIcon} class="w-6 h-6 mr-4" onClick={() => deleteCssFile(index)} />
-                                        <div class="sm:py-4 py-2 rounded-md flex items-center justify-between cursor-pointer" onClick={() => handleFileClick(index)}>
+                                    <div class="flex items-center sm:px-6 px-4">
+                                        <img src={trashIcon} class="w-6 h-6 mr-4 cursor-pointer" onClick={() => deleteCssFile(index)} />
+                                        <div class="flex-grow sm:py-4 py-2 rounded-md flex items-center justify-between cursor-pointer" onClick={() => handleFileClick(index)}>
                                             <div class="text-left text-bold-12">{file.name}</div>
                                             <label class="text-right">
                                                 <input type="radio" name="devices" id={`file${index}`} checked={selectedFileIndex.value === index} onChange={() => { selectedFileIndex.value = index }} />
