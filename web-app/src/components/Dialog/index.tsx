@@ -394,7 +394,6 @@ export const VideoBackgroundDialog = ({ onClose, message: { title }, type, backg
 };
 
 
-
 export const IODevicesDialog = ({ onClose, message: { message, title }, devices, deviceType, className, contentClassName }) => {
   let selectedDeviceIndex = -1
   const handleDeviceClick = (index = -1, vanish = true) => {

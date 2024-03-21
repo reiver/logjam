@@ -2,19 +2,47 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { Button, FormControl, TextField, css } from '@mui/material'
 import CopyIcon from 'assets/icons/Copy.svg?react'
 import LinkIcon from 'assets/icons/Link.svg?react'
+import LogoIcon from 'assets/images/Greatapelogo.png'
 import copy from 'clipboard-copy'
 import clsx from 'clsx'
-import { Icon, ResponsiveModal, Tooltip } from 'components'
+import { Icon, Logo, ResponsiveModal, Tooltip } from 'components'
 import Meeting from 'pages/Meeting'
 import { lazy } from 'preact-iso'
-import { useState } from 'preact/compat'
+import { useEffect, useState } from 'preact/compat'
 import { useForm } from 'react-hook-form'
-import { makePreviewDialog } from 'components/Dialog'
+import { HostToastProvider, makeCssFilesDialog, makeMetaImageDialog } from '../host/hostDialogs'
 import z from 'zod'
 import { parse } from 'postcss'
 import * as csstree from 'css-tree';
+import { signal } from '@preact/signals'
+import { PocketBaseManager, HostData, RoomData, CSSData, convertRoomDataToFormData } from 'lib/helperAPI'
 
 const PageNotFound = lazy(() => import('../_404'))
+const selectedImage = signal(null)
+const selectedCssFile = signal(null)
+const selectedImageFile = signal(null)
+const pbApi = new PocketBaseManager()
+var oldIndex = -1;
+var hostId = null
+const cssList = signal(null);
+
+const createNewHost = async (hostData) => {
+  var newHost = await pbApi.createHost(hostData)
+  console.log("new Host Created: ", newHost)
+  return newHost;
+}
+
+const createNewCSS = async (cssData) => {
+  var newCSS = await pbApi.createCSS(cssData)
+  console.log("new CSS Created: ", newCSS)
+  return newCSS;
+}
+
+const createNewRoom = async (roomData) => {
+  var newRoom = await pbApi.createRoom(roomData);
+  console.log("New Room Created: ", newRoom);
+  return newRoom
+}
 
 const schema = z.object({
   room: z.string().min(1, 'This field is required'),
@@ -30,124 +58,93 @@ const generateAudienceUrl = (roomName: string) => {
   return `${window.location.origin}/log/${roomName}`
 }
 
-const setCustomCssContent = (event, setContentCallback) => {
-  const file = event.target.files[0];
-
-
-  if (file) {
-    const reader = new FileReader();
-
-    reader.onload = (e) => {
-      const content = e.target.result;
-      setContentCallback(content);
-    };
-
-    reader.readAsText(file);
-  } else {
-    // Handle the case where no file is selected
-    setContentCallback(null);
-  }
-};
 
 var customStyles = null;
-
-const handleCssFileUpload = async (event) => {
-  setCustomCssContent(event, (content) => {
-
-    // Regular expression to match class names
-    const cssClassRegex = /\.([a-zA-Z0-9_-]+)/g;
-
-    // Match all class names in the CSS content and add them to the array
-    let match;
-    while ((match = cssClassRegex.exec(content)) !== null) {
-      if (!cssClassNames.includes(match[1])) {
-        cssClassNames.push(match[1]);
-      }
-    }
-    console.log("Css Class names: ", cssClassNames)
-
-    if (isValidCSS(content)) {
-      console.log("Is Valid true")
-      if (content) {
-        customStyles = content
-        return
-      }
-    } else {
-      console.log("Is Valid false")
-    }
-  });
-};
-
-// Define an array to store all the CSS class names from the provided CSS content
-const cssClassNames: string[] = [];
-
-// Check if all required classes are present in the CSS content
-const requiredClasses = [
-  'greatape-stage-host',
-  'greatape-stage-host-audience-1',
-  'greatape-stage-host-screenshare',
-  'greatape-stage-host-screenshare-audience-1',
-  'greatape-stage-host-audience-2',
-  'greatape-stage-host-audience-3',
-  'greatape-gap-in-videos',
-  'greatape-host-video',
-  'greatape-share-screen-video',
-  'greatape-audience-video',
-  'greatape-video-name',
-  'greatape-video-name-background',
-  'greatape-attendees-list',
-  'greatape-attendees-count',
-  'greatape-attendees-item',
-  'greatape-attendees-item-role',
-  'greatape-meeting-link',
-  'greatape-meeting-link-background'
-];
-
-function isValidCSS(cssContent: string): boolean {
-
-  const allClassesPresent = requiredClasses.every(className => cssClassNames.includes(className));
-
-  // Regular expression to match CSS rules
-  const cssRuleRegex = /[^{]*\{[^}]*\}/g;
-
-  // Match all CSS rules in the content
-  const matches = cssContent.match(cssRuleRegex);
-
-  // If matches are found and every match has a valid structure, and all required classes are present, return true
-  return (
-    matches !== null &&
-    matches.every(match => isValidCSSRule(match)) &&
-    allClassesPresent
-  );
-}
-
-function isValidCSSRule(cssRule: string): boolean {
-  // Regular expression to match a single CSS rule
-  const cssRuleStructureRegex = /^\s*([^\{\}]+)\s*\{([^\{\}]*)\}\s*$/;
-
-  // Check if the CSS rule matches the expected structure
-  return cssRuleStructureRegex.test(cssRule);
-}
-
-
 
 
 export const HostPage = ({ params: { displayName } }: { params?: { displayName?: string } }) => {
   const [started, setStarted] = useState(false)
   const [showModal, setShowModal] = useState(false)
+
   const form = useForm({
-    defaultValues: {
+    defaultValues:
+    {
       room: '',
       displayName: displayName.replace('@', ''),
       description: '',
     },
     resolver: zodResolver(schema),
   })
-  if (displayName) {
-    if (displayName[0] !== '@') return <PageNotFound />
+
+  //fecth Host From DB
+  const fetchHostData = async () => {
+    var name = displayName.replace('@', '')
+    var hostByName = await pbApi.getHostByName(name)
+
+    if (hostByName.code != undefined && hostByName.code == 404) {
+      console.log("Coede: ", hostByName.code)
+
+      //no host Found with That name... Create New Host
+      var hostData = new HostData(name, '')
+      var host = await createNewHost(hostData)
+      hostId = host.id;
+
+
+    } else {
+      console.log("hostByName: ", hostByName)
+
+      hostId = hostByName.id
+      //fetch host Css files
+
+      cssList.value = await pbApi.getFullListOfCssBYHostId(hostId)
+      console.log("csslist: ", cssList.value)
+      var css = cssList.value[0];
+      if (cssList.value.code != undefined && cssList.value.code == 404) {
+        console.log("cssByHost: ", cssList.value.message)
+      } else {
+        console.log("cssByHost: ", css)
+      }
+    }
+
+    //fetch host Room
+    var roomsList = await pbApi.getFullListOfRoomsBYHostId(hostId)
+    console.log("Rooms list: ", roomsList)
+    if (roomsList.code != undefined && roomsList.code == 404) {
+      console.log("roomByHost: ", roomsList.message)
+    } else {
+      var room = roomsList[0] //get top room created recently
+      console.log("roomByHost: ", room)
+      // console.log("Room image: ", room.thumbnail)
+      form.setValue('room', room.name);
+
+      // Programmatically trigger input event on the TextField to mimic user input
+      const roomInput = document.querySelector('input[name="room"]');
+      roomInput.dispatchEvent(new Event('input', { bubbles: true }));
+
+      form.setValue('description', room.description);
+
+      // Programmatically trigger input event on the TextField to mimic user input
+      const descInput = document.querySelector('input[name="description"]');
+      descInput.dispatchEvent(new Event('input', { bubbles: true }));
+
+    }
+
+
   }
 
+
+  if (displayName) {
+    if (displayName[0] !== '@') return <PageNotFound />
+
+    fetchHostData()
+  }
+
+
   const onSubmit = () => {
+    const { description } = form.getValues(); // Extracting values from the form
+
+    // Generating URLs and updating meta tags
+    // updateMetaTags("GreatApe", description, "/assets/metatagsLogo-3d1cffd4.png");
     setStarted(true)
   }
 
@@ -155,8 +152,66 @@ export const HostPage = ({ params: { displayName } }: { params?: { displayName?:
     form.trigger().then((v) => {
       if (v) {
         setShowModal(v)
+
+        const { room, description } = form.getValues(); // Extracting values from the form
+        //create new Room
+        var roomData = new RoomData(room, description,null, hostId, "")
+        // var formData = convertRoomDataToFormData(roomData)
+        // console.log("RoomData Thumbnail: ", formData.get('thumbnail'))
+        createNewRoom(roomData)
+
       }
     })
+  }
+
+
+  const showCssFilesDialog = (cssFiles) => {
+
+    console.log("inside showCssFilesDialog")
+    makeCssFilesDialog(
+      cssFiles,
+      hostId,
+      oldIndex,
+      'css-files',
+      {
+        title: 'Layout',
+      },
+      async () => {
+
+      },
+      async (cssFile, index) => {
+        oldIndex = index
+        selectedCssFile.value = cssFile
+        console.log("Selected CSS FILE: ", selectedCssFile.value)
+        if (selectedCssFile.value != null) {
+          customStyles = selectedCssFile.value.style
+        }else{
+          customStyles=null;
+        }
+
+        //fetch latest css files
+        cssList.value = await pbApi.getFullListOfCssBYHostId(hostId)
+      }
+    )
+  }
+
+  const showMetaImageDialog = (oldImage) => {
+    console.log("Inside showMetaImageDialog")
+
+    makeMetaImageDialog(
+      oldImage,
+      'meta-image',
+      {
+        title: 'Room Link Thumbnail',
+      },
+      async () => {
+
+      },
+      async (image, imageFile) => {
+        selectedImage.value = image
+        selectedImageFile.value = imageFile
+      }
+    )
   }
 
 
@@ -187,7 +242,6 @@ export const HostPage = ({ params: { displayName } }: { params?: { displayName?:
               </FormControl>
               <FormControl className="w-full">
                 <TextField
-                  multiline
                   rows={4}
                   label="Room Description"
                   variant="outlined"
@@ -197,14 +251,24 @@ export const HostPage = ({ params: { displayName } }: { params?: { displayName?:
                   helperText={form.formState.errors.description?.message}
                 />
               </FormControl>
-              <FormControl className="w-full">
-                <TextField
-                  variant="outlined"
-                  size="small"
-                  type="file"
-                  onChange={(event) => handleCssFileUpload(event)}
-                />
-              </FormControl>
+
+              <div className="flex flex-col gap-3">
+
+                <div class="my-0 flex items-center justify-between relative h-8">
+                  <div class={clsx('text-bold-12 text-gray-3')}>Layout</div>
+                  <div className="text-bold-12 text-gray-1 cursor-pointer float-right cursor-pointer" onClick={() => {
+                    console.log("CSS LIST: ", cssList.value)
+                    showCssFilesDialog(cssList)
+                  }}>{selectedCssFile.value != null ? selectedCssFile.value.name : 'Default'} </div>
+                </div>
+                <hr class="h-px my-0" />
+
+                <div class="flex items-center justify-between relative h-8">
+                  <div class={clsx('text-bold-12 text-gray-3')}>Room Link Thumbnail</div>
+                  <img alt="Selected Background Image" className="w-8 h-8 rounded-md float-right cursor-pointer border border-black border-1" src={selectedImage.value ? selectedImage.value : LogoIcon} onClick={() => { showMetaImageDialog(selectedImage.value) }}></img>
+                </div>
+
+              </div>
               <div class="flex gap-2 w-full flex-col-reverse md:flex-row">
                 <Button onClick={handleCreateLink} variant="outlined" className="w-full normal-case" sx={{ textTransform: 'none' }}>
                   Create Link
@@ -214,6 +278,8 @@ export const HostPage = ({ params: { displayName } }: { params?: { displayName?:
                 </Button>
               </div>
             </div>
+
+
           </form>
           <ResponsiveModal open={showModal} onClose={setShowModal.bind(null, false)}>
             <span className="text-bold-12 text-black block text-center pt-5">Room Links</span>
@@ -225,6 +291,9 @@ export const HostPage = ({ params: { displayName } }: { params?: { displayName?:
             </div>
           </ResponsiveModal>
         </div>
+
+        <HostToastProvider />
+
       </div>
     )
 
@@ -242,6 +311,8 @@ export const HostPage = ({ params: { displayName } }: { params?: { displayName?:
   }
 }
 export default HostPage
+
+
 
 export const LinkCopyComponent = ({ title, link, className }) => {
   const [copyTooltipTitle, setCopyTooltipTitle] = useState('Copy Link')

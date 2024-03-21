@@ -541,7 +541,7 @@ export class SparkRTC {
             this.updateVideosMuteStatus(this.metaData.muted);
           }
 
-          if(this.metaData.styles){
+          if(this.metaData){
             this.updateMeetingUI(this.metaData.styles)
           }
         }
