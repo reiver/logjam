@@ -196,6 +196,10 @@ func fetchDataForMetaTags(path string) *MetaData {
 
 		}
 		fmt.Println("HostName :", hostName)
+		myRecord = &Record{
+			Name:        "GreatApe",
+			Description: "GreatApe is Video Conferencing Application for Fediverse",
+		}
 
 	} else {
 		//get room name
