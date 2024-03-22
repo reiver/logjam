@@ -1,9 +1,11 @@
 package routers
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"regexp"
 	"strings"
 
 	"github.com/gorilla/mux"
@@ -31,6 +33,78 @@ func NewRouter(roomWSCtrl *controllers.RoomWSController, GoldGorillaCtrl *contro
 	}
 }
 
+// Define structs to match the JSON structure
+type Record struct {
+	CollectionID   string `json:"collectionId"`
+	CollectionName string `json:"collectionName"`
+	Created        string `json:"created"`
+	Description    string `json:"description"`
+	HostID         string `json:"hostId"`
+	ID             string `json:"id"`
+	Name           string `json:"name"`
+	Thumbnail      string `json:"thumbnail"`
+	Updated        string `json:"updated"`
+}
+
+type Response struct {
+	Page       int      `json:"page"`
+	PerPage    int      `json:"perPage"`
+	TotalItems int      `json:"totalItems"`
+	TotalPages int      `json:"totalPages"`
+	Items      []Record `json:"items"`
+}
+
+func fetchRecordFromPocketBase(roomName string) (*Record, error) {
+	url := "https://pb.greatape.stream/api/collections/rooms/records"
+
+	// Create a new request using http
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		fmt.Println("Error creating request:", err)
+		return nil, err
+	}
+
+	fmt.Println("Request:", req)
+
+	// Send the request via a client
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Println("Error sending request:", err)
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	// Read the response body
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Println("Error reading response body:", err)
+		return nil, err
+	}
+
+	record, err := parseResponse(string(body), roomName)
+	return record, err
+	// fmt.Println("Response:", string(body))
+}
+
+func parseResponse(jsonData string, roomName string) (*Record, error) {
+	var response Response
+	err := json.Unmarshal([]byte(jsonData), &response)
+	if err != nil {
+		fmt.Println("Error parsing JSON:", err)
+		return nil, fmt.Errorf("error parsing JSON: %w", err)
+	}
+
+	for _, item := range response.Items {
+		if item.Name == roomName {
+			fmt.Printf("Found record: %+v\n", item)
+			return &item, nil
+		}
+	}
+
+	return nil, fmt.Errorf("record not found")
+}
+
 func (r *Router) RegisterRoutes() error {
 	r.roomWSRouter.registerRoutes(r.router)
 	r.GoldGorillaRouter.registerRoutes(r.router)
@@ -42,6 +116,7 @@ func (r *Router) RegisterRoutes() error {
 
 	r.router.PathPrefix("/").HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 
+		r.logger.Log("URL: ", contracts.LDebug, req.URL.Path)
 		metaData := fetchDataForMetaTags(req.URL.Path) // Implement this to fetch meta data based on the request
 
 		// Read the existing index.html file
@@ -53,7 +128,7 @@ func (r *Router) RegisterRoutes() error {
 
 		// Modify the HTML content to include the dynamic title and description
 		modifiedHTML := injectMetaTags(string(htmlContent), metaData, r)
-		r.logger.Log("Modified HTML", contracts.LDebug, modifiedHTML)
+		// r.logger.Log("Modified HTML", contracts.LDebug, modifiedHTML)
 
 		// Serve the modified HTML content
 		// w.Header().Set("Content-Type", "text/html; charset=utf-8")
@@ -104,29 +179,81 @@ func isBotRequest(userAgent string) bool {
 
 func fetchDataForMetaTags(path string) *MetaData {
 	// Fetch your meta data based on the path or other conditions
+
+	var myRecord *Record
+
+	containsAt := strings.Contains(path, "@")
+	fmt.Println("Contains '@':", containsAt)
+	if containsAt {
+		//get host name
+		re := regexp.MustCompile(`/(@\w+)/`) // Regular expression to match '@' followed by word characters
+		match := re.FindStringSubmatch(path)
+
+		hostName := ""
+		if len(match) > 1 {
+			hostName = match[1] // The first submatch should be '@Zaid'
+			hostName = strings.TrimPrefix(hostName, "@")
+
+		}
+		fmt.Println("HostName :", hostName)
+
+	} else {
+		//get room name
+		parts := strings.Split(path, "/")
+		roomName := parts[len(parts)-1]
+		fmt.Println("RoomName :", roomName)
+
+		record, err := fetchRecordFromPocketBase(roomName)
+		if err != nil {
+			fmt.Println("Error :", roomName)
+
+		}
+		fmt.Println("Room Name:", record.Name, "Desc: ", record.Description, "Thumbnail: ", record.Thumbnail)
+		myRecord = record
+	}
+
 	return &MetaData{
-		Title:       "Dynamic Title",
-		Description: "Dynamic Description",
+		Title:       myRecord.Name,
+		Description: myRecord.Description,
 	}
 }
 
 func injectMetaTags(htmlContent string, data *MetaData, r *Router) string {
 	// Inject title and meta description into the HTML content
 	// descriptionTag := `<meta property="og:description" content="` + data.Description + `">`
-	titleTag := `<meta property="og:title" content="` + data.Title + `">`
+	if data.Title == "" {
+		data.Title = "GreatApe"
+	}
 
-	r.logger.Log("HTML CONTENT", contracts.LDebug, htmlContent)
+	if data.Description == "" {
+		data.Description = "GreatApe is Video Conferencing Application for Fediverse"
+	}
+
+	titleTag := `<meta property="og:title" content="` + data.Title + `">`
+	descTag := `<meta property="og:description" content="` + data.Description + `">`
+
+	r.logger.Log("DESC TAG CONTENT: ", contracts.LDebug, descTag)
 
 	// Replace existing meta description tag, or add if not present
-	if strings.Contains(htmlContent, `meta property="og:title"`) {
-		htmlContent = strings.Replace(htmlContent, `<meta property="og:title" content="GreatApe" />`, titleTag, 1)
-		r.logger.Log("String found", contracts.LDebug)
-	}
-	// else {
-	// 	htmlContent = strings.Replace(htmlContent, "<head>", "<head>"+descriptionTag, 1)
-	// 	r.logger.Log("String Not found", contracts.LDebug)
-
+	// if strings.Contains(htmlContent, `meta property="og:title"`) {
+	// 	htmlContent = strings.Replace(htmlContent, `<meta property="og:title" content="GreatApe" />`, titleTag, 1)
+	// 	r.logger.Log("String found", contracts.LDebug)
 	// }
+
+	headStartIndex := strings.Index(htmlContent, "<head>")
+	if headStartIndex != -1 {
+		// Position to insert after <head> tag
+		insertPosition := headStartIndex + len("<head>")
+
+		// Concatenate titleTag and descTag for insertion
+		tagsToInsert := titleTag + descTag
+
+		// Insert the tags right after the <head> tag
+		htmlContent = htmlContent[:insertPosition] + tagsToInsert + htmlContent[insertPosition:]
+		r.logger.Log("Title and description tags inserted", contracts.LDebug)
+	} else {
+		r.logger.Log("No <head> tag found, cannot insert tags", contracts.LDebug)
+	}
 
 	return htmlContent
 }
