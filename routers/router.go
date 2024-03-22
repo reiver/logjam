@@ -210,10 +210,15 @@ func fetchDataForMetaTags(path string) *MetaData {
 		record, err := fetchRecordFromPocketBase(roomName)
 		if err != nil {
 			fmt.Println("Error :", roomName)
-
+			myRecord = &Record{
+				Name:        "GreatApe",
+				Description: "GreatApe is Video Conferencing Application for Fediverse",
+			}
+		} else {
+			fmt.Println("Room Name:", record.Name, "Desc: ", record.Description, "Thumbnail: ", record.Thumbnail)
+			myRecord = record
 		}
-		fmt.Println("Room Name:", record.Name, "Desc: ", record.Description, "Thumbnail: ", record.Thumbnail)
-		myRecord = record
+
 	}
 
 	return &MetaData{
