@@ -250,9 +250,24 @@ func injectMetaTags(htmlContent string, data *MetaData, r *Router) string {
 
 	titleTag := `<meta property="og:title" content="` + data.Title + `">`
 	descTag := `<meta property="og:description" content="` + data.Description + `">`
+	twitterTitleTag := `<meta property="twitter:title" content="` + data.Title + `">`
+	twitterDescTag := `<meta property="twitter:description" content="` + data.Description + `">`
 	imageTag := ``
 	if data.Image != "" {
 		imageTag = `<meta property="og:image" content="` + data.Image + `" />`
+
+		// Remove the existing meta OG tag
+		if strings.Contains(htmlContent, `<meta name="twitter:image" content="/assets/metatagsLogo-3d1cffd4.png" />`) {
+			r.logger.Log("IMAGE TAG", contracts.LDebug, "FOUND THE IMAGE TAG")
+			htmlContent = strings.Replace(htmlContent, `<meta name="twitter:image" content="/assets/metatagsLogo-3d1cffd4.png" />`, imageTag, 1)
+			// r.logger.Log("UPDATED HTML: ", contracts.LDebug, htmlContent)
+		}
+
+		if strings.Contains(htmlContent, `<meta property="og:image" content="/assets/metatagsLogo-3d1cffd4.png" />`) {
+			r.logger.Log("IMAGE TAG", contracts.LDebug, "FOUND THE IMAGE TAG")
+			htmlContent = strings.Replace(htmlContent, `<meta property="og:image" content="/assets/metatagsLogo-3d1cffd4.png" />`, imageTag, 1)
+			// r.logger.Log("UPDATED HTML: ", contracts.LDebug, htmlContent)
+		}
 	}
 
 	r.logger.Log("DESC TAG CONTENT: ", contracts.LDebug, descTag)
@@ -269,11 +284,11 @@ func injectMetaTags(htmlContent string, data *MetaData, r *Router) string {
 		insertPosition := headStartIndex + len("<head>")
 
 		// Concatenate titleTag and descTag for insertion
-		tagsToInsert := titleTag + descTag
+		tagsToInsert := titleTag + descTag + twitterTitleTag + twitterDescTag
 
-		if imageTag != `` {
-			tagsToInsert += imageTag
-		}
+		// if imageTag != `` {
+		// 	tagsToInsert += imageTag
+		// }
 
 		// Insert the tags right after the <head> tag
 		htmlContent = htmlContent[:insertPosition] + tagsToInsert + htmlContent[insertPosition:]
