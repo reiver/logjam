@@ -107,7 +107,10 @@ export const MetaImageDialog = ({
             >
                 <div class="flex justify-center items-center p-5 relative">
                     <span class="dark:text-white text-black text-bold-12">{title}</span>
-                    <Icon icon={Close} class="absolute top-1/2 sm:right-5 right-[unset] left-5 sm:left-[unset] transform -translate-y-1/2 cursor-pointer" onClick={() => { onClose(selectedImage, imageFile) }} />
+                    <Icon icon={Close} class="absolute top-1/2 sm:right-5 right-[unset] left-5 sm:left-[unset] transform -translate-y-1/2 cursor-pointer" onClick={() => {
+                        console.log("Closing the Dialog: ",selectedImage)
+                        onClose(selectedImage, imageFile)
+                    }} />
                 </div>
                 <hr class="dark:border-gray-2 border-gray-0 sm:block hidden" />
 
@@ -387,7 +390,7 @@ export const CssFilesDialog = ({
                     <Icon icon={Close} class="absolute top-1/2 sm:right-5 right-[unset] left-5 sm:left-[unset] transform -translate-y-1/2 cursor-pointer" onClick={() => {
                         console.log("NEW CSS DATA: ", cssData)
                         if (selectedFileIndex.value === -1 && cssData != null) {
-                        
+
                             onClose(cssData, 0)
                         } else {
                             console.log("Index type: ", typeof selectedFileIndex.value, " Value: ", selectedFileIndex.value)

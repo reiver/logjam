@@ -19,6 +19,8 @@ import { PocketBaseManager, HostData, RoomData, CSSData, convertRoomDataToFormDa
 
 const PageNotFound = lazy(() => import('../_404'))
 const selectedImage = signal(null)
+const thumbnailUrl = signal(null)
+var resetThumbnail = false
 const selectedCssFile = signal(null)
 const selectedImageFile = signal(null)
 const pbApi = new PocketBaseManager()
@@ -51,7 +53,7 @@ const schema = z.object({
 })
 
 const generateHostUrl = (displayName: string) => {
-  return `${window.location.origin}/${displayName}`
+  return `${window.location.origin}/${displayName}/host`
 }
 
 const generateAudienceUrl = (roomName: string) => {
@@ -117,6 +119,13 @@ export const HostPage = ({ params: { displayName } }: { params?: { displayName?:
       // console.log("Room image: ", room.thumbnail)
       form.setValue('room', room.name);
 
+      if (room.thumbnail != "" && selectedImage.value == null && resetThumbnail == false) {
+        thumbnailUrl.value = `https://pb.greatape.stream/api/files/${room.collectionId}/${room.id}/${room.thumbnail}`
+        console.log("thumbnailUrl: ", thumbnailUrl.value)
+        var img = document.getElementById("thumbnail")
+        img.src = thumbnailUrl.value
+      }
+
       // Programmatically trigger input event on the TextField to mimic user input
       const roomInput = document.querySelector('input[name="room"]');
       roomInput.dispatchEvent(new Event('input', { bubbles: true }));
@@ -155,9 +164,9 @@ export const HostPage = ({ params: { displayName } }: { params?: { displayName?:
 
         const { room, description } = form.getValues(); // Extracting values from the form
         //create new Room
-        var roomData = new RoomData(room, description,null, hostId, "")
-        // var formData = convertRoomDataToFormData(roomData)
-        // console.log("RoomData Thumbnail: ", formData.get('thumbnail'))
+        var roomData = new RoomData(room, description, selectedImageFile.value, hostId, "")
+        var formData = convertRoomDataToFormData(roomData)
+        console.log("RoomData Thumbnail: ", formData.get('thumbnail'))
         createNewRoom(roomData)
 
       }
@@ -185,8 +194,8 @@ export const HostPage = ({ params: { displayName } }: { params?: { displayName?:
         console.log("Selected CSS FILE: ", selectedCssFile.value)
         if (selectedCssFile.value != null) {
           customStyles = selectedCssFile.value.style
-        }else{
-          customStyles=null;
+        } else {
+          customStyles = null;
         }
 
         //fetch latest css files
@@ -208,8 +217,19 @@ export const HostPage = ({ params: { displayName } }: { params?: { displayName?:
 
       },
       async (image, imageFile) => {
+        console.log("selectedImage: ", image)
+        console.log("thumbnailUrl: ", thumbnailUrl.value)
+
         selectedImage.value = image
         selectedImageFile.value = imageFile
+
+        if (selectedImage.value == null) {
+          resetThumbnail = true
+        } else {
+          resetThumbnail = false
+        }
+
+        thumbnailUrl.value = null
       }
     )
   }
@@ -265,7 +285,7 @@ export const HostPage = ({ params: { displayName } }: { params?: { displayName?:
 
                 <div class="flex items-center justify-between relative h-8">
                   <div class={clsx('text-bold-12 text-gray-3')}>Room Link Thumbnail</div>
-                  <img alt="Selected Background Image" className="w-8 h-8 rounded-md float-right cursor-pointer border border-black border-1" src={selectedImage.value ? selectedImage.value : LogoIcon} onClick={() => { showMetaImageDialog(selectedImage.value) }}></img>
+                  <img id="thumbnail" alt="Selected Background Image" className="w-8 h-8 rounded-md float-right cursor-pointer border border-black border-1" src={thumbnailUrl.value ? thumbnailUrl.value : selectedImage.value ? selectedImage.value : LogoIcon} onClick={() => { showMetaImageDialog(thumbnailUrl.value ? thumbnailUrl.value : selectedImage.value) }}></img>
                 </div>
 
               </div>
