@@ -55,7 +55,7 @@ type Response struct {
 }
 
 func fetchRecordFromPocketBase(roomName string) (*Record, error) {
-	url := "https://pb.greatape.stream/api/collections/rooms/records"
+	url := "https://pb.greatape.stream/api/collections/rooms/records?sort=-created"
 
 	// Create a new request using http
 	req, err := http.NewRequest("GET", url, nil)
@@ -82,7 +82,9 @@ func fetchRecordFromPocketBase(roomName string) (*Record, error) {
 		return nil, err
 	}
 
+	// fmt.Println("Response body:", body)
 	record, err := parseResponse(string(body), roomName)
+
 	return record, err
 	// fmt.Println("Response:", string(body))
 }
@@ -224,12 +226,20 @@ func fetchDataForMetaTags(path string) *MetaData {
 	return &MetaData{
 		Title:       myRecord.Name,
 		Description: myRecord.Description,
+		Image:       getImageURL(myRecord),
 	}
+}
+
+func getImageURL(myRecord *Record) string {
+	if myRecord.Thumbnail != "" {
+		return "https://pb.greatape.stream/api/files/" + myRecord.CollectionID + "/" + myRecord.ID + "/" + myRecord.Thumbnail
+	}
+	return "" // Return an empty string or a default image URL if no thumbnail is available
 }
 
 func injectMetaTags(htmlContent string, data *MetaData, r *Router) string {
 	// Inject title and meta description into the HTML content
-	// descriptionTag := `<meta property="og:description" content="` + data.Description + `">`
+
 	if data.Title == "" {
 		data.Title = "GreatApe"
 	}
@@ -240,6 +250,10 @@ func injectMetaTags(htmlContent string, data *MetaData, r *Router) string {
 
 	titleTag := `<meta property="og:title" content="` + data.Title + `">`
 	descTag := `<meta property="og:description" content="` + data.Description + `">`
+	imageTag := ``
+	if data.Image != "" {
+		imageTag = `<meta property="og:image" content="` + data.Image + `" />`
+	}
 
 	r.logger.Log("DESC TAG CONTENT: ", contracts.LDebug, descTag)
 
@@ -257,6 +271,10 @@ func injectMetaTags(htmlContent string, data *MetaData, r *Router) string {
 		// Concatenate titleTag and descTag for insertion
 		tagsToInsert := titleTag + descTag
 
+		if imageTag != `` {
+			tagsToInsert += imageTag
+		}
+
 		// Insert the tags right after the <head> tag
 		htmlContent = htmlContent[:insertPosition] + tagsToInsert + htmlContent[insertPosition:]
 		r.logger.Log("Title and description tags inserted", contracts.LDebug)
@@ -270,6 +288,7 @@ func injectMetaTags(htmlContent string, data *MetaData, r *Router) string {
 type MetaData struct {
 	Title       string
 	Description string
+	Image       string
 }
 
 func (r *Router) Serve(addr string) error {
