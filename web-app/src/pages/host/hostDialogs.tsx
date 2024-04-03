@@ -287,6 +287,8 @@ export const CssFilesDialog = ({
                     selectedFileIndex.value = 0
                     console.log("Selected file index :",selectedFileIndex.value)
 
+                    onClose(cssData, 0)
+                    
                     return
                 }
             } else {
