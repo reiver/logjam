@@ -14,6 +14,7 @@ import imageFolder from 'assets/images/ImageFolder.png'
 import { css } from '@emotion/react'
 import { CSSData, PocketBaseManager } from 'lib/helperAPI'
 const pbApi = new PocketBaseManager()
+const selectedFileIndex = signal(-1)
 
 export const HostDialogPool = () => {
     console.log("Inside HostDialogPool")
@@ -190,13 +191,15 @@ export const CssFilesDialog = ({
     showButtons = true,
     className,
 }) => {
-    const selectedFileIndex = signal(oldIndex)
+    console.log("Redraw: ",selectedFileIndex.value)
     let customStyles = null
     let uploadedFile = null
 
     //set default selection
     setTimeout(() => {
         const radioInput = document.getElementById(`file${selectedFileIndex.value}`) as HTMLInputElement
+        console.log("Updating the radio Button",selectedFileIndex.value)
+
         if (radioInput != null) {
             radioInput.checked = selectedFileIndex.value === selectedFileIndex.value
             radioInput.style.accentColor = 'black'
@@ -280,8 +283,9 @@ export const CssFilesDialog = ({
                     var data = new CSSData('', fileInput.files[0].name, customStyles, hostId)
                     cssData = await createNewCSS(data)
 
-                    cssFiles.value = [...cssFiles.value, cssData];
-                    selectedFileIndex.value = cssFiles.value.length - 1
+                    cssFiles.value = [cssData,...cssFiles.value];
+                    selectedFileIndex.value = 0
+                    console.log("Selected file index :",selectedFileIndex.value)
 
                     return
                 }
