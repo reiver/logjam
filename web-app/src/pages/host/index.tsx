@@ -188,10 +188,11 @@ export const HostPage = ({ params: { displayName } }: { params?: { displayName?:
       async () => {
 
       },
-      async (cssFile, index) => {
+      async (cssFile, index,hash) => {
         oldIndex = index
         selectedCssFile.value = cssFile
         console.log("Selected CSS FILE: ", selectedCssFile.value)
+        console.log("File Hash: ",hash)
         if (selectedCssFile.value != null) {
           customStyles = selectedCssFile.value.style
         } else {

@@ -10,11 +10,12 @@ export class HostData {
 }
 
 export class CSSData {
-  constructor(id, name, style, hostId) {
+  constructor(id, name, style, hostId, fileHash) {
     this.id = id;
     this.name = name;
     this.style = style;
     this.hostId = hostId;
+    this.fileHash = fileHash;
   }
 }
 
@@ -72,6 +73,7 @@ export class PocketBaseManager {
       name: cssData.name,
       hostId: cssData.hostId,
       id: cssData.id,
+      fileHash: cssData.fileHash,
     };
 
     try {
@@ -167,6 +169,17 @@ export class PocketBaseManager {
       const css = await this.pocketBase
         .collection("css")
         .getFirstListItem(`hostId="${hostId}"`);
+      return css;
+    } catch (error) {
+      return error.data;
+    }
+  };
+
+  getCSSbyHash = async (hash,hostId) => {
+    try {
+      const css = await this.pocketBase
+        .collection("css")
+        .getFirstListItem(`fileHash="${hash}" && hostId="${hostId}"`);
       return css;
     } catch (error) {
       return error.data;
