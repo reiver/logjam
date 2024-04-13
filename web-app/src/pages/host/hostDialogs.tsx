@@ -185,15 +185,15 @@ const createNewCSS = async (cssData) => {
         console.log("new CSS Created: ", newCSS)
         return newCSS;
     } else {
-        alert("CSS file with same Content Already exists")
+        alert(`${cssData.name} Already exists`)
     }
 
 
 }
 
-const generateFileHash = async (content) => {
+const generateFileHash = async (fileName, content) => {
     const encoder = new TextEncoder();
-    const data = encoder.encode(content);
+    const data = encoder.encode(fileName + content);
     const hashBuffer = await crypto.subtle.digest('SHA-256', data);
     const hashArray = Array.from(new Uint8Array(hashBuffer));
     const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
@@ -202,6 +202,7 @@ const generateFileHash = async (content) => {
 };
 
 var cssData = null;
+var cssFileName = null
 
 export const CssFilesDialog = ({
     onOk,
@@ -261,7 +262,7 @@ export const CssFilesDialog = ({
                 setTimeout(async () => {
                     console.log('Selected file: ', cssFiles.value[selectedFileIndex.value])
 
-                    var hash = await generateFileHash(cssFiles.value[selectedFileIndex.value])
+                    var hash = await generateFileHash(cssFiles.value[selectedFileIndex.value].style, cssFiles.value[selectedFileIndex.value].name)
                     onClose(cssFiles.value[selectedFileIndex.value], selectedFileIndex.value, hash)
                 }, 200)
             }
@@ -284,9 +285,9 @@ export const CssFilesDialog = ({
         }
 
 
-        setCustomCssContent(event, async (content) => {
+        setCustomCssContent(event, async (content, fileName) => {
 
-            var hash = await generateFileHash(content)
+            var hash = await generateFileHash(fileName, content)
             console.log("HASH OUT: ", hash)
 
             // Regular expression to match class names
@@ -335,13 +336,13 @@ export const CssFilesDialog = ({
 
             reader.onload = (e) => {
                 const content = e.target.result;
-                setContentCallback(content);
+                setContentCallback(content, file.name);
             };
 
             reader.readAsText(file);
         } else {
             // Handle the case where no file is selected
-            setContentCallback(null);
+            setContentCallback(null, null);
         }
     };
 
@@ -426,14 +427,14 @@ export const CssFilesDialog = ({
                     <Icon icon={Close} class="absolute top-1/2 sm:right-5 right-[unset] left-5 sm:left-[unset] transform -translate-y-1/2 cursor-pointer" onClick={async () => {
                         console.log("NEW CSS DATA: ", cssData)
                         if (selectedFileIndex.value === -1 && cssData != null) {
-                            var hash = await generateFileHash(cssData)
+                            var hash = await generateFileHash(cssData.style, cssData.name)
                             onClose(cssData, 0, hash)
                         } else {
                             console.log("Index type: ", typeof selectedFileIndex.value, " Value: ", selectedFileIndex.value)
                             if (selectedFileIndex.value != -1) {
                                 console.log("Index is not -1")
 
-                                var hash = await generateFileHash(cssFiles.value[selectedFileIndex.value])
+                                var hash = await generateFileHash(cssFiles.value[selectedFileIndex.value].style, cssFiles.value[selectedFileIndex.value].name)
                                 onClose(cssFiles.value[selectedFileIndex.value], selectedFileIndex.value, hash)
                             } else {
                                 console.log("Index is -1: ", selectedFileIndex.value)
