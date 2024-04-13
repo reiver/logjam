@@ -74,12 +74,33 @@ export class PocketBaseManager {
       hostId: cssData.hostId,
       id: cssData.id,
       fileHash: cssData.fileHash,
+      lastUsed: false,
     };
 
     try {
       const response = await this.pocketBase
         .collection("css")
         .create(formattedCSSData);
+      return response;
+    } catch (error) {
+      return error.data;
+    }
+  };
+
+  updateCSS = async (cssData,lastUsed) => {
+    const formattedCSSData = {
+      style: cssData.style,
+      name: cssData.name,
+      hostId: cssData.hostId,
+      id: cssData.id,
+      fileHash: cssData.fileHash,
+      lastUsed: lastUsed,
+    };
+
+    try {
+      const response = await this.pocketBase
+        .collection("css")
+        .update(cssData.id, formattedCSSData);
       return response;
     } catch (error) {
       return error.data;
@@ -175,7 +196,7 @@ export class PocketBaseManager {
     }
   };
 
-  getCSSbyHash = async (hash,hostId) => {
+  getCSSbyHash = async (hash, hostId) => {
     try {
       const css = await this.pocketBase
         .collection("css")

@@ -138,7 +138,8 @@ export const MetaImageDialog = ({
 }
 
 export const makeCssFilesDialog = (cssFiles, hostId, oldIndex, type, message, onOk, onClose, options = {}) => {
-    console.log("inside makeCssFilesDialog")
+    console.log("inside makeCssFilesDialog inside oldIndex: ", oldIndex)
+    selectedFileIndex.value = oldIndex
     const id = uuidv4()
     const destroy = () => {
         const dialogsTmp = { ...dialogs.value }
@@ -262,7 +263,10 @@ export const CssFilesDialog = ({
                 setTimeout(async () => {
                     console.log('Selected file: ', cssFiles.value[selectedFileIndex.value])
 
-                    var hash = await generateFileHash(cssFiles.value[selectedFileIndex.value].style, cssFiles.value[selectedFileIndex.value].name)
+                    var hash = null
+                    if (selectedFileIndex.value != -1) {
+                        hash = await generateFileHash(cssFiles.value[selectedFileIndex.value].style, cssFiles.value[selectedFileIndex.value].name)
+                    }
                     onClose(cssFiles.value[selectedFileIndex.value], selectedFileIndex.value, hash)
                 }, 200)
             }
