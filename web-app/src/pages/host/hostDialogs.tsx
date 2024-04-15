@@ -326,7 +326,9 @@ export const CssFilesDialog = ({
                     return
                 }
             } else {
+                alert("Please upload Valid CSS file")
                 console.log("Is Valid false")
+                onClose(null, 0, null)
             }
         });
     };
