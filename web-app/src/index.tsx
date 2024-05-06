@@ -2,15 +2,17 @@ import { ThemeProvider } from '@mui/material/styles'
 import { signal } from '@preact/signals'
 import { render } from 'preact'
 import { ErrorBoundary, LocationProvider, Router, lazy } from 'preact-iso'
+import { ThirdwebProvider } from "@thirdweb-dev/react";
 
 import { muiTheme } from 'theme'
 import './global.css'
 
+const WalletConnect = lazy(() => import('./pages/walletConnect'))
 const Home = lazy(() => import('./pages'))
 const HostPage = lazy(() => import('./pages/host'))
 const AudiencePage = lazy(() => import('./pages/audience'))
 const NotFound = lazy(() => import('./pages/_404.jsx'))
-const AppIcon = lazy(()=>import('./pages/appIcon.jsx'))
+const AppIcon = lazy(() => import('./pages/appIcon.jsx'))
 
 export const userInteractedWithDom = signal(false)
 
@@ -39,19 +41,28 @@ const interval = setInterval(() => {
 export function App() {
   return (
     <ThemeProvider theme={muiTheme}>
-      <LocationProvider>
-        <main>
-          <ErrorBoundary>
-            <Router>
-              <Home path="/" />
-              <AudiencePage path="/log/:room" />
-              <HostPage path="/:displayName/host"/>
-              <AppIcon path="/icon"/>
-              <NotFound default />
-            </Router>
-          </ErrorBoundary>
-        </main>
-      </LocationProvider>
+      <ThirdwebProvider
+        activeChain="ethereum"
+        authConfig={{
+          domain: "localhost:3000",
+          authUrl: "/api/auth",
+        }}
+      >
+        <LocationProvider>
+          <main>
+            <ErrorBoundary>
+              <Router>
+                <Home path="/" />
+                <AudiencePage path="/log/:room" />
+                <HostPage path="/:displayName/host" />
+                <WalletConnect path="/:wallet" />
+                <AppIcon path="/icon" />
+                <NotFound default />
+              </Router>
+            </ErrorBoundary>
+          </main>
+        </LocationProvider>
+      </ThirdwebProvider>
     </ThemeProvider>
   )
 }
