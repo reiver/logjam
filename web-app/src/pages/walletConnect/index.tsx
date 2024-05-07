@@ -1,17 +1,26 @@
-import { ConnectWallet, useSDK } from "@thirdweb-dev/react";
+import { ConnectWallet, resolveAddress, useSDK } from "@thirdweb-dev/react";
 import { useUser, useAddress, useLogin } from "@thirdweb-dev/react";
 import styles from "../../styles/Home.module.css";
 import "../../styles/globals.css"
 import { useState } from "react";
 import { v4 as uuidv4 } from 'uuid';
+import { resolveENS } from "./resolveens";
+import { useEffect } from "preact/hooks";
 
 
 export function WalletConnect() {
+
+    //"vitalik.eth"
+
+
     const address = useAddress()
     const { login } = useLogin()
 
     const [signature, setSignature] = useState('N/A')
     const [addres, setAddres] = useState('N/A')
+    const [message, setMessage] = useState('N/A');
+    const [resolvedEnsAddress, setResolvedEnsAddress] = useState('N/A')
+    const ens = "vitalik.eth"
 
     // const message = 'Please sign me';
 
@@ -55,10 +64,16 @@ export function WalletConnect() {
             .join('\n');
     }
 
-    const message = `localhost:3000 wants you to sign in with your Ethereum account:\n${address}\n\nPlease ensure that the domain above matches the URL of the current website.\n\n${objectToString(loginOptions)}`
+    const messageText = `${window.location.host} wants you to sign in with your Ethereum account:\n${address}\n\nPlease ensure that the domain above matches the URL of the current website.\n\n${objectToString(loginOptions)}`
+
+    useEffect(() => {
+
+        setMessage(messageText)
+
+    }, [])
 
     const signMessage = async () => {
-        const sig = await sdk?.wallet?.sign(message)
+        const sig = await sdk?.wallet?.sign(messageText)
 
         if (!sig) {
             throw new Error('Failed to sign message')
@@ -79,10 +94,10 @@ export function WalletConnect() {
 
 
     return (
-        <div  >
+        <div className={styles.page} >
             <div>
                 <h1 className={styles.div}>
-                    Welcome to GreatApe wallet connect App
+                    <b>Welcome to GreatApe wallet connect App</b>
                 </h1>
 
                 <div className={styles.connect}>
@@ -91,7 +106,7 @@ export function WalletConnect() {
                             loginOptional: true,
                         }} />
                 </div>
-                {address && <p>Address is {address}</p>}
+                {address && <p>Address is <b>{address}</b></p>}
 
                 {/* <button style={styles.button} onClick={() => { login() }}>
                     Sign in with Etheruem
@@ -100,8 +115,30 @@ export function WalletConnect() {
                 <div className={styles.div}>
                     <button onClick={signMessage}>Sign message</button>
                     <br />
-                    <p className={styles.div}>Signature: {signature}</p>
+                    <p className={styles.div}>Message: <b>{message}</b></p>
+                    <p className={styles.div}>Signature: <b>{signature}</b></p>
                 </div>
+
+                <div className={styles.div}>
+                    <button onClick={() => {
+                        resolveENS(ens)
+                            .then((resolvedName) => {
+                                if (resolvedName) {
+                                    console.log('Resolved ENS name:', resolvedName);
+                                    setResolvedEnsAddress(resolvedName)
+                                } else {
+                                    console.log('ENS name could not be resolved');
+                                }
+                            })
+                            .catch((error) => {
+                                console.error('Error resolving ENS name:', error);
+                            });
+                    }}>Resolve ENS</button>
+                    <br />
+                    <p className={styles.div}>Ens: <b>{ens}</b></p>
+                    <p className={styles.div}>Resolved Address: <b>{resolvedEnsAddress}</b></p>
+                </div>
+
                 {/* 
                 <button className={styles.div} onClick={recoverAddress}>Recover Wallet Address</button>
                 <p className={styles.div}>Recovered Wallet Address: {addres}</p> */}

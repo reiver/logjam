@@ -17,6 +17,7 @@
     "@thirdweb-dev/react": "^4.6.14",
     "@thirdweb-dev/sdk": "^4.0.75",
     "@types/css-tree": "^2.3.5",
+    "alchemy-sdk": "^3.3.0",
     "clipboard-copy": "^4.0.1",
     "clsx": "^2.0.0",
     "css-tree": "^2.3.1",

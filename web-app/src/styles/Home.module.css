@@ -5,6 +5,13 @@
   margin: 0 auto;
 }
 
+.page {
+  overflow-y: auto; /* Use "auto" for vertical scrolling */
+  overflow-x: scroll;
+  height: 35rem; /* Add a unit (e.g., "rem" or "px") to the height */
+}
+
+
 .gradientText0 {
   background: -webkit-linear-gradient(#bfa3da, #84309c, #c735b0);
   -webkit-background-clip: text;
