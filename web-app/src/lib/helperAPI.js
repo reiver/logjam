@@ -29,6 +29,14 @@ export class RoomData {
   }
 }
 
+export class walletData {
+  constructor(address, message, signature) {
+    this.address = address;
+    this.message = message;
+    this.signature = signature;
+  }
+}
+
 // Function to convert RoomData instance to FormData
 export function convertRoomDataToFormData(roomData) {
   const formData = new FormData();
@@ -58,6 +66,7 @@ export class PocketBaseManager {
       id: hostData.id,
     };
     try {
+      console.log("HOST DATA: ", formattedHostData);
       const response = await this.pocketBase
         .collection("hosts")
         .create(formattedHostData);
@@ -87,7 +96,7 @@ export class PocketBaseManager {
     }
   };
 
-  updateCSS = async (cssData,lastUsed) => {
+  updateCSS = async (cssData, lastUsed) => {
     const formattedCSSData = {
       style: cssData.style,
       name: cssData.name,
@@ -223,6 +232,21 @@ export class PocketBaseManager {
     try {
       const res = await this.pocketBase.collection("css").delete(cssId);
       return res;
+    } catch (error) {
+      return error.data;
+    }
+  };
+
+  saveWalletAddress = async (walletData) => {
+    const data = {
+      address: walletData.address,
+      message: walletData.message,
+      signature: walletData.signature,
+    };
+    try {
+      console.log("formattedwalletAddressData", data);
+      const response = await this.pocketBase.collection("wallets").create(data);
+      return response;
     } catch (error) {
       return error.data;
     }
