@@ -22,6 +22,11 @@ const WalletConnect = () => {
     const [message, setMessage] = useState('N/A');
     const [resolvedEnsAddress, setResolvedEnsAddress] = useState('N/A');
     const ens = "vitalik.eth";
+    const [ensInput, setEnsInput] = useState(''); // State to store the user's ENS input
+
+    const handleEnsInputChange = (event) => {
+        setEnsInput(event.target.value); // Update the ENS input state when the user types
+    };
 
     useEffect(() => {
         const currentDate = new Date();
@@ -65,7 +70,7 @@ const WalletConnect = () => {
 
     const resolveENSAddress = async () => {
         try {
-            const resolvedName = await resolveENS(ens);
+            const resolvedName = await resolveENS(ensInput);
             if (resolvedName) {
                 setResolvedEnsAddress(resolvedName);
             } else {
@@ -98,10 +103,20 @@ const WalletConnect = () => {
                     <p className={styles.div}>Signature: <b>{signature}</b></p>
                 </div>
 
+
                 <div className={styles.div}>
+                    <input className={styles.input}
+                        type="text"
+                        value={ensInput}
+                        onChange={handleEnsInputChange}
+                        placeholder="Enter ENS"
+                    />
+                </div>
+                <div className={styles.div}>
+
                     <button onClick={resolveENSAddress}>Resolve ENS</button>
                     <br />
-                    <p className={styles.div}>Ens: <b>{ens}</b></p>
+                    <p className={styles.div}>Ens: <b>{ensInput}</b></p>
                     <p className={styles.div}>Resolved Address: <b>{resolvedEnsAddress}</b></p>
                 </div>
 

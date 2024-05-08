@@ -11,6 +11,16 @@
   height: 35rem; /* Add a unit (e.g., "rem" or "px") to the height */
 }
 
+.input {
+  border: 1px solid #ccc; /* You can adjust the color and thickness of the border */
+  padding: 8px; /* Optional: Add padding for better visual appearance */
+  border-radius: 5px; /* Optional: Add border-radius for rounded corners */
+}
+
+/* Optional: Style for placeholder text */
+.input input::placeholder {
+  color: #999; /* Adjust placeholder text color */
+}
 
 .gradientText0 {
   background: -webkit-linear-gradient(#bfa3da, #84309c, #c735b0);
