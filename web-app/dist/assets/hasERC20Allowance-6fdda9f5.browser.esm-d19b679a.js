@@ -1,0 +1,1 @@
+import{_ as l,a7 as w}from"./index-eb1f45ee.js";async function g(e,a,t){const n=e.getProvider(),r=(await l(()=>import("./index-eb1f45ee.js").then(d=>d.eG),["assets/index-eb1f45ee.js","assets/index-36f85667.css"])).default,s=new w(n,a,r,{},e.storage),o=await e.getSignerAddress(),i=e.address;return(await s.read("allowance",[o,i])).gte(t)}export{g as h};

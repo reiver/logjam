@@ -3,7 +3,7 @@ import { ConnectWallet, useSDK, useAddress, useLogin } from "@thirdweb-dev/react
 import styles from "../../styles/Home.module.css";
 import "../../styles/globals.css";
 import { v4 as uuidv4 } from 'uuid';
-import { resolveENS } from "./resolveens";
+import { lookUpENS, resolveENS } from "./resolveens";
 import { PocketBaseManager, walletData } from "lib/helperAPI";
 
 const pbApi = new PocketBaseManager();
@@ -21,6 +21,8 @@ const WalletConnect = () => {
     const [signature, setSignature] = useState('N/A');
     const [message, setMessage] = useState('N/A');
     const [resolvedEnsAddress, setResolvedEnsAddress] = useState('N/A');
+    const [resolvedWalletAddress, setResolvedWalletAddress] = useState('N/A');
+
     const ens = "vitalik.eth";
     const [ensInput, setEnsInput] = useState(''); // State to store the user's ENS input
 
@@ -74,10 +76,23 @@ const WalletConnect = () => {
             if (resolvedName) {
                 setResolvedEnsAddress(resolvedName);
             } else {
-                console.log('ENS name could not be resolved');
+                setResolvedEnsAddress('ENS name could not be resolved');
             }
         } catch (error) {
             console.error('Error resolving ENS name:', error);
+        }
+    }
+
+    const lookupAddress = async () => {
+        try {
+            const resolvedName = await lookUpENS(address);
+            if (resolvedName) {
+                setResolvedWalletAddress(resolvedName);
+            } else {
+                setResolvedWalletAddress('Wallet Address could not be resolved')
+            }
+        } catch (error) {
+            console.error('Error resolving Wallet address:', error);
         }
     }
 
@@ -95,6 +110,12 @@ const WalletConnect = () => {
                         }} />
                 </div>
                 {address && <p>Address is <b>{address}</b></p>}
+
+                <div className={styles.div}>
+                    <button onClick={lookupAddress}>Lookup Address</button>
+                    <br />
+                    <p className={styles.div}>Linked ENS is: <b>{resolvedWalletAddress}</b></p>
+                </div>
 
                 <div className={styles.div}>
                     <button onClick={signMessage}>Sign message</button>

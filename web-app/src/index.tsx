@@ -38,6 +38,10 @@ const interval = setInterval(() => {
   }
 }, 500)
 
+const connectors = {
+  injected: {}
+};
+
 export function App() {
   return (
     <ThemeProvider theme={muiTheme}>
