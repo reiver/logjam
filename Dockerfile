@@ -12,6 +12,7 @@ RUN apt update && apt install wget curl htop nano tar xz-utils unzip gzip net-to
 
 WORKDIR /backend
 COPY --from=build-stage /backend/logjam ./logjam
+COPY ./web-app  ./
 
 EXPOSE 8080
 
