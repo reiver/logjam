@@ -62,6 +62,7 @@ const generateAudienceUrl = (roomName: string) => {
 
 
 var customStyles = null;
+var hostDataFetched = false
 
 
 export const HostPage = ({ params: { displayName } }: { params?: { displayName?: string } }) => {
@@ -104,7 +105,16 @@ export const HostPage = ({ params: { displayName } }: { params?: { displayName?:
       if (cssList.value.code != undefined && cssList.value.code == 404) {
         console.log("cssByHost: ", cssList.value.message)
       } else {
-        console.log("cssByHost: ", css)
+        // console.log("cssByHost: ", css)
+        cssList.value.forEach((file, index) => {
+          if (file.lastUsed === true) {
+            console.log(`last used file:`, file)
+            console.log(`last used index:`, index)
+
+            selectedCssFile.value = file;
+            oldIndex = index
+          }
+        })
       }
     }
 
@@ -145,12 +155,18 @@ export const HostPage = ({ params: { displayName } }: { params?: { displayName?:
   if (displayName) {
     if (displayName[0] !== '@') return <PageNotFound />
 
-    fetchHostData()
+    if (!hostDataFetched) {
+      fetchHostData()
+      hostDataFetched = true
+    }
   }
 
 
   const onSubmit = () => {
     const { description } = form.getValues(); // Extracting values from the form
+
+    //update css last used
+    updateCSSFilesLastUsedStatus(cssList.value)
 
     // Generating URLs and updating meta tags
     // updateMetaTags("GreatApe", description, "/assets/metatagsLogo-3d1cffd4.png");
@@ -173,6 +189,17 @@ export const HostPage = ({ params: { displayName } }: { params?: { displayName?:
     })
   }
 
+  const updateCSSFilesLastUsedStatus = (cssFiles) => {
+    cssFiles.forEach(async file => {
+      if (file.id === selectedCssFile.value.id) {
+        console.log(`Updating true ${selectedCssFile.value}`)
+        const updatedFile = await pbApi.updateCSS(file, true)
+      } else {
+        console.log(`Updating false ${selectedCssFile.value}`)
+        const updatedFile = await pbApi.updateCSS(file, false)
+      }
+    });
+  }
 
   const showCssFilesDialog = (cssFiles) => {
 
@@ -188,10 +215,11 @@ export const HostPage = ({ params: { displayName } }: { params?: { displayName?:
       async () => {
 
       },
-      async (cssFile, index) => {
+      async (cssFile, index, hash) => {
         oldIndex = index
         selectedCssFile.value = cssFile
         console.log("Selected CSS FILE: ", selectedCssFile.value)
+        console.log("File Hash: ", hash)
         if (selectedCssFile.value != null) {
           customStyles = selectedCssFile.value.style
         } else {

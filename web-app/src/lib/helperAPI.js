@@ -10,11 +10,12 @@ export class HostData {
 }
 
 export class CSSData {
-  constructor(id, name, style, hostId) {
+  constructor(id, name, style, hostId, fileHash) {
     this.id = id;
     this.name = name;
     this.style = style;
     this.hostId = hostId;
+    this.fileHash = fileHash;
   }
 }
 
@@ -72,12 +73,34 @@ export class PocketBaseManager {
       name: cssData.name,
       hostId: cssData.hostId,
       id: cssData.id,
+      fileHash: cssData.fileHash,
+      lastUsed: false,
     };
 
     try {
       const response = await this.pocketBase
         .collection("css")
         .create(formattedCSSData);
+      return response;
+    } catch (error) {
+      return error.data;
+    }
+  };
+
+  updateCSS = async (cssData,lastUsed) => {
+    const formattedCSSData = {
+      style: cssData.style,
+      name: cssData.name,
+      hostId: cssData.hostId,
+      id: cssData.id,
+      fileHash: cssData.fileHash,
+      lastUsed: lastUsed,
+    };
+
+    try {
+      const response = await this.pocketBase
+        .collection("css")
+        .update(cssData.id, formattedCSSData);
       return response;
     } catch (error) {
       return error.data;
@@ -167,6 +190,17 @@ export class PocketBaseManager {
       const css = await this.pocketBase
         .collection("css")
         .getFirstListItem(`hostId="${hostId}"`);
+      return css;
+    } catch (error) {
+      return error.data;
+    }
+  };
+
+  getCSSbyHash = async (hash, hostId) => {
+    try {
+      const css = await this.pocketBase
+        .collection("css")
+        .getFirstListItem(`fileHash="${hash}" && hostId="${hostId}"`);
       return css;
     } catch (error) {
       return error.data;

@@ -118,7 +118,7 @@ func (r *Router) RegisterRoutes() error {
 
 	r.router.PathPrefix("/").HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 
-		r.logger.Log("URL: ", contracts.LDebug, req.URL.Path)
+		r.logger.Log("URL: ", contracts.LDebug, req.URL.Host)
 		metaData := fetchDataForMetaTags(req.URL.Path) // Implement this to fetch meta data based on the request
 
 		// Read the existing index.html file
@@ -130,6 +130,9 @@ func (r *Router) RegisterRoutes() error {
 
 		// Modify the HTML content to include the dynamic title and description
 		modifiedHTML := injectMetaTags(string(htmlContent), metaData, r)
+
+		modifiedHTML = injectFcFrame(string(modifiedHTML), metaData, r, req)
+
 		// r.logger.Log("Modified HTML", contracts.LDebug, modifiedHTML)
 
 		// Serve the modified HTML content
@@ -235,6 +238,61 @@ func getImageURL(myRecord *Record) string {
 		return "https://pb.greatape.stream/api/files/" + myRecord.CollectionID + "/" + myRecord.ID + "/" + myRecord.Thumbnail
 	}
 	return "" // Return an empty string or a default image URL if no thumbnail is available
+}
+
+func injectFcFrame(htmlContent string, data *MetaData, r *Router, req *http.Request) string {
+
+	r.logger.Log("URL HOST: ", contracts.LDebug, req.Host)
+	r.logger.Log("URL RAW: ", contracts.LDebug, req.URL.String())
+
+	r.logger.Log("URL PATH: ", contracts.LDebug, req.URL.Path)
+	scheme := "http://"
+
+	if req.TLS != nil {
+		scheme = "https://"
+	}
+
+	fcFrameImage := `<meta property="fc:frame:image" content="` + data.Image + `" />`
+
+	if data.Image != "" {
+		oldImage := `<meta property="fc:frame:image" content="https://pb.greatape.stream/api/files/yv1btrvt3f5v8bb/oa95bq8ssoqfy5m/metatags_logo_RLFIF2h1Sm.png" />`
+		if strings.Contains(htmlContent, oldImage) {
+			r.logger.Log("IMAGE TAG", contracts.LDebug, "FOUND THE IMAGE TAG")
+			htmlContent = strings.Replace(htmlContent, oldImage, fcFrameImage, 1)
+		}
+
+	}
+
+	fcFrameTag := `<meta property="fc:frame" content="vNext" />`
+
+	fcFrameButton1 := `<meta property="fc:frame:button:1" content="Join the Meeting" />`
+	fcFrameButton1Action := `<meta name="fc:frame:button:1:action" content="link" />`
+	fcFrameButton1Target := `<meta name="fc:frame:button:1:target" content="` + scheme + req.Host + req.URL.Path + `" />`
+
+	fcFrameButton2 := `<meta property="fc:frame:button:2" content="Go to Home" />`
+	fcFrameButton2Action := `<meta name="fc:frame:button:2:action" content="link" />`
+	fcFrameButton2Target := `<meta name="fc:frame:button:2:target" content="` + scheme + req.Host + `" />`
+
+	fcFrameButton3 := `<meta property="fc:frame:button:3" content="Visit profile" />`
+	fcFrameButton3Action := `<meta name="fc:frame:button:3:action" content="link" />`
+	fcFrameButton3Target := `<meta name="fc:frame:button:3:target" content="` + scheme + req.Host + `" />`
+
+	headStartIndex := strings.Index(htmlContent, "<head>")
+	if headStartIndex != -1 {
+		// Position to insert after <head> tag
+		insertPosition := headStartIndex + len("<head>")
+
+		// Concatenate titleTag and descTag for insertion
+		tagsToInsert := fcFrameTag + fcFrameImage + fcFrameButton1 + fcFrameButton1Action + fcFrameButton1Target + fcFrameButton2 + fcFrameButton2Action + fcFrameButton2Target + fcFrameButton3 + fcFrameButton3Action + fcFrameButton3Target
+
+		// Insert the tags right after the <head> tag
+		htmlContent = htmlContent[:insertPosition] + tagsToInsert + htmlContent[insertPosition:]
+		r.logger.Log("FC Frame inserted", contracts.LDebug)
+	} else {
+		r.logger.Log("No <head> tag found, cannot insert tags", contracts.LDebug)
+	}
+
+	return htmlContent
 }
 
 func injectMetaTags(htmlContent string, data *MetaData, r *Router) string {

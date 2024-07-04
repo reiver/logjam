@@ -14,6 +14,7 @@ import imageFolder from 'assets/images/ImageFolder.png'
 import { css } from '@emotion/react'
 import { CSSData, PocketBaseManager } from 'lib/helperAPI'
 const pbApi = new PocketBaseManager()
+const selectedFileIndex = signal(-1)
 
 export const HostDialogPool = () => {
     console.log("Inside HostDialogPool")
@@ -108,7 +109,7 @@ export const MetaImageDialog = ({
                 <div class="flex justify-center items-center p-5 relative">
                     <span class="dark:text-white text-black text-bold-12">{title}</span>
                     <Icon icon={Close} class="absolute top-1/2 sm:right-5 right-[unset] left-5 sm:left-[unset] transform -translate-y-1/2 cursor-pointer" onClick={() => {
-                        console.log("Closing the Dialog: ",selectedImage)
+                        console.log("Closing the Dialog: ", selectedImage)
                         onClose(selectedImage, imageFile)
                     }} />
                 </div>
@@ -137,7 +138,8 @@ export const MetaImageDialog = ({
 }
 
 export const makeCssFilesDialog = (cssFiles, hostId, oldIndex, type, message, onOk, onClose, options = {}) => {
-    console.log("inside makeCssFilesDialog")
+    console.log("inside makeCssFilesDialog inside oldIndex: ", oldIndex)
+    selectedFileIndex.value = oldIndex
     const id = uuidv4()
     const destroy = () => {
         const dialogsTmp = { ...dialogs.value }
@@ -159,9 +161,9 @@ export const makeCssFilesDialog = (cssFiles, hostId, oldIndex, type, message, on
                 onOk && onOk()
                 destroy()
             },
-            onClose: async (cssFile, index) => {
+            onClose: async (cssFile, index, hash) => {
 
-                onClose && onClose(cssFile, index)
+                onClose && onClose(cssFile, index, hash)
                 destroy()
             },
             ...options,
@@ -172,11 +174,36 @@ export const makeCssFilesDialog = (cssFiles, hostId, oldIndex, type, message, on
 }
 
 const createNewCSS = async (cssData) => {
-    var newCSS = await pbApi.createCSS(cssData)
-    console.log("new CSS Created: ", newCSS)
-    return newCSS;
+
+    //check if file hash Exists already
+    var cssByHash = await pbApi.getCSSbyHash(cssData.fileHash, cssData.hostId)
+    console.log("CSS BY HASH: ", cssByHash)
+    if (cssByHash.code == 404) {
+        //no file with this hash exists
+        //upload this new file
+
+        var newCSS = await pbApi.createCSS(cssData)
+        console.log("new CSS Created: ", newCSS)
+        return newCSS;
+    } else {
+        alert(`${cssData.name} Already exists`)
+    }
+
+
 }
+
+const generateFileHash = async (fileName, content) => {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(fileName + content);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    console.log("HASH INSIDE: ", hashHex)
+    return hashHex;
+};
+
 var cssData = null;
+var cssFileName = null
 
 export const CssFilesDialog = ({
     onOk,
@@ -190,13 +217,15 @@ export const CssFilesDialog = ({
     showButtons = true,
     className,
 }) => {
-    const selectedFileIndex = signal(oldIndex)
+    console.log("Redraw: ", selectedFileIndex.value)
     let customStyles = null
     let uploadedFile = null
 
     //set default selection
     setTimeout(() => {
         const radioInput = document.getElementById(`file${selectedFileIndex.value}`) as HTMLInputElement
+        console.log("Updating the radio Button", selectedFileIndex.value)
+
         if (radioInput != null) {
             radioInput.checked = selectedFileIndex.value === selectedFileIndex.value
             radioInput.style.accentColor = 'black'
@@ -231,9 +260,14 @@ export const CssFilesDialog = ({
             radioInput.checked = selectedFileIndex.value === index
             radioInput.style.accentColor = 'black'
             if (vanish) {
-                setTimeout(() => {
+                setTimeout(async () => {
                     console.log('Selected file: ', cssFiles.value[selectedFileIndex.value])
-                    onClose(cssFiles.value[selectedFileIndex.value], selectedFileIndex.value)
+
+                    var hash = null
+                    if (selectedFileIndex.value != -1) {
+                        hash = await generateFileHash(cssFiles.value[selectedFileIndex.value].style, cssFiles.value[selectedFileIndex.value].name)
+                    }
+                    onClose(cssFiles.value[selectedFileIndex.value], selectedFileIndex.value, hash)
                 }, 200)
             }
         }
@@ -255,7 +289,10 @@ export const CssFilesDialog = ({
         }
 
 
-        setCustomCssContent(event, async (content) => {
+        setCustomCssContent(event, async (content, fileName) => {
+
+            var hash = await generateFileHash(fileName, content)
+            console.log("HASH OUT: ", hash)
 
             // Regular expression to match class names
             const cssClassRegex = /\.([a-zA-Z0-9_-]+)/g;
@@ -277,16 +314,21 @@ export const CssFilesDialog = ({
 
 
                     // //user uploaded valid css... Now save this css to DB
-                    var data = new CSSData('', fileInput.files[0].name, customStyles, hostId)
+                    var data = new CSSData('', fileInput.files[0].name, customStyles, hostId, hash)
                     cssData = await createNewCSS(data)
 
-                    cssFiles.value = [...cssFiles.value, cssData];
-                    selectedFileIndex.value = cssFiles.value.length - 1
+                    cssFiles.value = [cssData, ...cssFiles.value];
+                    selectedFileIndex.value = 0
+                    console.log("Selected file index :", selectedFileIndex.value)
+
+                    onClose(cssData, 0, hash)
 
                     return
                 }
             } else {
+                alert("Please upload Valid CSS file")
                 console.log("Is Valid false")
+                onClose(null, 0, null)
             }
         });
     };
@@ -300,15 +342,16 @@ export const CssFilesDialog = ({
 
             reader.onload = (e) => {
                 const content = e.target.result;
-                setContentCallback(content);
+                setContentCallback(content, file.name);
             };
 
             reader.readAsText(file);
         } else {
             // Handle the case where no file is selected
-            setContentCallback(null);
+            setContentCallback(null, null);
         }
     };
+
 
     // Define an array to store all the CSS class names from the provided CSS content
     const cssClassNames: string[] = [];
@@ -387,21 +430,22 @@ export const CssFilesDialog = ({
             >
                 <div class="flex justify-center items-center p-5 relative">
                     <span class="dark:text-white text-black text-bold-12">{title}</span>
-                    <Icon icon={Close} class="absolute top-1/2 sm:right-5 right-[unset] left-5 sm:left-[unset] transform -translate-y-1/2 cursor-pointer" onClick={() => {
+                    <Icon icon={Close} class="absolute top-1/2 sm:right-5 right-[unset] left-5 sm:left-[unset] transform -translate-y-1/2 cursor-pointer" onClick={async () => {
                         console.log("NEW CSS DATA: ", cssData)
                         if (selectedFileIndex.value === -1 && cssData != null) {
-
-                            onClose(cssData, 0)
+                            var hash = await generateFileHash(cssData.style, cssData.name)
+                            onClose(cssData, 0, hash)
                         } else {
                             console.log("Index type: ", typeof selectedFileIndex.value, " Value: ", selectedFileIndex.value)
                             if (selectedFileIndex.value != -1) {
                                 console.log("Index is not -1")
 
-                                onClose(cssFiles.value[selectedFileIndex.value], selectedFileIndex.value)
+                                var hash = await generateFileHash(cssFiles.value[selectedFileIndex.value].style, cssFiles.value[selectedFileIndex.value].name)
+                                onClose(cssFiles.value[selectedFileIndex.value], selectedFileIndex.value, hash)
                             } else {
                                 console.log("Index is -1: ", selectedFileIndex.value)
 
-                                onClose(null, selectedFileIndex.value)
+                                onClose(null, selectedFileIndex.value, null)
                             }
                         }
                     }} />
