@@ -67,6 +67,7 @@ var customStyles = null;
 export const HostPage = ({ params: { displayName } }: { params?: { displayName?: string } }) => {
   const [started, setStarted] = useState(false)
   const [showModal, setShowModal] = useState(false)
+  const [isUserCameFromGreatApe, setIsUserCameFromGreatApe] = useState(false)
 
   const form = useForm({
     defaultValues:
@@ -126,7 +127,7 @@ export const HostPage = ({ params: { displayName } }: { params?: { displayName?:
         img.src = thumbnailUrl.value
       }
 
-      // Programmatically trigger input event on the TextField to mimic user input
+      // // Programmatically trigger input event on the TextField to mimic user input
       const roomInput = document.querySelector('input[name="room"]');
       roomInput.dispatchEvent(new Event('input', { bubbles: true }));
 
@@ -141,11 +142,34 @@ export const HostPage = ({ params: { displayName } }: { params?: { displayName?:
 
   }
 
+  const checkUserIsDirectedFromGreatApe = async () => {
+    const searchParams = new URLSearchParams(location.search);
+
+    console.log("Search Params: ", searchParams)
+
+    // Check if the 'from' parameter exists
+    if (searchParams.has('from')) {
+      const fromValue = searchParams.get('from');
+      console.log('Parameter exists:', fromValue);
+
+      if (fromValue == "ga") {
+        console.log("User is directed from GreatApe")
+        setIsUserCameFromGreatApe(true)
+      }
+
+    } else {
+      console.log('Parameter does not exist');
+    }
+  }
+
 
   if (displayName) {
     if (displayName[0] !== '@') return <PageNotFound />
 
     fetchHostData()
+
+    //check where user it directed from
+    checkUserIsDirectedFromGreatApe()
   }
 
 
@@ -172,6 +196,18 @@ export const HostPage = ({ params: { displayName } }: { params?: { displayName?:
       }
     })
   }
+
+  const handleRedirectBackToGreatApe = () => {
+    console.log("Go back to GreatApe");
+
+    // Define the target URL
+    const redirectUrl = "http://localhost:3001/u/mianzaid";
+
+    // Open the URL in a new tab
+    window.open(redirectUrl, "_blank");
+  };
+
+
 
 
   const showCssFilesDialog = (cssFiles) => {
@@ -293,9 +329,13 @@ export const HostPage = ({ params: { displayName } }: { params?: { displayName?:
                 <Button onClick={handleCreateLink} variant="outlined" className="w-full normal-case" sx={{ textTransform: 'none' }}>
                   Create Link
                 </Button>
+                {isUserCameFromGreatApe && <Button onClick={handleRedirectBackToGreatApe} variant="outlined" className="w-full normal-case" sx={{ textTransform: 'none' }}>
+                  Back to GreatApe
+                </Button>}
                 <Button type="submit" variant="contained" className="w-full normal-case" sx={{ textTransform: 'none' }} color="primary">
                   Start Now
                 </Button>
+
               </div>
             </div>
 
