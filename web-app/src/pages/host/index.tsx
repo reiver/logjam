@@ -11,7 +11,7 @@ import { lazy } from 'preact-iso'
 import { useEffect, useState } from 'preact/compat'
 import { useForm } from 'react-hook-form'
 import { HostToastProvider, makeCssFilesDialog, makeMetaImageDialog } from '../host/hostDialogs'
-import z from 'zod'
+import z, { any } from 'zod'
 import { parse } from 'postcss'
 import * as csstree from 'css-tree';
 import { signal } from '@preact/signals'
@@ -27,6 +27,9 @@ const pbApi = new PocketBaseManager()
 var oldIndex = -1;
 var hostId = null
 const cssList = signal(null);
+
+
+
 
 const createNewHost = async (hostData) => {
   var newHost = await pbApi.createHost(hostData)
@@ -68,6 +71,20 @@ export const HostPage = ({ params: { displayName } }: { params?: { displayName?:
   const [started, setStarted] = useState(false)
   const [showModal, setShowModal] = useState(false)
   const [isUserCameFromGreatApe, setIsUserCameFromGreatApe] = useState(false)
+  const [meetingLinkCreated, setMeetingLinkCreated] = useState(false)
+  const [greatApeEvent, setGreatApeEvent] = useState(undefined)
+
+
+  const [hostLink, setHostLink] = useState("");
+  const [audienceLink, setAudienceLink] = useState("");
+
+
+  window.addEventListener("message", (event) => {
+    if (`${event.origin}/` === event.data.url) { // Validate the sender's origin
+      setIsUserCameFromGreatApe(true)
+      setGreatApeEvent(event)
+    }
+  });
 
   const form = useForm({
     defaultValues:
@@ -142,34 +159,12 @@ export const HostPage = ({ params: { displayName } }: { params?: { displayName?:
 
   }
 
-  const checkUserIsDirectedFromGreatApe = async () => {
-    const searchParams = new URLSearchParams(location.search);
-
-    console.log("Search Params: ", searchParams)
-
-    // Check if the 'from' parameter exists
-    if (searchParams.has('from')) {
-      const fromValue = searchParams.get('from');
-      console.log('Parameter exists:', fromValue);
-
-      if (fromValue == "ga") {
-        console.log("User is directed from GreatApe")
-        setIsUserCameFromGreatApe(true)
-      }
-
-    } else {
-      console.log('Parameter does not exist');
-    }
-  }
-
 
   if (displayName) {
     if (displayName[0] !== '@') return <PageNotFound />
 
     fetchHostData()
 
-    //check where user it directed from
-    checkUserIsDirectedFromGreatApe()
   }
 
 
@@ -198,13 +193,19 @@ export const HostPage = ({ params: { displayName } }: { params?: { displayName?:
   }
 
   const handleRedirectBackToGreatApe = () => {
-    console.log("Go back to GreatApe");
+    // Post a response message back to the origin window
+    greatApeEvent.source.postMessage(
+      {
+        audienceLink: audienceLink,
+        hostLink: hostLink,
+      },
+      {
+        targetOrigin: greatApeEvent.origin as string
+      }
+    );
 
-    // Define the target URL
-    const redirectUrl = "http://localhost:3001/u/mianzaid";
+    window.close()
 
-    // Open the URL in a new tab
-    window.open(redirectUrl, "_blank");
   };
 
 
@@ -270,6 +271,16 @@ export const HostPage = ({ params: { displayName } }: { params?: { displayName?:
     )
   }
 
+  useEffect(() => {
+    if (showModal) {
+      const host = generateHostUrl('@' + form.getValues('displayName'));
+      const audience = generateAudienceUrl(form.getValues('room'));
+      setHostLink(host);
+      setAudienceLink(audience);
+      setMeetingLinkCreated(true)
+    }
+  }, [showModal, form])
+
 
 
   if (!started)
@@ -329,7 +340,7 @@ export const HostPage = ({ params: { displayName } }: { params?: { displayName?:
                 <Button onClick={handleCreateLink} variant="outlined" className="w-full normal-case" sx={{ textTransform: 'none' }}>
                   Create Link
                 </Button>
-                {isUserCameFromGreatApe && <Button onClick={handleRedirectBackToGreatApe} variant="outlined" className="w-full normal-case" sx={{ textTransform: 'none' }}>
+                {isUserCameFromGreatApe && meetingLinkCreated && <Button onClick={handleRedirectBackToGreatApe} variant="outlined" className="w-full normal-case" sx={{ textTransform: 'none' }}>
                   Back to GreatApe
                 </Button>}
                 <Button type="submit" variant="contained" className="w-full normal-case" sx={{ textTransform: 'none' }} color="primary">
@@ -346,8 +357,8 @@ export const HostPage = ({ params: { displayName } }: { params?: { displayName?:
             <hr className="mt-4 mb-1 border-white md:border-gray-0" />
             <div className="p-5 flex flex-col gap-5 pb-6">
               <span class="text-bold-12 text-gray-2">Copy and use host’s link for yourself, and audience link for sending to others:</span>
-              <LinkCopyComponent title="Host's Link:" link={generateHostUrl('@' + form.getValues('displayName'))} />
-              <LinkCopyComponent title="Audience’s Link:" link={generateAudienceUrl(form.getValues('room'))} />
+              <LinkCopyComponent title="Host's Link:" link={hostLink} />
+              <LinkCopyComponent title="Audience’s Link:" link={audienceLink} />
             </div>
           </ResponsiveModal>
         </div>
