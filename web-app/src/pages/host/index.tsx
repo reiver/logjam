@@ -72,19 +72,31 @@ export const HostPage = ({ params: { displayName } }: { params?: { displayName?:
   const [showModal, setShowModal] = useState(false)
   const [isUserCameFromGreatApe, setIsUserCameFromGreatApe] = useState(false)
   const [meetingLinkCreated, setMeetingLinkCreated] = useState(false)
-  const [greatApeEvent, setGreatApeEvent] = useState(undefined)
-
-
   const [hostLink, setHostLink] = useState("");
   const [audienceLink, setAudienceLink] = useState("");
+  const [gaUrl, setGaUrl] = useState("")
 
+  // On page load, parse the hash for data
+  const hashData = window.location.hash.split("#data=")[1];
 
-  window.addEventListener("message", (event) => {
-    if (`${event.origin}/` === event.data.url) { // Validate the sender's origin
-      setIsUserCameFromGreatApe(true)
-      setGreatApeEvent(event)
+  if (hashData) {
+    try {
+      // Decode and parse the received data
+      const receivedData = JSON.parse(decodeURIComponent(hashData));
+
+      if (receivedData.from == "greatape") {
+        setIsUserCameFromGreatApe(true)
+        setGaUrl(receivedData.url)
+      }
+
+      window.location.hash = "";
+    } catch (error) {
+      console.error("Failed to parse hash data:", error);
+      window.location.hash = "";
     }
-  });
+  } else {
+    console.log("No data received in URL hash.");
+  }
 
   const form = useForm({
     defaultValues:
@@ -193,19 +205,21 @@ export const HostPage = ({ params: { displayName } }: { params?: { displayName?:
   }
 
   const handleRedirectBackToGreatApe = () => {
-    // Post a response message back to the origin window
-    greatApeEvent.source.postMessage(
-      {
-        audienceLink: audienceLink,
-        hostLink: hostLink,
-      },
-      {
-        targetOrigin: greatApeEvent.origin as string
-      }
-    );
 
-    window.close()
+    // Prepare the data to send
+    const dataToSend = {
+      from: "logjam",
+      audienceLink: audienceLink,
+    };
 
+    // Serialize the data into a URL hash
+    const hashData = encodeURIComponent(JSON.stringify(dataToSend));
+
+    // Define the target URL with hash
+    const redirectUrl = `${gaUrl}#data=${hashData}`;
+
+    // Redirect to the target URL
+    window.location.href = redirectUrl;
   };
 
 
