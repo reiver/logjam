@@ -76,27 +76,30 @@ export const HostPage = ({ params: { displayName } }: { params?: { displayName?:
   const [audienceLink, setAudienceLink] = useState("");
   const [gaUrl, setGaUrl] = useState("")
 
-  // On page load, parse the hash for data
-  const hashData = window.location.hash.split("#data=")[1];
+  useEffect(() => {
+    // On page load, parse the hash for data
+    const hashData = window.location.hash.split("#data=")[1];
 
-  if (hashData) {
-    try {
-      // Decode and parse the received data
-      const receivedData = JSON.parse(decodeURIComponent(hashData));
+    if (hashData) {
+      try {
+        // Decode and parse the received data
+        const receivedData = JSON.parse(decodeURIComponent(hashData));
 
-      if (receivedData.from == "greatape") {
-        setIsUserCameFromGreatApe(true)
-        setGaUrl(receivedData.url)
+        if (receivedData.from == "greatape") {
+          setIsUserCameFromGreatApe(true)
+          setGaUrl(receivedData.url)
+        }
+
+        window.location.hash = "";
+      } catch (error) {
+        console.error("Failed to parse hash data:", error);
+        window.location.hash = "";
       }
-
-      window.location.hash = "";
-    } catch (error) {
-      console.error("Failed to parse hash data:", error);
-      window.location.hash = "";
+    } else {
+      console.log("No data received in URL hash.");
     }
-  } else {
-    console.log("No data received in URL hash.");
-  }
+  }, [])
+
 
   const form = useForm({
     defaultValues:
