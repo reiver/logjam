@@ -590,7 +590,7 @@ export const PreviewDialog = ({
   useEffect(() => {
     videoRef.current.playsInline = true
 
-    const isMobile = window.parent.outerWidth <= 400 && window.parent.outerHeight <= 850
+    const isMobile = window.self == window.top && window.parent.outerWidth <= 400 && window.parent.outerHeight <= 850
     if (isMobile) {
       //set style
       // videoRef.current.style = 'width: 100%; height: 56.25vw; max-height: 100%;'

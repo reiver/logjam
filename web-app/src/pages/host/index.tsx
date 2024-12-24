@@ -76,6 +76,13 @@ export const HostPage = ({ params: { displayName } }: { params?: { displayName?:
   const [audienceLink, setAudienceLink] = useState("");
   const [gaUrl, setGaUrl] = useState("")
 
+  if (window.self !== window.top) {
+    console.log("This page is loaded inside an iframe.");
+  } else {
+    console.log("This page is not loaded inside an iframe.");
+  }
+
+
   useEffect(() => {
     // On page load, parse the hash for data
     const hashData = window.location.hash.split("#data=")[1];
@@ -214,6 +221,13 @@ export const HostPage = ({ params: { displayName } }: { params?: { displayName?:
       from: "logjam",
       audienceLink: audienceLink,
     };
+
+    if (window.self != window.top) {
+      //send data from Iframe to parant window
+      window.parent.postMessage(dataToSend, "*");  // Replace "*" with the parent URL if needed
+
+      return
+    }
 
     // Serialize the data into a URL hash
     const hashData = encodeURIComponent(JSON.stringify(dataToSend));
