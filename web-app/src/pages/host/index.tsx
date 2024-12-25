@@ -55,11 +55,11 @@ const schema = z.object({
   description: z.string(),
 })
 
-const generateHostUrl = (displayName: string) => {
+const generateHostUrl = async (displayName: string) => {
   return `${window.location.origin}/${displayName}/host`
 }
 
-const generateAudienceUrl = (roomName: string) => {
+const generateAudienceUrl = async (roomName: string) => {
   return `${window.location.origin}/log/${roomName}`
 }
 
@@ -70,18 +70,38 @@ var customStyles = null;
 export const HostPage = ({ params: { displayName } }: { params?: { displayName?: string } }) => {
   const [started, setStarted] = useState(false)
   const [showModal, setShowModal] = useState(false)
-  const [isUserCameFromGreatApe, setIsUserCameFromGreatApe] = useState(false)
-  const [meetingLinkCreated, setMeetingLinkCreated] = useState(false)
+  const [startNewRoomFromIframe, setStartNewRoomFromIframe] = useState(false)
   const [hostLink, setHostLink] = useState("");
   const [audienceLink, setAudienceLink] = useState("");
   const [gaUrl, setGaUrl] = useState("")
 
-  if (window.self !== window.top) {
+
+  const isInsideIframe = () => {
+    return window.self !== window.top
+  }
+
+  if (isInsideIframe()) {
     console.log("This page is loaded inside an iframe.");
   } else {
     console.log("This page is not loaded inside an iframe.");
   }
 
+  useEffect(() => {
+    const hashData = window.location.hash.split("#start-meeting=")[1];
+
+    if (hashData) {
+      try {
+        const receivedData = JSON.parse(decodeURIComponent(hashData));
+        form.setValue("displayName", receivedData.username)
+        form.setValue("room", receivedData.roomname);
+        setStarted(true)
+      } catch (error) {
+
+      }
+      window.location.hash = "";
+    }
+
+  })
 
   useEffect(() => {
     // On page load, parse the hash for data
@@ -93,7 +113,6 @@ export const HostPage = ({ params: { displayName } }: { params?: { displayName?:
         const receivedData = JSON.parse(decodeURIComponent(hashData));
 
         if (receivedData.from == "greatape") {
-          setIsUserCameFromGreatApe(true)
           setGaUrl(receivedData.url)
         }
 
@@ -190,31 +209,59 @@ export const HostPage = ({ params: { displayName } }: { params?: { displayName?:
   }
 
 
-  const onSubmit = () => {
-    const { description } = form.getValues(); // Extracting values from the form
+
+  const onSubmit = async () => {
+    const { room, displayName } = form.getValues(); // Extracting values from the form
+
+    if (isInsideIframe()) {
+      setStartNewRoomFromIframe(true)
+      //open current url in new tab
+
+      // Prepare the data to send
+      const dataToSend = {
+        from: "iframe",
+        roomname: room,
+        username: displayName
+      };
+
+      // Serialize the data into a URL hash
+      const hashData = encodeURIComponent(JSON.stringify(dataToSend));
+
+      await handleRoomCreationInDB()
+
+      await generateBothUrls()
+
+      window.open(`${window.location.href}#start-meeting=${hashData}`, "_blank");
+      return
+    }
 
     // Generating URLs and updating meta tags
     // updateMetaTags("GreatApe", description, "/assets/metatagsLogo-3d1cffd4.png");
     setStarted(true)
   }
 
+  const handleRoomCreationInDB = async () => {
+
+    const { room, description } = form.getValues(); // Extracting values from the form
+    //create new Room
+    var roomData = new RoomData(room, description, selectedImageFile.value, hostId, "")
+    var formData = convertRoomDataToFormData(roomData)
+    console.log("RoomData Thumbnail: ", formData.get('thumbnail'))
+    createNewRoom(roomData)
+
+  }
+
   const handleCreateLink = () => {
-    form.trigger().then((v) => {
+    form.trigger().then(async (v) => {
       if (v) {
         setShowModal(v)
 
-        const { room, description } = form.getValues(); // Extracting values from the form
-        //create new Room
-        var roomData = new RoomData(room, description, selectedImageFile.value, hostId, "")
-        var formData = convertRoomDataToFormData(roomData)
-        console.log("RoomData Thumbnail: ", formData.get('thumbnail'))
-        createNewRoom(roomData)
-
+        await handleRoomCreationInDB()
       }
     })
   }
 
-  const handleRedirectBackToGreatApe = () => {
+  const handleRedirectBackToGreatApe = async () => {
 
     // Prepare the data to send
     const dataToSend = {
@@ -222,7 +269,7 @@ export const HostPage = ({ params: { displayName } }: { params?: { displayName?:
       audienceLink: audienceLink,
     };
 
-    if (window.self != window.top) {
+    if (isInsideIframe()) {
       //send data from Iframe to parant window
       window.parent.postMessage(dataToSend, "*");  // Replace "*" with the parent URL if needed
 
@@ -238,6 +285,12 @@ export const HostPage = ({ params: { displayName } }: { params?: { displayName?:
     // Redirect to the target URL
     window.location.href = redirectUrl;
   };
+
+  window.addEventListener("message", async (event) => {
+    if (event.data.type === "REQUEST_DATA") {
+      await handleRedirectBackToGreatApe()
+    }
+  });
 
 
 
@@ -302,13 +355,23 @@ export const HostPage = ({ params: { displayName } }: { params?: { displayName?:
     )
   }
 
+  const generateBothUrls = async () => {
+    const host = await generateHostUrl('@' + form.getValues('displayName'));
+    const audience = await generateAudienceUrl(form.getValues('room'));
+    setHostLink(host);
+    setAudienceLink(audience);
+  }
+
+  useEffect(() => {
+    if (startNewRoomFromIframe && hostLink != "" && audienceLink != "") {
+      handleRedirectBackToGreatApe()
+    }
+  }, [startNewRoomFromIframe, hostLink, audienceLink]);
+
+
   useEffect(() => {
     if (showModal) {
-      const host = generateHostUrl('@' + form.getValues('displayName'));
-      const audience = generateAudienceUrl(form.getValues('room'));
-      setHostLink(host);
-      setAudienceLink(audience);
-      setMeetingLinkCreated(true)
+      generateBothUrls()
     }
   }, [showModal, form])
 
@@ -371,9 +434,6 @@ export const HostPage = ({ params: { displayName } }: { params?: { displayName?:
                 <Button onClick={handleCreateLink} variant="outlined" className="w-full normal-case" sx={{ textTransform: 'none' }}>
                   Create Link
                 </Button>
-                {isUserCameFromGreatApe && meetingLinkCreated && <Button onClick={handleRedirectBackToGreatApe} variant="outlined" className="w-full normal-case" sx={{ textTransform: 'none' }}>
-                  Back to GreatApe
-                </Button>}
                 <Button type="submit" variant="contained" className="w-full normal-case" sx={{ textTransform: 'none' }} color="primary">
                   Start Now
                 </Button>
