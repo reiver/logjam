@@ -19,11 +19,10 @@ import { useState } from 'preact/compat'
 import { isMobile } from '../../lib/common.js'
 
 const disableRaiseHandFeat = true
-
 export const isMoreOptionsOpen = signal(false)
 export const toggleMoreOptions = () => (isMoreOptionsOpen.value = !isMoreOptionsOpen.value)
 export const Controllers = () => {
-  const { isHost, showControllers, hasCamera, hasMic, ableToRaiseHand, sharingScreenStream, isStreamming, isCameraOn, isMicrophoneOn, isMeetingMuted } = currentUser.value
+  const { isHost, showControllers, hasCamera, hasMic, ableToRaiseHand, sharingScreenStream, isStreamming, isCameraOn, isMicrophoneOn, isMeetingMuted, isRecordingStarted } = currentUser.value
   console.log('this user', isStreamming)
   const toggleMuteMeeting = () => {
     updateUser({
@@ -50,6 +49,7 @@ export const Controllers = () => {
     })
   }
   const toggleMicrophone = () => {
+    console.log("Toggle MicroPhone: ", isMicrophoneOn)
     sparkRTC.value.disableAudio(!isMicrophoneOn)
     updateUser({
       isMicrophoneOn: !isMicrophoneOn,
@@ -72,7 +72,7 @@ export const Controllers = () => {
           })
           sparkRTC.value.leaveStage()
         },
-        () => {},
+        () => { },
         {
           okText: 'Leave the stage',
           okButtonVariant: 'red',
@@ -118,7 +118,22 @@ export const Controllers = () => {
     }
   }
 
-  const toggleBottomSheet = () => {}
+  const toggleBottomSheet = () => { }
+
+  const handleRecording = () => {
+    console.log("Handle Recording: isRecordingStarted: ", isRecordingStarted)
+
+
+    if (isRecordingStarted) {
+      sparkRTC.value.stopRecording();
+    } else {
+      sparkRTC.value.startRecording()
+    }
+
+    updateUser({
+      isRecordingStarted: !isRecordingStarted
+    })
+  }
 
   if (!showControllers) return null
   return (
@@ -127,6 +142,13 @@ export const Controllers = () => {
         <Tooltip label="Troubleshoot">
           <IconButton class="hidden sm:flex">
             <Icon icon="Troubleshoot" />
+          </IconButton>
+        </Tooltip>
+      )}
+      {isStreamming && (
+        <Tooltip label={isRecordingStarted ? 'Stop Recording' : 'Start Recording'}>
+          <IconButton class="sm:flex" onClick={handleRecording}>
+            <Icon icon={Camera} />
           </IconButton>
         </Tooltip>
       )}
@@ -149,7 +171,7 @@ export const Controllers = () => {
           </IconButton>
         </Tooltip>
       )}
-      {((!isStreamming && !disableRaiseHandFeat )|| (isStreamming && !isHost)) && (
+      {((!isStreamming && !disableRaiseHandFeat) || (isStreamming && !isHost)) && (
         <Tooltip key={isStreamming ? 'Leave the stage' : ableToRaiseHand ? 'Raise Hand' : 'Put Hand Down'} label={isStreamming ? 'Leave the stage' : ableToRaiseHand ? 'Raise Hand' : 'Put Hand Down'}>
           <IconButton key={isStreamming ? 'hand' : 'lower-hand'} onClick={onRaiseHand} variant={(isStreamming || !ableToRaiseHand) && 'danger'}>
             <Icon icon={isStreamming ? OffStage : Hand} />

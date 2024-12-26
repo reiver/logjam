@@ -53,6 +53,7 @@ export const currentUser = signal({
   hasCamera: true,
   userId: null,
   isStreamming: false,
+  isRecordingStarted: false,
 })
 
 export const updateUser = (props) => {
