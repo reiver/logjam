@@ -23,7 +23,7 @@ export const attendees = signal<{
   // }
 )
 
-const isMobile = window.parent.outerWidth <= 400 && window.parent.outerHeight <= 850
+const isMobile = window.self == window.top &&  window.parent.outerWidth <= 400 && window.parent.outerHeight <= 850
 
 export const attendeesCount = computed(() => Object.values(attendees.value).length)
 

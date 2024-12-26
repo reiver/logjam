@@ -152,9 +152,9 @@ export const IOSettingsDialog = ({
         <div class="z-20 absolute w-full h-full bg-black bg-opacity-60" />
         <div
             class=${clsx(
-                className,
-                'absolute -translate-y-full z-20 top-full left-0 right-0 sm:right-unset sm:top-1/2 sm:left-1/2 transform sm:-translate-x-1/2 sm:-translate-y-1/2 dark:bg-gray-3 dark:text-gray-0 bg-white text-gray-2 sm:rounded-lg rounded-t-lg w-full w-full sm:max-w-[400px] sm:border dark:border-gray-1 border-gray-0'
-            )}
+        className,
+        'absolute -translate-y-full z-20 top-full left-0 right-0 sm:right-unset sm:top-1/2 sm:left-1/2 transform sm:-translate-x-1/2 sm:-translate-y-1/2 dark:bg-gray-3 dark:text-gray-0 bg-white text-gray-2 sm:rounded-lg rounded-t-lg w-full w-full sm:max-w-[400px] sm:border dark:border-gray-1 border-gray-0'
+    )}
         >
             <div class="flex justify-center items-center p-5 relative">
                 <span class="dark:text-white text-black text-bold-12"
@@ -170,7 +170,7 @@ export const IOSettingsDialog = ({
 
             <div class="sm:pt-8 pt-4 sm:pb-8 pb-4">
                 ${!isIphone() &&
-                html`
+        html`
                     <div
                         class="sm:py-4 py-2 flex rounded-md mx-2 cursor-pointer"
                         onClick=${selectAudioOutputDevice}
@@ -183,61 +183,61 @@ export const IOSettingsDialog = ({
                             class="text-right text-bold-12 px-5 flex-1 text-gray-1 cursor-pointer"
                         >
                             ${(() => {
-                                const elem =
-                                    document.getElementById('selectedSpeaker');
+                const elem =
+                    document.getElementById('selectedSpeaker');
 
-                                if (
-                                    elem &&
-                                    elem.innerHTML !== '' &&
-                                    selectedSpeaker === null
-                                ) {
-                                    // innerHTML exists and is not empty or just whitespace
-                                    console.log(
-                                        'Speaker innerHTML exists:',
-                                        elem.innerHTML
-                                    );
-                                    if (
-                                        elem.innerHTML
-                                            .toLowerCase()
-                                            .includes(
-                                                builtInLabel.toLowerCase()
-                                            )
-                                    ) {
-                                        elem.innerHTML = '';
-                                        return builtInLabel;
-                                    }
-                                } else {
-                                    // innerHTML does not exist or is empty/whitespace
-                                    console.log('Speaker innerHTML not exists');
+                if (
+                    elem &&
+                    elem.innerHTML !== '' &&
+                    selectedSpeaker === null
+                ) {
+                    // innerHTML exists and is not empty or just whitespace
+                    console.log(
+                        'Speaker innerHTML exists:',
+                        elem.innerHTML
+                    );
+                    if (
+                        elem.innerHTML
+                            .toLowerCase()
+                            .includes(
+                                builtInLabel.toLowerCase()
+                            )
+                    ) {
+                        elem.innerHTML = '';
+                        return builtInLabel;
+                    }
+                } else {
+                    // innerHTML does not exist or is empty/whitespace
+                    console.log('Speaker innerHTML not exists');
 
-                                    if (elem) {
-                                        elem.innerHTML = '';
-                                    }
-                                    console.log(
-                                        'selectedSpeaker-default: ',
-                                        selectedSpeaker
-                                    );
+                    if (elem) {
+                        elem.innerHTML = '';
+                    }
+                    console.log(
+                        'selectedSpeaker-default: ',
+                        selectedSpeaker
+                    );
 
-                                    //return device name
-                                    if (
-                                        selectedSpeaker &&
-                                        selectedSpeaker.label
-                                    ) {
-                                        const labelLowerCase =
-                                            selectedSpeaker.label.toLowerCase();
-                                        if (
-                                            labelLowerCase.includes('default')
-                                        ) {
-                                            console.log('returning built in 1');
-                                            return builtInLabel;
-                                        } else {
-                                            return selectedSpeaker.label;
-                                        }
-                                    }
-                                    console.log('returning built in 2');
-                                    return builtInLabel;
-                                }
-                            })()}
+                    //return device name
+                    if (
+                        selectedSpeaker &&
+                        selectedSpeaker.label
+                    ) {
+                        const labelLowerCase =
+                            selectedSpeaker.label.toLowerCase();
+                        if (
+                            labelLowerCase.includes('default')
+                        ) {
+                            console.log('returning built in 1');
+                            return builtInLabel;
+                        } else {
+                            return selectedSpeaker.label;
+                        }
+                    }
+                    console.log('returning built in 2');
+                    return builtInLabel;
+                }
+            })()}
                         </div>
                     </div>
                 `}
@@ -254,56 +254,56 @@ export const IOSettingsDialog = ({
                         class="text-right text-bold-12 px-5 flex-1 text-gray-1"
                     >
                         ${(() => {
-                            const elem = document.getElementById('selectedMic');
+            const elem = document.getElementById('selectedMic');
 
-                            if (
-                                elem &&
-                                elem.innerHTML !== '' &&
-                                selectedMic === null
-                            ) {
-                                // innerHTML exists and is not empty or just whitespace
-                                console.log(
-                                    'mic innerHTML exists:',
-                                    elem.innerHTML
-                                );
-                                if (
-                                    elem.innerHTML
-                                        .toLowerCase()
-                                        .includes(builtInLabel.toLowerCase())
-                                ) {
-                                    elem.innerHTML = '';
-                                    return builtInLabel;
-                                }
-                            } else {
-                                // innerHTML does not exist or is empty/whitespace
-                                console.log('mic innerHTML not exists');
+            if (
+                elem &&
+                elem.innerHTML !== '' &&
+                selectedMic === null
+            ) {
+                // innerHTML exists and is not empty or just whitespace
+                console.log(
+                    'mic innerHTML exists:',
+                    elem.innerHTML
+                );
+                if (
+                    elem.innerHTML
+                        .toLowerCase()
+                        .includes(builtInLabel.toLowerCase())
+                ) {
+                    elem.innerHTML = '';
+                    return builtInLabel;
+                }
+            } else {
+                // innerHTML does not exist or is empty/whitespace
+                console.log('mic innerHTML not exists');
 
-                                if (elem) {
-                                    elem.innerHTML = '';
-                                }
-                                console.log(
-                                    'selectedMic-default: ',
-                                    selectedMic
-                                );
+                if (elem) {
+                    elem.innerHTML = '';
+                }
+                console.log(
+                    'selectedMic-default: ',
+                    selectedMic
+                );
 
-                                //return device name
-                                if (selectedMic && selectedMic.label) {
-                                    const labelLowerCase =
-                                        selectedMic.label.toLowerCase();
-                                    if (
-                                        labelLowerCase.includes('default') ||
-                                        labelLowerCase.includes(
-                                            'iphone microphone'
-                                        )
-                                    ) {
-                                        return builtInLabel;
-                                    } else {
-                                        return selectedMic.label;
-                                    }
-                                }
-                                return builtInLabel;
-                            }
-                        })()}
+                //return device name
+                if (selectedMic && selectedMic.label) {
+                    const labelLowerCase =
+                        selectedMic.label.toLowerCase();
+                    if (
+                        labelLowerCase.includes('default') ||
+                        labelLowerCase.includes(
+                            'iphone microphone'
+                        )
+                    ) {
+                        return builtInLabel;
+                    } else {
+                        return selectedMic.label;
+                    }
+                }
+                return builtInLabel;
+            }
+        })()}
                     </div>
                 </div>
 
@@ -319,71 +319,71 @@ export const IOSettingsDialog = ({
                         class="text-right text-bold-12 px-5 flex-1 text-gray-1"
                     >
                         ${(() => {
-                            const elem =
-                                document.getElementById('selectedCamera');
+            const elem =
+                document.getElementById('selectedCamera');
 
-                            if (
-                                elem &&
-                                elem.innerHTML !== '' &&
-                                selectedCamera === null
-                            ) {
-                                // innerHTML exists and is not empty or just whitespace
-                                console.log(
-                                    'Cam innerHTML exists:',
-                                    elem.innerHTML
-                                );
-                                if (
-                                    elem.innerHTML
-                                        .toLowerCase()
-                                        .includes(builtInLabel.toLowerCase())
-                                ) {
-                                    elem.innerHTML = '';
-                                    return builtInLabel;
-                                }
-                            } else {
-                                // innerHTML does not exist or is empty/whitespace
-                                console.log('Cam innerHTML not exists');
+            if (
+                elem &&
+                elem.innerHTML !== '' &&
+                selectedCamera === null
+            ) {
+                // innerHTML exists and is not empty or just whitespace
+                console.log(
+                    'Cam innerHTML exists:',
+                    elem.innerHTML
+                );
+                if (
+                    elem.innerHTML
+                        .toLowerCase()
+                        .includes(builtInLabel.toLowerCase())
+                ) {
+                    elem.innerHTML = '';
+                    return builtInLabel;
+                }
+            } else {
+                // innerHTML does not exist or is empty/whitespace
+                console.log('Cam innerHTML not exists');
 
-                                if (elem) {
-                                    elem.innerHTML = '';
-                                }
+                if (elem) {
+                    elem.innerHTML = '';
+                }
 
-                                console.log(
-                                    'selectedCamera-default: ',
-                                    selectedCamera
-                                );
+                console.log(
+                    'selectedCamera-default: ',
+                    selectedCamera
+                );
 
-                                //return device name
-                                if (selectedCamera && selectedCamera.label) {
-                                    const labelLowerCase =
-                                        selectedCamera.label.toLowerCase();
-                                    if (
-                                        labelLowerCase.includes('default') ||
-                                        labelLowerCase.includes('(') ||
-                                        labelLowerCase.includes('front')
-                                    ) {
-                                        return builtInLabel;
-                                    } else {
-                                        return selectedCamera.label;
-                                    }
-                                }
-                                return builtInLabel;
-                            }
-                        })()}
+                //return device name
+                if (selectedCamera && selectedCamera.label) {
+                    const labelLowerCase =
+                        selectedCamera.label.toLowerCase();
+                    if (
+                        labelLowerCase.includes('default') ||
+                        labelLowerCase.includes('(') ||
+                        labelLowerCase.includes('front')
+                    ) {
+                        return builtInLabel;
+                    } else {
+                        return selectedCamera.label;
+                    }
+                }
+                return builtInLabel;
+            }
+        })()}
                     </div>
                 </div>
             </div>
 
             ${showButtons &&
-            html`<div class="flex justify-end gap-2 p-5 pt-0">
+        html`<div class="flex justify-end gap-2 p-5 pt-0">
                 <${Button}
                     size="lg"
                     variant="outline"
                     class="w-full flex-grow-1"
                     onClick=${() => {
-                        onReject && onReject();
-                        onClose();
-                    }}
+                onReject && onReject();
+                onClose();
+            }}
                     >${cancelText}<//
                 >
                 <${Button}
@@ -391,8 +391,8 @@ export const IOSettingsDialog = ({
                     variant="${okButtonVariant}"
                     class="w-full flex-grow-1"
                     onClick=${() => {
-                        onOk(selectedMic, selectedCamera, selectedSpeaker);
-                    }}
+                onOk(selectedMic, selectedCamera, selectedSpeaker);
+            }}
                     >${okText}<//
                 >
             </div>`}
@@ -553,9 +553,9 @@ export const IODevicesDialog = ({
         <div class="z-20 absolute w-full h-full bg-black bg-opacity-60" />
         <div
             class=${clsx(
-                className,
-                'absolute -translate-y-full z-20 top-full left-0 right-0 sm:right-unset sm:top-1/2 sm:left-1/2 transform sm:-translate-x-1/2 sm:-translate-y-1/2 dark:bg-gray-3 dark:text-gray-0 bg-white text-gray-2 sm:rounded-lg rounded-t-lg w-full w-full sm:max-w-[400px] sm:border dark:border-gray-1 border-gray-0'
-            )}
+        className,
+        'absolute -translate-y-full z-20 top-full left-0 right-0 sm:right-unset sm:top-1/2 sm:left-1/2 transform sm:-translate-x-1/2 sm:-translate-y-1/2 dark:bg-gray-3 dark:text-gray-0 bg-white text-gray-2 sm:rounded-lg rounded-t-lg w-full w-full sm:max-w-[400px] sm:border dark:border-gray-1 border-gray-0'
+    )}
         >
             <div class="flex justify-center items-center p-5 relative">
                 <span class="dark:text-white text-black text-bold-12"
@@ -570,57 +570,57 @@ export const IODevicesDialog = ({
             <hr class="dark:border-gray-2 border-gray-0 sm:block hidden" />
             <div
                 class=${clsx(
-                    contentClassName,
-                    'text-left text-bold-12 sm:pt-8 pt-5 p-5'
-                )}
+        contentClassName,
+        'text-left text-bold-12 sm:pt-8 pt-5 p-5'
+    )}
                 dangerouslySetInnerHTML=${{ __html: message }}
             ></div>
 
             <form>
                 <div class="sm:pb-4 pb-2">
                     ${devices.map(
-                        (device, index) => html`
+        (device, index) => html`
                             <div
                                 class="sm:py-4 py-2 rounded-md mx-2 flex items-center cursor-pointer"
                                 onClick=${() => handleDeviceClick(index)}
                             >
                                 <${Icon}
                                     icon="${(() => {
-                                        //return defualt builtin
+                //return defualt builtin
 
-                                        if (
-                                            isBuiltInDevice(deviceType, device)
-                                        ) {
-                                            return 'Smartphone';
-                                        }
+                if (
+                    isBuiltInDevice(deviceType, device)
+                ) {
+                    return 'Smartphone';
+                }
 
-                                        //select other then default
-                                        if (deviceType === 'microphone') {
-                                            return 'MicrophoneLight';
-                                        } else if (deviceType === 'camera') {
-                                            return 'CameraLight';
-                                        } else if (deviceType === 'speaker') {
-                                            return 'Headphone';
-                                        }
-                                    })()}"
+                //select other then default
+                if (deviceType === 'microphone') {
+                    return 'MicrophoneLight';
+                } else if (deviceType === 'camera') {
+                    return 'CameraLight';
+                } else if (deviceType === 'speaker') {
+                    return 'Headphone';
+                }
+            })()}"
                                     class="ml-5"
                                     width="20px"
                                     height="20px"
                                 />
                                 <div class="text-left px-2 text-bold-12 flex-1">
                                     ${(() => {
-                                        var deviceName = '';
+                var deviceName = '';
 
-                                        if (
-                                            isBuiltInDevice(deviceType, device)
-                                        ) {
-                                            deviceName = builtInThisDevice;
-                                        } else {
-                                            deviceName = device.label;
-                                        }
+                if (
+                    isBuiltInDevice(deviceType, device)
+                ) {
+                    deviceName = builtInThisDevice;
+                } else {
+                    deviceName = device.label;
+                }
 
-                                        return deviceName;
-                                    })()}
+                return deviceName;
+            })()}
                                 </div>
                                 <label class="flex items-right px-5 flex-0">
                                     <input
@@ -632,7 +632,7 @@ export const IODevicesDialog = ({
                                 </label>
                             </div>
                         `
-                    )}
+    )}
                 </div>
             </form>
         </div>
@@ -666,7 +666,7 @@ export const PreviewDialog = ({
         videoRef.current.playsInline = true;
 
         const isMobile =
-            window.parent.outerWidth <= 400 && window.parent.outerHeight <= 850;
+            window.self == window.top && window.parent.outerWidth <= 400 && window.parent.outerHeight <= 850;
         if (isMobile) {
             //set style
             videoRef.current.style =
@@ -713,7 +713,7 @@ export const PreviewDialog = ({
                     console.log('No video ref');
                 }
             }, //ok
-            () => {} //close
+            () => { } //close
         );
     };
 
@@ -721,9 +721,9 @@ export const PreviewDialog = ({
         <div class="z-10 absolute w-full h-full bg-black bg-opacity-60" />
         <div
             class=${clsx(
-                className,
-                'absolute -translate-y-full z-20 top-full left-0 right-0 sm:right-unset sm:top-1/2 sm:left-1/2 transform sm:-translate-x-1/2 sm:-translate-y-1/2 dark:bg-gray-3 dark:text-gray-0 bg-white text-gray-2 sm:rounded-lg rounded-t-lg w-full w-full sm:max-w-[40%] sm:border dark:border-gray-1 border-gray-0'
-            )}
+        className,
+        'absolute -translate-y-full z-20 top-full left-0 right-0 sm:right-unset sm:top-1/2 sm:left-1/2 transform sm:-translate-x-1/2 sm:-translate-y-1/2 dark:bg-gray-3 dark:text-gray-0 bg-white text-gray-2 sm:rounded-lg rounded-t-lg w-full w-full sm:max-w-[40%] sm:border dark:border-gray-1 border-gray-0'
+    )}
         >
             <div class="flex justify-center items-center p-5 relative">
                 <span class="dark:text-white text-black text-bold-12"
@@ -738,9 +738,9 @@ export const PreviewDialog = ({
             <hr class="dark:border-gray-2 border-gray-0 sm:block hidden" />
             <div
                 class=${clsx(
-                    contentClassName,
-                    'text-left text-bold-12 sm:py-8 py-5 p-5'
-                )}
+        contentClassName,
+        'text-left text-bold-12 sm:py-8 py-5 p-5'
+    )}
                 dangerouslySetInnerHTML=${{ __html: message }}
             ></div>
             <div class="px-5 relative">
@@ -753,11 +753,11 @@ export const PreviewDialog = ({
                 />
                 <div
                     class=${clsx(
-                        'h-[48px] absolute top-1 right-6 gap-2 flex justify-center items-center'
-                    )}
+        'h-[48px] absolute top-1 right-6 gap-2 flex justify-center items-center'
+    )}
                 >
                     ${!isMicrophoneOn &&
-                    html` <div className="pr-2">
+        html` <div className="pr-2">
                         <${Icon}
                             icon="MicrophoneOff"
                             width="20px"
@@ -768,7 +768,7 @@ export const PreviewDialog = ({
             </div>
             <div class="py-4 px-5 flex gap-3 justify-center">
                 ${hasCamera &&
-                html` <${Tooltip}
+        html` <${Tooltip}
                     key="Camera${!isCameraOn ? 'Off' : ''}"
                     label=${!isCameraOn ? 'Turn Camera On' : 'Turn Camera Off'}
                 >
@@ -779,12 +779,12 @@ export const PreviewDialog = ({
                         <${Icon} icon="Camera${!isCameraOn ? 'Off' : ''}" /> <//
                 ><//>`}
                 ${hasMic &&
-                html`
+        html`
                     <${Tooltip}
                         key="Microphone${!isMicrophoneOn ? 'Off' : ''}"
                         label=${!isMicrophoneOn
-                            ? 'Turn Microphone On'
-                            : 'Turn Microphone Off'}
+                ? 'Turn Microphone On'
+                : 'Turn Microphone Off'}
                     >
                         <${IconButton}
                             variant=${!isMicrophoneOn && 'danger'}
@@ -797,8 +797,8 @@ export const PreviewDialog = ({
                     <//>
                 `}
                 ${hasCamera &&
-                hasMic &&
-                html`
+        hasMic &&
+        html`
                     <${Tooltip} key="Settings" label="Settings">
                         <${IconButton} onClick=${openDeviceSettings}>
                             <${Icon} icon="Settings" />
@@ -808,14 +808,14 @@ export const PreviewDialog = ({
             </div>
 
             ${showButtons &&
-            html`<div class="flex justify-end gap-2 p-5 pt-0">
+        html`<div class="flex justify-end gap-2 p-5 pt-0">
                 <${Button}
                     size="lg"
                     variant="outline"
                     class="w-full flex-grow-1"
                     onClick=${() => {
-                        onReject && onReject();
-                    }}
+                onReject && onReject();
+            }}
                     >${cancelText}<//
                 >
                 <${Button}
@@ -849,9 +849,9 @@ export const InviteDialog = ({
         />
         <div
             class=${clsx(
-                className,
-                'absolute -translate-y-full z-20 top-full left-0 right-0 sm:right-unset sm:top-1/2 sm:left-1/2 transform sm:-translate-x-1/2 sm:-translate-y-1/2 dark:bg-gray-3 dark:text-gray-0 bg-white text-gray-2 sm:rounded-lg rounded-t-lg w-full w-full sm:max-w-[400px] sm:border dark:border-gray-1 border-gray-0'
-            )}
+        className,
+        'absolute -translate-y-full z-20 top-full left-0 right-0 sm:right-unset sm:top-1/2 sm:left-1/2 transform sm:-translate-x-1/2 sm:-translate-y-1/2 dark:bg-gray-3 dark:text-gray-0 bg-white text-gray-2 sm:rounded-lg rounded-t-lg w-full w-full sm:max-w-[400px] sm:border dark:border-gray-1 border-gray-0'
+    )}
         >
             <div class="flex justify-center items-center p-5 relative">
                 <span class="dark:text-white text-black text-bold-12"
@@ -866,21 +866,21 @@ export const InviteDialog = ({
             <hr class="dark:border-gray-2 border-gray-0 sm:block hidden" />
             <div
                 class=${clsx(
-                    contentClassName,
-                    'text-left text-bold-12 sm:py-8 py-5 p-5'
-                )}
+        contentClassName,
+        'text-left text-bold-12 sm:py-8 py-5 p-5'
+    )}
                 dangerouslySetInnerHTML=${{ __html: message }}
             ></div>
             ${showButtons &&
-            html`<div class="flex justify-end gap-2 p-5 pt-0">
+        html`<div class="flex justify-end gap-2 p-5 pt-0">
                 <${Button}
                     size="lg"
                     variant="outline"
                     class="w-full flex-grow-1"
                     onClick=${() => {
-                        onReject && onReject();
-                        onClose();
-                    }}
+                onReject && onReject();
+                onClose();
+            }}
                     >${cancelText}<//
                 >
                 <${Button}
@@ -914,9 +914,9 @@ export const ConfirmDialog = ({
         />
         <div
             class=${clsx(
-                className,
-                'absolute -translate-y-full z-20 top-full left-0 right-0 sm:right-unset sm:top-1/2 sm:left-1/2 transform sm:-translate-x-1/2 sm:-translate-y-1/2 dark:bg-gray-3 dark:text-gray-0 bg-white text-gray-2 sm:rounded-lg rounded-t-lg w-full w-full sm:max-w-[400px] sm:border dark:border-gray-1 border-gray-0'
-            )}
+        className,
+        'absolute -translate-y-full z-20 top-full left-0 right-0 sm:right-unset sm:top-1/2 sm:left-1/2 transform sm:-translate-x-1/2 sm:-translate-y-1/2 dark:bg-gray-3 dark:text-gray-0 bg-white text-gray-2 sm:rounded-lg rounded-t-lg w-full w-full sm:max-w-[400px] sm:border dark:border-gray-1 border-gray-0'
+    )}
         >
             <div class="flex justify-center items-center p-5 relative">
                 <span class="dark:text-white text-black text-bold-12"
@@ -931,21 +931,21 @@ export const ConfirmDialog = ({
             <hr class="dark:border-gray-2 border-gray-0 sm:block hidden" />
             <div
                 class=${clsx(
-                    contentClassName,
-                    'text-left text-bold-12 sm:py-8 py-5 p-5'
-                )}
+        contentClassName,
+        'text-left text-bold-12 sm:py-8 py-5 p-5'
+    )}
                 dangerouslySetInnerHTML=${{ __html: message }}
             ></div>
             ${showButtons &&
-            html`<div class="flex justify-end gap-2 p-5 pt-0">
+        html`<div class="flex justify-end gap-2 p-5 pt-0">
                 <${Button}
                     size="lg"
                     variant="outline"
                     class="w-full flex-grow-1"
                     onClick=${() => {
-                        onReject && onReject();
-                        onClose();
-                    }}
+                onReject && onReject();
+                onClose();
+            }}
                     >${cancelText}<//
                 >
                 <${Button}
@@ -968,14 +968,14 @@ export const InfoDialog = ({
 }) => {
     return html`<div
         class=${clsx(
-            'select-none py-4 px-6 flex justify-between items-center text-medium-12 min-w-full sm:min-w-[350px] rounded-md',
-            {
-                'cursor-pointer': pointer,
-                'bg-red-distructive text-white-f-9': variant === 'danger',
-                'dark:bg-white-f-9 dark:text-gray-3 bg-gray-3 text-white-f-9 border dark:border-gray-1 border-gray-0':
-                    !variant,
-            }
-        )}
+        'select-none py-4 px-6 flex justify-between items-center text-medium-12 min-w-full sm:min-w-[350px] rounded-md',
+        {
+            'cursor-pointer': pointer,
+            'bg-red-distructive text-white-f-9': variant === 'danger',
+            'dark:bg-white-f-9 dark:text-gray-3 bg-gray-3 text-white-f-9 border dark:border-gray-1 border-gray-0':
+                !variant,
+        }
+    )}
         onClick=${onClose}
     >
         <div
@@ -991,23 +991,23 @@ export const DialogPool = () => {
             className="absolute right-0 left-0 md:left-[unset] md:right-10 bottom-[5.5rem] flex flex-col justify-end gap-2 px-4 sm:px-0"
         >
             ${Object.values(dialogs.value).map((dialog) => {
-                if (dialog.type === 'info')
-                    return html`<${InfoDialog} ...${dialog} />`;
-            })}
+        if (dialog.type === 'info')
+            return html`<${InfoDialog} ...${dialog} />`;
+    })}
         </div>
 
         ${Object.values(dialogs.value).map((dialog) => {
-            if (dialog.type === 'confirm')
-                return html`<${ConfirmDialog} ...${dialog} />`;
-            else if (dialog.type === 'preview')
-                return html`<${PreviewDialog} ...${dialog} />`;
-            else if (dialog.type === 'io-settings')
-                return html`<${IOSettingsDialog} ...${dialog} />`;
-            else if (dialog.type === 'io-devices')
-                return html`<${IODevicesDialog} ...${dialog} />`;
-            else if (dialog.type === 'invite')
-                return html`<${InviteDialog} ...${dialog} />`;
-        })}`;
+        if (dialog.type === 'confirm')
+            return html`<${ConfirmDialog} ...${dialog} />`;
+        else if (dialog.type === 'preview')
+            return html`<${PreviewDialog} ...${dialog} />`;
+        else if (dialog.type === 'io-settings')
+            return html`<${IOSettingsDialog} ...${dialog} />`;
+        else if (dialog.type === 'io-devices')
+            return html`<${IODevicesDialog} ...${dialog} />`;
+        else if (dialog.type === 'invite')
+            return html`<${InviteDialog} ...${dialog} />`;
+    })}`;
 };
 
 export const makeInviteDialog = (

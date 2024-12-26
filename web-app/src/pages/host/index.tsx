@@ -11,7 +11,7 @@ import { lazy } from 'preact-iso'
 import { useEffect, useState } from 'preact/compat'
 import { useForm } from 'react-hook-form'
 import { HostToastProvider, makeCssFilesDialog, makeMetaImageDialog } from '../host/hostDialogs'
-import z from 'zod'
+import z, { any } from 'zod'
 import { parse } from 'postcss'
 import * as csstree from 'css-tree';
 import { signal } from '@preact/signals'
@@ -27,6 +27,9 @@ const pbApi = new PocketBaseManager()
 var oldIndex = -1;
 var hostId = null
 const cssList = signal(null);
+
+
+
 
 const createNewHost = async (hostData) => {
   var newHost = await pbApi.createHost(hostData)
@@ -52,11 +55,11 @@ const schema = z.object({
   description: z.string(),
 })
 
-const generateHostUrl = (displayName: string) => {
+const generateHostUrl = async (displayName: string) => {
   return `${window.location.origin}/${displayName}/host`
 }
 
-const generateAudienceUrl = (roomName: string) => {
+const generateAudienceUrl = async (roomName: string) => {
   return `${window.location.origin}/log/${roomName}`
 }
 
@@ -67,6 +70,62 @@ var customStyles = null;
 export const HostPage = ({ params: { displayName } }: { params?: { displayName?: string } }) => {
   const [started, setStarted] = useState(false)
   const [showModal, setShowModal] = useState(false)
+  const [startNewRoomFromIframe, setStartNewRoomFromIframe] = useState(false)
+  const [hostLink, setHostLink] = useState("");
+  const [audienceLink, setAudienceLink] = useState("");
+  const [gaUrl, setGaUrl] = useState("")
+
+
+  const isInsideIframe = () => {
+    return window.self !== window.top
+  }
+
+  if (isInsideIframe()) {
+    console.log("This page is loaded inside an iframe.");
+  } else {
+    console.log("This page is not loaded inside an iframe.");
+  }
+
+  useEffect(() => {
+    const hashData = window.location.hash.split("#start-meeting=")[1];
+
+    if (hashData) {
+      try {
+        const receivedData = JSON.parse(decodeURIComponent(hashData));
+        form.setValue("displayName", receivedData.username)
+        form.setValue("room", receivedData.roomname);
+        setStarted(true)
+      } catch (error) {
+
+      }
+      window.location.hash = "";
+    }
+
+  })
+
+  useEffect(() => {
+    // On page load, parse the hash for data
+    const hashData = window.location.hash.split("#data=")[1];
+
+    if (hashData) {
+      try {
+        // Decode and parse the received data
+        const receivedData = JSON.parse(decodeURIComponent(hashData));
+
+        if (receivedData.from == "greatape") {
+          setGaUrl(receivedData.url)
+        }
+
+        window.location.hash = "";
+      } catch (error) {
+        console.error("Failed to parse hash data:", error);
+        window.location.hash = "";
+      }
+    } else {
+      console.log("No data received in URL hash.");
+    }
+  }, [])
+
 
   const form = useForm({
     defaultValues:
@@ -126,7 +185,7 @@ export const HostPage = ({ params: { displayName } }: { params?: { displayName?:
         img.src = thumbnailUrl.value
       }
 
-      // Programmatically trigger input event on the TextField to mimic user input
+      // // Programmatically trigger input event on the TextField to mimic user input
       const roomInput = document.querySelector('input[name="room"]');
       roomInput.dispatchEvent(new Event('input', { bubbles: true }));
 
@@ -146,32 +205,94 @@ export const HostPage = ({ params: { displayName } }: { params?: { displayName?:
     if (displayName[0] !== '@') return <PageNotFound />
 
     fetchHostData()
+
   }
 
 
-  const onSubmit = () => {
-    const { description } = form.getValues(); // Extracting values from the form
+
+  const onSubmit = async () => {
+    const { room, displayName } = form.getValues(); // Extracting values from the form
+
+    if (isInsideIframe()) {
+      setStartNewRoomFromIframe(true)
+      //open current url in new tab
+
+      // Prepare the data to send
+      const dataToSend = {
+        from: "iframe",
+        roomname: room,
+        username: displayName
+      };
+
+      // Serialize the data into a URL hash
+      const hashData = encodeURIComponent(JSON.stringify(dataToSend));
+
+      await handleRoomCreationInDB()
+
+      await generateBothUrls()
+
+      window.open(`${window.location.href}#start-meeting=${hashData}`, "_blank");
+      return
+    }
 
     // Generating URLs and updating meta tags
     // updateMetaTags("GreatApe", description, "/assets/metatagsLogo-3d1cffd4.png");
     setStarted(true)
   }
 
+  const handleRoomCreationInDB = async () => {
+
+    const { room, description } = form.getValues(); // Extracting values from the form
+    //create new Room
+    var roomData = new RoomData(room, description, selectedImageFile.value, hostId, "")
+    var formData = convertRoomDataToFormData(roomData)
+    console.log("RoomData Thumbnail: ", formData.get('thumbnail'))
+    createNewRoom(roomData)
+
+  }
+
   const handleCreateLink = () => {
-    form.trigger().then((v) => {
+    form.trigger().then(async (v) => {
       if (v) {
         setShowModal(v)
 
-        const { room, description } = form.getValues(); // Extracting values from the form
-        //create new Room
-        var roomData = new RoomData(room, description, selectedImageFile.value, hostId, "")
-        var formData = convertRoomDataToFormData(roomData)
-        console.log("RoomData Thumbnail: ", formData.get('thumbnail'))
-        createNewRoom(roomData)
-
+        await handleRoomCreationInDB()
       }
     })
   }
+
+  const handleRedirectBackToGreatApe = async () => {
+
+    // Prepare the data to send
+    const dataToSend = {
+      from: "logjam",
+      audienceLink: audienceLink,
+    };
+
+    if (isInsideIframe()) {
+      //send data from Iframe to parant window
+      window.parent.postMessage(dataToSend, "*");  // Replace "*" with the parent URL if needed
+
+      return
+    }
+
+    // Serialize the data into a URL hash
+    const hashData = encodeURIComponent(JSON.stringify(dataToSend));
+
+    // Define the target URL with hash
+    const redirectUrl = `${gaUrl}#data=${hashData}`;
+
+    // Redirect to the target URL
+    window.location.href = redirectUrl;
+  };
+
+  window.addEventListener("message", async (event) => {
+    if (event.data.type === "REQUEST_DATA") {
+      await handleRedirectBackToGreatApe()
+    }
+  });
+
+
 
 
   const showCssFilesDialog = (cssFiles) => {
@@ -233,6 +354,26 @@ export const HostPage = ({ params: { displayName } }: { params?: { displayName?:
       }
     )
   }
+
+  const generateBothUrls = async () => {
+    const host = await generateHostUrl('@' + form.getValues('displayName'));
+    const audience = await generateAudienceUrl(form.getValues('room'));
+    setHostLink(host);
+    setAudienceLink(audience);
+  }
+
+  useEffect(() => {
+    if (startNewRoomFromIframe && hostLink != "" && audienceLink != "") {
+      handleRedirectBackToGreatApe()
+    }
+  }, [startNewRoomFromIframe, hostLink, audienceLink]);
+
+
+  useEffect(() => {
+    if (showModal) {
+      generateBothUrls()
+    }
+  }, [showModal, form])
 
 
 
@@ -296,6 +437,7 @@ export const HostPage = ({ params: { displayName } }: { params?: { displayName?:
                 <Button type="submit" variant="contained" className="w-full normal-case" sx={{ textTransform: 'none' }} color="primary">
                   Start Now
                 </Button>
+
               </div>
             </div>
 
@@ -306,8 +448,8 @@ export const HostPage = ({ params: { displayName } }: { params?: { displayName?:
             <hr className="mt-4 mb-1 border-white md:border-gray-0" />
             <div className="p-5 flex flex-col gap-5 pb-6">
               <span class="text-bold-12 text-gray-2">Copy and use host’s link for yourself, and audience link for sending to others:</span>
-              <LinkCopyComponent title="Host's Link:" link={generateHostUrl('@' + form.getValues('displayName'))} />
-              <LinkCopyComponent title="Audience’s Link:" link={generateAudienceUrl(form.getValues('room'))} />
+              <LinkCopyComponent title="Host's Link:" link={hostLink} />
+              <LinkCopyComponent title="Audience’s Link:" link={audienceLink} />
             </div>
           </ResponsiveModal>
         </div>
