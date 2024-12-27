@@ -1,7 +1,7 @@
 class MultiStreamRecorder {
     constructor() {
         this.resetRecording()
-        this.videoType = "video/webm"; // Ensure browser compatibility
+        this.videoType = "video/mp4"; // Ensure browser compatibility
     }
 
     resetRecording() {
@@ -11,56 +11,56 @@ class MultiStreamRecorder {
         this.canvas = null;
         this.canvasStream = null;
         this.videos = [];
+        this.roomname = null;
     }
 
     addStreams(streams) {
-        // Array of media streams
-        console.log("Total Num of Streams Before Deduplication: ", streams);
-
         // Remove duplicates, keeping the last occurrence
-        const uniqueStreams = [];
-        const seenStreamIds = new Set();
-
-        // Iterate in reverse to ensure the last occurrence is kept
-        for (let i = streams.length - 1; i >= 0; i--) {
-            const stream = streams[i];
+        const seenStreamIds = new Set(this.streams.map((s) => s.id));
+        streams.forEach((stream) => {
             if (!seenStreamIds.has(stream.id)) {
                 seenStreamIds.add(stream.id);
-                uniqueStreams.unshift(stream); // Add to the front of the array
+                this.streams.push(stream);
+                const video = document.createElement("video");
+                video.srcObject = new MediaStream(stream.getVideoTracks());
+                video.muted = true; // Mute to avoid feedback
+                video.play();
+                this.videos.push(video);
             }
-        }
+        });
 
-        this.streams = uniqueStreams;
-        console.log("Total Num of Streams After Deduplication: ", this.streams);
+        console.log("Total Num of Streams After Addition: ", this.streams);
     }
 
-    // Initialize Canvas
-    initCanvas() {
-        const canvas = document.createElement("canvas");
-        document.body.appendChild(canvas); // Optionally attach it to the DOM for debugging
-        canvas.width = 1280; // Set canvas width
-        canvas.height = 720; // Set canvas height
-        this.canvas = canvas;
+    removeStream(streamId) {
+        const streamIndex = this.streams.findIndex((stream) => stream.id === streamId);
+        if (streamIndex !== -1) {
+            this.streams.splice(streamIndex, 1);
+            this.videos.splice(streamIndex, 1);
+        }
+        console.log("Total Num of Streams After Removal: ", this.streams);
+    }
 
-        return canvas;
+
+    // Initialize canvas if not already done
+    initCanvas() {
+        if (!this.canvas) {
+            const canvas = document.createElement("canvas");
+            document.body.appendChild(canvas); // Optionally attach to the DOM
+            canvas.width = 1280; // Set canvas width
+            canvas.height = 720; // Set canvas height
+            this.canvas = canvas;
+        }
+        return this.canvas;
     }
 
     // Start Recording
-    async startRecording() {
+    async startRecording(roomname) {
+        this.roomname = roomname;
         if (!this.canvas) {
             this.initCanvas();
         }
         const ctx = this.canvas.getContext("2d");
-
-        // Create video elements for each stream
-        this.videos = this.streams.map((stream) => {
-            const video = document.createElement("video");
-            video.srcObject = new MediaStream(stream.getVideoTracks());
-            video.muted = true; // Mute video to prevent echo
-            video.play();
-            return video;
-        });
-
 
         const drawFrames = () => {
             ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
@@ -239,10 +239,12 @@ class MultiStreamRecorder {
             const blob = new Blob(this.recordedBlobs, { type: this.videoType });
             const url = URL.createObjectURL(blob);
 
+            const currentTime = new Date();
+
             // Create download link
             const a = document.createElement("a");
             a.href = url;
-            a.download = "multi_stream_recording.webm";
+            a.download = `${this.roomname}__Recording__${currentTime}__.mp4`;
             a.click();
 
             console.log("Recording saved");

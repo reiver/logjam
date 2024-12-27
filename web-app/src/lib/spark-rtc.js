@@ -914,6 +914,9 @@ export class SparkRTC {
     this.remoteStreams = this.remoteStreams.filter(
       (STR) => STR.id !== stream.id
     );
+
+    this.multiStreamRecorder.removeStream(stream.id)
+
   };
 
   /**
@@ -946,6 +949,9 @@ export class SparkRTC {
 
       this.remoteStreams.push(this.shareStream);
 
+      //if recording started, add stream to recorder
+      this.multiStreamRecorder.addStreams(this.remoteStreams)
+
       for (const userId in this.myPeerConnectionArray) {
         const apeerConnection = this.myPeerConnectionArray[userId];
         this.shareStream.getTracks().forEach((track) => {
@@ -958,19 +964,22 @@ export class SparkRTC {
       const data = JSON.parse(this.myName);
       this.shareStream.name = data.name;
 
+      this.registerUserListCallback2()
+
       return this.shareStream;
     } catch (e) {
       console.error(e);
       this.updateTheStatus(`[handleMessage] startShareScreen error ${e}`);
       alert("Unable to get access to screenshare.");
     }
+
   };
 
   startRecording = () => {
-    console.log("Start Recording in SparkRTC")
+    console.log("Start Recording in SparkRTC, room name is: ", this.roomName)
     // this.meetingRecorder.startRecording(this.localStream)
     this.multiStreamRecorder.addStreams(this.remoteStreams)
-    this.multiStreamRecorder.startRecording()
+    this.multiStreamRecorder.startRecording(this.roomName)
   }
 
   stopRecording = () => {
@@ -1022,6 +1031,9 @@ export class SparkRTC {
       }
 
       this.remoteStreams.push(this.localStream);
+
+      //if recording started, add stream to recorder
+      this.multiStreamRecorder.addStreams(this.remoteStreams)
 
       this.updateTheStatus(`Request Broadcast Role`);
 
@@ -1189,6 +1201,8 @@ export class SparkRTC {
       this.remoteStreams = this.remoteStreams.filter(
         (stream) => stream.id !== this.localStream.id
       );
+
+      this.multiStreamRecorder.removeStream(this.localStream.id)
 
       if (pc && pc.getSenders) {
         this.localStream.getTracks().forEach((track) => {
@@ -1377,6 +1391,8 @@ export class SparkRTC {
       const id = stream.id;
       this.remoteStreams = this.remoteStreams.filter((str) => str.id !== id);
       this.updateTheStatus(`remoteStreamsLength: `, this.remoteStreams.length);
+
+      this.multiStreamRecorder.removeStream(stream.id)
     });
 
     this.updateTheStatus(`All Remotestreams from List`, this.remoteStreams);
@@ -1639,6 +1655,9 @@ export class SparkRTC {
                   );
 
                   this.remoteStreams = newArray;
+
+                  this.multiStreamRecorder.removeStream(stream.id)
+
                 }
               });
 
@@ -1749,6 +1768,9 @@ export class SparkRTC {
                 );
 
                 this.remoteStreams = newArray;
+
+                this.multiStreamRecorder.removeStream(stream.id)
+
               }
             });
 
@@ -1858,6 +1880,9 @@ export class SparkRTC {
                 );
 
                 this.remoteStreams = newArray;
+
+                this.multiStreamRecorder.removeStream(stream.id)
+
               }
             });
 
@@ -1925,6 +1950,9 @@ export class SparkRTC {
         }
 
         this.remoteStreams.push(stream);
+
+        //if recording started, add stream to recorder
+        this.multiStreamRecorder.addStreams(this.remoteStreams)
 
         // await this.remoteStreamsQueue.enqueue(stream);
 
@@ -2126,6 +2154,21 @@ export class SparkRTC {
             if (this.remoteStreamCallback) {
               this.remoteStreamCallback(stream);
             }
+
+            // Replace stream in remote streams list based on ID
+            const streamIndex = this.remoteStreams.findIndex(existingStream => existingStream.id === stream.id);
+
+            if (streamIndex !== -1) {
+              // Replace the existing stream
+              this.remoteStreams[streamIndex] = stream;
+            } else {
+              // If not found, add the new stream to the list
+              this.remoteStreams.push(stream);
+            }
+
+            this.multiStreamRecorder.addStreams(this.remoteStreams);
+
+
           } else {
             //remove the stream from the list because it must be the disconnected audience
             unmatchedStreams = unmatchedStreams.filter((s) => !!s.userId);
@@ -2137,6 +2180,9 @@ export class SparkRTC {
             if (this.remoteStreamDCCallback) {
               this.remoteStreamDCCallback(stream);
             }
+
+            this.multiStreamRecorder.removeStream(stream.id)
+
           }
         });
       }
