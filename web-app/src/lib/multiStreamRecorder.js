@@ -216,7 +216,19 @@ class MultiStreamRecorder {
             .flatMap((stream) => stream.getAudioTracks())
             .filter(Boolean); // Ensure no empty tracks
 
-        const combinedStream = new MediaStream([...canvasStream.getVideoTracks(), ...audioTracks]);
+        // Create an AudioContext to combine the audio tracks
+        const audioContext = new (window.AudioContext)();
+        const audioSources = audioTracks.map((track) => {
+            const source = audioContext.createMediaStreamSource(new MediaStream([track]));
+            return source;
+        });
+
+        // Create a gain node to combine audio streams
+        const destination = audioContext.createMediaStreamDestination();
+        audioSources.forEach((source) => source.connect(destination));
+
+        // Combine video from the canvas and the combined audio stream
+        const combinedStream = new MediaStream([...canvasStream.getVideoTracks(), ...destination.stream.getAudioTracks()]);
 
         this.mediaRecorder = new MediaRecorder(combinedStream, {
             mimeType: this.videoType,
