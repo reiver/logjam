@@ -977,9 +977,7 @@ export class SparkRTC {
 
   startRecording = () => {
     console.log("Start Recording in SparkRTC, room name is: ", this.roomName)
-    // this.meetingRecorder.startRecording(this.localStream)
-    this.multiStreamRecorder.addStreams(this.remoteStreams)
-    this.multiStreamRecorder.startRecording(this.roomName)
+    this.multiStreamRecorder.startRecording(this.roomName, this.remoteStreams)
   }
 
   stopRecording = () => {
@@ -1031,9 +1029,6 @@ export class SparkRTC {
       }
 
       this.remoteStreams.push(this.localStream);
-
-      //if recording started, add stream to recorder
-      this.multiStreamRecorder.addStreams(this.remoteStreams)
 
       this.updateTheStatus(`Request Broadcast Role`);
 

@@ -1,3 +1,6 @@
+import MultiStreamsMixer from 'multistreamsmixer';
+
+
 class MultiStreamRecorder {
     constructor() {
         this.resetRecording()
@@ -12,9 +15,16 @@ class MultiStreamRecorder {
         this.canvasStream = null;
         this.videos = [];
         this.roomname = null;
+        this.audioMixer = null;
+        this.audioMixerStreams = [];
     }
 
     addStreams(streams) {
+        if (!this.canvas) {
+            return
+        }
+        console.log("Add Stream called: ", streams)
+
         // Remove duplicates, keeping the last occurrence
         const seenStreamIds = new Set(this.streams.map((s) => s.id));
         streams.forEach((stream) => {
@@ -30,9 +40,32 @@ class MultiStreamRecorder {
         });
 
         console.log("Total Num of Streams After Addition: ", this.streams);
+
+        /**
+         * Dynamic Mixing of Audio
+         */
+
+        //initalize audio mixer
+        // if (this.audioMixer == null) {
+        //     console.log("Creating new Mixer")
+        //     this.audioMixer = new MultiStreamsMixer(this.streams);
+        // } else {
+        //     console.log("Adding stream to existing mixer")
+        //     // Add new streams only to audioMixerStreams
+        //     this.streams.forEach(stream => {
+        //         if (!this.audioMixerStreams.includes(stream)) {
+        //             this.audioMixerStreams.push(stream);
+        //             this.audioMixer.appendStreams([stream])
+        //         }
+        //     });
+        // }
     }
 
     removeStream(streamId) {
+        if (!this.canvas) {
+            return
+        }
+
         const streamIndex = this.streams.findIndex((stream) => stream.id === streamId);
         if (streamIndex !== -1) {
             this.streams.splice(streamIndex, 1);
@@ -55,12 +88,14 @@ class MultiStreamRecorder {
     }
 
     // Start Recording
-    async startRecording(roomname) {
+    async startRecording(roomname, streams) {
         this.roomname = roomname;
         if (!this.canvas) {
             this.initCanvas();
         }
         const ctx = this.canvas.getContext("2d");
+
+        this.addStreams(streams)
 
         const drawFrames = () => {
             ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
@@ -212,23 +247,19 @@ class MultiStreamRecorder {
         const canvasStream = this.canvas.captureStream(30); // Capture 30 FPS video from canvas
         this.canvasStream = canvasStream;
 
-        const audioTracks = this.streams
-            .flatMap((stream) => stream.getAudioTracks())
-            .filter(Boolean); // Ensure no empty tracks
+        //static recoridng of Audio streams (need all stream to be available)
+        this.audioMixer = new MultiStreamsMixer(this.streams);
 
-        // Create an AudioContext to combine the audio tracks
-        const audioContext = new (window.AudioContext)();
-        const audioSources = audioTracks.map((track) => {
-            const source = audioContext.createMediaStreamSource(new MediaStream([track]));
-            return source;
-        });
-
-        // Create a gain node to combine audio streams
-        const destination = audioContext.createMediaStreamDestination();
-        audioSources.forEach((source) => source.connect(destination));
+        console.log("Audio Mixer: ", this.audioMixer)
+        console.log("Audio Mixer Streams: ", this.audioMixer.getMixedStream().getAudioTracks())
 
         // Combine video from the canvas and the combined audio stream
-        const combinedStream = new MediaStream([...canvasStream.getVideoTracks(), ...destination.stream.getAudioTracks()]);
+        const combinedStream = new MediaStream([...canvasStream.getVideoTracks(), ...this.audioMixer.getMixedStream().getAudioTracks()]);
+
+        console.log("Combined stream: ", combinedStream)
+        console.log("Combined stream Videos: ", combinedStream.getVideoTracks())
+        console.log("Combined stream Audios: ", combinedStream.getAudioTracks())
+
 
         this.mediaRecorder = new MediaRecorder(combinedStream, {
             mimeType: this.videoType,
@@ -261,6 +292,9 @@ class MultiStreamRecorder {
 
             console.log("Recording saved");
 
+            if (this.audioMixer != null) {
+                this.audioMixer.releaseStreams()
+            }
             this.resetRecording();
         };
 
