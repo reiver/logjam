@@ -7,7 +7,6 @@ class AudioMixer {
         // Create a MediaStreamDestination node to capture mixed audio
         this.mediaStreamDestination = this.audioContext.createMediaStreamDestination();
         this.outputNode.connect(this.mediaStreamDestination); // Connect output to the destination
-        // this.outputNode.connect(this.audioContext.destination); // Connect to speakers (optional)
     }
 
     /**
