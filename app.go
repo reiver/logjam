@@ -4,10 +4,10 @@ import (
 	"github.com/reiver/logjam/controllers"
 	"github.com/reiver/logjam/cfg"
 	"github.com/reiver/logjam/lib/logs"
-	"github.com/reiver/logjam/models/repositories/goldgorilla"
 	roomRepository "github.com/reiver/logjam/models/repositories/room"
 	"github.com/reiver/logjam/routers"
 	"github.com/reiver/logjam/services"
+	"github.com/reiver/logjam/srv/goldgorilla"
 	"github.com/reiver/logjam/srv/log"
 )
 
@@ -24,7 +24,7 @@ func (app *App) Init(config cfg.Configurer) {
 	app.Logger = logger.Tag("app")
 	app.Logger.Info("app", "initializing logjam ..")
 	app.config = config
-	ggSVCRepo := GoldGorillaRepository.NewHTTPRepository(config.GoldGorillaBaseURL())
+	ggSVCRepo := goldgorillasrv.Repository
 	roomRepo := roomRepository.NewRoomRepository()
 	socketSVC := services.NewSocketService(logger)
 	roomWSCtrl := controllers.NewRoomWSController(socketSVC, roomRepo, ggSVCRepo, logger)
