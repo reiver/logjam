@@ -13,27 +13,26 @@ type stdoutLogger struct {
 
 var _ Logger = stdoutLogger{}
 
-func (receiver stdoutLogger) log(tag string, level string, msg ...string) error {
+func (receiver stdoutLogger) log(tag string, level string, msg ...string) {
 	if receiver.ignoreDebugLogs && level == levelDebug {
-		return nil
+		return
 	}
 	fmt.Fprintf(os.Stdout, "[%s] %s [%s] %s\n", tag, time.Now().Format(time.RFC3339), level, strings.Join(msg, ", "))
-	return nil
 }
 
-func (receiver stdoutLogger) Debug(tag string, msg ...string) error {
+func (receiver stdoutLogger) Debug(tag string, msg ...string) {
 	const level = levelDebug
-	return receiver.log(tag, level, msg...)
+	receiver.log(tag, level, msg...)
 }
 
-func (receiver stdoutLogger) Error(tag string, msg ...string) error {
+func (receiver stdoutLogger) Error(tag string, msg ...string) {
 	const level = levelError
-	return receiver.log(tag, level, msg...)
+	receiver.log(tag, level, msg...)
 }
 
-func (receiver stdoutLogger) Info(tag string, msg ...string) error {
+func (receiver stdoutLogger) Info(tag string, msg ...string) {
 	const level = levelInfo
-	return receiver.log(tag, level, msg...)
+	receiver.log(tag, level, msg...)
 }
 
 func NewStdOutLogger(ignoreDebugLogs bool) Logger {

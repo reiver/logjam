@@ -604,13 +604,13 @@ func (c *RoomWSController) DefaultHandler(ctx *models.WSContext) {
 }
 
 func (c *RoomWSController) debug(msg ...string) {
-	_ = c.logger.Debug("room_ws_ctrl", msg...)
+	 c.logger.Debug("room_ws_ctrl", msg...)
 }
 
 func (c *RoomWSController) error(msg ...string) {
-	_ = c.logger.Error("room_ws_ctrl", msg...)
+	c.logger.Error("room_ws_ctrl", msg...)
 }
 
 func (c *RoomWSController) info(msg ...string) {
-	_ = c.logger.Info("room_ws_ctrl", msg...)
+	c.logger.Info("room_ws_ctrl", msg...)
 }

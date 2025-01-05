@@ -141,7 +141,7 @@ func (s *socketService) OnDisconnect(conn *websocket.Conn, code int, error strin
 	s.Lock()
 	defer s.Unlock()
 	if keeper, exists := s.sockets[conn]; exists {
-		_ = s.logger.Debug("socket_svc", "a socket got disconnected ["+strconv.FormatUint(keeper.ID, 10)+"]", strconv.Itoa(code), ":", error)
+		s.logger.Debug("socket_svc", "a socket got disconnected ["+strconv.FormatUint(keeper.ID, 10)+"]", strconv.Itoa(code), ":", error)
 		delete(s.socketsById, keeper.ID)
 		delete(s.sockets, conn)
 	}

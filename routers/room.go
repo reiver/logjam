@@ -44,12 +44,12 @@ func (r *roomWSRouter) registerRoutes(router *mux.Router) {
 func (r *roomWSRouter) wsHandler(writer http.ResponseWriter, request *http.Request) {
 	wsConn, err := r.upgrader.Upgrade(writer, request, nil)
 	if err != nil {
-		_ = r.logger.Error("ws_router", err.Error())
+		r.logger.Error("ws_router", err.Error())
 		return
 	}
 	socketId, err := r.socketSVC.OnConnect(wsConn)
 	if err != nil {
-		_ = r.logger.Error("ws_router", err.Error())
+		r.logger.Error("ws_router", err.Error())
 		_ = wsConn.Close()
 		return
 	}
@@ -62,7 +62,7 @@ func (r *roomWSRouter) startReadingFromWS(wsConn *websocket.Conn, socketId uint6
 	for {
 		messageType, data, readErr := wsConn.ReadMessage()
 		if readErr != nil {
-			_ = r.logger.Error("ws_router", readErr.Error())
+			r.logger.Error("ws_router", readErr.Error())
 			go r.roomCtrl.OnDisconnect(&models.WSContext{
 				RoomId:        roomId,
 				SocketID:      socketId,
@@ -80,7 +80,7 @@ func (r *roomWSRouter) startReadingFromWS(wsConn *websocket.Conn, socketId uint6
 		var msg models.MessageContract
 		err := json.Unmarshal(data, &msg)
 		if err != nil {
-			_ = r.logger.Error("ws_router", err.Error())
+			r.logger.Error("ws_router", err.Error())
 			continue
 		}
 
@@ -99,7 +99,7 @@ func (r *roomWSRouter) handleEvent(ctx *models.WSContext) {
 		return
 	}
 	if ctx.ParsedMessage.Type != "tree" && ctx.ParsedMessage.Type != "ping" && ctx.ParsedMessage.Type != "metadata-get" {
-		_ = r.logger.Debug("ws_router", "ID["+strconv.FormatUint(ctx.SocketID, 10)+"] event: "+ctx.ParsedMessage.Type)
+		r.logger.Debug("ws_router", "ID["+strconv.FormatUint(ctx.SocketID, 10)+"] event: "+ctx.ParsedMessage.Type)
 	}
 	switch ctx.ParsedMessage.Type {
 	case "start":
