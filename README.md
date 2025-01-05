@@ -33,3 +33,13 @@ make sure you have docker installed first.
    1. build the image: `docker build -t logjam:latest .`
    2. create and run the container: `docker run --rm logjam:latest`
 
+
+## Authors
+
+**logjam** was created by:
+
+* [Charles Iliya Krempeaux](http://reiver.link/)
+* Massoud Seifi
+* Mehrdad Mirsamie
+* Muhammad Zaid Ali
+* Sal Rahman
