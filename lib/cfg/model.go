@@ -1,6 +1,6 @@
-package models
+package cfg
 
-type ConfigModel struct {
+type Model struct {
 	SrcListenAddr      string `json:"src"`
 	GoldGorillaSVCAddr string `json:"ggSVCAddr"`
 }

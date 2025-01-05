@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/reiver/logjam/cfg"
 	"github.com/reiver/logjam/lib/logs"
 	"github.com/reiver/logjam/models"
 	"github.com/reiver/logjam/models/contracts"
@@ -17,12 +18,12 @@ type GoldGorillaController struct {
 	roomRepo  contracts.IRoomRepository
 	ggSVCRepo contracts.IGoldGorillaServiceRepository
 	socketSVC contracts.ISocketService
-	conf      *models.ConfigModel
+	conf      cfg.Configurer
 	helper    *RestResponseHelper
 	logger    logs.Logger
 }
 
-func NewGoldGorillaController(roomRepo contracts.IRoomRepository, ggSVCRepo contracts.IGoldGorillaServiceRepository, socketSVC contracts.ISocketService, conf *models.ConfigModel, helper *RestResponseHelper, logger logs.Logger) *GoldGorillaController {
+func NewGoldGorillaController(roomRepo contracts.IRoomRepository, ggSVCRepo contracts.IGoldGorillaServiceRepository, socketSVC contracts.ISocketService, conf cfg.Configurer, helper *RestResponseHelper, logger logs.Logger) *GoldGorillaController {
 	return &GoldGorillaController{
 		roomRepo:  roomRepo,
 		socketSVC: socketSVC,
@@ -159,7 +160,7 @@ func (ctrl *GoldGorillaController) Join(rw http.ResponseWriter, req *http.Reques
 		}
 		_ = ctrl.socketSVC.Send(parentDCEvent, childrenIdList...)
 		println("deleted a goldgorilla instance from tree")
-	}(reqModel.RoomId, ctrl.conf.GoldGorillaSVCAddr, newGGID)
+	}(reqModel.RoomId, ctrl.conf.GoldGorillaBaseURL(), newGGID)
 }
 
 func (ctrl *GoldGorillaController) RejoinGoldGorilla(rw http.ResponseWriter, req *http.Request) {
