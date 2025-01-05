@@ -1,11 +1,10 @@
-package roomRepository
+package rooms
 
 import (
 	"errors"
 	"strconv"
 	"sync"
 
-	"github.com/reiver/logjam/lib/rooms"
 	"github.com/reiver/logjam/models"
 	"github.com/reiver/logjam/models/dto"
 )
@@ -15,7 +14,7 @@ type roomRepository struct {
 	rooms map[string]*models.RoomModel
 }
 
-func NewRoomRepository() rooms.Repository {
+func NewRoomRepository() Repository {
 	return &roomRepository{
 		Mutex: &sync.Mutex{},
 		rooms: make(map[string]*models.RoomModel),

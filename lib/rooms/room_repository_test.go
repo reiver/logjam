@@ -1,4 +1,4 @@
-package roomRepository
+package rooms
 
 import (
 	"testing"
