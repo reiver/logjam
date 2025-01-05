@@ -8,7 +8,7 @@ import (
 //
 // See also [NewStdOutLogger]
 func NewLogger(writer io.Writer, ignoreDebugLogs bool) TaggedLogger {
-	return internalLogger{
+	return internalTaggedLogger{
 		writer:writer,
 		ignoreDebugLogs: ignoreDebugLogs,
 	}

@@ -30,3 +30,7 @@ func Info(tag string, msg ...any) {
 func Infof(tag string, format string, msg ...any) {
 	Logger.Infof(tag, format, msg...)
 }
+
+func Tag(tag string) logs.Logger {
+	return Logger.Tag(tag)
+}

@@ -11,15 +11,17 @@ import (
 )
 
 type RoomWSController struct {
-	logger    logs.TaggedLogger
+	logger    logs.Logger
 	socketSVC contracts.ISocketService
 	roomRepo  contracts.IRoomRepository
 	ggRepo    contracts.IGoldGorillaServiceRepository
 }
 
 func NewRoomWSController(socketSVC contracts.ISocketService, roomRepo contracts.IRoomRepository, ggRepo contracts.IGoldGorillaServiceRepository, logger logs.TaggedLogger) *RoomWSController {
+	const logtag string = "room_ws_ctrl"
+
 	return &RoomWSController{
-		logger:    logger,
+		logger:    logger.Tag(logtag),
 		socketSVC: socketSVC,
 		roomRepo:  roomRepo,
 		ggRepo:    ggRepo,
@@ -604,13 +606,13 @@ func (c *RoomWSController) DefaultHandler(ctx *models.WSContext) {
 }
 
 func (c *RoomWSController) debug(msg ...any) {
-	 c.logger.Debug("room_ws_ctrl", msg...)
+	 c.logger.Debug(msg...)
 }
 
 func (c *RoomWSController) error(msg ...any) {
-	c.logger.Error("room_ws_ctrl", msg...)
+	c.logger.Error(msg...)
 }
 
 func (c *RoomWSController) info(msg ...any) {
-	c.logger.Info("room_ws_ctrl", msg...)
+	c.logger.Info(msg...)
 }

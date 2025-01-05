@@ -24,15 +24,17 @@ type Router struct {
 	router            *mux.Router
 	roomWSRouter      IRouteRegistrar
 	GoldGorillaRouter IRouteRegistrar
-	logger            logs.TaggedLogger
+	logger            logs.Logger
 }
 
 func NewRouter(roomWSCtrl *controllers.RoomWSController, GoldGorillaCtrl *controllers.GoldGorillaController, roomRepo contracts.IRoomRepository, socketSVC contracts.ISocketService, logger logs.TaggedLogger) *Router {
+	const logtag string = "router"
+
 	return &Router{
 		router:            mux.NewRouter(),
 		roomWSRouter:      newRoomWSRouter(roomWSCtrl, roomRepo, socketSVC, logger),
 		GoldGorillaRouter: newGoldGorillaRouter(GoldGorillaCtrl),
-		logger:            logger,
+		logger:            logger.Tag(logtag),
 	}
 }
 
@@ -316,6 +318,6 @@ type MetaData struct {
 }
 
 func (r *Router) Serve(addr string) error {
-	r.logger.Info("router", "[HTTP] serving on", addr)
+	r.logger.Info("[HTTP] serving on", addr)
 	return http.ListenAndServe(addr, r.router)
 }

@@ -11,10 +11,6 @@ import (
 	"github.com/reiver/logjam/models/contracts"
 )
 
-const (
-	logtag = "socket_svc"
-)
-
 type SocketKeeper struct {
 	*sync.Mutex
 	wsConn *websocket.Conn
@@ -37,7 +33,7 @@ func (s *SocketKeeper) WriteMessage(messageType int, data []byte) error {
 
 type socketService struct {
 	*sync.Mutex
-	logger      logs.TaggedLogger
+	logger      logs.Logger
 	lastId      uint64
 	sockets     map[*websocket.Conn]*SocketKeeper
 	socketsById map[uint64]*websocket.Conn
@@ -45,9 +41,12 @@ type socketService struct {
 }
 
 func NewSocketService(logger logs.TaggedLogger) contracts.ISocketService {
+
+	const logtag = "socket_svc"
+
 	return &socketService{
 		Mutex:       &sync.Mutex{},
-		logger:      logger,
+		logger:      logger.Tag(logtag),
 		lastId:      0,
 		sockets:     make(map[*websocket.Conn]*SocketKeeper),
 		socketsById: make(map[uint64]*websocket.Conn),
@@ -70,7 +69,7 @@ func (s *socketService) Send(data interface{}, receiverIds ...uint64) error {
 	} else {
 		jsonData, err = json.Marshal(data)
 		if err != nil {
-			s.logger.Error(logtag, err)
+			s.logger.Error(err)
 			return err
 		}
 	}
@@ -86,7 +85,7 @@ func (s *socketService) Send(data interface{}, receiverIds ...uint64) error {
 }
 
 func (s *socketService) OnConnect(conn *websocket.Conn) (uint64, error) {
-	s.logger.Debug(logtag, "new socket connected")
+	s.logger.Debug("new socket connected")
 	s.Lock()
 	defer s.Unlock()
 
@@ -144,7 +143,7 @@ func (s *socketService) OnDisconnect(conn *websocket.Conn, code int, error strin
 	s.Lock()
 	defer s.Unlock()
 	if keeper, exists := s.sockets[conn]; exists {
-		s.logger.Debugf(logtag, "a socket got disconnected [%d] %d : %s", keeper.ID, code, error)
+		s.logger.Debugf("a socket got disconnected [%d] %d : %s", keeper.ID, code, error)
 		delete(s.socketsById, keeper.ID)
 		delete(s.sockets, conn)
 	}

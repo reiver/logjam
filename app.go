@@ -12,23 +12,25 @@ import (
 )
 
 type App struct {
-	Logger logs.TaggedLogger
+	Logger logs.Logger
 	Router *routers.Router
 
 	config cfg.Configurer
 }
 
 func (app *App) Init(config cfg.Configurer) {
-	app.Logger = logsrv.Logger
+	logger := logsrv.Logger
+
+	app.Logger = logger.Tag("app")
 	app.Logger.Info("app", "initializing logjam ..")
 	app.config = config
 	ggSVCRepo := GoldGorillaRepository.NewHTTPRepository(config.GoldGorillaBaseURL())
 	roomRepo := roomRepository.NewRoomRepository()
-	socketSVC := services.NewSocketService(app.Logger)
-	roomWSCtrl := controllers.NewRoomWSController(socketSVC, roomRepo, ggSVCRepo, app.Logger)
+	socketSVC := services.NewSocketService(logger)
+	roomWSCtrl := controllers.NewRoomWSController(socketSVC, roomRepo, ggSVCRepo, logger)
 	restHelper := &controllers.RestResponseHelper{}
-	goldGorillaCtrl := controllers.NewGoldGorillaController(roomRepo, ggSVCRepo, socketSVC, app.config, restHelper, app.Logger)
-	app.Router = routers.NewRouter(roomWSCtrl, goldGorillaCtrl, roomRepo, socketSVC, app.Logger)
+	goldGorillaCtrl := controllers.NewGoldGorillaController(roomRepo, ggSVCRepo, socketSVC, app.config, restHelper, logger)
+	app.Router = routers.NewRouter(roomWSCtrl, goldGorillaCtrl, roomRepo, socketSVC, logger)
 	panicIfErr(app.Router.RegisterRoutes())
 }
 
