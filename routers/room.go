@@ -8,6 +8,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 	"github.com/reiver/logjam/controllers"
+	"github.com/reiver/logjam/lib/logs"
 	"github.com/reiver/logjam/models"
 	"github.com/reiver/logjam/models/contracts"
 )
@@ -17,10 +18,10 @@ type roomWSRouter struct {
 	roomRepo  contracts.IRoomRepository
 	upgrader  websocket.Upgrader
 	socketSVC contracts.ISocketService
-	logger    contracts.ILogger
+	logger    logs.ILogger
 }
 
-func newRoomWSRouter(roomCtrl *controllers.RoomWSController, roomRepo contracts.IRoomRepository, socketSVC contracts.ISocketService, logger contracts.ILogger) IRouteRegistrar {
+func newRoomWSRouter(roomCtrl *controllers.RoomWSController, roomRepo contracts.IRoomRepository, socketSVC contracts.ISocketService, logger logs.ILogger) IRouteRegistrar {
 	return &roomWSRouter{
 		roomCtrl:  roomCtrl,
 		roomRepo:  roomRepo,
@@ -43,12 +44,12 @@ func (r *roomWSRouter) registerRoutes(router *mux.Router) {
 func (r *roomWSRouter) wsHandler(writer http.ResponseWriter, request *http.Request) {
 	wsConn, err := r.upgrader.Upgrade(writer, request, nil)
 	if err != nil {
-		_ = r.logger.Log("ws_router", contracts.LError, err.Error())
+		_ = r.logger.Log("ws_router", logs.LError, err.Error())
 		return
 	}
 	socketId, err := r.socketSVC.OnConnect(wsConn)
 	if err != nil {
-		_ = r.logger.Log("ws_router", contracts.LError, err.Error())
+		_ = r.logger.Log("ws_router", logs.LError, err.Error())
 		_ = wsConn.Close()
 		return
 	}
@@ -61,7 +62,7 @@ func (r *roomWSRouter) startReadingFromWS(wsConn *websocket.Conn, socketId uint6
 	for {
 		messageType, data, readErr := wsConn.ReadMessage()
 		if readErr != nil {
-			_ = r.logger.Log("ws_router", contracts.LError, readErr.Error())
+			_ = r.logger.Log("ws_router", logs.LError, readErr.Error())
 			go r.roomCtrl.OnDisconnect(&models.WSContext{
 				RoomId:        roomId,
 				SocketID:      socketId,
@@ -72,14 +73,14 @@ func (r *roomWSRouter) startReadingFromWS(wsConn *websocket.Conn, socketId uint6
 			break
 		}
 		if messageType != websocket.TextMessage {
-			r.logger.Log("ws_router", contracts.LDebug, "ignoring a message of type: ", strconv.Itoa(messageType))
+			r.logger.Log("ws_router", logs.LDebug, "ignoring a message of type: ", strconv.Itoa(messageType))
 			continue
 		}
 
 		var msg models.MessageContract
 		err := json.Unmarshal(data, &msg)
 		if err != nil {
-			_ = r.logger.Log("ws_router", contracts.LError, err.Error())
+			_ = r.logger.Log("ws_router", logs.LError, err.Error())
 			continue
 		}
 
@@ -98,7 +99,7 @@ func (r *roomWSRouter) handleEvent(ctx *models.WSContext) {
 		return
 	}
 	if ctx.ParsedMessage.Type != "tree" && ctx.ParsedMessage.Type != "ping" && ctx.ParsedMessage.Type != "metadata-get" {
-		_ = r.logger.Log("ws_router", contracts.LDebug, "ID["+strconv.FormatUint(ctx.SocketID, 10)+"] event: "+ctx.ParsedMessage.Type)
+		_ = r.logger.Log("ws_router", logs.LDebug, "ID["+strconv.FormatUint(ctx.SocketID, 10)+"] event: "+ctx.ParsedMessage.Type)
 	}
 	switch ctx.ParsedMessage.Type {
 	case "start":

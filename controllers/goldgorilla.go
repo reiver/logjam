@@ -4,11 +4,13 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"strconv"
+	"time"
+
+	"github.com/reiver/logjam/lib/logs"
 	"github.com/reiver/logjam/models"
 	"github.com/reiver/logjam/models/contracts"
 	"github.com/reiver/logjam/models/dto"
-	"strconv"
-	"time"
 )
 
 type GoldGorillaController struct {
@@ -17,10 +19,10 @@ type GoldGorillaController struct {
 	socketSVC contracts.ISocketService
 	conf      *models.ConfigModel
 	helper    *RestResponseHelper
-	logger    contracts.ILogger
+	logger    logs.ILogger
 }
 
-func NewGoldGorillaController(roomRepo contracts.IRoomRepository, ggSVCRepo contracts.IGoldGorillaServiceRepository, socketSVC contracts.ISocketService, conf *models.ConfigModel, helper *RestResponseHelper, logger contracts.ILogger) *GoldGorillaController {
+func NewGoldGorillaController(roomRepo contracts.IRoomRepository, ggSVCRepo contracts.IGoldGorillaServiceRepository, socketSVC contracts.ISocketService, conf *models.ConfigModel, helper *RestResponseHelper, logger logs.ILogger) *GoldGorillaController {
 	return &GoldGorillaController{
 		roomRepo:  roomRepo,
 		socketSVC: socketSVC,

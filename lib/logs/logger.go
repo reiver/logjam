@@ -1,4 +1,4 @@
-package contracts
+package logs
 
 type TLogLevel string
 
