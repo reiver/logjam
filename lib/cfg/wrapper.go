@@ -17,6 +17,10 @@ func (receiver wrapper) GoldGorillaBaseURL() string {
 	return receiver.internal.GoldGorillaBaseURL
 }
 
+func (receiver wrapper) ProdMode() bool {
+	return receiver.internal.ProdMode
+}
+
 func (receiver wrapper) WebServerTCPAddress() string {
 	return receiver.internal.WebServerTCPAddress
 }

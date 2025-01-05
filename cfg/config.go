@@ -7,6 +7,7 @@ import (
 
 var config libcfg.Model = libcfg.Model{
 	GoldGorillaBaseURL:flags.GoldGorillaBaseURL,
+	ProdMode:flags.ProdMode,
 	WebServerTCPAddress:flags.WebServerTCPAddress,
 }
 

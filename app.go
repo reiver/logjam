@@ -17,8 +17,8 @@ type App struct {
 	config cfg.Configurer
 }
 
-func (app *App) Init(prodMode bool, config cfg.Configurer) {
-	app.Logger = logs.NewStdOutLogger(prodMode)
+func (app *App) Init(config cfg.Configurer) {
+	app.Logger = logs.NewStdOutLogger(config.ProdMode())
 	app.Logger.Info("app", "initializing logjam ..")
 	app.config = config
 	ggSVCRepo := GoldGorillaRepository.NewHTTPRepository(config.GoldGorillaBaseURL())
