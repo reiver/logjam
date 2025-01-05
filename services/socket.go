@@ -2,7 +2,6 @@ package services
 
 import (
 	"encoding/json"
-	"strconv"
 	"sync"
 	"time"
 
@@ -141,7 +140,7 @@ func (s *socketService) OnDisconnect(conn *websocket.Conn, code int, error strin
 	s.Lock()
 	defer s.Unlock()
 	if keeper, exists := s.sockets[conn]; exists {
-		s.logger.Debug("socket_svc", "a socket got disconnected ["+strconv.FormatUint(keeper.ID, 10)+"]", strconv.Itoa(code), ":", error)
+		s.logger.Debugf("socket_svc", "a socket got disconnected [%d] %d : %s", keeper.ID, code, error)
 		delete(s.socketsById, keeper.ID)
 		delete(s.sockets, conn)
 	}

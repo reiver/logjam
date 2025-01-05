@@ -73,7 +73,7 @@ func (r *roomWSRouter) startReadingFromWS(wsConn *websocket.Conn, socketId uint6
 			break
 		}
 		if messageType != websocket.TextMessage {
-			r.logger.Debug("ws_router", "ignoring a message of type: ", strconv.Itoa(messageType))
+			r.logger.Debugf("ws_router", "ignoring a message of type: %d", messageType)
 			continue
 		}
 
@@ -99,7 +99,7 @@ func (r *roomWSRouter) handleEvent(ctx *models.WSContext) {
 		return
 	}
 	if ctx.ParsedMessage.Type != "tree" && ctx.ParsedMessage.Type != "ping" && ctx.ParsedMessage.Type != "metadata-get" {
-		r.logger.Debug("ws_router", "ID["+strconv.FormatUint(ctx.SocketID, 10)+"] event: "+ctx.ParsedMessage.Type)
+		r.logger.Debugf("ws_router", "ID[%d] event: %s", ctx.SocketID, ctx.ParsedMessage.Type)
 	}
 	switch ctx.ParsedMessage.Type {
 	case "start":
