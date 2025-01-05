@@ -10,22 +10,22 @@ import (
 
 var (
 	GoldGorillaBaseURL string
-	WebServerTCPAddress string
+	help bool
 	ProdMode bool
-	Help bool
+	WebServerTCPAddress string
 )
 
 func init() {
 	var defaultSrc string = fmt.Sprintf(":%s", env.TcpPort)
 
 	flag.StringVar(&GoldGorillaBaseURL, "goldgorilla-svc-addr", "http://localhost:8080", "goldgorilla service address baseurl")
-	flag.StringVar(&WebServerTCPAddress, "src", defaultSrc, "source listen address")
+	flag.BoolVar(&help, "h", false, "print help")
 	flag.BoolVar(&ProdMode, "prod", false, "enable production mode ( its in dev mode by default )")
-	flag.BoolVar(&Help, "h", false, "print help")
+	flag.StringVar(&WebServerTCPAddress, "src", defaultSrc, "source listen address")
 
 	flag.Parse()
 
-	if Help {
+	if help {
 		flag.PrintDefaults()
 		os.Exit(0)
 	}
