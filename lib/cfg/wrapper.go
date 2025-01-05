@@ -1,5 +1,8 @@
 package cfg
 
+// wrapper exists to prevent a certain type of bug.
+//
+// Specially, a bug where some code changes the value of a config.
 type wrapper struct {
 	internal Model
 }
@@ -10,11 +13,10 @@ func Wrap(model Model) Configurer {
 	return wrapper{model}
 }
 
-
 func (receiver wrapper) GoldGorillaBaseURL() string {
-	return receiver.internal.GoldGorillaSVCAddr
+	return receiver.internal.GoldGorillaBaseURL
 }
 
 func (receiver wrapper) WebServerTCPAddress() string {
-	return receiver.internal.SrcListenAddr
+	return receiver.internal.WebServerTCPAddress
 }

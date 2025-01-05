@@ -6,8 +6,8 @@ import (
 )
 
 var config libcfg.Model = libcfg.Model{
-	SrcListenAddr:flags.Src,
-	GoldGorillaSVCAddr:flags.GoldGorillaSVCAddr,
+	GoldGorillaBaseURL:flags.GoldGorillaBaseURL,
+	WebServerTCPAddress:flags.WebServerTCPAddress,
 }
 
 var Config libcfg.Configurer = libcfg.Wrap(config)
