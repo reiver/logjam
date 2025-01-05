@@ -44,12 +44,12 @@ func (r *roomWSRouter) registerRoutes(router *mux.Router) {
 func (r *roomWSRouter) wsHandler(writer http.ResponseWriter, request *http.Request) {
 	wsConn, err := r.upgrader.Upgrade(writer, request, nil)
 	if err != nil {
-		r.logger.Error("ws_router", err.Error())
+		r.logger.Error("ws_router", err)
 		return
 	}
 	socketId, err := r.socketSVC.OnConnect(wsConn)
 	if err != nil {
-		r.logger.Error("ws_router", err.Error())
+		r.logger.Error("ws_router", err)
 		_ = wsConn.Close()
 		return
 	}
@@ -62,7 +62,7 @@ func (r *roomWSRouter) startReadingFromWS(wsConn *websocket.Conn, socketId uint6
 	for {
 		messageType, data, readErr := wsConn.ReadMessage()
 		if readErr != nil {
-			r.logger.Error("ws_router", readErr.Error())
+			r.logger.Error("ws_router", readErr)
 			go r.roomCtrl.OnDisconnect(&models.WSContext{
 				RoomId:        roomId,
 				SocketID:      socketId,
@@ -80,7 +80,7 @@ func (r *roomWSRouter) startReadingFromWS(wsConn *websocket.Conn, socketId uint6
 		var msg models.MessageContract
 		err := json.Unmarshal(data, &msg)
 		if err != nil {
-			r.logger.Error("ws_router", err.Error())
+			r.logger.Error("ws_router", err)
 			continue
 		}
 

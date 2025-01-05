@@ -34,18 +34,18 @@ func (c *RoomWSController) OnDisconnect(ctx *models.WSContext) {
 	defer c.emitUserList(ctx.RoomId)
 	wasBroadcaster, childrenIdList, err := c.roomRepo.RemoveMember(ctx.RoomId, ctx.SocketID)
 	if err != nil {
-		c.error(err.Error())
+		c.error(err)
 		return
 	}
 	if wasBroadcaster {
 		err := c.roomRepo.ClearBroadcasterSeat(ctx.RoomId)
 		if err != nil {
-			c.error(err.Error())
+			c.error(err)
 			return
 		}
 		membersIdList, err := c.roomRepo.GetAllMembersId(ctx.RoomId, true)
 		if err != nil {
-			c.error(err.Error())
+			c.error(err)
 			return
 		}
 		brDCEvent := models.MessageContract{
@@ -55,7 +55,7 @@ func (c *RoomWSController) OnDisconnect(ctx *models.WSContext) {
 		_ = c.socketSVC.Send(brDCEvent, membersIdList...)
 		oldggId, err := c.ggRepo.ResetRoom(ctx.RoomId)
 		if err != nil {
-			c.error(err.Error())
+			c.error(err)
 			//return
 		}
 		if oldggId != nil {
@@ -72,14 +72,14 @@ func (c *RoomWSController) OnDisconnect(ctx *models.WSContext) {
 			if c.roomRepo.IsGGInstance(ctx.RoomId, id) {
 				_, err := c.ggRepo.ResetRoom(ctx.RoomId)
 				if err != nil {
-					c.error(err.Error())
+					c.error(err)
 					//return
 				}
 				c.roomRepo.RemoveMember(ctx.RoomId, id)
 				go func() {
 					err := c.ggRepo.Start(ctx.RoomId)
 					if err != nil {
-						c.error(err.Error())
+						c.error(err)
 						return
 					}
 				}()
@@ -89,27 +89,27 @@ func (c *RoomWSController) OnDisconnect(ctx *models.WSContext) {
 	}
 	membersIdList, err := c.roomRepo.GetAllMembersId(ctx.RoomId, false)
 	if err != nil {
-		c.error(err.Error())
+		c.error(err)
 		return
 	}
 	if len(membersIdList) == 0 {
 		err = c.roomRepo.ClearMessageHistory(ctx.RoomId)
 		if err != nil {
-			c.error(err.Error())
+			c.error(err)
 		}
 		err = c.roomRepo.SetRoomMetaData(ctx.RoomId, map[string]interface{}{})
 		if err != nil {
-			c.error(err.Error())
+			c.error(err)
 		}
 	} else if len(membersIdList) == 1 {
 		if c.roomRepo.IsGGInstance(ctx.RoomId, membersIdList[0]) {
 			err = c.roomRepo.ClearMessageHistory(ctx.RoomId)
 			if err != nil {
-				c.error(err.Error())
+				c.error(err)
 			}
 			err = c.roomRepo.SetRoomMetaData(ctx.RoomId, map[string]interface{}{})
 			if err != nil {
-				c.error(err.Error())
+				c.error(err)
 			}
 		}
 	}
@@ -125,12 +125,12 @@ func (c *RoomWSController) Start(ctx *models.WSContext) {
 	_ = c.roomRepo.CreateRoom(ctx.RoomId)
 	err := c.roomRepo.AddMember(ctx.RoomId, ctx.SocketID, "", "", "", false)
 	if err != nil {
-		c.error(err.Error())
+		c.error(err)
 		return
 	}
 	err = c.roomRepo.UpdateMemberName(ctx.RoomId, ctx.SocketID, ctx.ParsedMessage.Data)
 	if err != nil {
-		c.error(err.Error())
+		c.error(err)
 	}
 	_ = c.socketSVC.Send(resultEvent, ctx.SocketID)
 }
@@ -146,7 +146,7 @@ func (c *RoomWSController) Role(ctx *models.WSContext) {
 	if exists {
 		err = c.roomRepo.UpdateMemberMeta(ctx.RoomId, ctx.SocketID, "streamId", streamId.(string))
 		if err != nil {
-			c.error(err.Error())
+			c.error(err)
 			return
 		}
 	}
@@ -160,13 +160,13 @@ func (c *RoomWSController) Role(ctx *models.WSContext) {
 	if ctx.ParsedMessage.Data == "broadcast" {
 		br, err := c.roomRepo.GetBroadcaster(ctx.RoomId)
 		if err != nil {
-			c.error(err.Error())
+			c.error(err)
 			return
 		}
 		if br != nil {
 			currentUser, err := c.roomRepo.GetMember(ctx.RoomId, ctx.SocketID)
 			if err != nil {
-				c.error(err.Error())
+				c.error(err)
 				_ = c.socketSVC.Send(models.MessageContract{
 					Type: "role",
 					Data: "no:broadcast",
@@ -185,17 +185,17 @@ func (c *RoomWSController) Role(ctx *models.WSContext) {
 		resultEvent.Data = "yes:broadcast"
 		err = c.roomRepo.UpdateCanConnect(ctx.RoomId, ctx.SocketID, true)
 		if err != nil {
-			c.error(err.Error())
+			c.error(err)
 			return
 		}
 		err = c.roomRepo.SetBroadcaster(ctx.RoomId, ctx.SocketID)
 		if err != nil {
-			c.error(err.Error())
+			c.error(err)
 			return
 		}
 		memberIds, err := c.roomRepo.GetAllMembersId(ctx.RoomId, true)
 		if err != nil {
-			c.error(err.Error())
+			c.error(err)
 			return
 		}
 
@@ -204,7 +204,7 @@ func (c *RoomWSController) Role(ctx *models.WSContext) {
 			Data: strconv.FormatUint(ctx.SocketID, 10),
 		}, memberIds...)
 		if err != nil {
-			c.error(err.Error())
+			c.error(err)
 		}
 		_ = c.socketSVC.Send(resultEvent, ctx.SocketID)
 		ggEnabled := true
@@ -224,7 +224,7 @@ func (c *RoomWSController) Role(ctx *models.WSContext) {
 	} else if ctx.ParsedMessage.Data == "alt-broadcast" {
 		broadcaster, err := c.roomRepo.GetBroadcaster(ctx.RoomId)
 		if err != nil {
-			c.error(err.Error())
+			c.error(err)
 			return
 		}
 		if broadcaster == nil {
@@ -241,7 +241,7 @@ func (c *RoomWSController) Role(ctx *models.WSContext) {
 
 		userInfo, err := c.roomRepo.GetMember(ctx.RoomId, ctx.SocketID)
 		if err != nil {
-			c.error(err.Error())
+			c.error(err)
 			return
 		}
 		broadcasterReceivingEvent := map[string]string{
@@ -253,7 +253,7 @@ func (c *RoomWSController) Role(ctx *models.WSContext) {
 	} else if ctx.ParsedMessage.Data == "audience" {
 		broadcaster, err := c.roomRepo.GetBroadcaster(ctx.RoomId)
 		if err != nil {
-			c.error(err.Error())
+			c.error(err)
 			return
 		}
 		if broadcaster == nil {
@@ -272,7 +272,7 @@ func (c *RoomWSController) Role(ctx *models.WSContext) {
 			goto start
 		}
 		if err != nil {
-			c.error(err.Error())
+			c.error(err)
 			_ = c.socketSVC.Send(map[string]interface{}{
 				"type": "error",
 				"data": "Insert Child Error : " + err.Error(),
@@ -287,7 +287,7 @@ func (c *RoomWSController) Role(ctx *models.WSContext) {
 		} else {
 			ggid, err := c.roomRepo.GetRoomGoldGorillaId(ctx.RoomId)
 			if err != nil {
-				c.error(err.Error())
+				c.error(err)
 				return
 			}
 			if ggid == nil {
@@ -311,7 +311,7 @@ func (c *RoomWSController) Stream(ctx *models.WSContext) {
 	payload := make(map[string]string)
 	err := json.Unmarshal(ctx.PureMessage, &payload)
 	if err != nil {
-		c.error(err.Error())
+		c.error(err)
 		return
 	}
 	newState := true
@@ -324,7 +324,7 @@ func (c *RoomWSController) Stream(ctx *models.WSContext) {
 	}
 	err = c.roomRepo.UpdateCanConnect(ctx.RoomId, ctx.SocketID, newState)
 	if err != nil {
-		c.error(err.Error())
+		c.error(err)
 		return
 	}
 }
@@ -333,7 +333,7 @@ func (c *RoomWSController) UpdateStreamId(ctx *models.WSContext) {
 	payload := make(map[string]interface{})
 	err := json.Unmarshal(ctx.PureMessage, &payload)
 	if err != nil {
-		c.error(err.Error())
+		c.error(err)
 		return
 	}
 	streamId, exists := payload["streamId"]
@@ -341,7 +341,7 @@ func (c *RoomWSController) UpdateStreamId(ctx *models.WSContext) {
 	if exists {
 		err = c.roomRepo.UpdateMemberMeta(ctx.RoomId, ctx.SocketID, "streamId", streamId.(string))
 		if err != nil {
-			c.error(err.Error())
+			c.error(err)
 			return
 		}
 	}
@@ -354,7 +354,7 @@ func (c *RoomWSController) Ping(ctx *models.WSContext) {
 func (c *RoomWSController) TurnStatus(ctx *models.WSContext) {
 	err := c.roomRepo.UpdateTurnStatus(ctx.RoomId, ctx.SocketID, ctx.ParsedMessage.Data == "on")
 	if err != nil {
-		c.error(err.Error())
+		c.error(err)
 		return
 	}
 }
@@ -362,7 +362,7 @@ func (c *RoomWSController) TurnStatus(ctx *models.WSContext) {
 func (c *RoomWSController) Tree(ctx *models.WSContext) {
 	room, err := c.roomRepo.GetRoom(ctx.RoomId)
 	if err != nil {
-		c.error(err.Error())
+		c.error(err)
 		return
 	}
 	if room == nil {
@@ -371,7 +371,7 @@ func (c *RoomWSController) Tree(ctx *models.WSContext) {
 	}
 	tree, err := room.GetTree()
 	if err != nil {
-		c.error(err.Error())
+		c.error(err)
 		return
 	}
 	buffer, err := json.Marshal(tree)
@@ -386,7 +386,7 @@ func (c *RoomWSController) MetadataSet(ctx *models.WSContext) {
 	metaData := make(map[string]interface{})
 	err := json.Unmarshal([]byte(ctx.ParsedMessage.Data), &metaData)
 	if err != nil {
-		c.error(err.Error())
+		c.error(err)
 		return
 	}
 	if _, exists := metaData[models.RoomMessagesMetaDataKey]; exists {
@@ -395,7 +395,7 @@ func (c *RoomWSController) MetadataSet(ctx *models.WSContext) {
 	}
 	err = c.roomRepo.SetRoomMetaData(ctx.RoomId, metaData)
 	if err != nil {
-		c.error(err.Error())
+		c.error(err)
 		return
 	}
 }
@@ -403,12 +403,12 @@ func (c *RoomWSController) MetadataSet(ctx *models.WSContext) {
 func (c *RoomWSController) MetadataGet(ctx *models.WSContext) {
 	meta, err := c.roomRepo.GetRoomMetaData(ctx.RoomId)
 	if err != nil {
-		c.error(err.Error())
+		c.error(err)
 		return
 	}
 	jsonBytes, err := json.Marshal(meta)
 	if err != nil {
-		c.error(err.Error())
+		c.error(err)
 		return
 	}
 	resultEvent := models.MessageContract{
@@ -421,7 +421,7 @@ func (c *RoomWSController) MetadataGet(ctx *models.WSContext) {
 func (c *RoomWSController) UserByStream(ctx *models.WSContext) {
 	userInfo, err := c.roomRepo.GetUserByStreamId(ctx.RoomId, ctx.ParsedMessage.Data)
 	if err != nil {
-		c.error(err.Error())
+		c.error(err)
 		return
 	}
 	if userInfo == nil {
@@ -429,7 +429,7 @@ func (c *RoomWSController) UserByStream(ctx *models.WSContext) {
 	}
 	isBroadcaster, err := c.roomRepo.IsBroadcaster(ctx.RoomId, userInfo.ID)
 	if err != nil {
-		c.error(err.Error())
+		c.error(err)
 	}
 	resultEvent := models.MessageContract{
 		Type: "user-by-stream",
@@ -449,7 +449,7 @@ func (c *RoomWSController) GetLatestUserList(ctx *models.WSContext) {
 func (c *RoomWSController) Muted(ctx *models.WSContext) {
 	list, err := c.roomRepo.GetAllMembersId(ctx.RoomId, false)
 	if err != nil {
-		c.error(err.Error())
+		c.error(err)
 		return
 	}
 	err = c.socketSVC.Send(ctx.PureMessage, list...)
@@ -458,12 +458,12 @@ func (c *RoomWSController) Muted(ctx *models.WSContext) {
 func (c *RoomWSController) emitUserList(roomId string) {
 	list, err := c.roomRepo.GetMembersList(roomId)
 	if err != nil {
-		c.error(err.Error())
+		c.error(err)
 		return
 	}
 	roomMembersIdList, err := c.roomRepo.GetAllMembersId(roomId, false)
 	if err != nil {
-		c.error(err.Error())
+		c.error(err)
 		return
 	}
 	index := -1
@@ -478,7 +478,7 @@ func (c *RoomWSController) emitUserList(roomId string) {
 	}
 	buffer, err := json.Marshal(list)
 	if err != nil {
-		c.error(err.Error())
+		c.error(err)
 		return
 	}
 	event := models.MessageContract{
@@ -491,7 +491,7 @@ func (c *RoomWSController) emitUserList(roomId string) {
 func (c *RoomWSController) ReconnectChildren(ctx *models.WSContext) {
 	childrenIdList, err := c.roomRepo.GetChildrenIdList(ctx.RoomId, ctx.SocketID)
 	if err != nil {
-		c.error(err.Error())
+		c.error(err)
 		return
 	}
 	event := models.MessageContract{
@@ -504,7 +504,7 @@ func (c *RoomWSController) ReconnectChildren(ctx *models.WSContext) {
 func (c *RoomWSController) SendMessage(ctx *models.WSContext) {
 	membersIdList, err := c.roomRepo.GetAllMembersId(ctx.RoomId, false)
 	if err != nil {
-		c.error(err.Error())
+		c.error(err)
 		_ = c.socketSVC.Send(map[string]string{"error": "error getting members list"}, ctx.SocketID)
 		return
 	}
@@ -516,7 +516,7 @@ func (c *RoomWSController) SendMessage(ctx *models.WSContext) {
 	}, membersIdList...)
 	err = c.roomRepo.AddMessageToHistory(ctx.RoomId, ctx.SocketID, ctx.ParsedMessage.Data)
 	if err != nil {
-		c.error(err.Error())
+		c.error(err)
 		return
 	}
 
@@ -526,12 +526,12 @@ func (c *RoomWSController) SendOfferToAN(ctx *models.WSContext) {
 	msg := make(map[string]interface{})
 	err := json.Unmarshal(ctx.PureMessage, &msg)
 	if err != nil {
-		c.error(err.Error())
+		c.error(err)
 		return
 	}
 	err = c.ggRepo.SendOffer(ctx.RoomId, ctx.SocketID, msg["sdp"])
 	if err != nil {
-		c.error(err.Error())
+		c.error(err)
 		return
 	}
 }
@@ -540,12 +540,12 @@ func (c *RoomWSController) SendAnswerToAN(ctx *models.WSContext) {
 	msg := make(map[string]interface{})
 	err := json.Unmarshal(ctx.PureMessage, &msg)
 	if err != nil {
-		c.error(err.Error())
+		c.error(err)
 		return
 	}
 	err = c.ggRepo.SendAnswer(ctx.RoomId, ctx.SocketID, msg["sdp"])
 	if err != nil {
-		c.error(err.Error())
+		c.error(err)
 		return
 	}
 }
@@ -554,12 +554,12 @@ func (c *RoomWSController) SendICECandidateToAN(ctx *models.WSContext) {
 	msg := make(map[string]interface{})
 	err := json.Unmarshal(ctx.PureMessage, &msg)
 	if err != nil {
-		c.error(err.Error())
+		c.error(err)
 		return
 	}
 	err = c.ggRepo.SendICECandidate(ctx.RoomId, ctx.SocketID, msg["candidate"])
 	if err != nil {
-		c.error(err.Error())
+		c.error(err)
 		return
 	}
 }
@@ -567,7 +567,7 @@ func (c *RoomWSController) SendICECandidateToAN(ctx *models.WSContext) {
 func (c *RoomWSController) DefaultHandler(ctx *models.WSContext) {
 	id, err := strconv.ParseUint(ctx.ParsedMessage.Target, 10, 64)
 	if err != nil {
-		c.error(err.Error())
+		c.error(err)
 		return
 	}
 	if c.roomRepo.IsGGInstance(ctx.RoomId, id) {
@@ -575,7 +575,7 @@ func (c *RoomWSController) DefaultHandler(ctx *models.WSContext) {
 	}
 	targetMember, err := c.roomRepo.GetMember(ctx.RoomId, id)
 	if err != nil {
-		c.error(err.Error())
+		c.error(err)
 		return
 	}
 
@@ -586,12 +586,12 @@ func (c *RoomWSController) DefaultHandler(ctx *models.WSContext) {
 	var fullMessage map[string]interface{}
 	err = json.Unmarshal(ctx.PureMessage, &fullMessage)
 	if err != nil {
-		c.error(err.Error())
+		c.error(err)
 		return
 	}
 	userInfo, err := c.roomRepo.GetMember(ctx.RoomId, ctx.SocketID)
 	if err != nil {
-		c.error(err.Error())
+		c.error(err)
 		return
 	}
 	if userInfo == nil {
@@ -603,14 +603,14 @@ func (c *RoomWSController) DefaultHandler(ctx *models.WSContext) {
 	_ = c.socketSVC.Send(fullMessage, targetMember.ID)
 }
 
-func (c *RoomWSController) debug(msg ...string) {
+func (c *RoomWSController) debug(msg ...any) {
 	 c.logger.Debug("room_ws_ctrl", msg...)
 }
 
-func (c *RoomWSController) error(msg ...string) {
+func (c *RoomWSController) error(msg ...any) {
 	c.logger.Error("room_ws_ctrl", msg...)
 }
 
-func (c *RoomWSController) info(msg ...string) {
+func (c *RoomWSController) info(msg ...any) {
 	c.logger.Info("room_ws_ctrl", msg...)
 }

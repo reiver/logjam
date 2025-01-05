@@ -1,7 +1,7 @@
 package logs
 
 type Logger interface {
-	Debug(tag string, msg ...string)
-	Error(tag string, msg ...string)
-	Info(tag string, msg ...string)
+	Debug(tag string, msg ...any)
+	Error(tag string, msg ...any)
+	Info(tag string, msg ...any)
 }

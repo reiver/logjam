@@ -3,7 +3,6 @@ package logs
 import (
 	"fmt"
 	"io"
-	"strings"
 	"time"
 )
 
@@ -14,11 +13,16 @@ type internalLogger struct {
 
 var _ Logger = internalLogger{}
 
-func (receiver internalLogger) log(level string, tag string, msg ...string) {
+func (receiver internalLogger) log(level string, tag string, msg ...any) {
 	if receiver.ignoreDebugLogs && level == levelDebug {
 		return
 	}
-	fmt.Fprintf(receiver.Writer(), "[%s] %s [%s] %s\n", tag, time.Now().Format(time.RFC3339), level, strings.Join(msg, ", "))
+
+	var now string = time.Now().Format(time.RFC3339)
+
+	var text string = fmt.Sprint(msg...)
+
+	fmt.Fprintf(receiver.Writer(), "[%s] %s [%s] %s\n", tag, now, level, text)
 }
 
 func (receiver internalLogger) Writer() io.Writer {
@@ -29,17 +33,17 @@ func (receiver internalLogger) Writer() io.Writer {
 	return writer
 }
 
-func (receiver internalLogger) Debug(tag string, msg ...string) {
+func (receiver internalLogger) Debug(tag string, msg ...any) {
 	const level = levelDebug
 	receiver.log(level, tag, msg...)
 }
 
-func (receiver internalLogger) Error(tag string, msg ...string) {
+func (receiver internalLogger) Error(tag string, msg ...any) {
 	const level = levelError
 	receiver.log(level, tag, msg...)
 }
 
-func (receiver internalLogger) Info(tag string, msg ...string) {
+func (receiver internalLogger) Info(tag string, msg ...any) {
 	const level = levelInfo
 	receiver.log(level, tag, msg...)
 }
