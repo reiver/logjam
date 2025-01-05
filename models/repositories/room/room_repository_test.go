@@ -1,8 +1,9 @@
 package roomRepository
 
 import (
-	"github.com/reiver/logjam/helpers"
 	"testing"
+
+	"github.com/reiver/logjam/lib/random"
 )
 
 func Test_CreationAndExistence(t *testing.T) {
@@ -97,7 +98,7 @@ func Test_Tree(t *testing.T) {
 		t.Error(err)
 		return
 	}
-	err = repo.AddMember(roomId, uint64(0), helpers.GetRandomString(8), "", "", false)
+	err = repo.AddMember(roomId, uint64(0), random.String(8), "", "", false)
 	if err != nil {
 		t.Error(err)
 		return
@@ -113,7 +114,7 @@ func Test_Tree(t *testing.T) {
 		return
 	}
 
-	err = repo.AddMember(roomId, uint64(1), helpers.GetRandomString(8), "", "", false)
+	err = repo.AddMember(roomId, uint64(1), random.String(8), "", "", false)
 	if err != nil {
 		t.Error(err)
 		return
@@ -123,7 +124,7 @@ func Test_Tree(t *testing.T) {
 		t.Error(err)
 		return
 	}
-	err = repo.AddMember(roomId, uint64(2), helpers.GetRandomString(8), "", "", false)
+	err = repo.AddMember(roomId, uint64(2), random.String(8), "", "", false)
 	if err != nil {
 		t.Error(err)
 		return
@@ -133,7 +134,7 @@ func Test_Tree(t *testing.T) {
 		t.Error(err)
 		return
 	}
-	err = repo.AddMember(roomId, uint64(3), helpers.GetRandomString(8), "", "", false)
+	err = repo.AddMember(roomId, uint64(3), random.String(8), "", "", false)
 	if err != nil {
 		t.Error(err)
 		return
