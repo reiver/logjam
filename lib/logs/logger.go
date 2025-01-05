@@ -1,13 +1,7 @@
 package logs
 
-type TLogLevel string
-
-const (
-	LInfo  TLogLevel = "info"
-	LDebug TLogLevel = "debug"
-	LError TLogLevel = "error"
-)
-
-type ILogger interface {
-	Log(tag string, level TLogLevel, msg ...string) error
+type Logger interface {
+	Debug(tag string, msg ...string) error
+	Error(tag string, msg ...string) error
+	Info(tag string, msg ...string) error
 }

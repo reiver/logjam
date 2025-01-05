@@ -34,14 +34,14 @@ func (s *SocketKeeper) WriteMessage(messageType int, data []byte) error {
 
 type socketService struct {
 	*sync.Mutex
-	logger      logs.ILogger
+	logger      logs.Logger
 	lastId      uint64
 	sockets     map[*websocket.Conn]*SocketKeeper
 	socketsById map[uint64]*websocket.Conn
 	pingTimeout time.Duration
 }
 
-func NewSocketService(logger logs.ILogger) contracts.ISocketService {
+func NewSocketService(logger logs.Logger) contracts.ISocketService {
 	return &socketService{
 		Mutex:       &sync.Mutex{},
 		logger:      logger,
@@ -83,7 +83,7 @@ func (s *socketService) Send(data interface{}, receiverIds ...uint64) error {
 }
 
 func (s *socketService) OnConnect(conn *websocket.Conn) (uint64, error) {
-	s.logger.Log("socket_svc", logs.LDebug, "new socket connected")
+	s.logger.Debug("socket_svc", "new socket connected")
 	s.Lock()
 	defer s.Unlock()
 
@@ -141,7 +141,7 @@ func (s *socketService) OnDisconnect(conn *websocket.Conn, code int, error strin
 	s.Lock()
 	defer s.Unlock()
 	if keeper, exists := s.sockets[conn]; exists {
-		_ = s.logger.Log("socket_svc", logs.LDebug, "a socket got disconnected ["+strconv.FormatUint(keeper.ID, 10)+"]", strconv.Itoa(code), ":", error)
+		_ = s.logger.Debug("socket_svc", "a socket got disconnected ["+strconv.FormatUint(keeper.ID, 10)+"]", strconv.Itoa(code), ":", error)
 		delete(s.socketsById, keeper.ID)
 		delete(s.sockets, conn)
 	}

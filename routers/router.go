@@ -22,10 +22,10 @@ type Router struct {
 	router            *mux.Router
 	roomWSRouter      IRouteRegistrar
 	GoldGorillaRouter IRouteRegistrar
-	logger            logs.ILogger
+	logger            logs.Logger
 }
 
-func NewRouter(roomWSCtrl *controllers.RoomWSController, GoldGorillaCtrl *controllers.GoldGorillaController, roomRepo contracts.IRoomRepository, socketSVC contracts.ISocketService, logger logs.ILogger) *Router {
+func NewRouter(roomWSCtrl *controllers.RoomWSController, GoldGorillaCtrl *controllers.GoldGorillaController, roomRepo contracts.IRoomRepository, socketSVC contracts.ISocketService, logger logs.Logger) *Router {
 	return &Router{
 		router:            mux.NewRouter(),
 		roomWSRouter:      newRoomWSRouter(roomWSCtrl, roomRepo, socketSVC, logger),
@@ -119,7 +119,7 @@ func (r *Router) RegisterRoutes() error {
 
 	r.router.PathPrefix("/").HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 
-		r.logger.Log("URL: ", logs.LDebug, req.URL.Path)
+		r.logger.Debug("URL: ", req.URL.Path)
 		metaData := fetchDataForMetaTags(req.URL.Path) // Implement this to fetch meta data based on the request
 
 		// Read the existing index.html file
@@ -131,7 +131,7 @@ func (r *Router) RegisterRoutes() error {
 
 		// Modify the HTML content to include the dynamic title and description
 		modifiedHTML := injectMetaTags(string(htmlContent), metaData, r)
-		// r.logger.Log("Modified HTML", logs.LDebug, modifiedHTML)
+		// r.logger.Debug("Modified HTML", modifiedHTML)
 
 		// Serve the modified HTML content
 		// w.Header().Set("Content-Type", "text/html; charset=utf-8")
@@ -166,7 +166,7 @@ func (r *Router) RegisterRoutes() error {
 			if strings.Index(ip, ":") > 0 {
 				ip = ip[:strings.Index(ip, ":")]
 			}
-			r.logger.Log("HTTP", logs.LDebug, fmt.Sprintf(`%s | %s "%s"`, ip, request.Method, request.URL.Path))
+			r.logger.Debug("HTTP", fmt.Sprintf(`%s | %s "%s"`, ip, request.Method, request.URL.Path))
 			handler.ServeHTTP(writer, request)
 		})
 	})
@@ -259,24 +259,24 @@ func injectMetaTags(htmlContent string, data *MetaData, r *Router) string {
 
 		// Remove the existing meta OG tag
 		if strings.Contains(htmlContent, `<meta name="twitter:image" content="/assets/metatagsLogo-3d1cffd4.png" />`) {
-			r.logger.Log("IMAGE TAG", logs.LDebug, "FOUND THE IMAGE TAG")
+			r.logger.Debug("IMAGE TAG", "FOUND THE IMAGE TAG")
 			htmlContent = strings.Replace(htmlContent, `<meta name="twitter:image" content="/assets/metatagsLogo-3d1cffd4.png" />`, imageTag, 1)
-			// r.logger.Log("UPDATED HTML: ", logs.LDebug, htmlContent)
+			// r.logger.Debug("UPDATED HTML: ", htmlContent)
 		}
 
 		if strings.Contains(htmlContent, `<meta property="og:image" content="/assets/metatagsLogo-3d1cffd4.png" />`) {
-			r.logger.Log("IMAGE TAG", logs.LDebug, "FOUND THE IMAGE TAG")
+			r.logger.Debug("IMAGE TAG", "FOUND THE IMAGE TAG")
 			htmlContent = strings.Replace(htmlContent, `<meta property="og:image" content="/assets/metatagsLogo-3d1cffd4.png" />`, imageTag, 1)
-			// r.logger.Log("UPDATED HTML: ", logs.LDebug, htmlContent)
+			// r.logger.Debug("UPDATED HTML: ", htmlContent)
 		}
 	}
 
-	r.logger.Log("DESC TAG CONTENT: ", logs.LDebug, descTag)
+	r.logger.Debug("DESC TAG CONTENT: ", descTag)
 
 	// Replace existing meta description tag, or add if not present
 	// if strings.Contains(htmlContent, `meta property="og:title"`) {
 	// 	htmlContent = strings.Replace(htmlContent, `<meta property="og:title" content="GreatApe" />`, titleTag, 1)
-	// 	r.logger.Log("String found", logs.LDebug)
+	// 	r.logger.Debug("String found")
 	// }
 
 	headStartIndex := strings.Index(htmlContent, "<head>")
@@ -293,9 +293,9 @@ func injectMetaTags(htmlContent string, data *MetaData, r *Router) string {
 
 		// Insert the tags right after the <head> tag
 		htmlContent = htmlContent[:insertPosition] + tagsToInsert + htmlContent[insertPosition:]
-		r.logger.Log("Title and description tags inserted", logs.LDebug)
+		r.logger.Debug("Title and description tags inserted")
 	} else {
-		r.logger.Log("No <head> tag found, cannot insert tags", logs.LDebug)
+		r.logger.Debug("No <head> tag found, cannot insert tags")
 	}
 
 	return htmlContent

@@ -8,19 +8,18 @@ import (
 	roomRepository "github.com/reiver/logjam/models/repositories/room"
 	"github.com/reiver/logjam/routers"
 	"github.com/reiver/logjam/services"
-	"github.com/reiver/logjam/services/logger"
 )
 
 type App struct {
-	Logger logs.ILogger
+	Logger logs.Logger
 	Router *routers.Router
 
 	config *models.ConfigModel
 }
 
 func (app *App) Init(srcListenAddr string, prodMode bool, goldGorillaSVCAddr string) {
-	app.Logger = logger.NewSTDOUTLogger(prodMode)
-	_ = app.Logger.Log("app", logs.LInfo, "initializing logjam ..")
+	app.Logger = logs.NewStdOutLogger(prodMode)
+	_ = app.Logger.Info("app", "initializing logjam ..")
 	app.config = &models.ConfigModel{
 		GoldGorillaSVCAddr: goldGorillaSVCAddr,
 		SrcListenAddr:      srcListenAddr,
@@ -36,7 +35,7 @@ func (app *App) Init(srcListenAddr string, prodMode bool, goldGorillaSVCAddr str
 }
 
 func (app *App) Run() {
-	_ = app.Logger.Log("app", logs.LInfo, "running ..")
+	_ = app.Logger.Info("app", "running ..")
 	panicIfErr(app.Router.Serve(app.config.SrcListenAddr))
 }
 
