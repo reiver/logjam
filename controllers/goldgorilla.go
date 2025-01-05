@@ -14,6 +14,10 @@ import (
 	"github.com/reiver/logjam/models/dto"
 )
 
+const (
+	logtag = "goldgorilla"
+)
+
 type GoldGorillaController struct {
 	roomRepo  contracts.IRoomRepository
 	ggSVCRepo contracts.IGoldGorillaServiceRepository
@@ -134,7 +138,7 @@ func (ctrl *GoldGorillaController) Join(rw http.ResponseWriter, req *http.Reques
 	}, 200)
 	memsId, err := ctrl.roomRepo.GetAllMembersId(reqModel.RoomId, false)
 	if err != nil {
-		println(err.Error())
+		ctrl.logger.Error(logtag, err)
 	} else {
 		_ = ctrl.socketSVC.Send(models.MessageContract{Type: "goldgorilla-joined", Data: strconv.FormatUint(newGGID, 10)}, memsId...)
 	}
@@ -151,7 +155,7 @@ func (ctrl *GoldGorillaController) Join(rw http.ResponseWriter, req *http.Reques
 		}
 		_, childrenIdList, err := ctrl.roomRepo.RemoveMember(roomId, newGGID)
 		if err != nil {
-			println(err.Error())
+			ctrl.logger.Error(logtag, err)
 			return
 		}
 		parentDCEvent := models.MessageContract{
@@ -159,7 +163,7 @@ func (ctrl *GoldGorillaController) Join(rw http.ResponseWriter, req *http.Reques
 			Data: strconv.FormatUint(newGGID, 10),
 		}
 		_ = ctrl.socketSVC.Send(parentDCEvent, childrenIdList...)
-		println("deleted a goldgorilla instance from tree")
+		ctrl.logger.Info(logtag, "deleted a goldgorilla instance from tree")
 	}(reqModel.RoomId, ctrl.conf.GoldGorillaBaseURL(), newGGID)
 }
 
@@ -205,7 +209,7 @@ func (ctrl *GoldGorillaController) RejoinGoldGorilla(rw http.ResponseWriter, req
 		time.Sleep(500 * time.Millisecond)
 		err := ctrl.ggSVCRepo.Start(roomId)
 		if err != nil {
-			println(err.Error())
+			ctrl.logger.Error(logtag, err)
 			return
 		}
 		brIsBackEvent := models.MessageContract{

@@ -216,7 +216,7 @@ func (c *RoomWSController) Role(ctx *models.WSContext) {
 			go func() {
 				err := c.ggRepo.Start(ctx.RoomId)
 				if err != nil {
-					println(err.Error())
+					c.error(err)
 					return
 				}
 			}()
@@ -366,7 +366,7 @@ func (c *RoomWSController) Tree(ctx *models.WSContext) {
 		return
 	}
 	if room == nil {
-		println("room doesn't exists")
+		c.error("room doesn't exists")
 		return
 	}
 	tree, err := room.GetTree()

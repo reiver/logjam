@@ -9,9 +9,11 @@ import (
 	"strings"
 
 	"github.com/gorilla/mux"
+
 	"github.com/reiver/logjam/controllers"
 	"github.com/reiver/logjam/lib/logs"
 	"github.com/reiver/logjam/models/contracts"
+	log "github.com/reiver/logjam/srv/log"
 )
 
 type IRouteRegistrar interface {
@@ -56,22 +58,24 @@ type Response struct {
 }
 
 func fetchRecordFromPocketBase(roomName string) (*Record, error) {
+	const logtag string = "fetchRecordFromPocketBase"
+
 	url := "https://pb.greatape.stream/api/collections/rooms/records?sort=-created"
 
 	// Create a new request using http
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		fmt.Println("Error creating request:", err)
+		log.Error(logtag, "Error creating request:", err)
 		return nil, err
 	}
 
-	fmt.Println("Request:", req)
+	log.Info(logtag, "Request:", req)
 
 	// Send the request via a client
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		fmt.Println("Error sending request:", err)
+		log.Error(logtag, "Error sending request:", err)
 		return nil, err
 	}
 	defer resp.Body.Close()
@@ -79,28 +83,30 @@ func fetchRecordFromPocketBase(roomName string) (*Record, error) {
 	// Read the response body
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		fmt.Println("Error reading response body:", err)
+		log.Error(logtag, "Error reading response body:", err)
 		return nil, err
 	}
 
-	// fmt.Println("Response body:", body)
+	// log.Info(logtag, "Response body:", body)
 	record, err := parseResponse(string(body), roomName)
 
 	return record, err
-	// fmt.Println("Response:", string(body))
+	// log.Info(logtag, "Response:", string(body))
 }
 
 func parseResponse(jsonData string, roomName string) (*Record, error) {
+	const logtag string = "parseResponse"
+
 	var response Response
 	err := json.Unmarshal([]byte(jsonData), &response)
 	if err != nil {
-		fmt.Println("Error parsing JSON:", err)
+		log.Error(logtag, "Error parsing JSON:", err)
 		return nil, fmt.Errorf("error parsing JSON: %w", err)
 	}
 
 	for _, item := range response.Items {
 		if item.Name == roomName {
-			fmt.Printf("Found record: %+v\n", item)
+			log.Infof(logtag, "Found record: %+v", item)
 			return &item, nil
 		}
 	}
@@ -181,12 +187,14 @@ func isBotRequest(userAgent string) bool {
 }
 
 func fetchDataForMetaTags(path string) *MetaData {
+	const logtag string = "fetchDataForMetaTags"
+
 	// Fetch your meta data based on the path or other conditions
 
 	var myRecord *Record
 
 	containsAt := strings.Contains(path, "@")
-	fmt.Println("Contains '@':", containsAt)
+	log.Error(logtag, "Contains '@':", containsAt)
 	if containsAt {
 		//get host name
 		re := regexp.MustCompile(`/(@\w+)/`) // Regular expression to match '@' followed by word characters
@@ -198,7 +206,7 @@ func fetchDataForMetaTags(path string) *MetaData {
 			hostName = strings.TrimPrefix(hostName, "@")
 
 		}
-		fmt.Println("HostName :", hostName)
+		log.Info(logtag, "HostName :", hostName)
 		myRecord = &Record{
 			Name:        "GreatApe",
 			Description: "GreatApe is Video Conferencing Application for Fediverse",
@@ -208,17 +216,17 @@ func fetchDataForMetaTags(path string) *MetaData {
 		//get room name
 		parts := strings.Split(path, "/")
 		roomName := parts[len(parts)-1]
-		fmt.Println("RoomName :", roomName)
+		log.Info(logtag, "RoomName :", roomName)
 
 		record, err := fetchRecordFromPocketBase(roomName)
 		if err != nil {
-			fmt.Println("Error :", roomName)
+			log.Error(logtag, "Error :", roomName)
 			myRecord = &Record{
 				Name:        "GreatApe",
 				Description: "GreatApe is Video Conferencing Application for Fediverse",
 			}
 		} else {
-			fmt.Println("Room Name:", record.Name, "Desc: ", record.Description, "Thumbnail: ", record.Thumbnail)
+			log.Info(logtag, "Room Name:", record.Name, "Desc: ", record.Description, "Thumbnail: ", record.Thumbnail)
 			myRecord = record
 		}
 
@@ -308,6 +316,6 @@ type MetaData struct {
 }
 
 func (r *Router) Serve(addr string) error {
-	println("[HTTP] serving on", addr)
+	r.logger.Info("router", "[HTTP] serving on", addr)
 	return http.ListenAndServe(addr, r.router)
 }

@@ -8,6 +8,7 @@ import (
 	roomRepository "github.com/reiver/logjam/models/repositories/room"
 	"github.com/reiver/logjam/routers"
 	"github.com/reiver/logjam/services"
+	"github.com/reiver/logjam/srv/log"
 )
 
 type App struct {
@@ -18,7 +19,7 @@ type App struct {
 }
 
 func (app *App) Init(config cfg.Configurer) {
-	app.Logger = logs.NewStdOutLogger(config.ProdMode())
+	app.Logger = logsrv.Logger
 	app.Logger.Info("app", "initializing logjam ..")
 	app.config = config
 	ggSVCRepo := GoldGorillaRepository.NewHTTPRepository(config.GoldGorillaBaseURL())

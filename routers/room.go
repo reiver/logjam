@@ -13,6 +13,10 @@ import (
 	"github.com/reiver/logjam/models/contracts"
 )
 
+const (
+	logtag = "ws_router"
+)
+
 type roomWSRouter struct {
 	roomCtrl  *controllers.RoomWSController
 	roomRepo  contracts.IRoomRepository
@@ -44,12 +48,12 @@ func (r *roomWSRouter) registerRoutes(router *mux.Router) {
 func (r *roomWSRouter) wsHandler(writer http.ResponseWriter, request *http.Request) {
 	wsConn, err := r.upgrader.Upgrade(writer, request, nil)
 	if err != nil {
-		r.logger.Error("ws_router", err)
+		r.logger.Error(logtag, err)
 		return
 	}
 	socketId, err := r.socketSVC.OnConnect(wsConn)
 	if err != nil {
-		r.logger.Error("ws_router", err)
+		r.logger.Error(logtag, err)
 		_ = wsConn.Close()
 		return
 	}
@@ -62,7 +66,7 @@ func (r *roomWSRouter) startReadingFromWS(wsConn *websocket.Conn, socketId uint6
 	for {
 		messageType, data, readErr := wsConn.ReadMessage()
 		if readErr != nil {
-			r.logger.Error("ws_router", readErr)
+			r.logger.Error(logtag, readErr)
 			go r.roomCtrl.OnDisconnect(&models.WSContext{
 				RoomId:        roomId,
 				SocketID:      socketId,
@@ -73,14 +77,14 @@ func (r *roomWSRouter) startReadingFromWS(wsConn *websocket.Conn, socketId uint6
 			break
 		}
 		if messageType != websocket.TextMessage {
-			r.logger.Debugf("ws_router", "ignoring a message of type: %d", messageType)
+			r.logger.Debugf(logtag, "ignoring a message of type: %d", messageType)
 			continue
 		}
 
 		var msg models.MessageContract
 		err := json.Unmarshal(data, &msg)
 		if err != nil {
-			r.logger.Error("ws_router", err)
+			r.logger.Error(logtag, err)
 			continue
 		}
 
@@ -99,7 +103,7 @@ func (r *roomWSRouter) handleEvent(ctx *models.WSContext) {
 		return
 	}
 	if ctx.ParsedMessage.Type != "tree" && ctx.ParsedMessage.Type != "ping" && ctx.ParsedMessage.Type != "metadata-get" {
-		r.logger.Debugf("ws_router", "ID[%d] event: %s", ctx.SocketID, ctx.ParsedMessage.Type)
+		r.logger.Debugf(logtag, "ID[%d] event: %s", ctx.SocketID, ctx.ParsedMessage.Type)
 	}
 	switch ctx.ParsedMessage.Type {
 	case "start":
@@ -179,7 +183,7 @@ func (r *roomWSRouter) handleEvent(ctx *models.WSContext) {
 		{
 			room, err := r.roomRepo.GetRoom(ctx.RoomId)
 			if err != nil {
-				println(err.Error())
+				r.logger.Error(logtag, err)
 			} else if room != nil {
 				if room.GoldGorilla != nil {
 					if ctx.ParsedMessage.Target == strconv.FormatUint((*room.GoldGorilla).ID, 10) {
