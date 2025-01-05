@@ -3,7 +3,7 @@ package services
 import (
 	"encoding/json"
 	"github.com/gorilla/websocket"
-	"sourcecode.social/greatape/logjam/models/contracts"
+	"github.com/reiver/logjam/models/contracts"
 	"strconv"
 	"sync"
 	"time"

@@ -5,8 +5,8 @@ import (
 	"strconv"
 	"time"
 
-	"sourcecode.social/greatape/logjam/models"
-	"sourcecode.social/greatape/logjam/models/contracts"
+	"github.com/reiver/logjam/models"
+	"github.com/reiver/logjam/models/contracts"
 )
 
 type RoomWSController struct {

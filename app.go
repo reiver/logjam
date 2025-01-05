@@ -1,14 +1,14 @@
 package main
 
 import (
-	"sourcecode.social/greatape/logjam/controllers"
-	"sourcecode.social/greatape/logjam/models"
-	"sourcecode.social/greatape/logjam/models/contracts"
-	"sourcecode.social/greatape/logjam/models/repositories/goldgorilla"
-	roomRepository "sourcecode.social/greatape/logjam/models/repositories/room"
-	"sourcecode.social/greatape/logjam/routers"
-	"sourcecode.social/greatape/logjam/services"
-	"sourcecode.social/greatape/logjam/services/logger"
+	"github.com/reiver/logjam/controllers"
+	"github.com/reiver/logjam/models"
+	"github.com/reiver/logjam/models/contracts"
+	"github.com/reiver/logjam/models/repositories/goldgorilla"
+	roomRepository "github.com/reiver/logjam/models/repositories/room"
+	"github.com/reiver/logjam/routers"
+	"github.com/reiver/logjam/services"
+	"github.com/reiver/logjam/services/logger"
 )
 
 type App struct {

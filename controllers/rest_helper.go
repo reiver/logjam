@@ -2,7 +2,7 @@ package controllers
 
 import (
 	"encoding/json"
-	"sourcecode.social/greatape/logjam/models"
+	"github.com/reiver/logjam/models"
 	"net/http"
 )
 

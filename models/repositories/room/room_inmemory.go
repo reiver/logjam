@@ -2,9 +2,9 @@ package roomRepository
 
 import (
 	"errors"
-	"sourcecode.social/greatape/logjam/models"
-	"sourcecode.social/greatape/logjam/models/contracts"
-	"sourcecode.social/greatape/logjam/models/dto"
+	"github.com/reiver/logjam/models"
+	"github.com/reiver/logjam/models/contracts"
+	"github.com/reiver/logjam/models/dto"
 	"strconv"
 	"sync"
 )

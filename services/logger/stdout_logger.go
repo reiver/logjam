@@ -2,7 +2,7 @@ package logger
 
 import (
 	"fmt"
-	"sourcecode.social/greatape/logjam/models/contracts"
+	"github.com/reiver/logjam/models/contracts"
 	"strings"
 	"time"
 )

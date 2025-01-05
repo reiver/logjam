@@ -7,9 +7,9 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
-	"sourcecode.social/greatape/logjam/controllers"
-	"sourcecode.social/greatape/logjam/models"
-	"sourcecode.social/greatape/logjam/models/contracts"
+	"github.com/reiver/logjam/controllers"
+	"github.com/reiver/logjam/models"
+	"github.com/reiver/logjam/models/contracts"
 )
 
 type roomWSRouter struct {

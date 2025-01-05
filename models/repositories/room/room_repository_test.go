@@ -1,7 +1,7 @@
 package roomRepository
 
 import (
-	"sourcecode.social/greatape/logjam/helpers"
+	"github.com/reiver/logjam/helpers"
 	"testing"
 )
 

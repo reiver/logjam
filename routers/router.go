@@ -9,8 +9,8 @@ import (
 	"strings"
 
 	"github.com/gorilla/mux"
-	"sourcecode.social/greatape/logjam/controllers"
-	"sourcecode.social/greatape/logjam/models/contracts"
+	"github.com/reiver/logjam/controllers"
+	"github.com/reiver/logjam/models/contracts"
 )
 
 type IRouteRegistrar interface {

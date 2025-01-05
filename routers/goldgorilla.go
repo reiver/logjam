@@ -3,7 +3,7 @@ package routers
 import (
 	"github.com/gorilla/mux"
 	"net/http"
-	"sourcecode.social/greatape/logjam/controllers"
+	"github.com/reiver/logjam/controllers"
 )
 
 type GoldGorillaRouter struct {
