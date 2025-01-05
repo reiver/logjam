@@ -4,4 +4,4 @@ import (
 	"github.com/reiver/logjam/lib/rooms"
 )
 
-var Repository rooms.Repository = rooms.NewRoomRepository()
+var Repository rooms.Repository = rooms.NewRepository()

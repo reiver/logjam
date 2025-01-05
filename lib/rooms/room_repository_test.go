@@ -7,7 +7,7 @@ import (
 )
 
 func Test_CreationAndExistence(t *testing.T) {
-	repo := NewRoomRepository()
+	repo := NewRepository()
 	roomId := "roomId"
 	memberId := uint64(2)
 	memberEmail := "mail@example.com"
@@ -91,7 +91,7 @@ func Test_CreationAndExistence(t *testing.T) {
 }
 
 func Test_Tree(t *testing.T) {
-	repo := NewRoomRepository()
+	repo := NewRepository()
 	roomId := "roomId"
 	err := repo.CreateRoom(roomId)
 	if err != nil {

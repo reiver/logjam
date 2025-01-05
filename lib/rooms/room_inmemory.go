@@ -14,7 +14,7 @@ type roomRepository struct {
 	rooms map[string]*models.RoomModel
 }
 
-func NewRoomRepository() Repository {
+func NewRepository() Repository {
 	return &roomRepository{
 		Mutex: &sync.Mutex{},
 		rooms: make(map[string]*models.RoomModel),
