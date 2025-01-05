@@ -14,7 +14,7 @@ type internalLogger struct {
 
 var _ Logger = internalLogger{}
 
-func (receiver internalLogger) log(tag string, level string, msg ...string) {
+func (receiver internalLogger) log(level string, tag string, msg ...string) {
 	if receiver.ignoreDebugLogs && level == levelDebug {
 		return
 	}
@@ -31,15 +31,15 @@ func (receiver internalLogger) Writer() io.Writer {
 
 func (receiver internalLogger) Debug(tag string, msg ...string) {
 	const level = levelDebug
-	receiver.log(tag, level, msg...)
+	receiver.log(level, tag, msg...)
 }
 
 func (receiver internalLogger) Error(tag string, msg ...string) {
 	const level = levelError
-	receiver.log(tag, level, msg...)
+	receiver.log(level, tag, msg...)
 }
 
 func (receiver internalLogger) Info(tag string, msg ...string) {
 	const level = levelInfo
-	receiver.log(tag, level, msg...)
+	receiver.log(level, tag, msg...)
 }
