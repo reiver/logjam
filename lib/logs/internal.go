@@ -13,8 +13,12 @@ type internalLogger struct {
 
 var _ Logger = internalLogger{}
 
+func (receiver internalLogger) discard(level string) bool {
+	return receiver.ignoreDebugLogs && level == levelDebug
+}
+
 func (receiver internalLogger) log(level string, tag string, msg ...any) {
-	if receiver.ignoreDebugLogs && level == levelDebug {
+	if receiver.discard(level) {
 		return
 	}
 
