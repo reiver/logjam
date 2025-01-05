@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/reiver/logjam/lib/logs"
+	"github.com/reiver/logjam/lib/rooms"
 	"github.com/reiver/logjam/models"
 	"github.com/reiver/logjam/models/contracts"
 )
@@ -13,11 +14,11 @@ import (
 type RoomWSController struct {
 	logger    logs.Logger
 	socketSVC contracts.ISocketService
-	roomRepo  contracts.IRoomRepository
+	roomRepo  rooms.Repository
 	ggRepo    contracts.IGoldGorillaServiceRepository
 }
 
-func NewRoomWSController(socketSVC contracts.ISocketService, roomRepo contracts.IRoomRepository, ggRepo contracts.IGoldGorillaServiceRepository, logger logs.TaggedLogger) *RoomWSController {
+func NewRoomWSController(socketSVC contracts.ISocketService, roomRepo rooms.Repository, ggRepo contracts.IGoldGorillaServiceRepository, logger logs.TaggedLogger) *RoomWSController {
 	const logtag string = "room_ws_ctrl"
 
 	return &RoomWSController{

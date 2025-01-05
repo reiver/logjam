@@ -9,13 +9,14 @@ import (
 
 	"github.com/reiver/logjam/cfg"
 	"github.com/reiver/logjam/lib/logs"
+	"github.com/reiver/logjam/lib/rooms"
 	"github.com/reiver/logjam/models"
 	"github.com/reiver/logjam/models/contracts"
 	"github.com/reiver/logjam/models/dto"
 )
 
 type GoldGorillaController struct {
-	roomRepo  contracts.IRoomRepository
+	roomRepo  rooms.Repository
 	ggSVCRepo contracts.IGoldGorillaServiceRepository
 	socketSVC contracts.ISocketService
 	conf      cfg.Configurer
@@ -23,7 +24,7 @@ type GoldGorillaController struct {
 	logger    logs.Logger
 }
 
-func NewGoldGorillaController(roomRepo contracts.IRoomRepository, ggSVCRepo contracts.IGoldGorillaServiceRepository, socketSVC contracts.ISocketService, conf cfg.Configurer, helper *RestResponseHelper, logger logs.TaggedLogger) *GoldGorillaController {
+func NewGoldGorillaController(roomRepo rooms.Repository, ggSVCRepo contracts.IGoldGorillaServiceRepository, socketSVC contracts.ISocketService, conf cfg.Configurer, helper *RestResponseHelper, logger logs.TaggedLogger) *GoldGorillaController {
 
 	const logtag string = "goldgorilla"
 
