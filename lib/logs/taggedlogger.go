@@ -1,6 +1,6 @@
 package logs
 
-type Logger interface {
+type TaggedLogger interface {
 	Debug(tag string, msg ...any)
 	Debugf(tag string, format string, msg ...any)
 	Error(tag string, msg ...any)

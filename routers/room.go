@@ -22,10 +22,10 @@ type roomWSRouter struct {
 	roomRepo  contracts.IRoomRepository
 	upgrader  websocket.Upgrader
 	socketSVC contracts.ISocketService
-	logger    logs.Logger
+	logger    logs.TaggedLogger
 }
 
-func newRoomWSRouter(roomCtrl *controllers.RoomWSController, roomRepo contracts.IRoomRepository, socketSVC contracts.ISocketService, logger logs.Logger) IRouteRegistrar {
+func newRoomWSRouter(roomCtrl *controllers.RoomWSController, roomRepo contracts.IRoomRepository, socketSVC contracts.ISocketService, logger logs.TaggedLogger) IRouteRegistrar {
 	return &roomWSRouter{
 		roomCtrl:  roomCtrl,
 		roomRepo:  roomRepo,

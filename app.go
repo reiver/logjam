@@ -12,7 +12,7 @@ import (
 )
 
 type App struct {
-	Logger logs.Logger
+	Logger logs.TaggedLogger
 	Router *routers.Router
 
 	config cfg.Configurer

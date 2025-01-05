@@ -24,10 +24,10 @@ type GoldGorillaController struct {
 	socketSVC contracts.ISocketService
 	conf      cfg.Configurer
 	helper    *RestResponseHelper
-	logger    logs.Logger
+	logger    logs.TaggedLogger
 }
 
-func NewGoldGorillaController(roomRepo contracts.IRoomRepository, ggSVCRepo contracts.IGoldGorillaServiceRepository, socketSVC contracts.ISocketService, conf cfg.Configurer, helper *RestResponseHelper, logger logs.Logger) *GoldGorillaController {
+func NewGoldGorillaController(roomRepo contracts.IRoomRepository, ggSVCRepo contracts.IGoldGorillaServiceRepository, socketSVC contracts.ISocketService, conf cfg.Configurer, helper *RestResponseHelper, logger logs.TaggedLogger) *GoldGorillaController {
 	return &GoldGorillaController{
 		roomRepo:  roomRepo,
 		socketSVC: socketSVC,

@@ -5,7 +5,7 @@ import (
 	"github.com/reiver/logjam/lib/logs"
 )
 
-var Logger logs.Logger = logs.NewStdOutLogger(cfg.Config.ProdMode())
+var Logger logs.TaggedLogger = logs.NewStdOutLogger(cfg.Config.ProdMode())
 
 func Debug(tag string, msg ...any) {
 	Logger.Debug(tag, msg...)

@@ -11,13 +11,13 @@ import (
 )
 
 type RoomWSController struct {
-	logger    logs.Logger
+	logger    logs.TaggedLogger
 	socketSVC contracts.ISocketService
 	roomRepo  contracts.IRoomRepository
 	ggRepo    contracts.IGoldGorillaServiceRepository
 }
 
-func NewRoomWSController(socketSVC contracts.ISocketService, roomRepo contracts.IRoomRepository, ggRepo contracts.IGoldGorillaServiceRepository, logger logs.Logger) *RoomWSController {
+func NewRoomWSController(socketSVC contracts.ISocketService, roomRepo contracts.IRoomRepository, ggRepo contracts.IGoldGorillaServiceRepository, logger logs.TaggedLogger) *RoomWSController {
 	return &RoomWSController{
 		logger:    logger,
 		socketSVC: socketSVC,

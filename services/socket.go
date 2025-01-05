@@ -37,14 +37,14 @@ func (s *SocketKeeper) WriteMessage(messageType int, data []byte) error {
 
 type socketService struct {
 	*sync.Mutex
-	logger      logs.Logger
+	logger      logs.TaggedLogger
 	lastId      uint64
 	sockets     map[*websocket.Conn]*SocketKeeper
 	socketsById map[uint64]*websocket.Conn
 	pingTimeout time.Duration
 }
 
-func NewSocketService(logger logs.Logger) contracts.ISocketService {
+func NewSocketService(logger logs.TaggedLogger) contracts.ISocketService {
 	return &socketService{
 		Mutex:       &sync.Mutex{},
 		logger:      logger,

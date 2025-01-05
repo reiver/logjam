@@ -11,7 +11,7 @@ type internalLogger struct {
 	ignoreDebugLogs bool
 }
 
-var _ Logger = internalLogger{}
+var _ TaggedLogger = internalLogger{}
 
 func (receiver internalLogger) discard(level string) bool {
 	return receiver.ignoreDebugLogs && level == levelDebug

@@ -24,10 +24,10 @@ type Router struct {
 	router            *mux.Router
 	roomWSRouter      IRouteRegistrar
 	GoldGorillaRouter IRouteRegistrar
-	logger            logs.Logger
+	logger            logs.TaggedLogger
 }
 
-func NewRouter(roomWSCtrl *controllers.RoomWSController, GoldGorillaCtrl *controllers.GoldGorillaController, roomRepo contracts.IRoomRepository, socketSVC contracts.ISocketService, logger logs.Logger) *Router {
+func NewRouter(roomWSCtrl *controllers.RoomWSController, GoldGorillaCtrl *controllers.GoldGorillaController, roomRepo contracts.IRoomRepository, socketSVC contracts.ISocketService, logger logs.TaggedLogger) *Router {
 	return &Router{
 		router:            mux.NewRouter(),
 		roomWSRouter:      newRoomWSRouter(roomWSCtrl, roomRepo, socketSVC, logger),
