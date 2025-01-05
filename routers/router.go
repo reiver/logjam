@@ -13,7 +13,7 @@ import (
 	"github.com/reiver/logjam/controllers"
 	"github.com/reiver/logjam/lib/logs"
 	"github.com/reiver/logjam/models/contracts"
-	log "github.com/reiver/logjam/srv/log"
+	"github.com/reiver/logjam/srv/log"
 )
 
 type IRouteRegistrar interface {
@@ -61,23 +61,24 @@ type Response struct {
 
 func fetchRecordFromPocketBase(roomName string) (*Record, error) {
 	const logtag string = "fetchRecordFromPocketBase"
+	log := logsrv.Tag(logtag)
 
 	url := "https://pb.greatape.stream/api/collections/rooms/records?sort=-created"
 
 	// Create a new request using http
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		log.Error(logtag, "Error creating request:", err)
+		log.Error("Error creating request:", err)
 		return nil, err
 	}
 
-	log.Info(logtag, "Request:", req)
+	log.Info("Request:", req)
 
 	// Send the request via a client
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Error(logtag, "Error sending request:", err)
+		log.Error("Error sending request:", err)
 		return nil, err
 	}
 	defer resp.Body.Close()
@@ -85,7 +86,7 @@ func fetchRecordFromPocketBase(roomName string) (*Record, error) {
 	// Read the response body
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Error(logtag, "Error reading response body:", err)
+		log.Error("Error reading response body:", err)
 		return nil, err
 	}
 
@@ -98,17 +99,18 @@ func fetchRecordFromPocketBase(roomName string) (*Record, error) {
 
 func parseResponse(jsonData string, roomName string) (*Record, error) {
 	const logtag string = "parseResponse"
+	log := logsrv.Tag(logtag)
 
 	var response Response
 	err := json.Unmarshal([]byte(jsonData), &response)
 	if err != nil {
-		log.Error(logtag, "Error parsing JSON:", err)
+		log.Error("Error parsing JSON:", err)
 		return nil, fmt.Errorf("error parsing JSON: %w", err)
 	}
 
 	for _, item := range response.Items {
 		if item.Name == roomName {
-			log.Infof(logtag, "Found record: %+v", item)
+			log.Infof("Found record: %+v", item)
 			return &item, nil
 		}
 	}
@@ -190,13 +192,14 @@ func isBotRequest(userAgent string) bool {
 
 func fetchDataForMetaTags(path string) *MetaData {
 	const logtag string = "fetchDataForMetaTags"
+	log := logsrv.Tag(logtag)
 
 	// Fetch your meta data based on the path or other conditions
 
 	var myRecord *Record
 
 	containsAt := strings.Contains(path, "@")
-	log.Error(logtag, "Contains '@':", containsAt)
+	log.Error("Contains '@':", containsAt)
 	if containsAt {
 		//get host name
 		re := regexp.MustCompile(`/(@\w+)/`) // Regular expression to match '@' followed by word characters
@@ -208,7 +211,7 @@ func fetchDataForMetaTags(path string) *MetaData {
 			hostName = strings.TrimPrefix(hostName, "@")
 
 		}
-		log.Info(logtag, "HostName :", hostName)
+		log.Info("HostName :", hostName)
 		myRecord = &Record{
 			Name:        "GreatApe",
 			Description: "GreatApe is Video Conferencing Application for Fediverse",
@@ -218,17 +221,17 @@ func fetchDataForMetaTags(path string) *MetaData {
 		//get room name
 		parts := strings.Split(path, "/")
 		roomName := parts[len(parts)-1]
-		log.Info(logtag, "RoomName :", roomName)
+		log.Info("RoomName :", roomName)
 
 		record, err := fetchRecordFromPocketBase(roomName)
 		if err != nil {
-			log.Error(logtag, "Error :", roomName)
+			log.Error("Error :", roomName)
 			myRecord = &Record{
 				Name:        "GreatApe",
 				Description: "GreatApe is Video Conferencing Application for Fediverse",
 			}
 		} else {
-			log.Info(logtag, "Room Name:", record.Name, "Desc: ", record.Description, "Thumbnail: ", record.Thumbnail)
+			log.Info("Room Name:", record.Name, "Desc: ", record.Description, "Thumbnail: ", record.Thumbnail)
 			myRecord = record
 		}
 
