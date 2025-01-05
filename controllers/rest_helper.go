@@ -34,6 +34,9 @@ func (r *RestResponseHelper) HandleIfErr(rw http.ResponseWriter, err error, stat
 	if err == nil {
 		return false
 	}
+
+	rw.WriteHeader(status)
+
 	_ = r.Write(rw, models.MessageResponse{Message: err.Error()}, status)
 	return true
 }
