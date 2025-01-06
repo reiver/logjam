@@ -177,7 +177,7 @@ func (r *Router) RegisterRoutes() error {
 			if strings.Index(ip, ":") > 0 {
 				ip = ip[:strings.Index(ip, ":")]
 			}
-			r.logger.Debugf("HTTP", `%s | %s "%s"`, ip, request.Method, request.URL.Path)
+			r.logger.Debugf(`HTTP %s | %s %q`, ip, request.Method, request.URL.Path)
 			handler.ServeHTTP(writer, request)
 		})
 	})
