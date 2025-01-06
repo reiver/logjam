@@ -16,110 +16,61 @@ func handleEvent(ctx *models.WSContext) {
 	}
 	switch ctx.ParsedMessage.Type {
 	case "start":
-		{
-			roomsrv.Controller.Start(ctx)
-			break
-		}
+		roomsrv.Controller.Start(ctx)
 	case "role":
-		{
-			roomsrv.Controller.Role(ctx)
-			break
-		}
+		roomsrv.Controller.Role(ctx)
 	case "stream":
-		{
-			roomsrv.Controller.Stream(ctx)
-			break
-		}
+		roomsrv.Controller.Stream(ctx)
 	case "updateStreamId":
-		{
-			roomsrv.Controller.UpdateStreamId(ctx)
-			break
-		}
+		roomsrv.Controller.UpdateStreamId(ctx)
 	case "ping":
-		{
-			roomsrv.Controller.Ping(ctx)
-			break
-		}
-
+		roomsrv.Controller.Ping(ctx)
 	case "turn_status":
-		{
-			roomsrv.Controller.TurnStatus(ctx)
-			break
-		}
+		roomsrv.Controller.TurnStatus(ctx)
 	case "tree":
-		{
-			roomsrv.Controller.Tree(ctx)
-			break
-		}
+		roomsrv.Controller.Tree(ctx)
 	case "metadata-set":
-		{
-			roomsrv.Controller.MetadataSet(ctx)
-			break
-		}
+		roomsrv.Controller.MetadataSet(ctx)
 	case "metadata-get":
-		{
-			roomsrv.Controller.MetadataGet(ctx)
-			break
-		}
+		roomsrv.Controller.MetadataGet(ctx)
 	case "user-by-stream":
-		{
-			roomsrv.Controller.UserByStream(ctx)
-			break
-		}
-
+		roomsrv.Controller.UserByStream(ctx)
 	case "muted":
-		{
-			roomsrv.Controller.Muted(ctx)
-			break
-		}
+		roomsrv.Controller.Muted(ctx)
 	case "get-latest-user-list":
-		{
-			roomsrv.Controller.GetLatestUserList(ctx)
-			break
-		}
-
+		roomsrv.Controller.GetLatestUserList(ctx)
 	case "reconnect-children":
-		{
-			roomsrv.Controller.ReconnectChildren(ctx)
-			break
-		}
+		roomsrv.Controller.ReconnectChildren(ctx)
 	case "send-message":
-		{
-			roomsrv.Controller.SendMessage(ctx)
-			break
-		}
+		roomsrv.Controller.SendMessage(ctx)
 	default:
-		{
-			room, err := roomsrv.Repository.GetRoom(ctx.RoomId)
-			if err != nil {
-				log.Error(err)
-			} else if room != nil {
-				if room.GoldGorilla != nil {
-					if ctx.ParsedMessage.Target == strconv.FormatUint((*room.GoldGorilla).ID, 10) {
-						switch ctx.ParsedMessage.Type {
-						case "video-answer":
-							{
-								roomsrv.Controller.SendAnswerToAN(ctx)
-								break
-							}
-						case "video-offer":
-							{
-								roomsrv.Controller.SendOfferToAN(ctx)
-								break
-							}
-						case "new-ice-candidate":
-							{
-								roomsrv.Controller.SendICECandidateToAN(ctx)
-								break
-							}
-						default:
-							{
-								roomsrv.Controller.DefaultHandler(ctx)
-								break
-							}
+		room, err := roomsrv.Repository.GetRoom(ctx.RoomId)
+		if err != nil {
+			log.Error(err)
+		} else if room != nil {
+			if room.GoldGorilla != nil {
+				if ctx.ParsedMessage.Target == strconv.FormatUint((*room.GoldGorilla).ID, 10) {
+					switch ctx.ParsedMessage.Type {
+					case "video-answer":
+						{
+							roomsrv.Controller.SendAnswerToAN(ctx)
+							break
 						}
-					} else {
-						roomsrv.Controller.DefaultHandler(ctx)
+					case "video-offer":
+						{
+							roomsrv.Controller.SendOfferToAN(ctx)
+							break
+						}
+					case "new-ice-candidate":
+						{
+							roomsrv.Controller.SendICECandidateToAN(ctx)
+							break
+						}
+					default:
+						{
+							roomsrv.Controller.DefaultHandler(ctx)
+							break
+						}
 					}
 				} else {
 					roomsrv.Controller.DefaultHandler(ctx)
@@ -127,7 +78,8 @@ func handleEvent(ctx *models.WSContext) {
 			} else {
 				roomsrv.Controller.DefaultHandler(ctx)
 			}
-			break
+		} else {
+			roomsrv.Controller.DefaultHandler(ctx)
 		}
 	}
 }
