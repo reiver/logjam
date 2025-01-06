@@ -28,7 +28,7 @@ type Router struct {
 	logger            logs.Logger
 }
 
-func NewRouter(roomWSCtrl *rooms.RoomWSController, GoldGorillaCtrl *controllers.GoldGorillaController, roomRepo rooms.Repository, socketSVC websock.SocketService, logger logs.TaggedLogger) *Router {
+func NewRouter(GoldGorillaCtrl *controllers.GoldGorillaController, roomRepo rooms.Repository, socketSVC websock.SocketService, logger logs.TaggedLogger) *Router {
 	const logtag string = "router"
 
 	return &Router{
