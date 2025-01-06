@@ -24,17 +24,15 @@ type IRouteRegistrar interface {
 
 type Router struct {
 	router            *mux.Router
-	roomWSRouter      IRouteRegistrar
 	GoldGorillaRouter IRouteRegistrar
 	logger            logs.Logger
 }
 
-func NewRouter(roomWSCtrl *controllers.RoomWSController, GoldGorillaCtrl *controllers.GoldGorillaController, roomRepo rooms.Repository, socketSVC websock.SocketService, logger logs.TaggedLogger) *Router {
+func NewRouter(roomWSCtrl *rooms.RoomWSController, GoldGorillaCtrl *controllers.GoldGorillaController, roomRepo rooms.Repository, socketSVC websock.SocketService, logger logs.TaggedLogger) *Router {
 	const logtag string = "router"
 
 	return &Router{
 		router:            httpsrv.Router,
-		roomWSRouter:      newRoomWSRouter(roomWSCtrl, roomRepo, socketSVC, logger),
 		GoldGorillaRouter: newGoldGorillaRouter(GoldGorillaCtrl),
 		logger:            logger.Tag(logtag),
 	}
@@ -121,7 +119,6 @@ func parseResponse(jsonData string, roomName string) (*Record, error) {
 }
 
 func (r *Router) RegisterRoutes() error {
-	r.roomWSRouter.registerRoutes(r.router)
 	r.GoldGorillaRouter.registerRoutes(r.router)
 
 	r.router.PathPrefix("/assets/").Handler(http.StripPrefix("/assets/", http.FileServer(http.Dir("./web-app/dist/assets/"))))

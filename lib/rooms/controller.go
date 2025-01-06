@@ -1,4 +1,4 @@
-package controllers
+package rooms
 
 import (
 	"encoding/json"
@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/reiver/logjam/lib/logs"
-	"github.com/reiver/logjam/lib/rooms"
 	"github.com/reiver/logjam/lib/websock"
 	"github.com/reiver/logjam/models"
 	"github.com/reiver/logjam/models/contracts"
@@ -15,11 +14,11 @@ import (
 type RoomWSController struct {
 	logger    logs.Logger
 	socketSVC websock.SocketService
-	roomRepo  rooms.Repository
+	roomRepo  Repository
 	ggRepo    contracts.IGoldGorillaServiceRepository
 }
 
-func NewRoomWSController(socketSVC websock.SocketService, roomRepo rooms.Repository, ggRepo contracts.IGoldGorillaServiceRepository, logger logs.TaggedLogger) *RoomWSController {
+func NewRoomWSController(socketSVC websock.SocketService, roomRepo Repository, ggRepo contracts.IGoldGorillaServiceRepository, logger logs.TaggedLogger) *RoomWSController {
 	const logtag string = "room_ws_ctrl"
 
 	return &RoomWSController{
@@ -393,7 +392,7 @@ func (c *RoomWSController) MetadataSet(ctx *models.WSContext) {
 		c.error(err)
 		return
 	}
-	if _, exists := metaData[rooms.RoomMessagesMetaDataKey]; exists {
+	if _, exists := metaData[RoomMessagesMetaDataKey]; exists {
 		c.socketSVC.Send(map[string]string{"error": "can't overwrite message history"}, ctx.SocketID)
 		return
 	}
