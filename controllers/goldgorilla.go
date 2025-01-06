@@ -9,6 +9,7 @@ import (
 
 	"github.com/reiver/logjam/cfg"
 	"github.com/reiver/logjam/lib/logs"
+	"github.com/reiver/logjam/lib/rest"
 	"github.com/reiver/logjam/lib/rooms"
 	"github.com/reiver/logjam/lib/websock"
 	"github.com/reiver/logjam/models"
@@ -21,11 +22,10 @@ type GoldGorillaController struct {
 	ggSVCRepo contracts.IGoldGorillaServiceRepository
 	socketSVC websock.SocketService
 	conf      cfg.Configurer
-	helper    *RestResponseHelper
 	logger    logs.Logger
 }
 
-func NewGoldGorillaController(roomRepo rooms.Repository, ggSVCRepo contracts.IGoldGorillaServiceRepository, socketSVC websock.SocketService, conf cfg.Configurer, helper *RestResponseHelper, logger logs.TaggedLogger) *GoldGorillaController {
+func NewGoldGorillaController(roomRepo rooms.Repository, ggSVCRepo contracts.IGoldGorillaServiceRepository, socketSVC websock.SocketService, conf cfg.Configurer, logger logs.TaggedLogger) *GoldGorillaController {
 
 	const logtag string = "goldgorilla"
 
@@ -35,18 +35,17 @@ func NewGoldGorillaController(roomRepo rooms.Repository, ggSVCRepo contracts.IGo
 		logger:    logger.Tag(logtag),
 		ggSVCRepo: ggSVCRepo,
 		conf:      conf,
-		helper:    helper,
 	}
 }
 
 func (ctrl *GoldGorillaController) SendAnswer(rw http.ResponseWriter, req *http.Request) {
 	reqBody, err := io.ReadAll(req.Body)
-	if ctrl.helper.HandleIfErr(rw, err, 400) {
+	if rest.HandleIfErr(rw, err, 400) {
 		return
 	}
 	var reqModel dto.SetSDPRPCModel
 	err = json.Unmarshal(reqBody, &reqModel)
-	if ctrl.helper.HandleIfErr(rw, err, 400) {
+	if rest.HandleIfErr(rw, err, 400) {
 		return
 	}
 	ctrl.socketSVC.Send(map[string]interface{}{
@@ -56,17 +55,17 @@ func (ctrl *GoldGorillaController) SendAnswer(rw http.ResponseWriter, req *http.
 		"sdp":    reqModel.SDP,
 		"data":   strconv.FormatUint(reqModel.GGID, 10),
 	}, reqModel.ID)
-	_ = ctrl.helper.Write(rw, nil, 204)
+	_ = rest.Write(rw, nil, 204)
 }
 
 func (ctrl *GoldGorillaController) SendOffer(rw http.ResponseWriter, req *http.Request) {
 	reqBody, err := io.ReadAll(req.Body)
-	if ctrl.helper.HandleIfErr(rw, err, 400) {
+	if rest.HandleIfErr(rw, err, 400) {
 		return
 	}
 	var reqModel dto.SetSDPRPCModel
 	err = json.Unmarshal(reqBody, &reqModel)
-	if ctrl.helper.HandleIfErr(rw, err, 400) {
+	if rest.HandleIfErr(rw, err, 400) {
 		return
 	}
 	_ = ctrl.socketSVC.Send(map[string]interface{}{
@@ -76,17 +75,17 @@ func (ctrl *GoldGorillaController) SendOffer(rw http.ResponseWriter, req *http.R
 		"sdp":    reqModel.SDP,
 		"data":   strconv.FormatUint(reqModel.GGID, 10),
 	}, reqModel.ID)
-	_ = ctrl.helper.Write(rw, nil, 204)
+	_ = rest.Write(rw, nil, 204)
 }
 
 func (ctrl *GoldGorillaController) SendICECandidate(rw http.ResponseWriter, req *http.Request) {
 	reqBody, err := io.ReadAll(req.Body)
-	if ctrl.helper.HandleIfErr(rw, err, 400) {
+	if rest.HandleIfErr(rw, err, 400) {
 		return
 	}
 	var reqModel dto.SendIceCandidateReqModel
 	err = json.Unmarshal(reqBody, &reqModel)
-	if ctrl.helper.HandleIfErr(rw, err, 400) {
+	if rest.HandleIfErr(rw, err, 400) {
 		return
 	}
 	_ = ctrl.socketSVC.Send(map[string]interface{}{
@@ -95,36 +94,36 @@ func (ctrl *GoldGorillaController) SendICECandidate(rw http.ResponseWriter, req 
 		"candidate": reqModel.ICECandidate,
 		"data":      strconv.FormatUint(reqModel.GGID, 10),
 	}, reqModel.ID)
-	_ = ctrl.helper.Write(rw, nil, 204)
+	_ = rest.Write(rw, nil, 204)
 }
 
 func (ctrl *GoldGorillaController) Join(rw http.ResponseWriter, req *http.Request) {
 	reqBody, err := io.ReadAll(req.Body)
-	if ctrl.helper.HandleIfErr(rw, err, 400) {
+	if rest.HandleIfErr(rw, err, 400) {
 		return
 	}
 	var reqModel dto.JoinReqModel
 	err = json.Unmarshal(reqBody, &reqModel)
-	if ctrl.helper.HandleIfErr(rw, err, 400) {
+	if rest.HandleIfErr(rw, err, 400) {
 		return
 	}
 	//ctrl.conf.GoldGorillaSVCAddr = reqModel.ServiceAddr
 	newGGID := ctrl.socketSVC.GetNewID()
 	err = ctrl.roomRepo.AddMember(reqModel.RoomId, newGGID, "{}", "", "", true)
-	if ctrl.helper.HandleIfErr(rw, err, 500) {
+	if rest.HandleIfErr(rw, err, 500) {
 		return
 	}
 	err = ctrl.roomRepo.UpdateCanConnect(reqModel.RoomId, newGGID, true)
-	if ctrl.helper.HandleIfErr(rw, err, 500) {
+	if rest.HandleIfErr(rw, err, 500) {
 		return
 	}
 	parentId, err := ctrl.roomRepo.InsertMemberToTree(reqModel.RoomId, newGGID, true)
-	if ctrl.helper.HandleIfErr(rw, err, 500) {
+	if rest.HandleIfErr(rw, err, 500) {
 		_, _, _ = ctrl.roomRepo.RemoveMember(reqModel.RoomId, newGGID)
 		return
 	}
 	err = ctrl.ggSVCRepo.CreatePeer(reqModel.RoomId, *parentId, true, true, newGGID)
-	if ctrl.helper.HandleIfErr(rw, err, 503) {
+	if rest.HandleIfErr(rw, err, 503) {
 		return
 	}
 	_ = ctrl.socketSVC.Send(models.MessageContract{
@@ -132,7 +131,7 @@ func (ctrl *GoldGorillaController) Join(rw http.ResponseWriter, req *http.Reques
 		Data: strconv.FormatUint(newGGID, 10),
 	}, *parentId)
 
-	_ = ctrl.helper.Write(rw, struct {
+	_ = rest.Write(rw, struct {
 		ID uint64 `json:"id"`
 	}{
 		ID: newGGID,
@@ -170,7 +169,7 @@ func (ctrl *GoldGorillaController) Join(rw http.ResponseWriter, req *http.Reques
 
 func (ctrl *GoldGorillaController) RejoinGoldGorilla(rw http.ResponseWriter, req *http.Request) {
 	reqBody, err := io.ReadAll(req.Body)
-	if ctrl.helper.HandleIfErr(rw, err, 400) {
+	if rest.HandleIfErr(rw, err, 400) {
 		return
 	}
 	var reqModel struct {
@@ -178,24 +177,24 @@ func (ctrl *GoldGorillaController) RejoinGoldGorilla(rw http.ResponseWriter, req
 		GGID   uint64 `json:"ggid"`
 	}
 	err = json.Unmarshal(reqBody, &reqModel)
-	if ctrl.helper.HandleIfErr(rw, err, 400) {
+	if rest.HandleIfErr(rw, err, 400) {
 		return
 	}
 	broadcaster, err := ctrl.roomRepo.GetBroadcaster(reqModel.RoomId)
-	if ctrl.helper.HandleIfErr(rw, err, 500) {
+	if rest.HandleIfErr(rw, err, 500) {
 		return
 	}
 
 	if broadcaster == nil {
-		_ = ctrl.helper.Write(rw, nil, 503)
+		_ = rest.Write(rw, nil, 503)
 		return
 	}
 	_, _, err = ctrl.roomRepo.RemoveMember(reqModel.RoomId, reqModel.GGID)
-	if ctrl.helper.HandleIfErr(rw, err, 500) {
+	if rest.HandleIfErr(rw, err, 500) {
 		return
 	}
 	roomMembersIdList, err := ctrl.roomRepo.GetAllMembersId(reqModel.RoomId, true)
-	if ctrl.helper.HandleIfErr(rw, err, 500) {
+	if rest.HandleIfErr(rw, err, 500) {
 		return
 	}
 
@@ -219,5 +218,5 @@ func (ctrl *GoldGorillaController) RejoinGoldGorilla(rw http.ResponseWriter, req
 
 		_ = ctrl.socketSVC.Send(brIsBackEvent, membersIdList...)
 	}(reqModel.RoomId, roomMembersIdList)
-	_ = ctrl.helper.Write(rw, nil, 204)
+	_ = rest.Write(rw, nil, 204)
 }

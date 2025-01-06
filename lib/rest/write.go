@@ -1,15 +1,11 @@
-package controllers
+package rest
 
 import (
 	"encoding/json"
-	"github.com/reiver/logjam/models"
 	"net/http"
 )
 
-type RestResponseHelper struct {
-}
-
-func (r *RestResponseHelper) Write(rw http.ResponseWriter, response interface{}, statusCode int) error {
+func Write(rw http.ResponseWriter, response interface{}, statusCode int) error {
 	if response == nil {
 		response = struct{}{}
 	}
@@ -28,15 +24,4 @@ func (r *RestResponseHelper) Write(rw http.ResponseWriter, response interface{},
 	}
 
 	return nil
-}
-
-func (r *RestResponseHelper) HandleIfErr(rw http.ResponseWriter, err error, status int) bool {
-	if err == nil {
-		return false
-	}
-
-	rw.WriteHeader(status)
-
-	_ = r.Write(rw, models.MessageResponse{Message: err.Error()}, status)
-	return true
 }

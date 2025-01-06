@@ -13,7 +13,3 @@ type MessageContract struct {
 	Target string
 	Name   string
 }
-
-type MessageResponse struct {
-	Message string `json:"message"`
-}

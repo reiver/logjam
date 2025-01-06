@@ -28,8 +28,7 @@ func (app *App) Init(config cfg.Configurer) {
 	roomRepo := roomsrv.Repository
 	socketSVC := websocksrv.WebSockSrv
 	roomWSCtrl := controllers.NewRoomWSController(socketSVC, roomRepo, ggSVCRepo, logger)
-	restHelper := &controllers.RestResponseHelper{}
-	goldGorillaCtrl := controllers.NewGoldGorillaController(roomRepo, ggSVCRepo, socketSVC, app.config, restHelper, logger)
+	goldGorillaCtrl := controllers.NewGoldGorillaController(roomRepo, ggSVCRepo, socketSVC, app.config, logger)
 	app.Router = routers.NewRouter(roomWSCtrl, goldGorillaCtrl, roomRepo, socketSVC, logger)
 	panicIfErr(app.Router.RegisterRoutes())
 }
