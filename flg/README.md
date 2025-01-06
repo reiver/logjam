@@ -1,4 +1,4 @@
-# flags
+# flg
 
 Do NOT import directly from this.
 

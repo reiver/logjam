@@ -1,14 +1,14 @@
 package cfg
 
 import (
-	"github.com/reiver/logjam/flags"
+	"github.com/reiver/logjam/flg"
 	libcfg "github.com/reiver/logjam/lib/cfg"
 )
 
 var config libcfg.Model = libcfg.Model{
-	GoldGorillaBaseURL:flags.GoldGorillaBaseURL,
-	ProdMode:flags.ProdMode,
-	WebServerTCPAddress:flags.WebServerTCPAddress,
+	GoldGorillaBaseURL:flg.GoldGorillaBaseURL,
+	ProdMode:flg.ProdMode,
+	WebServerTCPAddress:flg.WebServerTCPAddress,
 }
 
 var Config libcfg.Configurer = libcfg.Wrap(config)
