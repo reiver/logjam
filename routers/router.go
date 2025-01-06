@@ -14,6 +14,7 @@ import (
 	"github.com/reiver/logjam/lib/logs"
 	"github.com/reiver/logjam/lib/rooms"
 	"github.com/reiver/logjam/lib/websock"
+	"github.com/reiver/logjam/srv/http"
 	"github.com/reiver/logjam/srv/log"
 )
 
@@ -32,7 +33,7 @@ func NewRouter(roomWSCtrl *controllers.RoomWSController, GoldGorillaCtrl *contro
 	const logtag string = "router"
 
 	return &Router{
-		router:            mux.NewRouter(),
+		router:            httpsrv.Router,
 		roomWSRouter:      newRoomWSRouter(roomWSCtrl, roomRepo, socketSVC, logger),
 		GoldGorillaRouter: newGoldGorillaRouter(GoldGorillaCtrl),
 		logger:            logger.Tag(logtag),
