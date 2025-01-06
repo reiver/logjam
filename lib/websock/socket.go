@@ -1,4 +1,4 @@
-package services
+package websock
 
 import (
 	"encoding/json"
@@ -8,7 +8,6 @@ import (
 	"github.com/gorilla/websocket"
 
 	"github.com/reiver/logjam/lib/logs"
-	"github.com/reiver/logjam/models/contracts"
 )
 
 type SocketKeeper struct {
@@ -40,7 +39,7 @@ type socketService struct {
 	pingTimeout time.Duration
 }
 
-func NewSocketService(logger logs.TaggedLogger) contracts.ISocketService {
+func NewSocketService(logger logs.TaggedLogger) SocketService {
 
 	const logtag = "socket_svc"
 

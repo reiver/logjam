@@ -10,19 +10,19 @@ import (
 	"github.com/reiver/logjam/controllers"
 	"github.com/reiver/logjam/lib/logs"
 	"github.com/reiver/logjam/lib/rooms"
+	"github.com/reiver/logjam/lib/websock"
 	"github.com/reiver/logjam/models"
-	"github.com/reiver/logjam/models/contracts"
 )
 
 type roomWSRouter struct {
 	roomCtrl  *controllers.RoomWSController
 	roomRepo  rooms.Repository
 	upgrader  websocket.Upgrader
-	socketSVC contracts.ISocketService
+	socketSVC websock.SocketService
 	logger    logs.Logger
 }
 
-func newRoomWSRouter(roomCtrl *controllers.RoomWSController, roomRepo rooms.Repository, socketSVC contracts.ISocketService, logger logs.TaggedLogger) IRouteRegistrar {
+func newRoomWSRouter(roomCtrl *controllers.RoomWSController, roomRepo rooms.Repository, socketSVC websock.SocketService, logger logs.TaggedLogger) IRouteRegistrar {
 	const logtag string = "ws_router"
 
 	return &roomWSRouter{

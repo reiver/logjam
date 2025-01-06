@@ -1,8 +1,8 @@
-package contracts
+package websock
 
 import "github.com/gorilla/websocket"
 
-type ISocketService interface {
+type SocketService interface {
 	Send(data interface{}, receiverIds ...uint64) error
 
 	GetNewID() uint64
