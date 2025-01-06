@@ -52,25 +52,13 @@ func handleEvent(ctx *models.WSContext) {
 				if ctx.ParsedMessage.Target == strconv.FormatUint((*room.GoldGorilla).ID, 10) {
 					switch ctx.ParsedMessage.Type {
 					case "video-answer":
-						{
-							roomsrv.Controller.SendAnswerToAN(ctx)
-							break
-						}
+						roomsrv.Controller.SendAnswerToAN(ctx)
 					case "video-offer":
-						{
-							roomsrv.Controller.SendOfferToAN(ctx)
-							break
-						}
+						roomsrv.Controller.SendOfferToAN(ctx)
 					case "new-ice-candidate":
-						{
-							roomsrv.Controller.SendICECandidateToAN(ctx)
-							break
-						}
+						roomsrv.Controller.SendICECandidateToAN(ctx)
 					default:
-						{
-							roomsrv.Controller.DefaultHandler(ctx)
-							break
-						}
+						roomsrv.Controller.DefaultHandler(ctx)
 					}
 				} else {
 					roomsrv.Controller.DefaultHandler(ctx)
