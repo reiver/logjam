@@ -10,7 +10,6 @@ import (
 
 	"github.com/gorilla/mux"
 
-	"github.com/reiver/logjam/controllers"
 	"github.com/reiver/logjam/lib/logs"
 	"github.com/reiver/logjam/lib/rooms"
 	"github.com/reiver/logjam/lib/websock"
@@ -24,16 +23,14 @@ type IRouteRegistrar interface {
 
 type Router struct {
 	router            *mux.Router
-	GoldGorillaRouter IRouteRegistrar
 	logger            logs.Logger
 }
 
-func NewRouter(GoldGorillaCtrl *controllers.GoldGorillaController, roomRepo rooms.Repository, socketSVC websock.SocketService, logger logs.TaggedLogger) *Router {
+func NewRouter(roomRepo rooms.Repository, socketSVC websock.SocketService, logger logs.TaggedLogger) *Router {
 	const logtag string = "router"
 
 	return &Router{
 		router:            httpsrv.Router,
-		GoldGorillaRouter: newGoldGorillaRouter(GoldGorillaCtrl),
 		logger:            logger.Tag(logtag),
 	}
 }
@@ -119,8 +116,6 @@ func parseResponse(jsonData string, roomName string) (*Record, error) {
 }
 
 func (r *Router) RegisterRoutes() error {
-	r.GoldGorillaRouter.registerRoutes(r.router)
-
 	r.router.PathPrefix("/assets/").Handler(http.StripPrefix("/assets/", http.FileServer(http.Dir("./web-app/dist/assets/"))))
 	// r.router.PathPrefix("/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	// 	http.ServeFile(w, r, "./web-app/dist/index.html")

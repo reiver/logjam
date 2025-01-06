@@ -1,11 +1,9 @@
 package main
 
 import (
-	"github.com/reiver/logjam/controllers"
 	"github.com/reiver/logjam/cfg"
 	"github.com/reiver/logjam/lib/logs"
 	"github.com/reiver/logjam/routers"
-	"github.com/reiver/logjam/srv/goldgorilla"
 	"github.com/reiver/logjam/srv/log"
 	"github.com/reiver/logjam/srv/room"
 	"github.com/reiver/logjam/srv/websock"
@@ -24,11 +22,9 @@ func (app *App) Init(config cfg.Configurer) {
 	app.Logger = logger.Tag("app")
 	app.Logger.Info("app", "initializing logjam ..")
 	app.config = config
-	ggSVCRepo := goldgorillasrv.Repository
 	roomRepo := roomsrv.Repository
 	socketSVC := websocksrv.WebSockSrv
-	goldGorillaCtrl := controllers.NewGoldGorillaController(roomRepo, ggSVCRepo, socketSVC, app.config, logger)
-	app.Router = routers.NewRouter(goldGorillaCtrl, roomRepo, socketSVC, logger)
+	app.Router = routers.NewRouter(roomRepo, socketSVC, logger)
 	panicIfErr(app.Router.RegisterRoutes())
 }
 
