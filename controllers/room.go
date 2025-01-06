@@ -392,7 +392,7 @@ func (c *RoomWSController) MetadataSet(ctx *models.WSContext) {
 		c.error(err)
 		return
 	}
-	if _, exists := metaData[models.RoomMessagesMetaDataKey]; exists {
+	if _, exists := metaData[rooms.RoomMessagesMetaDataKey]; exists {
 		c.socketSVC.Send(map[string]string{"error": "can't overwrite message history"}, ctx.SocketID)
 		return
 	}

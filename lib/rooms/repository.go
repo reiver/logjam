@@ -1,19 +1,18 @@
 package rooms
 
 import (
-	"github.com/reiver/logjam/models"
 	"github.com/reiver/logjam/models/dto"
 )
 
 type Repository interface {
 	DoesRoomExists(id string) bool
 	CreateRoom(id string) error
-	GetRoom(id string) (*models.RoomModel, error)
+	GetRoom(id string) (*RoomModel, error)
 	SetBroadcaster(roomId string, id uint64) error
-	GetBroadcaster(roomId string) (*models.MemberModel, error)
+	GetBroadcaster(roomId string) (*MemberModel, error)
 	ClearBroadcasterSeat(roomId string) error
 	AddMember(roomId string, id uint64, name, email, streamId string, isGoldGorilla bool) error
-	GetMember(roomId string, id uint64) (*models.MemberModel, error)
+	GetMember(roomId string, id uint64) (*MemberModel, error)
 	UpdateCanConnect(roomId string, id uint64, newState bool) error
 	UpdateTurnStatus(roomId string, id uint64, newState bool) error
 	UpdateMemberMeta(roomId string, id uint64, metaKey string, value string) error
@@ -25,7 +24,7 @@ type Repository interface {
 	GetRoomMetaData(roomId string) (map[string]interface{}, error)
 	AddMessageToHistory(roomId string, senderId uint64, msg string) error
 	ClearMessageHistory(roomId string) error
-	GetUserByStreamId(roomId string, streamId string) (*models.MemberModel, error)
+	GetUserByStreamId(roomId string, streamId string) (*MemberModel, error)
 	IsBroadcaster(roomId string, id uint64) (bool, error)
 	GetMembersList(roomId string) ([]dto.MemberDTO, error)
 	GetChildrenIdList(roomId string, id uint64) ([]uint64, error)

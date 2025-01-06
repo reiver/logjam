@@ -5,19 +5,18 @@ import (
 	"strconv"
 	"sync"
 
-	"github.com/reiver/logjam/models"
 	"github.com/reiver/logjam/models/dto"
 )
 
 type roomRepository struct {
 	*sync.Mutex
-	rooms map[string]*models.RoomModel
+	rooms map[string]*RoomModel
 }
 
 func NewRepository() Repository {
 	return &roomRepository{
 		Mutex: &sync.Mutex{},
-		rooms: make(map[string]*models.RoomModel),
+		rooms: make(map[string]*RoomModel),
 	}
 }
 
@@ -41,11 +40,11 @@ func (r *roomRepository) CreateRoom(id string) error {
 		return nil
 	}
 
-	r.rooms[id] = &models.RoomModel{
+	r.rooms[id] = &RoomModel{
 		Mutex:     &sync.Mutex{},
 		Title:     "",
-		PeersTree: &models.PeerModel{},
-		Members:   make(map[uint64]*models.MemberModel),
+		PeersTree: &PeerModel{},
+		Members:   make(map[uint64]*MemberModel),
 		MetaData:  make(map[string]interface{}),
 	}
 	return nil
@@ -60,7 +59,7 @@ func (r *roomRepository) HadGoldGorillaInTreeBefore(id string) bool {
 	return r.rooms[id].HadGoldGorillaBefore
 }
 
-func (r *roomRepository) GetRoom(id string) (*models.RoomModel, error) {
+func (r *roomRepository) GetRoom(id string) (*RoomModel, error) {
 	r.Lock()
 	defer r.Unlock()
 	if room, exists := r.rooms[id]; exists {
@@ -84,7 +83,7 @@ func (r *roomRepository) SetBroadcaster(roomId string, id uint64) error {
 	return nil
 }
 
-func (r *roomRepository) GetBroadcaster(roomId string) (*models.MemberModel, error) {
+func (r *roomRepository) GetBroadcaster(roomId string) (*MemberModel, error) {
 	r.Lock()
 	defer r.Unlock()
 	if !r.doesRoomExists(roomId) {
@@ -119,7 +118,7 @@ func (r *roomRepository) AddMember(roomId string, id uint64, name, email, stream
 	}
 	r.rooms[roomId].Lock()
 	defer r.rooms[roomId].Unlock()
-	r.rooms[roomId].Members[id] = &models.MemberModel{
+	r.rooms[roomId].Members[id] = &MemberModel{
 		ID:             id,
 		Name:           name,
 		Email:          email,
@@ -130,7 +129,7 @@ func (r *roomRepository) AddMember(roomId string, id uint64, name, email, stream
 	return nil
 }
 
-func (r *roomRepository) GetMember(roomId string, id uint64) (*models.MemberModel, error) {
+func (r *roomRepository) GetMember(roomId string, id uint64) (*MemberModel, error) {
 	r.Lock()
 	defer r.Unlock()
 
@@ -213,10 +212,10 @@ func (r *roomRepository) InsertMemberToTree(roomId string, memberId uint64, isGo
 		r.rooms[roomId].GoldGorilla = nil
 	}
 	if r.rooms[roomId].GoldGorilla != nil {
-		(*r.rooms[roomId].GoldGorilla).Children = append((*r.rooms[roomId].GoldGorilla).Children, &models.PeerModel{
+		(*r.rooms[roomId].GoldGorilla).Children = append((*r.rooms[roomId].GoldGorilla).Children, &PeerModel{
 			ID:            memberId,
 			IsConnected:   true,
-			Children:      []*models.PeerModel{},
+			Children:      []*PeerModel{},
 			IsGoldGorilla: false,
 		})
 		parentId = &(*r.rooms[roomId].GoldGorilla).ID
@@ -235,10 +234,10 @@ start:
 	found := false
 	for _, node := range levelNodes {
 		if len((*node).Children) < 2 {
-			newChild := &models.PeerModel{
+			newChild := &PeerModel{
 				ID:            memberId,
 				IsConnected:   true,
-				Children:      []*models.PeerModel{},
+				Children:      []*PeerModel{},
 				IsGoldGorilla: isGoldGorilla,
 			}
 			(*node).Children = append((*node).Children, newChild)
@@ -313,11 +312,11 @@ func (r *roomRepository) AddMessageToHistory(roomId string, senderId uint64, msg
 	r.rooms[roomId].Lock()
 	defer r.rooms[roomId].Unlock()
 
-	if _, exists := r.rooms[roomId].MetaData[models.RoomMessagesMetaDataKey]; !exists {
-		r.rooms[roomId].MetaData[models.RoomMessagesMetaDataKey] = []dto.UserMessageModel{}
+	if _, exists := r.rooms[roomId].MetaData[RoomMessagesMetaDataKey]; !exists {
+		r.rooms[roomId].MetaData[RoomMessagesMetaDataKey] = []dto.UserMessageModel{}
 	}
-	lastMessages := r.rooms[roomId].MetaData[models.RoomMessagesMetaDataKey].([]dto.UserMessageModel)
-	r.rooms[roomId].MetaData[models.RoomMessagesMetaDataKey] = append(lastMessages, dto.UserMessageModel{
+	lastMessages := r.rooms[roomId].MetaData[RoomMessagesMetaDataKey].([]dto.UserMessageModel)
+	r.rooms[roomId].MetaData[RoomMessagesMetaDataKey] = append(lastMessages, dto.UserMessageModel{
 		Message:  msg,
 		SenderId: senderId,
 	})
@@ -335,7 +334,7 @@ func (r *roomRepository) ClearMessageHistory(roomId string) error {
 	r.rooms[roomId].Lock()
 	defer r.rooms[roomId].Unlock()
 
-	r.rooms[roomId].MetaData[models.RoomMessagesMetaDataKey] = []dto.UserMessageModel{}
+	r.rooms[roomId].MetaData[RoomMessagesMetaDataKey] = []dto.UserMessageModel{}
 	return nil
 }
 
@@ -355,7 +354,7 @@ func (r *roomRepository) GetRoomMetaData(roomId string) (map[string]interface{},
 	return copiedMap, nil
 }
 
-func (r *roomRepository) GetUserByStreamId(roomId string, targetStreamId string) (*models.MemberModel, error) {
+func (r *roomRepository) GetUserByStreamId(roomId string, targetStreamId string) (*MemberModel, error) {
 	r.Lock()
 	defer r.Unlock()
 	if !r.doesRoomExists(roomId) {
@@ -364,7 +363,7 @@ func (r *roomRepository) GetUserByStreamId(roomId string, targetStreamId string)
 
 	r.rooms[roomId].Lock()
 	defer r.rooms[roomId].Unlock()
-	var chosen *models.MemberModel
+	var chosen *MemberModel
 	for _, member := range r.rooms[roomId].Members {
 		if streamId, exists := member.MetaData["streamId"]; exists && streamId != targetStreamId {
 			continue
@@ -444,8 +443,8 @@ func (r *roomRepository) RemoveMember(roomId string, memberId uint64) (wasBroadc
 		r.rooms[roomId].PeersTree.IsConnected = false
 		return true, nodeChildrenIdList, nil
 	}
-	var lastNodesList []**models.PeerModel
-	//var targetNode ***models.PeerModel
+	var lastNodesList []**PeerModel
+	//var targetNode ***PeerModel
 	lastCheckedLevel := uint(0)
 
 	found := false
@@ -461,7 +460,7 @@ start:
 				for _, parentLostChild := range nodeChild.Children {
 					nodeChildrenIdList = append(nodeChildrenIdList, parentLostChild.ID)
 				}
-				//if memberId == models.GetGoldGorillaId() {
+				//if memberId == GetGoldGorillaId() {
 				if nodeChild.IsGoldGorilla {
 					r.rooms[roomId].GoldGorilla = nil
 				}
