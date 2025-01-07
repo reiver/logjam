@@ -13,17 +13,17 @@ func init() {
 	httpsrv.Router.HandleFunc(path, serveHTTP)
 }
 
-func serveHTTP(writer http.ResponseWriter, request *http.Request) {
-	if nil == writer {
+func serveHTTP(responsewriter http.ResponseWriter, request *http.Request) {
+	if nil == responsewriter {
 		return
 	}
 	if nil == request {
 		const code int = http.StatusInternalServerError
-		http.Error(writer, http.StatusText(code), code)
+		http.Error(responsewriter, http.StatusText(code), code)
 		return
 	}
 
-	wsConn, err := upgrader.Upgrade(writer, request, nil)
+	wsConn, err := upgrader.Upgrade(responsewriter, request, nil)
 	if err != nil {
 		log.Error(err)
 		return
