@@ -11,7 +11,6 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/reiver/logjam/lib/logs"
-	"github.com/reiver/logjam/lib/rooms"
 	"github.com/reiver/logjam/lib/websock"
 	"github.com/reiver/logjam/srv/http"
 	"github.com/reiver/logjam/srv/log"
@@ -26,7 +25,7 @@ type Router struct {
 	logger            logs.Logger
 }
 
-func NewRouter(roomRepo rooms.Repository, socketSVC websock.SocketService, logger logs.TaggedLogger) *Router {
+func NewRouter(socketSVC websock.SocketService, logger logs.TaggedLogger) *Router {
 	const logtag string = "router"
 
 	return &Router{
