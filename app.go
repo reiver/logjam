@@ -5,7 +5,6 @@ import (
 	"github.com/reiver/logjam/lib/logs"
 	"github.com/reiver/logjam/routers"
 	"github.com/reiver/logjam/srv/log"
-	"github.com/reiver/logjam/srv/websock"
 )
 
 type App struct {
@@ -21,8 +20,7 @@ func (app *App) Init(config cfg.Configurer) {
 	app.Logger = logger.Tag("app")
 	app.Logger.Info("app", "initializing logjam ..")
 	app.config = config
-	socketSVC := websocksrv.WebSockSrv
-	app.Router = routers.NewRouter(socketSVC, logger)
+	app.Router = routers.NewRouter(logger)
 	panicIfErr(app.Router.RegisterRoutes())
 }
 
