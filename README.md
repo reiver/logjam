@@ -51,6 +51,8 @@ PORT=9000 ./logjam
 
 Method №2: command line switch/flag.
 
+For example:
+
 ```
 ./logjam --src=9000
 ```
