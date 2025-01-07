@@ -2,6 +2,8 @@
 
 **logjam** is a P2P video & audio technology for decentralized social-media (DeSo).
 
+![](doc/img/greatape-logo.png)
+
 ## Running The Project
 
 ---
