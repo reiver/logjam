@@ -41,7 +41,7 @@ make sure you have docker installed first.
 
 By default this web-server runs on TCP port `8080`.
 
-This can be changed to a different TCP port using either of 2 differnt methods.
+This can be changed to a different TCP port using either of 2 different methods.
 
 Method №1: `PORT` environment variable.
 
