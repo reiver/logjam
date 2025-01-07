@@ -15,17 +15,19 @@ func init() {
 
 func serveHTTP(responsewriter http.ResponseWriter, request *http.Request) {
 	if nil == responsewriter {
+		log.Error("nil response-writer")
 		return
 	}
 	if nil == request {
 		const code int = http.StatusInternalServerError
 		http.Error(responsewriter, http.StatusText(code), code)
+		log.Error("nil request")
 		return
 	}
 
 	wsConn, err := upgrader.Upgrade(responsewriter, request, nil)
 	if err != nil {
-		log.Error(err)
+		log.Errorf("problem upgrading to websocket: %s", err)
 		return
 	}
 	socketId, err := websocksrv.WebSockSrv.OnConnect(wsConn)
