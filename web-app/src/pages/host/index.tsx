@@ -1,21 +1,19 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Button, FormControl, TextField, css } from '@mui/material'
+import { Button, FormControl, TextField } from '@mui/material'
 import CopyIcon from 'assets/icons/Copy.svg?react'
 import LinkIcon from 'assets/icons/Link.svg?react'
 import LogoIcon from 'assets/images/Greatapelogo.png'
 import copy from 'clipboard-copy'
 import clsx from 'clsx'
-import { Icon, Logo, ResponsiveModal, Tooltip } from 'components'
+import { Icon, ResponsiveModal, Tooltip } from 'components'
 import Meeting from 'pages/Meeting'
 import { lazy } from 'preact-iso'
 import { useEffect, useState } from 'preact/compat'
 import { useForm } from 'react-hook-form'
 import { HostToastProvider, makeCssFilesDialog, makeMetaImageDialog } from '../host/hostDialogs'
-import z, { any } from 'zod'
-import { parse } from 'postcss'
-import * as csstree from 'css-tree';
+import z from 'zod'
 import { signal } from '@preact/signals'
-import { PocketBaseManager, HostData, RoomData, CSSData, convertRoomDataToFormData } from 'lib/helperAPI'
+import { PocketBaseManager, HostData, RoomData, convertRoomDataToFormData } from 'lib/helperAPI'
 
 const PageNotFound = lazy(() => import('../_404'))
 const selectedImage = signal(null)
@@ -27,9 +25,6 @@ const pbApi = new PocketBaseManager()
 var oldIndex = -1;
 var hostId = null
 const cssList = signal(null);
-
-
-
 
 const createNewHost = async (hostData) => {
   var newHost = await pbApi.createHost(hostData)
