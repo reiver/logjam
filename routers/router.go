@@ -114,7 +114,6 @@ func parseResponse(jsonData string, roomName string) (*Record, error) {
 }
 
 func (r *Router) RegisterRoutes() error {
-	r.router.PathPrefix("/assets/").Handler(http.StripPrefix("/assets/", http.FileServer(http.Dir("./web-app/dist/assets/"))))
 	// r.router.PathPrefix("/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	// 	http.ServeFile(w, r, "./web-app/dist/index.html")
 	// })
