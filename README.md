@@ -49,7 +49,7 @@ This can be changed to a different TCP port using either of 2 different methods.
 
 Method №1 is to use the `PORT` **environment-variable**.
 
-For example, if you wanted to change the web-server's TCP port to `9090` then you could do something similar to the following:
+For example, if you wanted to change the web-server's TCP port to `9000` then you could do something similar to the following:
 
 ```
 PORT=9000 ./logjam
@@ -59,7 +59,7 @@ PORT=9000 ./logjam
 
 Method №2 is to use the `--src` **command-line** switch/flag.
 
-For example, if you wanted to change the web-server's TCP port to `9090` then you could do something similar to the following:
+For example, if you wanted to change the web-server's TCP port to `9000` then you could do something similar to the following:
 
 ```
 ./logjam --src=9000
