@@ -33,6 +33,28 @@ make sure you have docker installed first.
    1. build the image: `docker build -t logjam:latest .`
    2. create and run the container: `docker run --rm logjam:latest`
 
+## HTTP TCP Port
+
+**logjam** includes a web-server.
+
+By default this web-server runs on TCP port `8080`.
+
+This can be changed to a different TCP port using either of 2 differnt methods.
+
+Method №1: `PORT` environment variable.
+
+For example:
+
+```
+PORT=9000 ./logjam
+```
+
+Method №2: command line switch/flag.
+
+```
+./logjam --src=9000
+```
+
 ## Authors
 
 **logjam** was created by:
