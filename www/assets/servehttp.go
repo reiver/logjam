@@ -39,17 +39,20 @@ func serveHTTP(responsewriter http.ResponseWriter, request *http.Request) {
 		log.Error("nil request-url")
 		return
 	}
-
-	var requesturi string = request.URL.RequestURI()
-	if !strings.HasPrefix(requesturi, pathprefix) {
-		const code int = http.StatusNotFound
-		http.Error(responsewriter, http.StatusText(code), code)
-		log.Debugf("bad request-uri (%q)", requesturi)
-		return
-	}
+	var requestpath string = request.URL.Path
 
 	log.Debugf("request-method = %q", request.Method)
-	log.Debugf("request-uri    = %q", requesturi)
+	log.Debugf("request-path   = %q", requestpath)
+
+	requestpath = path.Canonical(requestpath)
+	log.Debugf("request-path   = %q (canonical)", requestpath)
+
+	if !strings.HasPrefix(requestpath, pathprefix) {
+		const code int = http.StatusNotFound
+		http.Error(responsewriter, http.StatusText(code), code)
+		log.Debugf("bad request-path (%q)", requestpath)
+		return
+	}
 
 	if http.MethodGet != request.Method {
 		const code int = http.StatusMethodNotAllowed
@@ -60,11 +63,11 @@ func serveHTTP(responsewriter http.ResponseWriter, request *http.Request) {
 
 	var fspath string
 	{
-		truncated, err := truncateRequestURI(pathprefix, requesturi)
+		truncated, err := truncateRequestURI(pathprefix, requestpath)
 		if nil != err {
 			const code int = http.StatusNotFound
 			http.Error(responsewriter, http.StatusText(code), code)
-			log.Debugf("not found (%q)", requesturi)
+			log.Debugf("not found (%q)", requestpath)
 			return
 		}
 
