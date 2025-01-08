@@ -30,6 +30,7 @@ import blurIcon from 'assets/icons/Blur.svg'
 import noBackgroundIcon from 'assets/icons/NoBackground.svg'
 import { VideoBackground } from 'lib/videoBackground'
 import { isMobile } from 'lib/common.js'
+import logger from 'lib/logger.js'
 
 const blurTxt = "Blur";
 const noneTxt = "None"
@@ -66,7 +67,7 @@ export const IOSettingsDialog = ({
     const io = new IODevices()
     await io.initDevices()
     const devices = io.getAudioOutputDevices()
-    console.log('Audio Output Devices: ', devices)
+    logger.log('Audio Output Devices: ', devices)
     makeIODevicesDialog(
       'io-devices',
       {
@@ -89,7 +90,7 @@ export const IOSettingsDialog = ({
     const io = new IODevices()
     await io.initDevices()
     const devices = io.getAudioInputDevices()
-    console.log('Audio Input Devices: ', devices)
+    logger.log('Audio Input Devices: ', devices)
 
     makeIODevicesDialog(
       'io-devices',
@@ -113,7 +114,7 @@ export const IOSettingsDialog = ({
     const io = new IODevices()
     await io.initDevices()
     const devices = io.getVideoInputDevices()
-    console.log('Video Input Devices: ', devices)
+    logger.log('Video Input Devices: ', devices)
 
     makeIODevicesDialog(
       'io-devices',
@@ -145,9 +146,9 @@ export const IOSettingsDialog = ({
       },
       backgroundsList,
       (backgroundMode, index) => {
-        console.log("backgroundMode: ", backgroundMode);
+        logger.log("backgroundMode: ", backgroundMode);
 
-        console.log("backgroundImage: ", backgroundsList[index])
+        logger.log("backgroundImage: ", backgroundsList[index])
 
         if (backgroundMode === "backgroundimage") {
           selectedBackground.value = index
@@ -162,7 +163,7 @@ export const IOSettingsDialog = ({
   }
 
 
-  console.log('Resetting..')
+  logger.log('Resetting..')
 
   return (
     <div class="absolute top-0 left-0 w-full h-full">
@@ -248,7 +249,7 @@ export const IOSettingsDialog = ({
               variant={okButtonVariant}
               class="w-full flex-grow-1"
               onClick={() => {
-                console.log("selectedBackground.value onOK : ", selectedBackground.value)
+                logger.log("selectedBackground.value onOK : ", selectedBackground.value)
                 onOk(selectedMic.value, selectedCamera.value, selectedSpeaker.value, selectedBackground.value)
               }}
             >
@@ -413,7 +414,7 @@ export const IODevicesDialog = ({ onClose, message: { message, title }, devices,
         }
       })
 
-      console.log('Updated Index: ', index, ' ,value: ', devices[index])
+      logger.log('Updated Index: ', index, ' ,value: ', devices[index])
     }
 
     // Now, the 'index' variable will contain the index of the matching device (or -1 if none found).
@@ -427,16 +428,16 @@ export const IODevicesDialog = ({ onClose, message: { message, title }, devices,
       selectedDeviceIndex = index
     }
 
-    console.log('handleDeviceClick: ', index)
+    logger.log('handleDeviceClick: ', index)
     // Update the radio button's checked attribute based on the selectedDeviceIndex
     const radioInput = document.getElementById(`device${index}`) as HTMLInputElement
-    console.log('radioInput: ', radioInput)
+    logger.log('radioInput: ', radioInput)
     if (radioInput) {
       radioInput.checked = selectedDeviceIndex === index
       radioInput.style.accentColor = 'black'
       if (vanish) {
         setTimeout(() => {
-          console.log('Selected Device: ', devices[selectedDeviceIndex])
+          logger.log('Selected Device: ', devices[selectedDeviceIndex])
           onClose(devices[selectedDeviceIndex])
         }, 200)
       }
@@ -457,17 +458,17 @@ export const IODevicesDialog = ({ onClose, message: { message, title }, devices,
   //check selected devices and make it selected on radio button too
   if (devices && devices.length > 0) {
     devices.forEach((value, index) => {
-      console.log('Device: ', value, ' index: ', index)
+      logger.log('Device: ', value, ' index: ', index)
       if (value.kind === 'audioinput') {
         if (selectedMic.value && selectedMic.value.deviceId === value.deviceId) {
-          console.log('selectedMicis: ', selectedMic.value)
+          logger.log('selectedMicis: ', selectedMic.value)
           setTimeout(() => {
             handleDeviceClick(index, false)
           }, 250)
         }
       } else if (value.kind === 'videoinput') {
         if (selectedCamera.value && selectedCamera.value.deviceId === value.deviceId) {
-          console.log('selectedCamis: ', selectedCamera.value)
+          logger.log('selectedCamis: ', selectedCamera.value)
 
           setTimeout(() => {
             handleDeviceClick(index, false)
@@ -475,7 +476,7 @@ export const IODevicesDialog = ({ onClose, message: { message, title }, devices,
         }
       } else if (value.kind === 'audiooutput') {
         if (selectedSpeaker.value && selectedSpeaker.value.deviceId === value.deviceId) {
-          console.log('selectedSpeakeris: ', selectedSpeaker.value)
+          logger.log('selectedSpeakeris: ', selectedSpeaker.value)
 
           setTimeout(() => {
             handleDeviceClick(index, false)
@@ -509,7 +510,7 @@ export const IODevicesDialog = ({ onClose, message: { message, title }, devices,
 
     return false
   }
-  console.log(devices)
+  logger.log(devices)
 
   return (
     <div class="absolute top-0 left-0 w-full h-full">
@@ -609,7 +610,7 @@ export const PreviewDialog = ({
     updateUser({
       isCameraOn: !isCameraOn,
     })
-    console.log("Selected Camera: ", selectedCamera.value)
+    logger.log("Selected Camera: ", selectedCamera.value)
   }
 
   const toggleMicrophone = () => {
@@ -629,12 +630,12 @@ export const PreviewDialog = ({
         title: 'Settings',
       },
       async (mic, cam, speaker, backgroundIndex) => {
-        console.log('mic: ', mic, 'cam: ', cam, 'speaker: ', speaker, 'background: ', backgroundIndex)
+        logger.log('mic: ', mic, 'cam: ', cam, 'speaker: ', speaker, 'background: ', backgroundIndex)
 
         //now change the Audio, Video and Speaker devices
         const stream = await sparkRTC.value.changeIODevices(mic, cam, speaker)
 
-        console.log('New Stream: ', stream.getTracks())
+        logger.log('New Stream: ', stream.getTracks())
         //check if video is enable or disabled
         videoStream = stream
 
@@ -671,7 +672,7 @@ export const PreviewDialog = ({
           if (videoRef.current) {
             videoRef.current.srcObject = videoStream
           } else {
-            console.log('No video ref')
+            logger.log('No video ref')
           }
         }
 

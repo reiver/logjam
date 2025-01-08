@@ -1,3 +1,5 @@
+import logger from "./logger"
+
 const CAMERA_ON = 'images/cam-on.png'
 const CAMERA_OFF = 'images/cam-off.png'
 const MIC_ON = 'images/mic-on.png'
@@ -72,7 +74,7 @@ function onMicButtonClick() {
 }
 
 function createVideoElement(videoId, muted = false) {
-  console.log('createVideoElement: ', videoId)
+  logger.log('createVideoElement: ', videoId)
   let container = document.createElement('div')
   container.className = 'video-container'
   let video = document.createElement('video')
@@ -110,13 +112,13 @@ function getVideoElement(videoId) {
 }
 
 function removeVideoElement(videoId) {
-  console.log('removeVideoElement')
+  logger.log('removeVideoElement')
   let video = document.getElementById(videoId)
   if (!video) return
-  console.log('Video:', video)
+  logger.log('Video:', video)
   let videoContainer = video.parentNode
   if (!videoContainer) return
-  console.log('VideoContainer:', videoContainer)
+  logger.log('VideoContainer:', videoContainer)
   document.getElementById('screen').removeChild(videoContainer)
   arrangeVideoContainers()
 }
@@ -192,14 +194,14 @@ function setMyName() {
     // document.getElementById('inputName').value = myName
     // document.getElementById('inputEmail').value = email
   } catch (e) {
-    console.log(e)
+    logger.log(e)
   }
   if (myName === '' || !myName) {
     myName = makeId(20)
     try {
       localStorage.setItem('logjam_myName', myName)
     } catch (e) {
-      console.log(e)
+      logger.log(e)
     }
   }
 }
@@ -213,10 +215,10 @@ function validateEmail(email) {
 
 async function handleEmailInput() {
   const inputEmail = document.getElementById('inputEmail')
-  console.log('input: ', inputEmail)
+  logger.log('input: ', inputEmail)
 
   inputEmail.addEventListener('input', function () {
-    console.log('Input field value changed:', inputEmail.value)
+    logger.log('Input field value changed:', inputEmail.value)
 
     let error = document.getElementById('error')
 
@@ -235,10 +237,10 @@ async function handleEmailInput() {
 
 async function handleNameInput() {
   const inputName = document.getElementById('inputName')
-  console.log('input: ', inputName)
+  logger.log('input: ', inputName)
 
   inputName.addEventListener('input', function () {
-    console.log('Input field value changed:', inputName.value)
+    logger.log('Input field value changed:', inputName.value)
 
     let error = document.getElementById('error')
 
@@ -278,7 +280,7 @@ async function handleClick(turn = true) {
         localStorage.setItem('logjam_myName', myName)
         localStorage.setItem('logjam_myEmail', myEmail)
       } catch (e) {
-        console.log(e)
+        logger.log(e)
       }
 
       await start(turn)
@@ -373,7 +375,7 @@ async function onRaiseHand() {
     img.src = RAISE_HAND_OFF
 
     if (sparkRTC.localStream) {
-      console.log('local stream exists')
+      logger.log('local stream exists')
       return
     }
 
@@ -399,7 +401,7 @@ function addLog(log) {
   // const p = document.createElement('p')
   // p.innerText = log
   // logs.appendChild(p)
-  console.log(log)
+  logger.log(log)
 }
 
 function enableAudioVideoControls() {
@@ -449,7 +451,7 @@ function updateUsersThumbnail(users) {
       try {
         return JSON.parse(name)
       } catch (e) {
-        console.error(e)
+        logger.error(e)
         return { name }
       }
     })()
@@ -476,7 +478,7 @@ function setSidebar(users) {
     if (sparkRTC.role === 'broadcast') {
       if (role != 'broadcaster') {
         if (video !== null && video !== undefined) {
-          console.log('broadcasting audience..')
+          logger.log('broadcasting audience..')
 
           const AudienceBroadcastIcon = document.createElement('img') //image element for profile image
 
@@ -516,7 +518,7 @@ function setSidebar(users) {
             msg = `Are you sure, you want to stop <b>${name}</b>'s broadcast?`
             res = await confirmStopAudienceBroadcast(msg)
             if (res) {
-              console.log('stoping broadcasting of Audience')
+              logger.log('stoping broadcasting of Audience')
 
               // Remove the event listeners
               AudienceBroadcastIcon.removeEventListener('mouseover', handleMouseOver)
@@ -534,7 +536,7 @@ function setSidebar(users) {
 
           pfp.appendChild(AudienceBroadcastIcon)
         } else {
-          console.log('Not broadcasting audience..')
+          logger.log('Not broadcasting audience..')
 
           const image = document.createElement('img')
           image.src = getProfilePicture(email)
@@ -542,7 +544,7 @@ function setSidebar(users) {
           pfp.appendChild(image)
         }
       } else {
-        console.log('Not audience..')
+        logger.log('Not audience..')
 
         const image = document.createElement('img')
         image.src = getProfilePicture(email)
@@ -569,17 +571,17 @@ function setSidebar(users) {
   const container = document.getElementById('sidebar')
   container.innerHTML = ''
 
-  console.log('Users: ', users)
+  logger.log('Users: ', users)
 
   for (const { name, role, video, id } of users) {
-    console.log('Video: ', video)
+    logger.log('Video: ', video)
 
     const { name: userName, email } = (() => {
       try {
-        console.log(JSON.parse(name))
+        logger.log(JSON.parse(name))
         return JSON.parse(name)
       } catch (e) {
-        console.error(e)
+        logger.error(e)
         return { name }
       }
     })()

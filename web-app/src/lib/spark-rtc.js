@@ -2,6 +2,7 @@ import { iceServers } from "./config.js";
 import { videoBackGround } from "./common.js";
 import MeetingRecorder from "./videoRecorder.js";
 import MultiStreamRecorder from "./multiStreamRecorder.js";
+import logger from "./logger.js";
 
 /** Your class description
  *
@@ -194,7 +195,7 @@ export class SparkRTC {
     try {
       if (broadcasterPeerConnection.signalingState !== "stable") {
         try {
-          console.log(
+          logger.log(
             "received offer when sigstate is ",
             broadcasterPeerConnection.signalingState,
             " rolling localDescription back"
@@ -204,7 +205,7 @@ export class SparkRTC {
             sdp: "",
           });
         } catch (e) {
-          console.error("[ignorable] rollback sdp: ", e);
+          logger.error("[ignorable] rollback sdp: ", e);
         }
       }
 
@@ -237,12 +238,12 @@ export class SparkRTC {
         `[handleVideoOfferMsg] send video-answer to ${msg.name} from ${this.myUsername}`
       );
     } catch (error) {
-      console.error("[handleVideoOfferMsg] Error:", error);
+      logger.error("[handleVideoOfferMsg] Error:", error);
     }
   };
 
   cancelJoinStage = async (data, cancel = false) => {
-    console.log("cancelJoinStage: audience-broadcasting: ", cancel, " ", data);
+    logger.log("cancelJoinStage: audience-broadcasting: ", cancel, " ", data);
     this.lastBroadcasterId = data.toString();
     this.socket.send(
       JSON.stringify({
@@ -260,7 +261,7 @@ export class SparkRTC {
 
     this.lastBroadcasterId = data.toString();
     if (this.localStream) {
-      console.log("audience-broadcasting: joining stage");
+      logger.log("audience-broadcasting: joining stage");
       this.socket.send(
         JSON.stringify({
           type: "audience-broadcasting",
@@ -454,7 +455,7 @@ export class SparkRTC {
                   `[handleMessage] alt-broadcast result ${result}`
                 );
               } catch (e) {
-                console.error(e);
+                logger.error(e);
                 return;
               }
             }
@@ -619,7 +620,7 @@ export class SparkRTC {
         break;
 
       case "audience-broadcasting":
-        console.log("audience-broadcasting", msg);
+        logger.log("audience-broadcasting", msg);
 
         this.getLatestUserList("audience-broadcasting");
 
@@ -627,7 +628,7 @@ export class SparkRTC {
           //remove the user id from raisehands
 
           this.removeFromRaiseHandList(msg.data);
-          console.log("userLoweredHand: ", this.userLoweredHand);
+          logger.log("userLoweredHand: ", this.userLoweredHand);
           if (this.userLoweredHand) {
             //get name and parse
             let name = null;
@@ -651,14 +652,14 @@ export class SparkRTC {
         break;
 
       case "invite-to-stage":
-        console.log("invite-to-stage: ", msg);
+        logger.log("invite-to-stage: ", msg);
         if (this.invitationToJoinStage) {
           this.invitationToJoinStage(msg);
         }
         break;
 
       case "left-stage":
-        console.log("left-stage", msg);
+        logger.log("left-stage", msg);
         break;
 
       case "pong": {
@@ -695,7 +696,7 @@ export class SparkRTC {
         const foundUser = users.some((user) => {
           return user.id === raiseHandId;
         });
-        console.log("RaiseHandID: User not in Meeting:", foundUser);
+        logger.log("RaiseHandID: User not in Meeting:", foundUser);
 
         if (!foundUser) {
           this.removeFromRaiseHandList(id);
@@ -709,7 +710,7 @@ export class SparkRTC {
       this.acceptedRequests.includes(data) &&
       this.role === this.Roles.BROADCAST
     ) {
-      console.log(
+      logger.log(
         "removing from acceptedRequests: ",
         this.acceptedRequests.length
       );
@@ -718,7 +719,7 @@ export class SparkRTC {
         this.acceptedRequests.splice(index, 1);
       }
 
-      console.log(
+      logger.log(
         "removed from acceptedRequests: ",
         this.acceptedRequests.length
       );
@@ -730,13 +731,13 @@ export class SparkRTC {
       this.sentRequests.includes(data) &&
       this.role === this.Roles.BROADCAST
     ) {
-      console.log("removing from sentRequest: ", this.sentRequests.length);
+      logger.log("removing from sentRequest: ", this.sentRequests.length);
       var index = this.sentRequests.indexOf(data);
       if (index > -1) {
         this.sentRequests.splice(index, 1);
       }
 
-      console.log("removed from sentRequest: ", this.sentRequests.length);
+      logger.log("removed from sentRequest: ", this.sentRequests.length);
     }
   };
 
@@ -764,16 +765,16 @@ export class SparkRTC {
         };
         this.socket.send(JSON.stringify(message));
       } catch (error) {
-        console.error("Error sending message:", error);
+        logger.error("Error sending message:", error);
       }
       if (!!this.lastPong) {
         let lastResponse = new Date(this.lastPong);
         lastResponse.setSeconds(lastResponse.getSeconds() + this.pingTimeout);
         let now = new Date();
-        // console.log(`lastPong:${this.lastPong} +5sec => is ${lastResponse} before ${now}`);
+        // logger.log(`lastPong:${this.lastPong} +5sec => is ${lastResponse} before ${now}`);
         if (lastResponse < now) {
           this.lastPong = null;
-          console.log("[timeout] pong timed out, restarting.");
+          logger.log("[timeout] pong timed out, restarting.");
           this.startProcedure?.(true);
         }
       }
@@ -968,7 +969,7 @@ export class SparkRTC {
 
       return this.shareStream;
     } catch (e) {
-      console.error(e);
+      logger.error(e);
       this.updateTheStatus(`[handleMessage] startShareScreen error ${e}`);
       alert("Unable to get access to screenshare.");
     }
@@ -976,13 +977,11 @@ export class SparkRTC {
   };
 
   startRecording = () => {
-    console.log("Start Recording in SparkRTC, room name is: ", this.roomName)
+    logger.log("Start Recording in SparkRTC, room name is: ", this.roomName)
     this.multiStreamRecorder.startRecording(this.roomName, this.remoteStreams)
   }
 
   stopRecording = () => {
-    console.log("Start Recording in SparkRTC")
-    // this.meetingRecorder.stopRecording()
     this.multiStreamRecorder.stopRecording()
   }
 
@@ -1132,7 +1131,7 @@ export class SparkRTC {
    */
   raiseHand = async () => {
     try {
-      console.log("Raising Hand");
+      logger.log("Raising Hand");
       if (this.startedRaiseHand) return;
       this.startedRaiseHand = true;
 
@@ -2051,13 +2050,13 @@ export class SparkRTC {
 
     setTimeout(() => {
       if (!peerConnection._iceIsConnected) {
-        console.log("ice not connected yet, restarting ice");
+        logger.log("ice not connected yet, restarting ice");
 
         peerConnection.restartIce();
       }
       setTimeout(() => {
         if (peerConnection.iceConnectionState === "new") {
-          console.log(
+          logger.log(
             "iceConnectionState is new after 8 seconds. restarting everything .."
           );
           this.updateTheStatus("closing the peer connection: " + target);
@@ -2210,7 +2209,7 @@ export class SparkRTC {
   //                         const data = JSON.parse(broadcaster.name);
   //                         broadcasterName = data.name;
   //                         this.lastBroadcasterId = broadcaster.id;
-  //                         console.log(
+  //                         logger.log(
   //                             'broadcasterId: ',
   //                             this.lastBroadcasterId
   //                         );
@@ -2587,7 +2586,7 @@ export class SparkRTC {
         video: videoConstraints,
       });
 
-      console.log("new LocalStream: ", this.localStream);
+      logger.log("new LocalStream: ", this.localStream);
 
       if (this.lastAudioState === this.LastState.DISABLED) {
         await this.disableAudio();
@@ -2598,7 +2597,7 @@ export class SparkRTC {
 
       return this.localStream;
     } catch (e) {
-      console.error(e);
+      logger.error(e);
     }
   };
   changeIODevices = async (mic, cam, speaker) => {
@@ -2798,13 +2797,13 @@ export class SparkRTC {
       try {
         this.updateStatus(tag, data);
       } catch (e) {
-        console.log("Failed to Update the Status: ", e);
+        logger.error("Failed to Update the Status: ", e);
       }
     }
   };
 
   closeCamera = async () => {
-    console.log("Closing camera");
+    logger.log("Closing camera");
     if (videoBackGround) {
       await videoBackGround.stopProcessing();
     }
@@ -3006,6 +3005,9 @@ export class SparkRTC {
    * To leave the meeting
    */
   leaveMeeting = async () => {
+
+    this.stopRecording()
+
     //check for local stream and stop tracks
     //stop all the sender tracks
     try {
@@ -3029,7 +3031,7 @@ export class SparkRTC {
         }
       }
     } catch (error) {
-      console.log("Error 1 while leaving: ", error);
+      logger.log("Error 1 while leaving: ", error);
     }
 
     if (this.role === this.Roles.BROADCAST) {
@@ -3085,7 +3087,7 @@ export class SparkRTC {
             }
           })
           .catch((error) => {
-            console.error(`userid: ${userid} Error retrieving stats`, error);
+            logger.error(`userid: ${userid} Error retrieving stats`, error);
           })
           .finally(() => {
             // Schedule the next check after the current task is completed

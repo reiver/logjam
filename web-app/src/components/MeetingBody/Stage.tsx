@@ -13,6 +13,7 @@ import { getDeviceConfig } from '../../hooks/use-breakpoint.js'
 import { IODevices } from '../../lib/io-devices.js'
 import { broadcastIsInTheMeeting, currentUser, sparkRTC } from '../../pages/Meeting'
 import { E } from '../../../dist/assets/index-1792d287'
+import logger from 'lib/logger'
 let timeOut
 export const bottomBarVisible = signal(true)
 export const fullScreenedStream = signal(null)
@@ -173,7 +174,7 @@ export const Stage = ({ customStyles }) => {
 
       // Set the CSS content of the style element
       styleElement.textContent = customStyles;
-      console.log("Creating style elem Stage.js")
+      logger.log("Creating style elem Stage.js")
 
     }
   }, [])
@@ -317,7 +318,7 @@ export const Stage = ({ customStyles }) => {
       }
       return 0;
     } else {
-      console.log("Original Sorting Logic")
+      logger.log("Original Sorting Logic")
 
       //original Logic
       let aScore = 0
@@ -426,7 +427,7 @@ export const Video = memo(({ stream, isMuted, isHostStream, name, userId, isUser
 
       // Set the CSS content of the style element
       styleElement.textContent = customStyles;
-      console.log("Creating style elem Stage.js 2")
+      logger.log("Creating style elem Stage.js 2")
 
     }
   }, [])
@@ -447,7 +448,7 @@ export const Video = memo(({ stream, isMuted, isHostStream, name, userId, isUser
 
   //toggle screen back to normal mode, when stream is stopped
   if ((toggleScreen && hasFullScreenedStream.value && fullScreenedStream.value === stream.id)) {
-    console.log('toggleFullScreen finally')
+    logger.log('toggleFullScreen finally')
     toggleFullScreen()
     toggleScreen = null
   }
@@ -476,12 +477,12 @@ export const Video = memo(({ stream, isMuted, isHostStream, name, userId, isUser
       }
     } else {
       //every other stream anywhere
-      console.log("Not Iphone display normal stream")
+      logger.log("Not Iphone display normal stream")
       videoRef.current.srcObject = stream
     }
     //set default speaker
     if (sparkRTC.value.defaultSpeaker) {
-      console.log('Changing speaker')
+      logger.log('Changing speaker')
       var io = new IODevices()
       io.attachSinkId(videoRef.current, sparkRTC.value.defaultSpeaker)
     }
@@ -534,7 +535,7 @@ export const Video = memo(({ stream, isMuted, isHostStream, name, userId, isUser
   }, [bottomBarVisible.value, hasFullScreenedStream.value])
   useEffect(() => {
     function handleClickOutside(event) {
-      if (menuOpen && menu.current && !menu.current.base.contains(event.target)) {
+      if (menuOpen && menu.current && menu.current.base && !menu.current.base.contains(event.target)) {
         setMenuOpen(false)
       }
     }

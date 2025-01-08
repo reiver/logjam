@@ -17,13 +17,14 @@ import { Icon, IconButton, Tooltip, attendeesBadge, makeDialog } from 'component
 import { currentUser, isDebugMode, onStartShareScreen, onStopShareScreen, setUserActionLoading, sparkRTC, updateUser } from 'pages/Meeting.js'
 import { useState } from 'preact/compat'
 import { isMobile } from '../../lib/common.js'
+import logger from 'lib/logger.js'
 
 const disableRaiseHandFeat = true
 export const isMoreOptionsOpen = signal(false)
 export const toggleMoreOptions = () => (isMoreOptionsOpen.value = !isMoreOptionsOpen.value)
 export const Controllers = () => {
   const { isHost, showControllers, hasCamera, hasMic, ableToRaiseHand, sharingScreenStream, isStreamming, isCameraOn, isMicrophoneOn, isMeetingMuted, isRecordingStarted } = currentUser.value
-  console.log('this user', isStreamming)
+  logger.log('this user', isStreamming)
   const toggleMuteMeeting = () => {
     updateUser({
       isMeetingMuted: !isMeetingMuted,
@@ -49,7 +50,7 @@ export const Controllers = () => {
     })
   }
   const toggleMicrophone = () => {
-    console.log("Toggle MicroPhone: ", isMicrophoneOn)
+    logger.log("Toggle MicroPhone: ", isMicrophoneOn)
     sparkRTC.value.disableAudio(!isMicrophoneOn)
     updateUser({
       isMicrophoneOn: !isMicrophoneOn,
@@ -121,7 +122,7 @@ export const Controllers = () => {
   const toggleBottomSheet = () => { }
 
   const handleRecording = () => {
-    console.log("Handle Recording: isRecordingStarted: ", isRecordingStarted)
+    logger.log("Handle Recording: isRecordingStarted: ", isRecordingStarted)
 
 
     if (isRecordingStarted) {
@@ -145,7 +146,7 @@ export const Controllers = () => {
           </IconButton>
         </Tooltip>
       )}
-      {isStreamming && (
+      {(
         <Tooltip label={isRecordingStarted ? 'Stop Recording' : 'Start Recording'}>
           <IconButton class="sm:flex" onClick={handleRecording}>
             <Icon icon={Camera} />

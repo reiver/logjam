@@ -1,3 +1,5 @@
+import logger from "./logger";
+
 export const detectKeyPress = (keyPressCallback) => {
   document.onkeyup = function (e) {
     if (
@@ -11,7 +13,7 @@ export const detectKeyPress = (keyPressCallback) => {
       e.key === "8" ||
       e.key === "9"
     ) {
-      console.log("Key pressed: ", e.key);
+      logger.log("Key pressed: ", e.key);
       keyPressCallback(e.key);
     }
   };

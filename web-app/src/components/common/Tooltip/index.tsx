@@ -4,6 +4,7 @@ import tippy, { Instance } from 'tippy.js'
 import { deviceSize } from '../../MeetingBody/Stage'
 
 import 'tippy.js/dist/tippy.css'
+import logger from 'lib/logger'
 export const Tooltip = ({ children, label, hideOnClick = true }) => {
   const ref = useRef<any>()
   const component = toChildArray(children)[0] as VNode
@@ -25,7 +26,7 @@ export const Tooltip = ({ children, label, hideOnClick = true }) => {
   }, [deviceSize.value])
 
   useEffect(() => {
-    console.log('changed', label, tippyInstance.current)
+    logger.log('changed', label, tippyInstance.current)
     if (tippyInstance.current) tippyInstance.current.setContent(label)
   }, [label])
 

@@ -19,14 +19,40 @@ export const iceServers = [
     username: 'turnuser',
     credential: 'XzfVP8cpNEy17hws',
   },
-  // {
-  //     url: "stun:65.21.156.193:3478",
-  //     username: "testyu",
-  //     credential: "testyu123",
-  // },
-  // {
-  //     url: "turn:65.21.156.193:3478",
-  //     username: "testyu",
-  //     credential: "testyu123",
-  // },
+  {
+    url: "stun:65.21.156.193:3478",
+    username: "testyu",
+    credential: "testyu123",
+  },
+  {
+    url: "turn:65.21.156.193:3478",
+    username: "testyu",
+    credential: "testyu123",
+  },
+
+  //METERED TRUN
+
+  {
+    urls: "stun:stun.relay.metered.ca:80",
+  },
+  {
+    urls: "turn:global.relay.metered.ca:80",
+    username: "7d59d37ae8ff49aff498bf5a",
+    credential: "+09PaL14gBF2AGcN",
+  },
+  {
+    urls: "turn:global.relay.metered.ca:80?transport=tcp",
+    username: "7d59d37ae8ff49aff498bf5a",
+    credential: "+09PaL14gBF2AGcN",
+  },
+  {
+    urls: "turn:global.relay.metered.ca:443",
+    username: "7d59d37ae8ff49aff498bf5a",
+    credential: "+09PaL14gBF2AGcN",
+  },
+  {
+    urls: "turns:global.relay.metered.ca:443?transport=tcp",
+    username: "7d59d37ae8ff49aff498bf5a",
+    credential: "+09PaL14gBF2AGcN",
+  },
 ]

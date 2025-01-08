@@ -9,8 +9,12 @@ import (
 	"strings"
 
 	"github.com/gorilla/mux"
-	"sourcecode.social/greatape/logjam/controllers"
-	"sourcecode.social/greatape/logjam/models/contracts"
+
+	"github.com/reiver/logjam/lib/logs"
+	"github.com/reiver/logjam/lib/rooms"
+	"github.com/reiver/logjam/lib/websock"
+	"github.com/reiver/logjam/srv/http"
+	"github.com/reiver/logjam/srv/log"
 )
 
 type IRouteRegistrar interface {
@@ -19,17 +23,15 @@ type IRouteRegistrar interface {
 
 type Router struct {
 	router            *mux.Router
-	roomWSRouter      IRouteRegistrar
-	GoldGorillaRouter IRouteRegistrar
-	logger            contracts.ILogger
+	logger            logs.Logger
 }
 
-func NewRouter(roomWSCtrl *controllers.RoomWSController, GoldGorillaCtrl *controllers.GoldGorillaController, roomRepo contracts.IRoomRepository, socketSVC contracts.ISocketService, logger contracts.ILogger) *Router {
+func NewRouter(roomRepo rooms.Repository, socketSVC websock.SocketService, logger logs.TaggedLogger) *Router {
+	const logtag string = "router"
+
 	return &Router{
-		router:            mux.NewRouter(),
-		roomWSRouter:      newRoomWSRouter(roomWSCtrl, roomRepo, socketSVC, logger),
-		GoldGorillaRouter: newGoldGorillaRouter(GoldGorillaCtrl),
-		logger:            logger,
+		router:            httpsrv.Router,
+		logger:            logger.Tag(logtag),
 	}
 }
 
@@ -55,22 +57,25 @@ type Response struct {
 }
 
 func fetchRecordFromPocketBase(roomName string) (*Record, error) {
+	const logtag string = "fetchRecordFromPocketBase"
+	log := logsrv.Tag(logtag)
+
 	url := "https://pb.greatape.stream/api/collections/rooms/records?sort=-created"
 
 	// Create a new request using http
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		fmt.Println("Error creating request:", err)
+		log.Error("Error creating request:", err)
 		return nil, err
 	}
 
-	fmt.Println("Request:", req)
+	log.Info("Request:", req)
 
 	// Send the request via a client
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		fmt.Println("Error sending request:", err)
+		log.Error("Error sending request:", err)
 		return nil, err
 	}
 	defer resp.Body.Close()
@@ -78,28 +83,31 @@ func fetchRecordFromPocketBase(roomName string) (*Record, error) {
 	// Read the response body
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		fmt.Println("Error reading response body:", err)
+		log.Error("Error reading response body:", err)
 		return nil, err
 	}
 
-	// fmt.Println("Response body:", body)
+	// log.Info(logtag, "Response body:", body)
 	record, err := parseResponse(string(body), roomName)
 
 	return record, err
-	// fmt.Println("Response:", string(body))
+	// log.Info(logtag, "Response:", string(body))
 }
 
 func parseResponse(jsonData string, roomName string) (*Record, error) {
+	const logtag string = "parseResponse"
+	log := logsrv.Tag(logtag)
+
 	var response Response
 	err := json.Unmarshal([]byte(jsonData), &response)
 	if err != nil {
-		fmt.Println("Error parsing JSON:", err)
+		log.Error("Error parsing JSON:", err)
 		return nil, fmt.Errorf("error parsing JSON: %w", err)
 	}
 
 	for _, item := range response.Items {
 		if item.Name == roomName {
-			fmt.Printf("Found record: %+v\n", item)
+			log.Infof("Found record: %+v", item)
 			return &item, nil
 		}
 	}
@@ -108,9 +116,6 @@ func parseResponse(jsonData string, roomName string) (*Record, error) {
 }
 
 func (r *Router) RegisterRoutes() error {
-	r.roomWSRouter.registerRoutes(r.router)
-	r.GoldGorillaRouter.registerRoutes(r.router)
-
 	r.router.PathPrefix("/assets/").Handler(http.StripPrefix("/assets/", http.FileServer(http.Dir("./web-app/dist/assets/"))))
 	// r.router.PathPrefix("/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	// 	http.ServeFile(w, r, "./web-app/dist/index.html")
@@ -118,7 +123,7 @@ func (r *Router) RegisterRoutes() error {
 
 	r.router.PathPrefix("/").HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 
-		r.logger.Log("URL: ", contracts.LDebug, req.URL.Path)
+		r.logger.Debug("URL: ", req.URL.Path)
 		metaData := fetchDataForMetaTags(req.URL.Path) // Implement this to fetch meta data based on the request
 
 		// Read the existing index.html file
@@ -130,7 +135,7 @@ func (r *Router) RegisterRoutes() error {
 
 		// Modify the HTML content to include the dynamic title and description
 		modifiedHTML := injectMetaTags(string(htmlContent), metaData, r)
-		// r.logger.Log("Modified HTML", contracts.LDebug, modifiedHTML)
+		// r.logger.Debug("Modified HTML", modifiedHTML)
 
 		// Serve the modified HTML content
 		// w.Header().Set("Content-Type", "text/html; charset=utf-8")
@@ -165,7 +170,7 @@ func (r *Router) RegisterRoutes() error {
 			if strings.Index(ip, ":") > 0 {
 				ip = ip[:strings.Index(ip, ":")]
 			}
-			r.logger.Log("HTTP", contracts.LDebug, fmt.Sprintf(`%s | %s "%s"`, ip, request.Method, request.URL.Path))
+			r.logger.Debugf(`HTTP %s | %s %q`, ip, request.Method, request.URL.Path)
 			handler.ServeHTTP(writer, request)
 		})
 	})
@@ -180,12 +185,15 @@ func isBotRequest(userAgent string) bool {
 }
 
 func fetchDataForMetaTags(path string) *MetaData {
+	const logtag string = "fetchDataForMetaTags"
+	log := logsrv.Tag(logtag)
+
 	// Fetch your meta data based on the path or other conditions
 
 	var myRecord *Record
 
 	containsAt := strings.Contains(path, "@")
-	fmt.Println("Contains '@':", containsAt)
+	log.Error("Contains '@':", containsAt)
 	if containsAt {
 		//get host name
 		re := regexp.MustCompile(`/(@\w+)/`) // Regular expression to match '@' followed by word characters
@@ -197,7 +205,7 @@ func fetchDataForMetaTags(path string) *MetaData {
 			hostName = strings.TrimPrefix(hostName, "@")
 
 		}
-		fmt.Println("HostName :", hostName)
+		log.Info("HostName :", hostName)
 		myRecord = &Record{
 			Name:        "GreatApe",
 			Description: "GreatApe is Video Conferencing Application for Fediverse",
@@ -207,17 +215,17 @@ func fetchDataForMetaTags(path string) *MetaData {
 		//get room name
 		parts := strings.Split(path, "/")
 		roomName := parts[len(parts)-1]
-		fmt.Println("RoomName :", roomName)
+		log.Info("RoomName :", roomName)
 
 		record, err := fetchRecordFromPocketBase(roomName)
 		if err != nil {
-			fmt.Println("Error :", roomName)
+			log.Error("Error :", roomName)
 			myRecord = &Record{
 				Name:        "GreatApe",
 				Description: "GreatApe is Video Conferencing Application for Fediverse",
 			}
 		} else {
-			fmt.Println("Room Name:", record.Name, "Desc: ", record.Description, "Thumbnail: ", record.Thumbnail)
+			log.Info("Room Name:", record.Name, "Desc: ", record.Description, "Thumbnail: ", record.Thumbnail)
 			myRecord = record
 		}
 
@@ -258,24 +266,24 @@ func injectMetaTags(htmlContent string, data *MetaData, r *Router) string {
 
 		// Remove the existing meta OG tag
 		if strings.Contains(htmlContent, `<meta name="twitter:image" content="/assets/metatagsLogo-3d1cffd4.png" />`) {
-			r.logger.Log("IMAGE TAG", contracts.LDebug, "FOUND THE IMAGE TAG")
+			r.logger.Debug("IMAGE TAG", "FOUND THE IMAGE TAG")
 			htmlContent = strings.Replace(htmlContent, `<meta name="twitter:image" content="/assets/metatagsLogo-3d1cffd4.png" />`, imageTag, 1)
-			// r.logger.Log("UPDATED HTML: ", contracts.LDebug, htmlContent)
+			// r.logger.Debug("UPDATED HTML: ", htmlContent)
 		}
 
 		if strings.Contains(htmlContent, `<meta property="og:image" content="/assets/metatagsLogo-3d1cffd4.png" />`) {
-			r.logger.Log("IMAGE TAG", contracts.LDebug, "FOUND THE IMAGE TAG")
+			r.logger.Debug("IMAGE TAG", "FOUND THE IMAGE TAG")
 			htmlContent = strings.Replace(htmlContent, `<meta property="og:image" content="/assets/metatagsLogo-3d1cffd4.png" />`, imageTag, 1)
-			// r.logger.Log("UPDATED HTML: ", contracts.LDebug, htmlContent)
+			// r.logger.Debug("UPDATED HTML: ", htmlContent)
 		}
 	}
 
-	r.logger.Log("DESC TAG CONTENT: ", contracts.LDebug, descTag)
+	r.logger.Debug("DESC TAG CONTENT: ", descTag)
 
 	// Replace existing meta description tag, or add if not present
 	// if strings.Contains(htmlContent, `meta property="og:title"`) {
 	// 	htmlContent = strings.Replace(htmlContent, `<meta property="og:title" content="GreatApe" />`, titleTag, 1)
-	// 	r.logger.Log("String found", contracts.LDebug)
+	// 	r.logger.Debug("String found")
 	// }
 
 	headStartIndex := strings.Index(htmlContent, "<head>")
@@ -292,9 +300,9 @@ func injectMetaTags(htmlContent string, data *MetaData, r *Router) string {
 
 		// Insert the tags right after the <head> tag
 		htmlContent = htmlContent[:insertPosition] + tagsToInsert + htmlContent[insertPosition:]
-		r.logger.Log("Title and description tags inserted", contracts.LDebug)
+		r.logger.Debug("Title and description tags inserted")
 	} else {
-		r.logger.Log("No <head> tag found, cannot insert tags", contracts.LDebug)
+		r.logger.Debug("No <head> tag found, cannot insert tags")
 	}
 
 	return htmlContent
@@ -307,6 +315,6 @@ type MetaData struct {
 }
 
 func (r *Router) Serve(addr string) error {
-	println("[HTTP] serving on", addr)
+	r.logger.Info("[HTTP] serving on", addr)
 	return http.ListenAndServe(addr, r.router)
 }

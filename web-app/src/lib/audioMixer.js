@@ -1,3 +1,5 @@
+import logger from "./logger";
+
 class AudioMixer {
     constructor() {
         this.audioContext = new (window.AudioContext)();
@@ -14,6 +16,10 @@ class AudioMixer {
      * @param {MediaStreamTrack} mediaStreamTrack - MediaStreamTrack to add.
      */
     addMediaStreamTrack(mediaStreamTrack) {
+        if (mediaStreamTrack == undefined || mediaStreamTrack == null) {
+            logger.log("Audio Track is undefined...Can't recorded")
+            return
+        }
         const mediaStreamSource = this.audioContext.createMediaStreamSource(new MediaStream([mediaStreamTrack]));
         const gainNode = this.audioContext.createGain();
 

@@ -12,6 +12,7 @@ import backImage from 'assets/images/blur.jpg'
 import { VideoBackground } from 'lib/videoBackground'
 let displayIdCounter = 2
 import { streamersLength } from '../components/MeetingBody/Stage'
+import logger from 'lib/logger'
 
 const PageNotFound = lazy(() => import('./_404'))
 const styleElement = document.createElement('style');
@@ -206,9 +207,9 @@ const log = (tag, data?: any) => {
   const date = new Date().toLocaleTimeString()
 
   if (data) {
-    console.log('[', date, '] ', tag, ' | ', data)
+    logger.log('[', date, '] ', tag, ' | ', data)
   } else {
-    console.log('[', date, '] ', tag)
+    logger.log('[', date, '] ', tag)
   }
 }
 const setupSignalingSocket = async (host, name, room, debug) => {
@@ -236,7 +237,7 @@ export const onUserRaisedHand = (userId, raisedHand, actionLoading: boolean, acc
       acceptRaiseHand,
     },
   }
-  console.log('LOWER HAND', userId, raisedHand)
+  logger.log('LOWER HAND', userId, raisedHand)
   sparkRTC.value.getLatestUserList('onUserRaiseHand')
 }
 
@@ -249,7 +250,7 @@ export const onInviteToStage = (participant) => {
     })
   } else {
     //send invite
-    console.log('Send Intitation to ', participant)
+    logger.log('Send Intitation to ', participant)
     sparkRTC.value.inviteToStage(participant.userId)
     setUserActionLoading(participant.userId, true)
 
@@ -336,7 +337,7 @@ const Meeting = ({ params: { room, displayName, name, _customStyles } }: { param
 
             //if host send Custom styles to room
             if (sparkRTC.value.role === sparkRTC.value.Roles.BROADCAST) {
-              console.log("Send Meeting UI: ", customStyles)
+              logger.log("Send Meeting UI: ", customStyles)
               sparkRTC.value.sendCustomStylesToRoom(customStyles)
             }
 
@@ -407,7 +408,7 @@ const Meeting = ({ params: { room, displayName, name, _customStyles } }: { param
                   broadcastIsInTheMeeting.value = false
 
                   var ele = document.getElementById('customStyles')
-                  console.log("styleEel: ", ele)
+                  logger.log("styleEel: ", ele)
                   if (ele) {
                     ele.remove()
                   }
@@ -477,7 +478,7 @@ const Meeting = ({ params: { room, displayName, name, _customStyles } }: { param
           },
           updateMeetingUI: (styles) => {
             if (sparkRTC.value.role == sparkRTC.value.Roles.AUDIENCE) {
-              console.log("Latest Meeting UI: ", styles)
+              logger.log("Latest Meeting UI: ", styles)
               setCustomStyles(styles)
             }
           },
@@ -491,7 +492,7 @@ const Meeting = ({ params: { room, displayName, name, _customStyles } }: { param
             //@ts-ignore
             setUserActionLoading(currentUser.value.userId, false)
 
-            console.log('altBroadcastApprove: data: ', data)
+            logger.log('altBroadcastApprove: data: ', data)
 
             if (!isStreamming) {
               sparkRTC.value.onRaiseHandRejected()
@@ -651,7 +652,7 @@ const Meeting = ({ params: { room, displayName, name, _customStyles } }: { param
               if (!user.isHost && user.raisedHand) return prev + 1
               return prev
             }, 0)
-            console.log('raiseHandCount:', rC)
+            logger.log('raiseHandCount:', rC)
 
             if (rC === 0) {
               attendeesBadge.value = false
@@ -667,7 +668,7 @@ const Meeting = ({ params: { room, displayName, name, _customStyles } }: { param
           },
 
           invitationToJoinStage: async (msg) => {
-            console.log('invitationToJoinStage: ', msg)
+            logger.log('invitationToJoinStage: ', msg)
             //show preview dialog to Join stage
             const localStream = await sparkRTC.value.getAccessToLocalStream()
 
@@ -703,7 +704,7 @@ const Meeting = ({ params: { room, displayName, name, _customStyles } }: { param
                 }, 2000)
               },
               () => {
-                console.log('audience-broadcasting cancelling..')
+                logger.log('audience-broadcasting cancelling..')
                 //onClose
                 updateUser({
                   ableToRaiseHand: true,
@@ -719,7 +720,7 @@ const Meeting = ({ params: { room, displayName, name, _customStyles } }: { param
           },
           updateVideosMuteStatus: (muted) => {
             if (muted) {
-              console.log("MutedMap: ", muted)
+              logger.log("MutedMap: ", muted)
               for (const [streamID, isMuted] of Object.entries(muted)) {
 
                 if (sparkRTC.value.localStream && streamID === sparkRTC.value.localStream.id) {
@@ -773,7 +774,7 @@ const Meeting = ({ params: { room, displayName, name, _customStyles } }: { param
   }
 
   useEffect(() => {
-    console.log("customStyles effect")
+    logger.log("customStyles effect")
     if (customStyles) {
       styleElement.id = 'customStyles';
       // Create a style element and append it to the head of the document
@@ -781,7 +782,7 @@ const Meeting = ({ params: { room, displayName, name, _customStyles } }: { param
 
       // Set the CSS content of the style element
       styleElement.textContent = customStyles;
-      console.log("Creating style elem Meeting.js")
+      logger.log("Creating style elem Meeting.js")
 
     }
   }, [customStyles])

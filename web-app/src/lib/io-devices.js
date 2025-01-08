@@ -1,3 +1,5 @@
+import logger from "./logger";
+
 export class IODevices {
     devices = null;
 
@@ -6,13 +8,13 @@ export class IODevices {
         try {
             this.devices = await navigator.mediaDevices.enumerateDevices();
         } catch (error) {
-            console.error('Error enumerating devices:', error);
+            logger.error('Error enumerating devices:', error);
         }
     };
 
     //disply dveices in alert
     display = (_devices) => {
-        console.log('devices: ', _devices);
+        logger.log('devices: ', _devices);
         var str = '';
 
         _devices.forEach((device) => {
@@ -23,7 +25,7 @@ export class IODevices {
             str += '\n';
         });
 
-        console.log('devices: String: ', str);
+        logger.log('devices: String: ', str);
         alert(str);
     };
     //list input audio devices
@@ -140,7 +142,7 @@ export class IODevices {
             element
                 .setSinkId(sinkId)
                 .then(() => {
-                    console.log(
+                    logger.log(
                         `Success, audio output device attached: ${sinkId}`
                     );
                 })
@@ -149,12 +151,12 @@ export class IODevices {
                     if (error.name === 'SecurityError') {
                         errorMessage = `You need to use HTTPS for selecting audio output device: ${error}`;
                     }
-                    console.error(errorMessage);
+                    logger.error(errorMessage);
                     // Jump back to first output device in the list as it's the default.
                     audioOutputSelect.selectedIndex = 0;
                 });
         } else {
-            console.log('Browser does not support output device selection.');
+            logger.log('Browser does not support output device selection.');
         }
     };
 }

@@ -1,4 +1,4 @@
-module sourcecode.social/greatape/logjam
+module github.com/reiver/logjam
 
 go 1.20
 

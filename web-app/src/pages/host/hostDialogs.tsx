@@ -13,10 +13,11 @@ import { RoundButton } from 'components/common/RoundButton'
 import imageFolder from 'assets/images/ImageFolder.png'
 import { css } from '@emotion/react'
 import { CSSData, PocketBaseManager } from 'lib/helperAPI'
+import logger from 'lib/logger'
 const pbApi = new PocketBaseManager()
 
 export const HostDialogPool = () => {
-    console.log("Inside HostDialogPool")
+    logger.log("Inside HostDialogPool")
     return (
         <>
             {Object.values(dialogs.value).map((dialog) => {
@@ -29,7 +30,7 @@ export const HostDialogPool = () => {
 }
 
 export const makeMetaImageDialog = (oldImage, type, message, onOk, onClose, options = {}) => {
-    console.log("inside makeMetaImageDialog")
+    logger.log("inside makeMetaImageDialog")
     const id = uuidv4()
     const destroy = () => {
         const dialogsTmp = { ...dialogs.value }
@@ -83,7 +84,7 @@ export const MetaImageDialog = ({
             const reader = new FileReader();
             reader.onload = (e) => {
                 setSelectedImage(e.target.result);
-                console.log("sleectedImage: ", selectedImage)
+                logger.log("sleectedImage: ", selectedImage)
             };
             reader.readAsDataURL(file);
         }
@@ -93,7 +94,7 @@ export const MetaImageDialog = ({
         setSelectedImage(null)
     }
 
-    console.log("Inside MetaImageDialog")
+    logger.log("Inside MetaImageDialog")
 
     return (
         <div class="absolute top-0 left-0 w-full h-full">
@@ -108,7 +109,7 @@ export const MetaImageDialog = ({
                 <div class="flex justify-center items-center p-5 relative">
                     <span class="dark:text-white text-black text-bold-12">{title}</span>
                     <Icon icon={Close} class="absolute top-1/2 sm:right-5 right-[unset] left-5 sm:left-[unset] transform -translate-y-1/2 cursor-pointer" onClick={() => {
-                        console.log("Closing the Dialog: ",selectedImage)
+                        logger.log("Closing the Dialog: ",selectedImage)
                         onClose(selectedImage, imageFile)
                     }} />
                 </div>
@@ -137,7 +138,7 @@ export const MetaImageDialog = ({
 }
 
 export const makeCssFilesDialog = (cssFiles, hostId, oldIndex, type, message, onOk, onClose, options = {}) => {
-    console.log("inside makeCssFilesDialog")
+    logger.log("inside makeCssFilesDialog")
     const id = uuidv4()
     const destroy = () => {
         const dialogsTmp = { ...dialogs.value }
@@ -173,7 +174,7 @@ export const makeCssFilesDialog = (cssFiles, hostId, oldIndex, type, message, on
 
 const createNewCSS = async (cssData) => {
     var newCSS = await pbApi.createCSS(cssData)
-    console.log("new CSS Created: ", newCSS)
+    logger.log("new CSS Created: ", newCSS)
     return newCSS;
 }
 var cssData = null;
@@ -208,7 +209,7 @@ export const CssFilesDialog = ({
     }, 50);
 
 
-    console.log("Inside MetaImageDialog")
+    logger.log("Inside MetaImageDialog")
 
     const handleFileClick = (index = -1, vanish = true) => {
 
@@ -223,16 +224,16 @@ export const CssFilesDialog = ({
             selectedFileIndex.value = index
         }
 
-        console.log('handleDeviceClick: ', index)
+        logger.log('handleDeviceClick: ', index)
         // Update the radio button's checked attribute based on the selectedDeviceIndex
         const radioInput = document.getElementById(`file${index}`) as HTMLInputElement
-        console.log('radioInput: ', radioInput)
+        logger.log('radioInput: ', radioInput)
         if (radioInput) {
             radioInput.checked = selectedFileIndex.value === index
             radioInput.style.accentColor = 'black'
             if (vanish) {
                 setTimeout(() => {
-                    console.log('Selected file: ', cssFiles.value[selectedFileIndex.value])
+                    logger.log('Selected file: ', cssFiles.value[selectedFileIndex.value])
                     onClose(cssFiles.value[selectedFileIndex.value], selectedFileIndex.value)
                 }, 200)
             }
@@ -267,10 +268,10 @@ export const CssFilesDialog = ({
                     cssClassNames.push(match[1]);
                 }
             }
-            console.log("Css Class names: ", cssClassNames)
+            logger.log("Css Class names: ", cssClassNames)
 
             if (isValidCSS(content)) {
-                console.log("Is Valid true")
+                logger.log("Is Valid true")
                 if (content) {
 
                     customStyles = content
@@ -286,7 +287,7 @@ export const CssFilesDialog = ({
                     return
                 }
             } else {
-                console.log("Is Valid false")
+                logger.log("Is Valid false")
             }
         });
     };
@@ -363,15 +364,15 @@ export const CssFilesDialog = ({
 
     async function deleteCssFile(index) {
         const fileToDel = cssFiles.value[index]
-        console.log("File to Del: ", fileToDel)
+        logger.log("File to Del: ", fileToDel)
         const res = await pbApi.deleteCssRecord(fileToDel.id)
-        console.log("Filed Deleted: ", res)
+        logger.log("Filed Deleted: ", res)
 
         if (res == true && index > -1) {
 
             const updatedCssFiles = cssFiles.value.filter((_, i) => i !== index);
             cssFiles.value = updatedCssFiles;
-            console.log("Updated cssFiles: ", cssFiles.value)
+            logger.log("Updated cssFiles: ", cssFiles.value)
         }
     }
 
@@ -388,18 +389,18 @@ export const CssFilesDialog = ({
                 <div class="flex justify-center items-center p-5 relative">
                     <span class="dark:text-white text-black text-bold-12">{title}</span>
                     <Icon icon={Close} class="absolute top-1/2 sm:right-5 right-[unset] left-5 sm:left-[unset] transform -translate-y-1/2 cursor-pointer" onClick={() => {
-                        console.log("NEW CSS DATA: ", cssData)
+                        logger.log("NEW CSS DATA: ", cssData)
                         if (selectedFileIndex.value === -1 && cssData != null) {
 
                             onClose(cssData, 0)
                         } else {
-                            console.log("Index type: ", typeof selectedFileIndex.value, " Value: ", selectedFileIndex.value)
+                            logger.log("Index type: ", typeof selectedFileIndex.value, " Value: ", selectedFileIndex.value)
                             if (selectedFileIndex.value != -1) {
-                                console.log("Index is not -1")
+                                logger.log("Index is not -1")
 
                                 onClose(cssFiles.value[selectedFileIndex.value], selectedFileIndex.value)
                             } else {
-                                console.log("Index is -1: ", selectedFileIndex.value)
+                                logger.log("Index is -1: ", selectedFileIndex.value)
 
                                 onClose(null, selectedFileIndex.value)
                             }

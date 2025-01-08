@@ -1,3 +1,5 @@
+import logger from "./logger";
+
 class MeetingRecorder {
     constructor() {
         this.recordedBlobs = [];
@@ -6,14 +8,14 @@ class MeetingRecorder {
 
     // Start Recording
     startRecording(stream) {
-        console.log("Start Recording");
+        logger.log("Start Recording");
 
         this.mediaRecorder = new MediaRecorder(stream, {
             mimeType: "video/mp4", // Use 'video/mp4' if supported by your browser
         });
 
         this.mediaRecorder.ondataavailable = (event) => {
-            console.log("Data is available");
+            logger.log("Data is available");
             if (event.data && event.data.size > 0) {
                 this.recordedBlobs.push(event.data);
             }
@@ -24,10 +26,10 @@ class MeetingRecorder {
 
     // Stop Recording
     stopRecording() {
-        console.log("Stop Recording");
+        logger.log("Stop Recording");
 
         if (!this.mediaRecorder) {
-            console.error("No recording in progress.");
+            logger.error("No recording in progress.");
             return;
         }
 

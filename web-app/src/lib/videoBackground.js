@@ -1,3 +1,5 @@
+import logger from "./logger";
+
 export class VideoBackground {
   setBackVideoBackground = async (image, videoStream, blur = false) => {
     try {
@@ -74,7 +76,7 @@ export class VideoBackground {
 
       return this.processedStream;
     } catch (error) {
-      console.log("Error while setting background: ", error);
+      logger.log("Error while setting background: ", error);
     }
   };
 
@@ -130,7 +132,7 @@ export class VideoBackground {
 
       this.ctx.restore();
     } else {
-      console.log("ctx is undefined");
+      logger.log("ctx is undefined");
     }
   }
 
@@ -161,7 +163,7 @@ export class VideoBackground {
         this.selfieSegmentation = null;
       }
     } catch (error) {
-      console.log("Error while closing selfi: ", error);
+      logger.log("Error while closing selfi: ", error);
     }
 
     // Stop streams
@@ -239,7 +241,7 @@ export class VideoBackground {
         });
         resolve(flippedFrame);
       } catch (error) {
-        console.error("Error flipping video frame:", error);
+        logger.error("Error flipping video frame:", error);
         resolve(null); // Resolve with null if an error occurs
       } finally {
         videoFrame.close(); // Ensure that close is always called

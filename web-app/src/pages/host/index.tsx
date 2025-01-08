@@ -1,21 +1,20 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Button, FormControl, TextField, css } from '@mui/material'
+import { Button, FormControl, TextField } from '@mui/material'
 import CopyIcon from 'assets/icons/Copy.svg?react'
 import LinkIcon from 'assets/icons/Link.svg?react'
 import LogoIcon from 'assets/images/Greatapelogo.png'
 import copy from 'clipboard-copy'
 import clsx from 'clsx'
-import { Icon, Logo, ResponsiveModal, Tooltip } from 'components'
+import { Icon, ResponsiveModal, Tooltip } from 'components'
 import Meeting from 'pages/Meeting'
 import { lazy } from 'preact-iso'
 import { useEffect, useState } from 'preact/compat'
 import { useForm } from 'react-hook-form'
 import { HostToastProvider, makeCssFilesDialog, makeMetaImageDialog } from '../host/hostDialogs'
-import z, { any } from 'zod'
-import { parse } from 'postcss'
-import * as csstree from 'css-tree';
+import z from 'zod'
 import { signal } from '@preact/signals'
-import { PocketBaseManager, HostData, RoomData, CSSData, convertRoomDataToFormData } from 'lib/helperAPI'
+import { PocketBaseManager, HostData, RoomData, convertRoomDataToFormData } from 'lib/helperAPI'
+import logger from 'lib/logger'
 
 const PageNotFound = lazy(() => import('../_404'))
 const selectedImage = signal(null)
@@ -28,24 +27,21 @@ var oldIndex = -1;
 var hostId = null
 const cssList = signal(null);
 
-
-
-
 const createNewHost = async (hostData) => {
   var newHost = await pbApi.createHost(hostData)
-  console.log("new Host Created: ", newHost)
+  logger.log("new Host Created: ", newHost)
   return newHost;
 }
 
 const createNewCSS = async (cssData) => {
   var newCSS = await pbApi.createCSS(cssData)
-  console.log("new CSS Created: ", newCSS)
+  logger.log("new CSS Created: ", newCSS)
   return newCSS;
 }
 
 const createNewRoom = async (roomData) => {
   var newRoom = await pbApi.createRoom(roomData);
-  console.log("New Room Created: ", newRoom);
+  logger.log("New Room Created: ", newRoom);
   return newRoom
 }
 
@@ -81,9 +77,9 @@ export const HostPage = ({ params: { displayName } }: { params?: { displayName?:
   }
 
   if (isInsideIframe()) {
-    console.log("This page is loaded inside an iframe.");
+    logger.log("This page is loaded inside an iframe.");
   } else {
-    console.log("This page is not loaded inside an iframe.");
+    logger.log("This page is not loaded inside an iframe.");
   }
 
   useEffect(() => {
@@ -118,11 +114,11 @@ export const HostPage = ({ params: { displayName } }: { params?: { displayName?:
 
         window.location.hash = "";
       } catch (error) {
-        console.error("Failed to parse hash data:", error);
+        logger.error("Failed to parse hash data:", error);
         window.location.hash = "";
       }
     } else {
-      console.log("No data received in URL hash.");
+      logger.log("No data received in URL hash.");
     }
   }, [])
 
@@ -143,7 +139,7 @@ export const HostPage = ({ params: { displayName } }: { params?: { displayName?:
     var hostByName = await pbApi.getHostByName(name)
 
     if (hostByName.code != undefined && hostByName.code == 404) {
-      console.log("Coede: ", hostByName.code)
+      logger.log("Coede: ", hostByName.code)
 
       //no host Found with That name... Create New Host
       var hostData = new HostData(name, '')
@@ -152,52 +148,57 @@ export const HostPage = ({ params: { displayName } }: { params?: { displayName?:
 
 
     } else {
-      console.log("hostByName: ", hostByName)
+      logger.log("hostByName: ", hostByName)
 
       hostId = hostByName.id
       //fetch host Css files
 
       cssList.value = await pbApi.getFullListOfCssBYHostId(hostId)
-      console.log("csslist: ", cssList.value)
+      logger.log("csslist: ", cssList.value)
       var css = cssList.value[0];
       if (cssList.value.code != undefined && cssList.value.code == 404) {
-        console.log("cssByHost: ", cssList.value.message)
+        logger.log("cssByHost: ", cssList.value.message)
       } else {
-        console.log("cssByHost: ", css)
+        logger.log("cssByHost: ", css)
       }
     }
 
     //fetch host Room
     var roomsList = await pbApi.getFullListOfRoomsBYHostId(hostId)
-    console.log("Rooms list: ", roomsList)
+    logger.log("Rooms list: ", roomsList)
     if (roomsList.code != undefined && roomsList.code == 404) {
-      console.log("roomByHost: ", roomsList.message)
+      logger.log("roomByHost: ", roomsList.message)
     } else {
       var room = roomsList[0] //get top room created recently
-      console.log("roomByHost: ", room)
-      // console.log("Room image: ", room.thumbnail)
-      form.setValue('room', room.name);
+      logger.log("roomByHost: ", room)
 
-      if (room.thumbnail != "" && selectedImage.value == null && resetThumbnail == false) {
-        thumbnailUrl.value = `https://pb.greatape.stream/api/files/${room.collectionId}/${room.id}/${room.thumbnail}`
-        console.log("thumbnailUrl: ", thumbnailUrl.value)
-        var img = document.getElementById("thumbnail")
-        img.src = thumbnailUrl.value
+      if (room != undefined && room != null) {
+        // logger.log("Room image: ", room.thumbnail)
+        form.setValue('room', room.name);
+
+        if (room.thumbnail != "" && selectedImage.value == null && resetThumbnail == false) {
+          thumbnailUrl.value = `https://pb.greatape.stream/api/files/${room.collectionId}/${room.id}/${room.thumbnail}`
+          logger.log("thumbnailUrl: ", thumbnailUrl.value)
+          var img = document.getElementById("thumbnail")
+          img.src = thumbnailUrl.value
+        }
+
+        // // Programmatically trigger input event on the TextField to mimic user input
+        const roomInput = document.querySelector('input[name="room"]');
+        if (roomInput != null) {
+          roomInput.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+
+        form.setValue('description', room.description);
+
+        // Programmatically trigger input event on the TextField to mimic user input
+        const descInput = document.querySelector('input[name="description"]');
+        if (descInput != null) {
+          descInput.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+
       }
-
-      // // Programmatically trigger input event on the TextField to mimic user input
-      const roomInput = document.querySelector('input[name="room"]');
-      roomInput.dispatchEvent(new Event('input', { bubbles: true }));
-
-      form.setValue('description', room.description);
-
-      // Programmatically trigger input event on the TextField to mimic user input
-      const descInput = document.querySelector('input[name="description"]');
-      descInput.dispatchEvent(new Event('input', { bubbles: true }));
-
     }
-
-
   }
 
 
@@ -246,7 +247,7 @@ export const HostPage = ({ params: { displayName } }: { params?: { displayName?:
     //create new Room
     var roomData = new RoomData(room, description, selectedImageFile.value, hostId, "")
     var formData = convertRoomDataToFormData(roomData)
-    console.log("RoomData Thumbnail: ", formData.get('thumbnail'))
+    logger.log("RoomData Thumbnail: ", formData.get('thumbnail'))
     createNewRoom(roomData)
 
   }
@@ -297,7 +298,7 @@ export const HostPage = ({ params: { displayName } }: { params?: { displayName?:
 
   const showCssFilesDialog = (cssFiles) => {
 
-    console.log("inside showCssFilesDialog")
+    logger.log("inside showCssFilesDialog")
     makeCssFilesDialog(
       cssFiles,
       hostId,
@@ -312,7 +313,7 @@ export const HostPage = ({ params: { displayName } }: { params?: { displayName?:
       async (cssFile, index) => {
         oldIndex = index
         selectedCssFile.value = cssFile
-        console.log("Selected CSS FILE: ", selectedCssFile.value)
+        logger.log("Selected CSS FILE: ", selectedCssFile.value)
         if (selectedCssFile.value != null) {
           customStyles = selectedCssFile.value.style
         } else {
@@ -326,7 +327,7 @@ export const HostPage = ({ params: { displayName } }: { params?: { displayName?:
   }
 
   const showMetaImageDialog = (oldImage) => {
-    console.log("Inside showMetaImageDialog")
+    logger.log("Inside showMetaImageDialog")
 
     makeMetaImageDialog(
       oldImage,
@@ -338,8 +339,8 @@ export const HostPage = ({ params: { displayName } }: { params?: { displayName?:
 
       },
       async (image, imageFile) => {
-        console.log("selectedImage: ", image)
-        console.log("thumbnailUrl: ", thumbnailUrl.value)
+        logger.log("selectedImage: ", image)
+        logger.log("thumbnailUrl: ", thumbnailUrl.value)
 
         selectedImage.value = image
         selectedImageFile.value = imageFile
@@ -418,7 +419,7 @@ export const HostPage = ({ params: { displayName } }: { params?: { displayName?:
                 <div class="my-0 flex items-center justify-between relative h-8">
                   <div class={clsx('text-bold-12 text-gray-3')}>Layout</div>
                   <div className="text-bold-12 text-gray-1 cursor-pointer float-right cursor-pointer" onClick={() => {
-                    console.log("CSS LIST: ", cssList.value)
+                    logger.log("CSS LIST: ", cssList.value)
                     showCssFilesDialog(cssList)
                   }}>{selectedCssFile.value != null ? selectedCssFile.value.name : 'Default'} </div>
                 </div>

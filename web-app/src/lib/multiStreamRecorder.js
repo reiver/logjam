@@ -1,4 +1,5 @@
 import AudioMixer from './audioMixer'
+import logger from './logger';
 
 class MultiStreamRecorder {
     constructor() {
@@ -33,7 +34,7 @@ class MultiStreamRecorder {
         if (!this.canvas) {
             return
         }
-        console.log("Add Stream called: ", streams)
+        logger.log("Add Stream called: ", streams)
 
         // Remove duplicates, keeping the last occurrence
         const seenStreamIds = new Set(this.streams.map((s) => s.id));
@@ -49,7 +50,7 @@ class MultiStreamRecorder {
             }
         });
 
-        console.log("Total Num of Streams After Addition: ", this.streams);
+        logger.log("Total Num of Streams After Addition: ", this.streams);
 
         this.addAudioTrackToMixer()
     }
@@ -64,7 +65,7 @@ class MultiStreamRecorder {
             this.streams.splice(streamIndex, 1);
             this.videos.splice(streamIndex, 1);
         }
-        console.log("Total Num of Streams After Removal: ", this.streams);
+        logger.log("Total Num of Streams After Removal: ", this.streams);
 
         this.audioMixer.removeTrack(streamIndex)
     }
@@ -93,6 +94,10 @@ class MultiStreamRecorder {
         this.addStreams(streams)
 
         const drawFrames = () => {
+            if (this.canvas == null || this.canvas == undefined) {
+                return
+            }
+
             ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
             const numStreams = this.videos.length;
@@ -259,12 +264,15 @@ class MultiStreamRecorder {
         };
 
         this.mediaRecorder.start();
-        console.log("Recording started");
+        logger.log("Recording started");
     }
 
     // Stop Recording
     stopRecording() {
-        console.log("Stop Recording");
+        if (this.mediaRecorder == null) {
+            return
+        }
+        logger.log("Stop Recording");
         this.mediaRecorder.onstop = () => {
             const blob = new Blob(this.recordedBlobs, { type: this.videoType });
             const url = URL.createObjectURL(blob);
@@ -277,13 +285,14 @@ class MultiStreamRecorder {
             a.download = `${this.roomname}__Recording__${currentTime}__.mp4`;
             a.click();
 
-            console.log("Recording saved");
+            logger.log("Recording saved");
 
             if (this.audioMixer != null) {
                 this.audioMixer.clear()
             }
             this.resetRecording();
         };
+
 
         this.mediaRecorder.stop();
     }

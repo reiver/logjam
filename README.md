@@ -11,7 +11,7 @@ first you need to get the binary by one of this ways :
 3. leaving the build and run to **docker**!
 
 - ### getting the release
-1. download the latest binary from here https://sourcecode.social/greatape/logjam/releases
+1. download the latest binary from here https://github.com/reiver/logjam/releases
 2. make it executable like `chmod +x ./logjam`
 3. run it! `./logjam`
 
@@ -33,3 +33,24 @@ make sure you have docker installed first.
    1. build the image: `docker build -t logjam:latest .`
    2. create and run the container: `docker run --rm logjam:latest`
 
+## Authors
+
+**logjam** was created by:
+
+* [Charles Iliya Krempeaux](http://reiver.link/)
+* Massoud Seifi
+* Mehrdad Mirsamie
+* Muhammad Zaid Ali
+* Sal Rahman
+
+## Cookie
+
+```
+  ░▒▓█▓▒░      ░▒▓██████▓▒░ ░▒▓██████▓▒░       ░▒▓█▓▒░░▒▓██████▓▒░░▒▓██████████████▓▒░
+  ░▒▓█▓▒░     ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░      ░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░
+  ░▒▓█▓▒░     ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░             ░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░
+  ░▒▓█▓▒░     ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒▒▓███▓▒░      ░▒▓█▓▒░▒▓████████▓▒░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░
+  ░▒▓█▓▒░     ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░
+  ░▒▓█▓▒░     ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░
+  ░▒▓████████▓▒░▒▓██████▓▒░ ░▒▓██████▓▒░ ░▒▓██████▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░
+```

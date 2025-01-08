@@ -1,6 +1,7 @@
 import { Attendees, AttendeesBottomSheet, BottomBarBottomSheet, Container } from 'components'
 import { Stage, streamers } from './Stage.js'
 import { useState, useEffect } from 'preact/compat'
+import logger from 'lib/logger.js'
 
 export { streamers }
 
@@ -16,7 +17,7 @@ export const MeetingBody = ({ customStyles }) => {
 
       // Set the CSS content of the style element
       styleElement.textContent = customStyles;
-      console.log("Creating style elem Index.js")
+      logger.log("Creating style elem Index.js")
     }
   }, [])
 
