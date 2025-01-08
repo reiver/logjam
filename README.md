@@ -71,6 +71,7 @@ For example, if you wanted to change the web-server's TCP port to `9000` then yo
 
 (In alphabetical order.)
 
+* Benyamin Azarkhazin
 * [Charles Iliya Krempeaux](http://reiver.link/)
 * Massoud Seifi
 * Mehrdad Mirsamie
