@@ -23,3 +23,6 @@ const AssetsPathPrefix string = "dist/assets"
 //go:embed dist/assets/*.png
 //go:embed dist/assets/*.svg
 var AssetsFS embed.FS
+
+//go:embed src/*
+var SrcFS embed.FS
