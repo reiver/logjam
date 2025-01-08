@@ -1,7 +1,7 @@
 import { Attendees, AttendeesBottomSheet, BottomBarBottomSheet, Container } from 'components'
 import { Stage, streamers } from './Stage.js'
 import { useState, useEffect } from 'preact/compat'
-import logger from 'lib/logger.js'
+import logger from 'lib/logger/logger.js'
 
 export { streamers }
 

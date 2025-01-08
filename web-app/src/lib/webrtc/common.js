@@ -1,5 +1,5 @@
-import { SparkRTC } from "./spark-rtc.js";
-import { VideoBackground } from "./videoBackground.js";
+import { SparkRTC } from "../webrtc/spark-rtc";
+import { VideoBackground } from "../videoBackground/videoBackground.js";
 
 //enum for Roles
 export const Roles = {

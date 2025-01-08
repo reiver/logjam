@@ -10,10 +10,10 @@ import { memo, useEffect, useRef, useState } from 'preact/compat'
 import { isIphone } from 'components/Dialog/index'
 import { userInteractedWithDom } from '../..'
 import { getDeviceConfig } from '../../hooks/use-breakpoint.js'
-import { IODevices } from '../../lib/io-devices.js'
+import { IODevices } from '../../lib/ioDevices/io-devices.js'
 import { broadcastIsInTheMeeting, currentUser, sparkRTC } from '../../pages/Meeting'
 import { E } from '../../../dist/assets/index-1792d287'
-import logger from 'lib/logger'
+import logger from 'lib/logger/logger'
 let timeOut
 export const bottomBarVisible = signal(true)
 export const fullScreenedStream = signal(null)

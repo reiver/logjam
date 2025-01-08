@@ -4,7 +4,7 @@ import tippy, { Instance } from 'tippy.js'
 import { deviceSize } from '../../MeetingBody/Stage'
 
 import 'tippy.js/dist/tippy.css'
-import logger from 'lib/logger'
+import logger from 'lib/logger/logger'
 export const Tooltip = ({ children, label, hideOnClick = true }) => {
   const ref = useRef<any>()
   const component = toChildArray(children)[0] as VNode

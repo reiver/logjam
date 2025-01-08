@@ -1,5 +1,5 @@
 import AudioMixer from './audioMixer'
-import logger from './logger';
+import logger from '../logger/logger';
 
 class MultiStreamRecorder {
     constructor() {

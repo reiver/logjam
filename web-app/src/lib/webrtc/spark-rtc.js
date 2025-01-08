@@ -1,8 +1,8 @@
-import { iceServers } from "./config.js";
-import { videoBackGround } from "./common.js";
-import MeetingRecorder from "./videoRecorder.js";
-import MultiStreamRecorder from "./multiStreamRecorder.js";
-import logger from "./logger.js";
+import { iceServers } from "../webrtc/config";
+import { videoBackGround } from "../webrtc/common";
+import MeetingRecorder from "../meetingRecorder/videoRecorder.js";
+import MultiStreamRecorder from "../meetingRecorder/multiStreamRecorder.js";
+import logger from "../logger/logger";
 
 /** Your class description
  *
@@ -550,6 +550,14 @@ export class SparkRTC {
           if (this.metaData) {
             this.updateMeetingUI(this.metaData.styles)
           }
+
+
+        }
+
+        if (this.metaData != null && this.metaData.recordingStarted != null) {
+          logger.log("METADATA RECEIVED: ", this.metaData)
+
+          // alert("Meeting is being Been Recorded now!")
         }
 
         break;
@@ -979,10 +987,12 @@ export class SparkRTC {
   startRecording = () => {
     logger.log("Start Recording in SparkRTC, room name is: ", this.roomName)
     this.multiStreamRecorder.startRecording(this.roomName, this.remoteStreams)
+    this.nofityOtherUserAboutMeetingRecordingStatus(true)
   }
 
   stopRecording = () => {
     this.multiStreamRecorder.stopRecording()
+    this.nofityOtherUserAboutMeetingRecordingStatus(false)
   }
 
   //Get Local Stream
@@ -3099,6 +3109,16 @@ export class SparkRTC {
       checkStats();
     }
   };
+
+
+  nofityOtherUserAboutMeetingRecordingStatus = async (started) => {
+    this.getMetadata();
+    setTimeout(() => {
+      const meta = this.metaData;
+      meta.recordingStarted = started
+      this.setMetadata(meta)
+    }, 1000);
+  }
 
   sendCustomStylesToRoom = async (styles) => {
     this.getMetadata();

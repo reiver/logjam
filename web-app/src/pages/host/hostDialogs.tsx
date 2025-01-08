@@ -12,8 +12,8 @@ import reset from 'assets/images/Reset.png'
 import { RoundButton } from 'components/common/RoundButton'
 import imageFolder from 'assets/images/ImageFolder.png'
 import { css } from '@emotion/react'
-import { CSSData, PocketBaseManager } from 'lib/helperAPI'
-import logger from 'lib/logger'
+import { CSSData, PocketBaseManager } from 'lib/pocketBase/helperAPI'
+import logger from 'lib/logger/logger'
 const pbApi = new PocketBaseManager()
 
 export const HostDialogPool = () => {

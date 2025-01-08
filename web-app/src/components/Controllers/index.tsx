@@ -16,8 +16,8 @@ import { clsx } from 'clsx'
 import { Icon, IconButton, Tooltip, attendeesBadge, makeDialog } from 'components'
 import { currentUser, isDebugMode, onStartShareScreen, onStopShareScreen, setUserActionLoading, sparkRTC, updateUser } from 'pages/Meeting.js'
 import { useState } from 'preact/compat'
-import { isMobile } from '../../lib/common.js'
-import logger from 'lib/logger.js'
+import { isMobile } from '../../lib/webrtc/common.js'
+import logger from 'lib/logger/logger.js'
 
 const disableRaiseHandFeat = true
 export const isMoreOptionsOpen = signal(false)

@@ -1,4 +1,4 @@
-import logger from "./logger";
+import logger from "../logger/logger";
 
 export class VideoBackground {
   setBackVideoBackground = async (image, videoStream, blur = false) => {

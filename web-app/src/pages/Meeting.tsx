@@ -2,17 +2,17 @@ import { computed, signal } from '@preact/signals'
 import { BottomBar, Button, MeetingBody, TopBar, attendees, attendeesBadge, isMoreOptionsOpen, makeDialog, streamers } from 'components'
 import { isAttendeesOpen } from 'components/Attendees'
 import { ToastProvider, destroyDialog, makePreviewDialog } from 'components/Dialog'
-import { Roles, createSparkRTC, getWsUrl } from 'lib/common.js'
-import { detectKeyPress } from 'lib/controls'
+import { Roles, createSparkRTC, getWsUrl } from 'lib/webrtc/common.js'
+import { detectKeyPress } from 'lib/helpers/controls'
 import { lazy } from 'preact-iso'
 import clsx from 'clsx'
 import { useEffect, useState } from 'preact/compat'
 import { fullScreenedStream, getValidClass, hasHostStream, hasShareScreenStream } from 'components/MeetingBody/Stage'
 import backImage from 'assets/images/blur.jpg'
-import { VideoBackground } from 'lib/videoBackground'
+import { VideoBackground } from 'lib/videoBackground/videoBackground'
 let displayIdCounter = 2
 import { streamersLength } from '../components/MeetingBody/Stage'
-import logger from 'lib/logger'
+import logger from 'lib/logger/logger'
 
 const PageNotFound = lazy(() => import('./_404'))
 const styleElement = document.createElement('style');

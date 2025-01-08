@@ -1,4 +1,4 @@
-import logger from "./logger"
+import logger from "./logger/logger"
 
 const CAMERA_ON = 'images/cam-on.png'
 const CAMERA_OFF = 'images/cam-off.png'

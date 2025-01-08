@@ -13,8 +13,8 @@ import { useForm } from 'react-hook-form'
 import { HostToastProvider, makeCssFilesDialog, makeMetaImageDialog } from '../host/hostDialogs'
 import z from 'zod'
 import { signal } from '@preact/signals'
-import { PocketBaseManager, HostData, RoomData, convertRoomDataToFormData } from 'lib/helperAPI'
-import logger from 'lib/logger'
+import { PocketBaseManager, HostData, RoomData, convertRoomDataToFormData } from 'lib/pocketBase/helperAPI'
+import logger from 'lib/logger/logger'
 
 const PageNotFound = lazy(() => import('../_404'))
 const selectedImage = signal(null)
