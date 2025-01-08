@@ -75,12 +75,22 @@ Any wishing to contribute to the **logjam** source-code, please see [HACKING.md]
 
 (In alphabetical order.)
 
-* Benyamin Azarkhazin
-* [Charles Iliya Krempeaux](http://reiver.link/)
-* Massoud Seifi
-* Mehrdad Mirsamie
-* Muhammad Zaid Ali
-* Sal Rahman
+* Software Engineers:
+  * Back-End Software Engineers
+    * Benyamin Azarkhazin
+    * [Charles Iliya Krempeaux](http://reiver.link/)
+    * Mehrdad Mirsamie
+  * Front-End Software Engineers
+    * Massoud Seifi
+    * Muhammad Zaid Ali
+    * Sal Rahman
+* Product Researchers
+  * [Charles Iliya Krempeaux](http://reiver.link/)
+* QA Specialists:
+   *Atanaz Ostovar
+  * Sepideh Farsi
+* UX/UI Specialists:
+  * Farzaneh Amini
 
 ## Cookie
 
