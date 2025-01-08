@@ -7,7 +7,7 @@ import (
 	"github.com/reiver/logjam/srv/websock"
 )
 
-const path string = "/ws"
+const path string = "/hapi/v1/ws"
 
 func init() {
 	httpsrv.Router.HandleFunc(path, serveHTTP)
