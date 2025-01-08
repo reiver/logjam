@@ -69,28 +69,43 @@ For example, if you wanted to change the web-server's TCP port to `9000` then yo
 
 Any wishing to contribute to the **logjam** source-code, please see [HACKING.md](HACKING.md) file.
 
-## Authors
+## Credits
 
-**logjam** was created by —
+Many people worked on **logjam**.
 
-(In alphabetical order.)
+Some continue to work on it.
+Some are alumni.
 
-* Software Engineers:
-  * Back-End Software Engineers
-    * Benyamin Azarkhazin
-    * [Charles Iliya Krempeaux](http://reiver.link/)
-    * Mehrdad Mirsamie
-  * Front-End Software Engineers
-    * Massoud Seifi
-    * Muhammad Zaid Ali
-    * Sal Rahman
-* Product Researchers
-  * [Charles Iliya Krempeaux](http://reiver.link/)
-* QA Specialists:
-   *Atanaz Ostovar
-  * Sepideh Farsi
-* UX/UI Specialists:
-  * Farzaneh Amini
+In alphabetical order —
+
+### Credits — Back-End Software Engineers
+
+* Benyamin Azarkhazin
+* [Charles Iliya Krempeaux](http://reiver.link/)
+* Mehrdad Mirsamie
+
+### Credits — Front-End Software Engineers
+
+* Massoud Seifi
+* Muhammad Zaid Ali
+* Sal Rahman
+
+### Credits — Logo
+
+* Chet Earl Woodside
+
+### Credits — Product Researchers
+
+* [Charles Iliya Krempeaux](http://reiver.link/)
+
+### Credits — QA Specialists
+
+* Atanaz Ostovar
+* Sepideh Farsi
+
+### Credits — UX/UI Specialists
+
+* Farzaneh Amini
 
 ## Cookie
 
