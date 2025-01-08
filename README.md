@@ -65,6 +65,10 @@ For example, if you wanted to change the web-server's TCP port to `9000` then yo
 ./logjam --src=9000
 ```
 
+## Hacking
+
+Any wishing to contribute to the **logjam** source-code,, please see [HACKING.md](HACKING.md) file.
+
 ## Authors
 
 **logjam** was created by —
