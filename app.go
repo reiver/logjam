@@ -24,11 +24,6 @@ func (app *App) Init(config cfg.Configurer) {
 	panicIfErr(app.Router.RegisterRoutes())
 }
 
-func (app *App) Run() {
-	app.Logger.Info("app", "running ..")
-	panicIfErr(app.Router.Serve(app.config.WebServerTCPAddress()))
-}
-
 func panicIfErr(err error) {
 	if err != nil {
 		panic(err)
