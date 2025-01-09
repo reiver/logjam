@@ -67,6 +67,10 @@ export const updateUser = (props) => {
 export const onStartShareScreen = (stream) => {
   log(`ScreenShareStram: ${stream}`)
 
+  if (stream == null || stream == undefined) {
+    return
+  }
+
   stream.getTracks()[0].onended = async () => {
     await sparkRTC.value.stopShareScreen(stream)
     updateUser({
@@ -482,6 +486,37 @@ const Meeting = ({ params: { room, displayName, name, _customStyles } }: { param
               setCustomStyles(styles)
             }
           },
+
+
+
+          updateRecordingUi: (recordersList) => {
+            logger.log("Updated Recorders List: ", recordersList)
+
+            // Reset all `isRecordingTheMeeting` values to `false`
+            Object.keys(attendees.value).forEach(userId => {
+              attendees.value[userId] = {
+                ...attendees.value[userId],
+                isRecordingTheMeeting: false,
+              };
+            });
+
+            recordersList.forEach(element => {
+              const userId = parseInt(element, 10)
+              logger.log("User ID: ", userId)
+
+              attendees.value = {
+                ...attendees.value,
+                [userId]: {
+                  ...attendees.value[userId],
+                  isRecordingTheMeeting: true,
+                },
+              }
+            });
+
+            logger.log("Updated Attendees List: ", attendees.value)
+
+          },
+
           startAgain: async () => {
             if (sparkRTC.value) {
               //Init socket and start sparkRTC

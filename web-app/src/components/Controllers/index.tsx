@@ -1,5 +1,7 @@
 import { signal } from '@preact/signals'
 import Camera from 'assets/icons/Camera.svg?react'
+import RecordStart from 'assets/icons/StartRecording.svg?react'
+import RecordStop from 'assets/icons/StopRecording.svg?react'
 import CameraOff from 'assets/icons/CameraOff.svg?react'
 import Hand from 'assets/icons/Hand.svg?react'
 import KebabMenuVertical from 'assets/icons/KebabMenuVertical.svg?react'
@@ -146,13 +148,7 @@ export const Controllers = () => {
           </IconButton>
         </Tooltip>
       )}
-      {(
-        <Tooltip label={isRecordingStarted ? 'Stop Recording' : 'Start Recording'}>
-          <IconButton class="sm:flex" onClick={handleRecording}>
-            <Icon icon={Camera} />
-          </IconButton>
-        </Tooltip>
-      )}
+
       <Tooltip label={isMeetingMuted ? 'Listen' : 'Deafen'}>
         <IconButton variant={isMeetingMuted ? 'danger' : undefined} onClick={toggleMuteMeeting} class="hidden sm:flex">
           <Icon icon={isMeetingMuted ? VolumeOff : Volume} />
@@ -165,6 +161,15 @@ export const Controllers = () => {
           </IconButton>
         </Tooltip>
       )}
+
+      {(
+        <Tooltip label={isRecordingStarted ? 'Stop Recording' : 'Start Recording'}>
+          <IconButton variant={isRecordingStarted && 'danger'} class="sm:flex" onClick={handleRecording}>
+            <Icon icon={isRecordingStarted ? RecordStop : RecordStart} />
+          </IconButton>
+        </Tooltip>
+      )}
+
       {isStreamming && isHost && (
         <Tooltip key={sharingScreenStream ? 'ShareOff' : 'Share'} label={!sharingScreenStream ? 'Share Screen' : 'Stop Sharing Screen'}>
           <IconButton variant={sharingScreenStream && 'danger'} onClick={handleShareScreen} class="hidden sm:flex">

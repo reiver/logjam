@@ -10,6 +10,7 @@ import logger from "../logger/logger";
  *
  */
 export class SparkRTC {
+
   started = false;
   maxRaisedHands = 6;
   myPeerConnectionConfig = {
@@ -23,6 +24,7 @@ export class SparkRTC {
   remoteStreams = [];
   /** @type {WebSocket} */
   socket;
+  metaDataInterVal = null
   myName = "NoName";
   roomName = "SparkRTC";
   myUsername = "NoUsername";
@@ -69,6 +71,7 @@ export class SparkRTC {
   metaData = {};
   userStreamData = {};
   users = [];
+  recordersList = [];
 
   meetingRecorder = new MeetingRecorder()
   multiStreamRecorder = new MultiStreamRecorder()
@@ -286,6 +289,7 @@ export class SparkRTC {
     let msg;
     try {
       msg = JSON.parse(event.data);
+      logger.log("HANDLE MESSSAGE: ", msg)
     } catch (e) {
       return;
     }
@@ -550,14 +554,10 @@ export class SparkRTC {
           if (this.metaData) {
             this.updateMeetingUI(this.metaData.styles)
           }
-
-
         }
 
         if (this.metaData != null && this.metaData.recordingStarted != null) {
-          logger.log("METADATA RECEIVED: ", this.metaData)
-
-          // alert("Meeting is being Been Recorded now!")
+          this.handleMetaDataToGetRecordingStatus(this.metaData)
         }
 
         break;
@@ -593,6 +593,8 @@ export class SparkRTC {
             };
           });
           this.users = users;
+
+          logger.log("Users list: ", this.users)
 
           if (this.userListCallback) {
             this.userListCallback(users);
@@ -821,6 +823,12 @@ export class SparkRTC {
    * @returns
    */
   setupSignalingSocket = (url, myName, roomName, debug) => {
+
+    // add timer to get metaData after every second
+    if (this.metaDataInterVal == null) {
+      this.metaDataInterVal = setInterval(this.getMetadata, 1000);
+    }
+
     this.updateTheStatus(
       `[setupSignalingSocket] url=${url} myName=${myName} roomName=${roomName}`
     );
@@ -987,12 +995,12 @@ export class SparkRTC {
   startRecording = () => {
     logger.log("Start Recording in SparkRTC, room name is: ", this.roomName)
     this.multiStreamRecorder.startRecording(this.roomName, this.remoteStreams)
-    this.nofityOtherUserAboutMeetingRecordingStatus(true)
+    this.notifyOtherUserAboutMeetingRecordingStatus(true)
   }
 
   stopRecording = () => {
     this.multiStreamRecorder.stopRecording()
-    this.nofityOtherUserAboutMeetingRecordingStatus(false)
+    this.notifyOtherUserAboutMeetingRecordingStatus(false)
   }
 
   //Get Local Stream
@@ -2973,6 +2981,10 @@ export class SparkRTC {
     if (closeSocket && this.socket) {
       this.updateTheStatus(`socket is closed in restart`);
       this.socket.onclose = null;
+      if (this.metaDataInterVal != null) {
+        clearInterval(this.metaDataInterVal)
+        this.metaDataInterVal = null
+      }
       this.socket.close();
       this.socket = null;
 
@@ -3111,11 +3123,36 @@ export class SparkRTC {
   };
 
 
-  nofityOtherUserAboutMeetingRecordingStatus = async (started) => {
+  notifyOtherUserAboutMeetingRecordingStatus = async (started) => {
     this.getMetadata();
     setTimeout(() => {
       const meta = this.metaData;
-      meta.recordingStarted = started
+
+      //set recorder started statue and also update current user id to recorders list
+
+      if (started == true) {
+        //just started
+        if (meta.recordersList == null || meta.recordersList == undefined) {
+          meta.recordersList = Array.of(this.myUsername)
+        } else {
+          if (!meta.recordersList.includes(this.myUsername)) {
+            meta.recordersList = Array.of(...meta.recordersList, this.myUsername);
+          }
+        }
+
+        meta.recordingStarted = started
+
+      } else {
+        //stoped
+        if (meta.recordersList != null && meta.recordersList != undefined) {
+          meta.recordersList = meta.recordersList.filter(username => username !== this.myUsername);
+        }
+
+        if (meta.recordersList.length == 0) {
+          meta.recordingStarted = started
+        }
+      }
+
       this.setMetadata(meta)
     }, 1000);
   }
@@ -3167,7 +3204,13 @@ export class SparkRTC {
     if (resetAll) {
       this.socketURL = "";
       this.socket = null;
+
+      if (this.metaDataInterVal != null) {
+        clearInterval(this.metaDataInterVal)
+        this.metaDataInterVal = null
+      }
     }
+
     this.myName = "NoName";
     this.roomName = "SparkRTC";
     this.myUsername = "NoUsername";
@@ -3201,6 +3244,67 @@ export class SparkRTC {
     this.lastAudioState = this.LastState.ENABLED;
   };
 
+  //handle video recording status
+  handleMetaDataToGetRecordingStatus(metaData) {
+    logger.log("METADATA RECEIVED: ", metaData)
+
+    const list = metaData.recordersList
+
+    if (list.length > 0) {
+      logger.log("Recorder list Received in META DATA: ", list)
+
+      if (list.length == this.recordersList.length) {
+        logger.log("List is same already no need to modify")
+      } else {
+        // Find newly added values
+        const newlyAdded = list.filter(item => !this.recordersList.includes(item));
+
+        // Find removed values
+        const removedValues = this.recordersList.filter(item => !list.includes(item));
+
+        logger.log("Need to update the list.");
+        logger.log("Newly added values:", newlyAdded);
+        logger.log("Removed values:", removedValues);
+
+        // logger.log("Users list is: ", this.users)
+
+        // if (newlyAdded.length > 0) {
+        //   // Find the user by ID
+
+        //   const userId = parseInt(newlyAdded[0], 10); // Convert to integer
+
+        //   const user = this.users.find(user => user.id === userId);
+
+        //   if (user) {
+        //     // Parse the `name` field to extract the username
+        //     const userName = JSON.parse(user.name).name;
+        //     logger.log("Username:", userName);
+        //   } else {
+        //     logger.error("User not found");
+        //   }
+        // }
+
+        //get the new value received in list
+        this.recordersList = list
+        if (this.updateRecordingUi) this.updateRecordingUi(this.recordersList)
+      }
+    } else {
+      if (this.recordersList.length > 0) {
+        // Find removed values
+        const removedValues = this.recordersList.filter(item => !list.includes(item));
+
+        logger.log("Recording is stopped fully and list is empty now");
+        logger.log("Removed values:", removedValues);
+
+        this.recordersList = list;
+        if (this.updateRecordingUi) this.updateRecordingUi(this.recordersList)
+
+      }
+    }
+
+    // alert("Meeting is being Been Recorded now!")
+  }
+
   /**
    * Construcor Function for Class SparkRTC
    *
@@ -3232,7 +3336,7 @@ export class SparkRTC {
     this.invitationToJoinStage = options.invitationToJoinStage;
     this.updateVideosMuteStatus = options.updateVideosMuteStatus;
     this.updateMeetingUI = options.updateMeetingUI;
-
+    this.updateRecordingUi = options.updateRecordingUi;
     this.checkBrowser(); //detect browser
     this.getSupportedCodecs();
   }

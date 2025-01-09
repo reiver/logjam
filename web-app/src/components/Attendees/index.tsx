@@ -9,9 +9,11 @@ import { BottomSheet, Icon, makeDialog } from 'components'
 import { currentUser, onInviteToStage, onUserRaisedHand, sparkRTC } from 'pages/Meeting'
 import { makeInviteDialog } from '../Dialog'
 import { deviceSize } from '../MeetingBody/Stage.js'
+import logger from 'lib/logger/logger'
+import { useEffect } from 'preact/hooks'
 
 export const attendees = signal<{
-  [userId: string]: { name: string; isHost: boolean; avatar: string; raisedHand: Date; hasCamera: boolean; userId: number; actionLoading?: boolean; acceptRaiseHand?: any }
+  [userId: string]: { name: string; isHost: boolean; avatar: string; raisedHand: Date; hasCamera: boolean; userId: number; actionLoading?: boolean; acceptRaiseHand?: any, isRecordingTheMeeting: boolean }
 }>(
   {}
   // {
@@ -23,7 +25,7 @@ export const attendees = signal<{
   // }
 )
 
-const isMobile = window.self == window.top &&  window.parent.outerWidth <= 400 && window.parent.outerHeight <= 850
+const isMobile = window.self == window.top && window.parent.outerWidth <= 400 && window.parent.outerHeight <= 850
 
 export const attendeesCount = computed(() => Object.values(attendees.value).length)
 
@@ -41,6 +43,7 @@ export const attendeesWidth = computed(() => {
 })
 
 export const Participant = ({ participant }) => {
+
   const handleRaiseHand = () => {
     //check multiple scenarios
     let res = checkUserCount()
@@ -162,7 +165,7 @@ export const Participant = ({ participant }) => {
           <img src={participant.avatar} class="w-9 h-9 rounded-full object-cover" />
         ) : (
           <div class="dark:bg-gray-300 min-w-[36px] min-h-[36px] dark:bg-opacity-30 bg-opacity-30 bg-gray-400 rounded-full w-9 h-9 flex justify-center items-center">
-            <Icon icon={AvatarIcon} width="20px" height="20px"  class="greatape-attendees-item" />
+            <Icon icon={AvatarIcon} width="20px" height="20px" class="greatape-attendees-item" />
           </div>
         )}
 
@@ -180,6 +183,13 @@ export const Participant = ({ participant }) => {
           ) : (
             ''
           )}
+
+          {
+            participant.userId != currentUser.value.userId && participant.isRecordingTheMeeting == true ? (
+              <span class="text-gray-1 dark:text-gray-0 text-regular-12 greatape-attendees-item-role">Is Recording</span>
+            ) : ('')
+          }
+
         </div>
       </div>
       <div class="flex gap-1 dark:text-gray-0 text-gray-1">

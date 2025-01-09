@@ -58,6 +58,7 @@ export const createBroadcastSpartRTC = (role, props) => {
     userLoweredHand: props.userLoweredHand,
     invitationToJoinStage: props.invitationToJoinStage,
     updateMeetingUI: props.updateMeetingUI,
+    updateRecordingUi: props.updateRecordingUi,
   });
 };
 
@@ -80,5 +81,6 @@ export const createAudienceSpartRTC = (role, props) => {
     invitationToJoinStage: props.invitationToJoinStage,
     updateVideosMuteStatus: props.updateVideosMuteStatus,
     updateMeetingUI: props.updateMeetingUI,
+    updateRecordingUi: props.updateRecordingUi,
   });
 };
