@@ -4,6 +4,11 @@
 
 <img src="doc/img/greatape-logo.png" style="width:150px" />
 
+The documentation for **logjam** is divided up into several files.
+
+* [RUNNING.md](doc/RUNNING.md) — Any wishing to run **logjam**, please see [RUNNING.md](doc/RUNNING.md) file.
+* [HACKING.md](doc/HACKING.md) — Any wishing to contribute to the **logjam** source-code, please see [HACKING.md](doc/HACKING.md) file.
+
 ## PocketBase Base URL
 
 To run **logjam** you need to tell it where your **PocketBase** server is, using a **PocketBase base-URL**.
@@ -90,10 +95,6 @@ For example, if you wanted to change the web-server's TCP port to `9000` then yo
 ```
 ./logjam --src=9000
 ```
-
-## Hacking
-
-Any wishing to contribute to the **logjam** source-code, please see [HACKING.md](HACKING.md) file.
 
 ## Credits
 
