@@ -1,4 +1,4 @@
-package contracts
+package goldgorilla
 
 type IGoldGorillaServiceRepository interface {
 	Start(roomId string) error

@@ -5,20 +5,20 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/reiver/logjam/lib/goldgorilla"
 	"github.com/reiver/logjam/lib/logs"
 	"github.com/reiver/logjam/lib/websock"
 	"github.com/reiver/logjam/models"
-	"github.com/reiver/logjam/models/contracts"
 )
 
 type RoomWSController struct {
 	logger    logs.Logger
 	socketSVC websock.SocketService
 	roomRepo  Repository
-	ggRepo    contracts.IGoldGorillaServiceRepository
+	ggRepo    goldgorilla.IGoldGorillaServiceRepository
 }
 
-func NewRoomWSController(socketSVC websock.SocketService, roomRepo Repository, ggRepo contracts.IGoldGorillaServiceRepository, logger logs.TaggedLogger) *RoomWSController {
+func NewRoomWSController(socketSVC websock.SocketService, roomRepo Repository, ggRepo goldgorilla.IGoldGorillaServiceRepository, logger logs.TaggedLogger) *RoomWSController {
 	const logtag string = "room_ws_ctrl"
 
 	return &RoomWSController{
