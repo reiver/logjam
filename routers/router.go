@@ -86,11 +86,8 @@ func (r *Router) RegisterRoutes() error {
 
 	r.router.Use(func(handler http.Handler) http.Handler {
 		return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
-			ip := request.RemoteAddr
-			if strings.Index(ip, ":") > 0 {
-				ip = ip[:strings.Index(ip, ":")]
-			}
-			r.logger.Debugf(`HTTP %s | %s %q`, ip, request.Method, request.URL.Path)
+			remoteAddr := request.RemoteAddr
+			r.logger.Debugf(`HTTP-request method=%q remote-addr=%q request-uri=%q`, request.Method, remoteAddr, request.URL.RequestURI())
 			handler.ServeHTTP(writer, request)
 		})
 	})
