@@ -7,8 +7,8 @@ import (
 
 	"github.com/reiver/logjam/lib/goldgorilla"
 	"github.com/reiver/logjam/lib/logs"
+	"github.com/reiver/logjam/lib/msgs"
 	"github.com/reiver/logjam/lib/websock"
-	"github.com/reiver/logjam/models"
 )
 
 type RoomWSController struct {
@@ -51,7 +51,7 @@ func (c *RoomWSController) OnDisconnect(ctx *WSContext) {
 			c.error(err)
 			return
 		}
-		brDCEvent := models.MessageContract{
+		brDCEvent := msgs.MessageContract{
 			Type: "event-broadcaster-disconnected",
 			Data: strconv.FormatUint(ctx.SocketID, 10),
 		}
@@ -65,7 +65,7 @@ func (c *RoomWSController) OnDisconnect(ctx *WSContext) {
 			c.roomRepo.RemoveMember(ctx.RoomId, *oldggId)
 		}
 	} else {
-		parentDCEvent := models.MessageContract{
+		parentDCEvent := msgs.MessageContract{
 			Type: "event-parent-dc",
 			Data: strconv.FormatUint(ctx.SocketID, 10),
 		}
@@ -119,7 +119,7 @@ func (c *RoomWSController) OnDisconnect(ctx *WSContext) {
 }
 
 func (c *RoomWSController) Start(ctx *WSContext) {
-	resultEvent := models.MessageContract{
+	resultEvent := msgs.MessageContract{
 		Type:   "start",
 		Data:   strconv.FormatInt(int64(ctx.SocketID), 10),
 		Target: "",
@@ -154,7 +154,7 @@ func (c *RoomWSController) Role(ctx *WSContext) {
 		}
 	}
 
-	resultEvent := models.MessageContract{
+	resultEvent := msgs.MessageContract{
 		Type:   "role",
 		Data:   "",
 		Target: "",
@@ -170,14 +170,14 @@ func (c *RoomWSController) Role(ctx *WSContext) {
 			currentUser, err := c.roomRepo.GetMember(ctx.RoomId, ctx.SocketID)
 			if err != nil {
 				c.error(err)
-				_ = c.socketSVC.Send(models.MessageContract{
+				_ = c.socketSVC.Send(msgs.MessageContract{
 					Type: "role",
 					Data: "no:broadcast",
 				}, ctx.SocketID)
 				return
 			}
 			if currentUser.Name != br.Name {
-				_ = c.socketSVC.Send(models.MessageContract{
+				_ = c.socketSVC.Send(msgs.MessageContract{
 					Type: "role",
 					Data: "no:broadcast",
 				}, ctx.SocketID)
@@ -202,7 +202,7 @@ func (c *RoomWSController) Role(ctx *WSContext) {
 			return
 		}
 
-		err = c.socketSVC.Send(models.MessageContract{
+		err = c.socketSVC.Send(msgs.MessageContract{
 			Type: "broadcasting",
 			Data: strconv.FormatUint(ctx.SocketID, 10),
 		}, memberIds...)
@@ -231,7 +231,7 @@ func (c *RoomWSController) Role(ctx *WSContext) {
 			return
 		}
 		if broadcaster == nil {
-			_ = c.socketSVC.Send(models.MessageContract{
+			_ = c.socketSVC.Send(msgs.MessageContract{
 				Type: "alt-broadcast",
 				Data: "no-broadcaster",
 			}, ctx.SocketID)
@@ -260,7 +260,7 @@ func (c *RoomWSController) Role(ctx *WSContext) {
 			return
 		}
 		if broadcaster == nil {
-			_ = c.socketSVC.Send(models.MessageContract{
+			_ = c.socketSVC.Send(msgs.MessageContract{
 				Type: "role",
 				Data: "no:audience",
 			}, ctx.SocketID)
@@ -283,7 +283,7 @@ func (c *RoomWSController) Role(ctx *WSContext) {
 			return
 		}
 		if !c.roomRepo.IsGGInstance(ctx.RoomId, *parentId) {
-			_ = c.socketSVC.Send(models.MessageContract{
+			_ = c.socketSVC.Send(msgs.MessageContract{
 				Type: "add_audience",
 				Data: strconv.FormatUint(ctx.SocketID, 10),
 			}, *parentId)
@@ -300,7 +300,7 @@ func (c *RoomWSController) Role(ctx *WSContext) {
 			}
 			err = c.ggRepo.CreatePeer(ctx.RoomId, ctx.SocketID, true, false, *ggid)
 			if err != nil {
-				_ = c.socketSVC.Send(models.MessageContract{
+				_ = c.socketSVC.Send(msgs.MessageContract{
 					Type: "error",
 					Data: err.Error(),
 				}, ctx.SocketID)
@@ -351,7 +351,7 @@ func (c *RoomWSController) UpdateStreamId(ctx *WSContext) {
 }
 
 func (c *RoomWSController) Ping(ctx *WSContext) {
-	_ = c.socketSVC.Send(models.MessageContract{Type: "pong"}, ctx.SocketID)
+	_ = c.socketSVC.Send(msgs.MessageContract{Type: "pong"}, ctx.SocketID)
 }
 
 func (c *RoomWSController) TurnStatus(ctx *WSContext) {
@@ -378,7 +378,7 @@ func (c *RoomWSController) Tree(ctx *WSContext) {
 		return
 	}
 	buffer, err := json.Marshal(tree)
-	resultEvent := models.MessageContract{
+	resultEvent := msgs.MessageContract{
 		Type: "tree",
 		Data: string(buffer),
 	}
@@ -414,7 +414,7 @@ func (c *RoomWSController) MetadataGet(ctx *WSContext) {
 		c.error(err)
 		return
 	}
-	resultEvent := models.MessageContract{
+	resultEvent := msgs.MessageContract{
 		Type: "metadata-get",
 		Data: string(jsonBytes),
 	}
@@ -434,7 +434,7 @@ func (c *RoomWSController) UserByStream(ctx *WSContext) {
 	if err != nil {
 		c.error(err)
 	}
-	resultEvent := models.MessageContract{
+	resultEvent := msgs.MessageContract{
 		Type: "user-by-stream",
 	}
 	userRole := "audience"
@@ -484,7 +484,7 @@ func (c *RoomWSController) emitUserList(roomId string) {
 		c.error(err)
 		return
 	}
-	event := models.MessageContract{
+	event := msgs.MessageContract{
 		Type: "user-event",
 		Data: string(buffer),
 	}
@@ -497,7 +497,7 @@ func (c *RoomWSController) ReconnectChildren(ctx *WSContext) {
 		c.error(err)
 		return
 	}
-	event := models.MessageContract{
+	event := msgs.MessageContract{
 		Type: "reconnect",
 		Data: strconv.FormatUint(ctx.SocketID, 10),
 	}
@@ -511,7 +511,7 @@ func (c *RoomWSController) SendMessage(ctx *WSContext) {
 		_ = c.socketSVC.Send(map[string]string{"error": "error getting members list"}, ctx.SocketID)
 		return
 	}
-	_ = c.socketSVC.Send(models.MessageContract{
+	_ = c.socketSVC.Send(msgs.MessageContract{
 		Type:   "new-message",
 		Data:   ctx.ParsedMessage.Data,
 		Target: "",

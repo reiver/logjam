@@ -5,7 +5,7 @@ import (
 
 	"github.com/gorilla/websocket"
 
-	"github.com/reiver/logjam/models"
+	"github.com/reiver/logjam/lib/msgs"
 	"github.com/reiver/logjam/lib/rooms"
 	"github.com/reiver/logjam/srv/room"
 )
@@ -30,7 +30,7 @@ func serveWS(wsConn *websocket.Conn, socketId uint64, roomId string) {
 			continue
 		}
 
-		var msg models.MessageContract
+		var msg msgs.MessageContract
 		err := json.Unmarshal(data, &msg)
 		if err != nil {
 			log.Error(err)

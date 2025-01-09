@@ -1,4 +1,4 @@
-package models
+package msgs
 
 type MessageContract struct {
 	Type   string

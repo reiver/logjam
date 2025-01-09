@@ -1,12 +1,12 @@
 package rooms
 
 import (
-	"github.com/reiver/logjam/models"
+	"github.com/reiver/logjam/lib/msgs"
 )
 
 type WSContext struct {
 	SocketID      uint64
 	PureMessage   []byte
-	ParsedMessage *models.MessageContract
+	ParsedMessage *msgs.MessageContract
 	RoomId        string
 }
