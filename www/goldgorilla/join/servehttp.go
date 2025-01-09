@@ -8,9 +8,9 @@ import (
 	"time"
 
 	"github.com/reiver/logjam/cfg"
+	"github.com/reiver/logjam/lib/goldgorilla"
 	"github.com/reiver/logjam/lib/rest"
 	"github.com/reiver/logjam/models"
-	"github.com/reiver/logjam/models/dto"
 	"github.com/reiver/logjam/srv/goldgorilla"
 	"github.com/reiver/logjam/srv/http"
 	"github.com/reiver/logjam/srv/room"
@@ -37,7 +37,7 @@ func serveHTTP(responsewriter http.ResponseWriter, request *http.Request) {
 	if rest.HandleIfErr(responsewriter, err, 400) {
 		return
 	}
-	var reqModel dto.JoinReqModel
+	var reqModel goldgorilla.JoinReqModel
 	err = json.Unmarshal(reqBody, &reqModel)
 	if rest.HandleIfErr(responsewriter, err, 400) {
 		return

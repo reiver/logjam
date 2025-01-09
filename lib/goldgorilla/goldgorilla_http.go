@@ -6,7 +6,6 @@ import (
 	"errors"
 	"io"
 	"net/http"
-	"github.com/reiver/logjam/models/dto"
 	"time"
 )
 
@@ -38,8 +37,8 @@ func (a *HTTPRepository) CreatePeer(roomId string, id uint64, canPublish bool, i
 		return errors.New("gg repository not initialized yet")
 	}
 	body, err := getReader(
-		dto.CreatePeerRPCModel{
-			RoomPeerDTO: dto.RoomPeerDTO{
+		CreatePeerRPCModel{
+			RoomPeerDTO: RoomPeerDTO{
 				RoomId: roomId,
 				ID:     id,
 			},
@@ -65,8 +64,8 @@ func (a *HTTPRepository) SendICECandidate(roomId string, id uint64, iceCandidate
 		return errors.New("gg repository not initialized yet")
 	}
 	body, err := getReader(
-		dto.SendIceCandidateReqModel{
-			RoomPeerDTO: dto.RoomPeerDTO{
+		SendIceCandidateReqModel{
+			RoomPeerDTO: RoomPeerDTO{
 				RoomId: roomId,
 				ID:     id,
 			},
@@ -89,8 +88,8 @@ func (a *HTTPRepository) SendAnswer(roomId string, peerId uint64, answer interfa
 	if !a.isConfigured() {
 		return errors.New("gg repository not initialized yet")
 	}
-	body, err := getReader(dto.SetSDPRPCModel{
-		RoomPeerDTO: dto.RoomPeerDTO{
+	body, err := getReader(SetSDPRPCModel{
+		RoomPeerDTO: RoomPeerDTO{
 			RoomId: roomId,
 			ID:     peerId,
 		},
@@ -113,8 +112,8 @@ func (a *HTTPRepository) SendOffer(roomId string, peerId uint64, offer interface
 	if !a.isConfigured() {
 		return errors.New("gg repository not initialized yet")
 	}
-	body, err := getReader(dto.SetSDPRPCModel{
-		RoomPeerDTO: dto.RoomPeerDTO{
+	body, err := getReader(SetSDPRPCModel{
+		RoomPeerDTO: RoomPeerDTO{
 			RoomId: roomId,
 			ID:     peerId,
 		},
@@ -137,7 +136,7 @@ func (a *HTTPRepository) ClosePeer(roomId string, id uint64) error {
 	if !a.isConfigured() {
 		return errors.New("gg repository not initialized yet")
 	}
-	body, err := getReader(dto.RoomPeerDTO{
+	body, err := getReader(RoomPeerDTO{
 		RoomId: roomId,
 		ID:     id,
 	})

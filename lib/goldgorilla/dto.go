@@ -1,4 +1,4 @@
-package dto
+package goldgorilla
 
 type RoomPeerDTO struct {
 	RoomId string `json:"roomId"`

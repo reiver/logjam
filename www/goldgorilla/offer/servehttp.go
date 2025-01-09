@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/reiver/logjam/lib/goldgorilla"
 	"github.com/reiver/logjam/lib/rest"
-	"github.com/reiver/logjam/models/dto"
 	"github.com/reiver/logjam/srv/http"
 	"github.com/reiver/logjam/srv/websock"
 )
@@ -32,7 +32,7 @@ func serveHTTP(responsewriter http.ResponseWriter, request *http.Request) {
 	if rest.HandleIfErr(responsewriter, err, 400) {
 		return
 	}
-	var reqModel dto.SetSDPRPCModel
+	var reqModel goldgorilla.SetSDPRPCModel
 	err = json.Unmarshal(reqBody, &reqModel)
 	if rest.HandleIfErr(responsewriter, err, 400) {
 		return
