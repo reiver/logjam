@@ -1,9 +1,5 @@
 package rooms
 
-import (
-	"github.com/reiver/logjam/models/dto"
-)
-
 type Repository interface {
 	DoesRoomExists(id string) bool
 	CreateRoom(id string) error
@@ -26,7 +22,7 @@ type Repository interface {
 	ClearMessageHistory(roomId string) error
 	GetUserByStreamId(roomId string, streamId string) (*MemberModel, error)
 	IsBroadcaster(roomId string, id uint64) (bool, error)
-	GetMembersList(roomId string) ([]dto.MemberDTO, error)
+	GetMembersList(roomId string) ([]MemberDTO, error)
 	GetChildrenIdList(roomId string, id uint64) ([]uint64, error)
 	IsGGInstance(roomId string, id uint64) bool
 	GetRoomGoldGorillaId(roomId string) (*uint64, error)

@@ -4,8 +4,6 @@ import (
 	"errors"
 	"strconv"
 	"sync"
-
-	"github.com/reiver/logjam/models/dto"
 )
 
 type roomRepository struct {
@@ -313,10 +311,10 @@ func (r *roomRepository) AddMessageToHistory(roomId string, senderId uint64, msg
 	defer r.rooms[roomId].Unlock()
 
 	if _, exists := r.rooms[roomId].MetaData[RoomMessagesMetaDataKey]; !exists {
-		r.rooms[roomId].MetaData[RoomMessagesMetaDataKey] = []dto.UserMessageModel{}
+		r.rooms[roomId].MetaData[RoomMessagesMetaDataKey] = []UserMessageModel{}
 	}
-	lastMessages := r.rooms[roomId].MetaData[RoomMessagesMetaDataKey].([]dto.UserMessageModel)
-	r.rooms[roomId].MetaData[RoomMessagesMetaDataKey] = append(lastMessages, dto.UserMessageModel{
+	lastMessages := r.rooms[roomId].MetaData[RoomMessagesMetaDataKey].([]UserMessageModel)
+	r.rooms[roomId].MetaData[RoomMessagesMetaDataKey] = append(lastMessages, UserMessageModel{
 		Message:  msg,
 		SenderId: senderId,
 	})
@@ -334,7 +332,7 @@ func (r *roomRepository) ClearMessageHistory(roomId string) error {
 	r.rooms[roomId].Lock()
 	defer r.rooms[roomId].Unlock()
 
-	r.rooms[roomId].MetaData[RoomMessagesMetaDataKey] = []dto.UserMessageModel{}
+	r.rooms[roomId].MetaData[RoomMessagesMetaDataKey] = []UserMessageModel{}
 	return nil
 }
 
@@ -389,7 +387,7 @@ func (r *roomRepository) IsBroadcaster(roomId string, id uint64) (bool, error) {
 	return r.rooms[roomId].PeersTree.ID == id, nil
 }
 
-func (r *roomRepository) GetMembersList(roomId string) ([]dto.MemberDTO, error) {
+func (r *roomRepository) GetMembersList(roomId string) ([]MemberDTO, error) {
 	r.Lock()
 	defer r.Unlock()
 	if !r.doesRoomExists(roomId) {
@@ -398,7 +396,7 @@ func (r *roomRepository) GetMembersList(roomId string) ([]dto.MemberDTO, error) 
 
 	r.rooms[roomId].Lock()
 	defer r.rooms[roomId].Unlock()
-	var list []dto.MemberDTO
+	var list []MemberDTO
 	for _, member := range r.rooms[roomId].Members {
 		role := "audience"
 		if r.rooms[roomId].PeersTree.ID == member.ID {
@@ -412,7 +410,7 @@ func (r *roomRepository) GetMembersList(roomId string) ([]dto.MemberDTO, error) 
 				streamId = strStreamId
 			}
 		}
-		list = append(list, dto.MemberDTO{
+		list = append(list, MemberDTO{
 			Id:       member.ID,
 			Name:     member.Name,
 			Role:     role,

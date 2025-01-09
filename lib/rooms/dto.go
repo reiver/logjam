@@ -1,4 +1,4 @@
-package dto
+package rooms
 
 type MemberDTO struct {
 	Id       uint64 `json:"id"`
