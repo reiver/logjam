@@ -6,6 +6,7 @@ import (
 
 type Context struct {
 	Logger logs.Logger
+	PocketBaseURL string
 }
 
 var _ logs.Logger = Context{}
@@ -56,4 +57,8 @@ func (receiver Context) Infof(format string, msg ...any) {
 	}
 
 	receiver.Logger.Infof(format, msg...)
+}
+
+func (receiver Context) URL(apipath string) string {
+	return createURL(receiver.PocketBaseURL, apipath)
 }

@@ -17,6 +17,10 @@ func (receiver wrapper) GoldGorillaBaseURL() string {
 	return receiver.internal.GoldGorillaBaseURL
 }
 
+func (receiver wrapper) PocketBaseURL() string {
+	return receiver.internal.PocketBaseURL
+}
+
 func (receiver wrapper) ProdMode() bool {
 	return receiver.internal.ProdMode
 }

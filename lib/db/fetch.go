@@ -10,7 +10,7 @@ func fetchRecordFromPocketBase(ctx Context, roomName string) (*Record, error) {
 	ctx.Debug("{fetchRecordFromPocketBase} BEGIN")
 	defer ctx.Debug("{fetchRecordFromPocketBase} END")
 
-	url := "https://pb.greatape.stream/api/collections/rooms/records?sort=-created"
+	url := ctx.URL("collections/rooms/records?sort=-created")
 
 	// Create a new request using http
 	req, err := http.NewRequest("GET", url, nil)

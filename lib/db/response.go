@@ -2,7 +2,8 @@ package db
 
 import (
 	"encoding/json"
-	"fmt"
+
+	"github.com/reiver/go-erorr"
 )
 
 type Response struct {
@@ -13,6 +14,10 @@ type Response struct {
 	Items      []Record `json:"items"`
 }
 
+const (
+	errRecordNotFound = erorr.Error("record not found")
+)
+
 func parseResponse(ctx Context, jsonData string, roomName string) (*Record, error) {
 
 	ctx.Debug("{parseResponse} BEGIN")
@@ -22,7 +27,7 @@ func parseResponse(ctx Context, jsonData string, roomName string) (*Record, erro
 	err := json.Unmarshal([]byte(jsonData), &response)
 	if err != nil {
 		ctx.Error("Error parsing JSON:", err)
-		return nil, fmt.Errorf("error parsing JSON: %w", err)
+		return nil, erorr.Errorf("error parsing JSON: %w", err)
 	}
 
 	for _, item := range response.Items {
@@ -32,5 +37,5 @@ func parseResponse(ctx Context, jsonData string, roomName string) (*Record, erro
 		}
 	}
 
-	return nil, fmt.Errorf("record not found")
+	return nil, errRecordNotFound
 }

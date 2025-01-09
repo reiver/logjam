@@ -61,7 +61,6 @@ func FetchDataForMetaTags(ctx Context, path string) *MetaData {
 	return &MetaData{
 		Title:       myRecord.Name,
 		Description: myRecord.Description,
-		Image:       getImageURL(myRecord),
+		Image:       getImageURL(ctx, myRecord),
 	}
 }
-

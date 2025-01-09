@@ -4,6 +4,32 @@
 
 <img src="doc/img/greatape-logo.png" style="width:150px" />
 
+## PocketBase Base URL
+
+To run **logjam** you need to tell it where your **PocketBase** server is, using a **PocketBase base-URL**.
+
+You can set this using 2 different methods.
+
+### PocketBase Base URL — environment-variable
+
+Method №1 is to use the `POCKETBASE_URL` **environment-variable**.
+
+For example, if you wanted to change the **PocketBase base-URL** TCP port to `http://example.com/api` then you could do something similar to the following:
+
+```
+POCKETBASE_URL="http://example.com/api" ./logjam
+```
+
+### PocketBase Base URL — command-line switch / flag
+
+Method №2 is to use the `--pburl` **command-line** switch/flag.
+
+For example, if you wanted to change the **PocketBase base-URL** TCP port to `http://example.com/api` then you could do something similar to the following:
+
+```
+./logjam --pburl='http://example.com/api'
+```
+
 ## Running The Project
 
 ---
@@ -37,7 +63,7 @@ make sure you have docker installed first.
    1. build the image: `docker build -t logjam:latest .`
    2. create and run the container: `docker run --rm logjam:latest`
 
-## HTTP TCP Port
+## HTTP TCP Port Configuration (optional)
 
 **logjam** includes a web-server.
 
@@ -45,7 +71,7 @@ By default this web-server runs on TCP port `8080`.
 
 This can be changed to a different TCP port using either of 2 different methods.
 
-### HTTP TCP Port — environment-variable
+### HTTP TCP Port Configuration (optional) — environment-variable
 
 Method №1 is to use the `PORT` **environment-variable**.
 
@@ -55,7 +81,7 @@ For example, if you wanted to change the web-server's TCP port to `9000` then yo
 PORT=9000 ./logjam
 ```
 
-### HTTP TCP Port — command-line switch / flag
+### HTTP TCP Port Configuration (optional) — command-line switch / flag
 
 Method №2 is to use the `--src` **command-line** switch/flag.
 

@@ -7,6 +7,7 @@ import (
 
 	"github.com/gorilla/mux"
 
+	"github.com/reiver/logjam/cfg"
 	"github.com/reiver/logjam/lib/db"
 	"github.com/reiver/logjam/lib/logs"
 	"github.com/reiver/logjam/srv/http"
@@ -39,6 +40,7 @@ func (r *Router) RegisterRoutes() error {
 		{
 			var ctx = db.Context{
 				Logger: logsrv.Tag("db"),
+				PocketBaseURL: cfg.Config.PocketBaseURL(),
 			}
 
 			metaData = db.FetchDataForMetaTags(ctx, req.URL.Path) // Implement this to fetch meta data based on the request
