@@ -15,10 +15,6 @@ import (
 	"github.com/reiver/logjam/srv/log"
 )
 
-type IRouteRegistrar interface {
-	registerRoutes(router *mux.Router)
-}
-
 type Router struct {
 	router            *mux.Router
 	logger            logs.Logger
