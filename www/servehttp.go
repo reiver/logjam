@@ -54,7 +54,7 @@ func serveHTTP(responsewriter http.ResponseWriter, request *http.Request) {
 	}
 	log.Debugf("digest: %s", digest)
 
-	var eTag string = "sha256d-" + digest
+	var eTag string = "sha256-" + digest
 	log.Debugf("eTag: %s", eTag)
 
 	if etag.Handle(responsewriter, request, eTag) {
