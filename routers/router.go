@@ -29,6 +29,7 @@ func NewRouter(logger logs.TaggedLogger) *Router {
 }
 
 func (r *Router) RegisterRoutes() error {
+
 	// r.router.PathPrefix("/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	// 	http.ServeFile(w, r, "./web-app/dist/index.html")
 	// })
@@ -82,14 +83,6 @@ func (r *Router) RegisterRoutes() error {
 		// 	// Serve the static index.html for regular users
 		// 	http.ServeFile(w, req, "./web-app/dist/index.html")
 		// }
-	})
-
-	r.router.Use(func(handler http.Handler) http.Handler {
-		return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
-			remoteAddr := request.RemoteAddr
-			r.logger.Debugf(`HTTP-request method=%q remote-addr=%q request-uri=%q`, request.Method, remoteAddr, request.URL.RequestURI())
-			handler.ServeHTTP(writer, request)
-		})
 	})
 
 	return nil
