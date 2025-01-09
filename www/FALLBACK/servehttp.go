@@ -1,42 +1,27 @@
-package routers
+package verboten
 
 import (
-	"io/ioutil"
 	"net/http"
 	"strings"
 
-	"github.com/gorilla/mux"
-
 	"github.com/reiver/logjam/cfg"
 	"github.com/reiver/logjam/lib/db"
-	"github.com/reiver/logjam/lib/logs"
 	"github.com/reiver/logjam/srv/http"
 	"github.com/reiver/logjam/srv/log"
+	"github.com/reiver/logjam/web-app"
 )
 
-type Router struct {
-	router            *mux.Router
-	logger            logs.Logger
+const pathprefix  string = "/log/"
+const pathpattern string = "/@{handle}/host"
+
+func init() {
+	httpsrv.Router.PathPrefix(pathprefix).HandlerFunc(serveHTTP)
+	httpsrv.Router.HandleFunc(pathpattern, serveHTTP)
 }
 
-func NewRouter(logger logs.TaggedLogger) *Router {
-	const logtag string = "router"
+func serveHTTP(w http.ResponseWriter, req *http.Request) {
 
-	return &Router{
-		router:            httpsrv.Router,
-		logger:            logger.Tag(logtag),
-	}
-}
-
-func (r *Router) RegisterRoutes() error {
-
-	// r.router.PathPrefix("/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-	// 	http.ServeFile(w, r, "./web-app/dist/index.html")
-	// })
-
-	r.router.PathPrefix("/").HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-
-		r.logger.Debug("URL: ", req.URL.Path)
+		log.Debug("URL: ", req.URL.Path)
 		var metaData *db.MetaData
 		{
 			var ctx = db.Context{
@@ -48,15 +33,11 @@ func (r *Router) RegisterRoutes() error {
 		}
 
 		// Read the existing index.html file
-		htmlContent, err := ioutil.ReadFile("./web-app/dist/index.html")
-		if err != nil {
-			http.Error(w, "Internal Server Error", 500)
-			return
-		}
+		htmlContent := webapp.IndexFile
 
 		// Modify the HTML content to include the dynamic title and description
-		modifiedHTML := injectMetaTags(string(htmlContent), metaData, r)
-		// r.logger.Debug("Modified HTML", modifiedHTML)
+		modifiedHTML := injectMetaTags(htmlContent, metaData)
+		// log.Debug("Modified HTML", modifiedHTML)
 
 		// Serve the modified HTML content
 		// w.Header().Set("Content-Type", "text/html; charset=utf-8")
@@ -83,9 +64,6 @@ func (r *Router) RegisterRoutes() error {
 		// 	// Serve the static index.html for regular users
 		// 	http.ServeFile(w, req, "./web-app/dist/index.html")
 		// }
-	})
-
-	return nil
 }
 
 func isBotRequest(userAgent string) bool {
@@ -94,7 +72,7 @@ func isBotRequest(userAgent string) bool {
 	return strings.Contains(lowerAgent, "googlebot") || strings.Contains(lowerAgent, "bingbot")
 }
 
-func injectMetaTags(htmlContent string, data *db.MetaData, r *Router) string {
+func injectMetaTags(htmlContent string, data *db.MetaData) string {
 	// Inject title and meta description into the HTML content
 
 	if data.Title == "" {
@@ -115,24 +93,24 @@ func injectMetaTags(htmlContent string, data *db.MetaData, r *Router) string {
 
 		// Remove the existing meta OG tag
 		if strings.Contains(htmlContent, `<meta name="twitter:image" content="/assets/metatagsLogo-3d1cffd4.png" />`) {
-			r.logger.Debug("IMAGE TAG", "FOUND THE IMAGE TAG")
+			log.Debug("IMAGE TAG", "FOUND THE IMAGE TAG")
 			htmlContent = strings.Replace(htmlContent, `<meta name="twitter:image" content="/assets/metatagsLogo-3d1cffd4.png" />`, imageTag, 1)
-			// r.logger.Debug("UPDATED HTML: ", htmlContent)
+			// log.Debug("UPDATED HTML: ", htmlContent)
 		}
 
 		if strings.Contains(htmlContent, `<meta property="og:image" content="/assets/metatagsLogo-3d1cffd4.png" />`) {
-			r.logger.Debug("IMAGE TAG", "FOUND THE IMAGE TAG")
+			log.Debug("IMAGE TAG", "FOUND THE IMAGE TAG")
 			htmlContent = strings.Replace(htmlContent, `<meta property="og:image" content="/assets/metatagsLogo-3d1cffd4.png" />`, imageTag, 1)
-			// r.logger.Debug("UPDATED HTML: ", htmlContent)
+			// log.Debug("UPDATED HTML: ", htmlContent)
 		}
 	}
 
-	r.logger.Debug("DESC TAG CONTENT: ", descTag)
+	log.Debug("DESC TAG CONTENT: ", descTag)
 
 	// Replace existing meta description tag, or add if not present
 	// if strings.Contains(htmlContent, `meta property="og:title"`) {
 	// 	htmlContent = strings.Replace(htmlContent, `<meta property="og:title" content="GreatApe" />`, titleTag, 1)
-	// 	r.logger.Debug("String found")
+	// 	log.Debug("String found")
 	// }
 
 	headStartIndex := strings.Index(htmlContent, "<head>")
@@ -149,9 +127,9 @@ func injectMetaTags(htmlContent string, data *db.MetaData, r *Router) string {
 
 		// Insert the tags right after the <head> tag
 		htmlContent = htmlContent[:insertPosition] + tagsToInsert + htmlContent[insertPosition:]
-		r.logger.Debug("Title and description tags inserted")
+		log.Debug("Title and description tags inserted")
 	} else {
-		r.logger.Debug("No <head> tag found, cannot insert tags")
+		log.Debug("No <head> tag found, cannot insert tags")
 	}
 
 	return htmlContent

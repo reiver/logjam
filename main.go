@@ -11,9 +11,6 @@ func main() {
 	log.Info("LogJam ⚡")
 	blur()
 
-	app := App{}
-	app.Init()
-
 	log.Info("Here we go…")
 	webserve()
 }
