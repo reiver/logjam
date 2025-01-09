@@ -18,7 +18,7 @@ With the web-based front-end written in CSS, HTML, JavaScript, and TypeScript.
 ## Sub-Directories
 
 * `cfg/` — this is where the rest of the source-code gets configuration information from.
-* `doc/` — files needs for docs (including some docs themselves).
+* `doc/` — files needed for docs (including some docs themselves).
 * `env/` — handles configuration done via environment variables.
   * this (`env/`) should NOT be `import`ed by anything other than `flg/`; `import` from `cfg/` to get configuration information.
 * `flg/` — handles configuration done via command-line flags/switch, while defauling to and potential configuration done via environment variables.
