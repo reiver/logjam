@@ -1,4 +1,4 @@
-package GoldGorillaRepository
+package goldgorilla
 
 import (
 	"bytes"
@@ -6,7 +6,6 @@ import (
 	"errors"
 	"io"
 	"net/http"
-	"github.com/reiver/logjam/lib/goldgorilla"
 	"github.com/reiver/logjam/models/dto"
 	"time"
 )
@@ -16,7 +15,7 @@ type HTTPRepository struct {
 	svcAddr string
 }
 
-func NewHTTPRepository(svcAddr string) goldgorilla.IGoldGorillaServiceRepository {
+func NewHTTPRepository(svcAddr string) IGoldGorillaServiceRepository {
 	return &HTTPRepository{
 		client: &http.Client{
 			Timeout: 8 * time.Second,
