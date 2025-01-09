@@ -3,11 +3,11 @@ package verboten
 import (
 	"strconv"
 
-	"github.com/reiver/logjam/models"
+	"github.com/reiver/logjam/lib/rooms"
 	"github.com/reiver/logjam/srv/room"
 )
 
-func handleEvent(ctx *models.WSContext) {
+func handleEvent(ctx *rooms.WSContext) {
 	if ctx.ParsedMessage == nil || len(ctx.PureMessage) <= 2 {
 		return
 	}

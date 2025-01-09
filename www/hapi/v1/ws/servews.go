@@ -6,6 +6,7 @@ import (
 	"github.com/gorilla/websocket"
 
 	"github.com/reiver/logjam/models"
+	"github.com/reiver/logjam/lib/rooms"
 	"github.com/reiver/logjam/srv/room"
 )
 
@@ -15,7 +16,7 @@ func serveWS(wsConn *websocket.Conn, socketId uint64, roomId string) {
 		messageType, data, readErr := wsConn.ReadMessage()
 		if readErr != nil {
 			log.Error(readErr)
-			go roomsrv.Controller.OnDisconnect(&models.WSContext{
+			go roomsrv.Controller.OnDisconnect(&rooms.WSContext{
 				RoomId:        roomId,
 				SocketID:      socketId,
 				PureMessage:   nil,
@@ -36,7 +37,7 @@ func serveWS(wsConn *websocket.Conn, socketId uint64, roomId string) {
 			continue
 		}
 
-		ctx := &models.WSContext{
+		ctx := &rooms.WSContext{
 			RoomId:        roomId,
 			SocketID:      socketId,
 			PureMessage:   data,
