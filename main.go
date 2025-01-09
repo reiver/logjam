@@ -7,7 +7,9 @@ import (
 )
 
 func main() {
-	logsrv.Info("main", "LogJam ⚡")
+	log := logsrv.Tag("main")
+
+	log.Info("LogJam ⚡")
 	blur()
 
 	app := App{}
