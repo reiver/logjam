@@ -2,6 +2,8 @@ package main
 
 import (
 	"github.com/reiver/logjam/srv/log"
+
+	// This import enables all the HTTP handlers.
 	_ "github.com/reiver/logjam/www"
 )
 
