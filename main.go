@@ -13,8 +13,8 @@ func main() {
 	blur()
 
 	app := App{}
-
 	app.Init(cfg.Config)
 
+	log.Info("Here we go…")
 	webserve()
 }
