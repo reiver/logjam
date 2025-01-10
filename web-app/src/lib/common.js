@@ -1,4 +1,5 @@
 import { SparkRTC } from "./spark-rtc.js";
+import { VideoBackground } from "./videoBackground.js";
 
 //enum for Roles
 export const Roles = {
@@ -7,13 +8,15 @@ export const Roles = {
   BROADCASTER: "broadcaster",
 };
 
-export const isMobile = async () => {
-  return window.innerWidth <= 800 && window.innerHeight <= 600;
+export const isMobile = () => {
+  let res = window.innerWidth <= 800 && window.innerHeight <= 1000;
+  return res;
 };
 
 // TODO: set base url
 export function getWsUrl(host = null) {
   let baseUrl = "";
+  let basePath = "/hapi/v1";
 
   if (host) {
     baseUrl = host;
@@ -23,7 +26,11 @@ export function getWsUrl(host = null) {
 
   const protocol =
     window.location.href.split("//")[0] === "http:" ? "ws" : "wss";
-  return `${protocol}://${baseUrl}/ws`;
+
+  const wsURL = `${protocol}://${baseUrl}${basePath}/ws`;
+//  console.log("wsURL:", wsURL);
+
+  return wsURL;
 }
 
 export function createSparkRTC(role, options) {
@@ -34,6 +41,7 @@ export function createSparkRTC(role, options) {
     return createAudienceSpartRTC(role, options);
   }
 }
+export const videoBackGround = new VideoBackground();
 
 export const createBroadcastSpartRTC = (role, props) => {
   return new SparkRTC(role, {
@@ -54,6 +62,7 @@ export const createBroadcastSpartRTC = (role, props) => {
     onAudioStatusChange: props.onAudioStatusChange,
     userLoweredHand: props.userLoweredHand,
     invitationToJoinStage: props.invitationToJoinStage,
+    updateMeetingUI: props.updateMeetingUI,
   });
 };
 
@@ -74,5 +83,7 @@ export const createAudienceSpartRTC = (role, props) => {
     parentDcMessage: props.parentDcMessage,
     onAudioStatusChange: props.onAudioStatusChange,
     invitationToJoinStage: props.invitationToJoinStage,
+    updateVideosMuteStatus: props.updateVideosMuteStatus,
+    updateMeetingUI: props.updateMeetingUI,
   });
 };

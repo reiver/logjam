@@ -23,7 +23,7 @@ export const attendees = signal<{
   // }
 )
 
-const isMobile = window.parent.outerWidth <= 400 && window.parent.outerHeight <= 850
+const isMobile = window.self == window.top &&  window.parent.outerWidth <= 400 && window.parent.outerHeight <= 850
 
 export const attendeesCount = computed(() => Object.values(attendees.value).length)
 
@@ -57,7 +57,7 @@ export const Participant = ({ participant }) => {
           onUserRaisedHand(participant.userId, false, true)
           sparkRTC.value.acceptedRequests.push(participant.userId.toString())
         },
-        () => {},
+        () => { },
         {
           onReject: () => {
             participant.acceptRaiseHand(false)
@@ -132,7 +132,7 @@ export const Participant = ({ participant }) => {
           //on ok
           onInviteToStage(participant)
         },
-        () => {},
+        () => { },
         {}
       )
     }
@@ -162,21 +162,21 @@ export const Participant = ({ participant }) => {
           <img src={participant.avatar} class="w-9 h-9 rounded-full object-cover" />
         ) : (
           <div class="dark:bg-gray-300 min-w-[36px] min-h-[36px] dark:bg-opacity-30 bg-opacity-30 bg-gray-400 rounded-full w-9 h-9 flex justify-center items-center">
-            <Icon icon={AvatarIcon} width="20px" height="20px" />
+            <Icon icon={AvatarIcon} width="20px" height="20px"  class="greatape-attendees-item" />
           </div>
         )}
 
         <div class="flex flex-col justify-center truncate">
           <span class="text-gray-1 dark:text-gray-0 truncate">
-            <span class="text-bold-12 text-gray-3 dark:text-white-f-9">{participant.name}</span>{' '}
+            <span class="text-bold-12 text-gray-3 dark:text-white-f-9 greatape-attendees-item">{participant.name}</span>{' '}
           </span>
 
           {participant.userId == currentUser.value.userId && participant.isHost ? (
-            <span class="text-gray-1 dark:text-gray-0 text-regular-12">Host (You)</span>
+            <span class="text-gray-1 dark:text-gray-0 text-regular-12 greatape-attendees-item-role">Host (You)</span>
           ) : participant.isHost ? (
-            <span class="text-gray-1 dark:text-gray-0 text-regular-12">Host</span>
+            <span class="text-gray-1 dark:text-gray-0 text-regular-12 greatape-attendees-item-role">Host</span>
           ) : participant.userId == currentUser.value.userId ? (
-            <span class="text-gray-1 dark:text-gray-0 text-regular-12">You</span>
+            <span class="text-gray-1 dark:text-gray-0 text-regular-12 greatape-attendees-item-role">You</span>
           ) : (
             ''
           )}
@@ -184,11 +184,11 @@ export const Participant = ({ participant }) => {
       </div>
       <div class="flex gap-1 dark:text-gray-0 text-gray-1">
         {!raisedHand && !participant.hasCamera && !participant.actionLoading && currentUser.value.isHost && !isMobile && (
-          <Icon class="hidden group-hover:block" icon={Check} width="25" height="25px" />
+          <Icon class="hidden group-hover:block greatape-attendees-item" icon={Check} width="25" height="25px" />
         )}
         {(raisedHand || participant.hasCamera || participant.actionLoading) && (
           <div>
-            <Icon icon={participant.actionLoading ? Loader : raisedHand ? Hand : participant.hasCamera ? Camera : ''} width="25" height="25px" />
+            <Icon icon={participant.actionLoading ? Loader : raisedHand ? Hand : participant.hasCamera ? Camera : ''} class="greatape-attendees-item" width="25" height="25px" />
           </div>
         )}
       </div>
@@ -210,7 +210,8 @@ export const Attendees = () => {
           'translate-x-[100%] lg:-mr-10 -mr-4': !isAttendeesOpen.value,
           'translate-x-[100%]': !isAttendeesOpen.value,
         },
-        'hidden sm:block'
+        'hidden sm:block',
+        'greatape-attendees-list'
       )}
       onClick={() => (attendeesBadge.value = false)}
     >
