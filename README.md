@@ -6,8 +6,8 @@
 
 The documentation for **logjam** is divided up into several files.
 
-* [RUNNING.md](doc/RUNNING.md) — Any wishing to run **logjam**, please see [RUNNING.md](doc/RUNNING.md) file.
-* [HACKING.md](doc/HACKING.md) — Any wishing to contribute to the **logjam** source-code, please see [HACKING.md](doc/HACKING.md) file.
+* [RUNNING.md](doc/RUNNING.md) — Anyone wishing to run **logjam**, please see [RUNNING.md](doc/RUNNING.md) file.
+* [HACKING.md](doc/HACKING.md) — Anyone wishing to contribute to the **logjam** source-code, please see [HACKING.md](doc/HACKING.md) file.
 
 ## Credits
 
