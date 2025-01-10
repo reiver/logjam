@@ -15,7 +15,7 @@ import (
 const path string = "/hapi/v1/rooms"
 
 func init() {
-	httpsrv.Router.HandleFunc(path, serveGET).Methods(http.MethodGet)
+	httpsrv.Router.HandleFunc(path, serveGET).Methods(http.MethodGet, http.MethodOptions)
 }
 
 func serveGET(responsewriter http.ResponseWriter, request *http.Request) {
@@ -99,6 +99,7 @@ func serveGET(responsewriter http.ResponseWriter, request *http.Request) {
 
 
 	{
+		responsewriter.Header().Add("Access-Control-Allow-Origin", "*")
 		responsewriter.Header().Add("Content-Type", "application/activity+json")
 
 		_, err := responsewriter.Write(bytes)
