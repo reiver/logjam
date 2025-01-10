@@ -1,10 +1,11 @@
 package verboten
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/reiver/go-erorr"
+	"github.com/reiver/go-jsonld"
+	libpath "github.com/reiver/go-path"
 
 	"github.com/reiver/logjam/lib/rooms"
 	"github.com/reiver/logjam/srv/http"
@@ -87,18 +88,25 @@ func serveHTTP(responsewriter http.ResponseWriter, request *http.Request) {
 
 	var bytes []byte
 	{
+		var path string = libpath.Parent(pathpattern)
+
+		var name string = roomID
+		var id string = rooms.RoomURL(roomID, path, request.Host)
+
 		var response = struct{
+			NameSpace jsonld.NameSpace `jsonld:"https://www.w3.org/ns/activitystreams"`
+
 			Type string `json:"type"`
 			ID   string `json:"id"`
 			Name string `json:"name"`
 		}{
-			Type: "Room",
-			ID:   roomID,
-			Name: room.Title,
+			Type: "Object",
+			ID:   id,
+			Name: name,
 		}
 
 		var err error
-		bytes, err = json.Marshal(response)
+		bytes, err = jsonld.Marshal(response)
 		if nil != err {
 			log.Errorf("problem encoding response for room %q as JSON: %s", roomID, err)
 			return
