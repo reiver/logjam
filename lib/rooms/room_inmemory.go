@@ -2,7 +2,6 @@ package rooms
 
 import (
 	"errors"
-	"strconv"
 	"sync"
 )
 
