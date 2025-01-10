@@ -76,7 +76,7 @@ func (r *roomRepository) SetBroadcaster(roomId string, id uint64) error {
 		r.rooms[roomId].PeersTree.ID = id
 		r.rooms[roomId].PeersTree.IsConnected = true
 	} else {
-		return errors.New("room does not exists")
+		return ErrRoomNotFound
 	}
 	return nil
 }
@@ -85,7 +85,7 @@ func (r *roomRepository) GetBroadcaster(roomId string) (*MemberModel, error) {
 	r.Lock()
 	defer r.Unlock()
 	if !r.doesRoomExists(roomId) {
-		return nil, errors.New("room doesnt exists")
+		return nil, ErrRoomNotFound
 	}
 	r.rooms[roomId].Lock()
 	defer r.rooms[roomId].Unlock()
@@ -112,7 +112,7 @@ func (r *roomRepository) AddMember(roomId string, id uint64, name, email, stream
 	r.Lock()
 	defer r.Unlock()
 	if !r.doesRoomExists(roomId) {
-		return errors.New("room doesnt' exists")
+		return ErrRoomNotFound
 	}
 	r.rooms[roomId].Lock()
 	defer r.rooms[roomId].Unlock()
@@ -140,7 +140,7 @@ func (r *roomRepository) GetMember(roomId string, id uint64) (*MemberModel, erro
 			return nil, nil
 		}
 	} else {
-		return nil, errors.New("room doesnt exists")
+		return nil, ErrRoomNotFound
 	}
 }
 
@@ -157,7 +157,7 @@ func (r *roomRepository) UpdateMemberMeta(roomId string, id uint64, metaKey stri
 			return errors.New("member doesn't exists " + strconv.FormatUint(id, 10))
 		}
 	} else {
-		return errors.New("room doesnt exists")
+		return ErrRoomNotFound
 	}
 	return nil
 }
@@ -166,7 +166,7 @@ func (r *roomRepository) GetAllMembersId(roomId string, excludeBroadcaster bool)
 	r.Lock()
 	defer r.Unlock()
 	if !r.doesRoomExists(roomId) {
-		return nil, errors.New("room doesn't exists")
+		return nil, ErrRoomNotFound
 	}
 
 	r.rooms[roomId].Lock()
@@ -185,7 +185,7 @@ func (r *roomRepository) UpdateCanConnect(roomId string, id uint64, newState boo
 	r.Lock()
 	defer r.Unlock()
 	if !r.doesRoomExists(roomId) {
-		return errors.New("room doesn't exists")
+		return ErrRoomNotFound
 	}
 	r.rooms[roomId].Lock()
 	defer r.rooms[roomId].Unlock()
@@ -200,7 +200,7 @@ func (r *roomRepository) InsertMemberToTree(roomId string, memberId uint64, isGo
 	r.Lock()
 	defer r.Unlock()
 	if !r.doesRoomExists(roomId) {
-		return nil, errors.New("room doesn't exists")
+		return nil, ErrRoomNotFound
 	}
 	r.rooms[roomId].Lock()
 	defer r.rooms[roomId].Unlock()
@@ -260,7 +260,7 @@ func (r *roomRepository) UpdateTurnStatus(roomId string, id uint64, newState boo
 	r.Lock()
 	defer r.Unlock()
 	if !r.doesRoomExists(roomId) {
-		return errors.New("room doesn't exists")
+		return ErrRoomNotFound
 	}
 
 	r.rooms[roomId].Lock()
@@ -276,7 +276,7 @@ func (r *roomRepository) UpdateMemberName(roomId string, id uint64, name string)
 	r.Lock()
 	defer r.Unlock()
 	if !r.doesRoomExists(roomId) {
-		return errors.New("room doesn't exists")
+		return ErrRoomNotFound
 	}
 
 	r.rooms[roomId].Lock()
@@ -292,7 +292,7 @@ func (r *roomRepository) SetRoomMetaData(roomId string, metaData map[string]inte
 	r.Lock()
 	defer r.Unlock()
 	if !r.doesRoomExists(roomId) {
-		return errors.New("room doesn't exists")
+		return ErrRoomNotFound
 	}
 
 	r.rooms[roomId].Lock()
@@ -304,7 +304,7 @@ func (r *roomRepository) AddMessageToHistory(roomId string, senderId uint64, msg
 	r.Lock()
 	defer r.Unlock()
 	if !r.doesRoomExists(roomId) {
-		return errors.New("room doesn't exists")
+		return ErrRoomNotFound
 	}
 
 	r.rooms[roomId].Lock()
@@ -326,7 +326,7 @@ func (r *roomRepository) ClearMessageHistory(roomId string) error {
 	r.Lock()
 	defer r.Unlock()
 	if !r.doesRoomExists(roomId) {
-		return errors.New("room doesn't exists")
+		return ErrRoomNotFound
 	}
 
 	r.rooms[roomId].Lock()
@@ -340,7 +340,7 @@ func (r *roomRepository) GetRoomMetaData(roomId string) (map[string]interface{},
 	r.Lock()
 	defer r.Unlock()
 	if !r.doesRoomExists(roomId) {
-		return nil, errors.New("room doesn't exists")
+		return nil, ErrRoomNotFound
 	}
 
 	r.rooms[roomId].Lock()
@@ -356,7 +356,7 @@ func (r *roomRepository) GetUserByStreamId(roomId string, targetStreamId string)
 	r.Lock()
 	defer r.Unlock()
 	if !r.doesRoomExists(roomId) {
-		return nil, errors.New("room doesn't exists")
+		return nil, ErrRoomNotFound
 	}
 
 	r.rooms[roomId].Lock()
@@ -379,7 +379,7 @@ func (r *roomRepository) IsBroadcaster(roomId string, id uint64) (bool, error) {
 	r.Lock()
 	defer r.Unlock()
 	if !r.doesRoomExists(roomId) {
-		return false, errors.New("room doesn't exists")
+		return false, ErrRoomNotFound
 	}
 
 	r.rooms[roomId].Lock()
@@ -391,7 +391,7 @@ func (r *roomRepository) GetMembersList(roomId string) ([]MemberDTO, error) {
 	r.Lock()
 	defer r.Unlock()
 	if !r.doesRoomExists(roomId) {
-		return nil, errors.New("room doesn't exists")
+		return nil, ErrRoomNotFound
 	}
 
 	r.rooms[roomId].Lock()
@@ -424,7 +424,7 @@ func (r *roomRepository) RemoveMember(roomId string, memberId uint64) (wasBroadc
 	r.Lock()
 	defer r.Unlock()
 	if !r.doesRoomExists(roomId) {
-		return false, nil, errors.New("room doesn't exists")
+		return false, nil, ErrRoomNotFound
 	}
 	defer func() {
 		delete(r.rooms[roomId].Members, memberId)
@@ -482,7 +482,7 @@ func (r *roomRepository) GetChildrenIdList(roomId string, id uint64) ([]uint64, 
 	r.Lock()
 	defer r.Unlock()
 	if !r.doesRoomExists(roomId) {
-		return nil, errors.New("room doesn't exists")
+		return nil, ErrRoomNotFound
 	}
 
 	r.rooms[roomId].Lock()
@@ -538,7 +538,7 @@ func (r *roomRepository) GetRoomGoldGorillaId(roomId string) (*uint64, error) {
 	r.Lock()
 	defer r.Unlock()
 	if !r.doesRoomExists(roomId) {
-		return nil, errors.New("room doesn't exists")
+		return nil, ErrRoomNotFound
 	}
 
 	r.rooms[roomId].Lock()
