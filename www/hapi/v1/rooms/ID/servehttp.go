@@ -37,7 +37,7 @@ func serveHTTP(responsewriter http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	var roomID string = "----TODO----"
+	var roomID string
 	{
 		var m map[string]string = httpsrv.Vars(request)
 		if len(m) <= 0 {
@@ -56,6 +56,7 @@ func serveHTTP(responsewriter http.ResponseWriter, request *http.Request) {
 			return
 		}
 	}
+	log.Debugf("room-id = %q", roomID)
 
 	var room *rooms.RoomModel
 	{
