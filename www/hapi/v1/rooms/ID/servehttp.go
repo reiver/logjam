@@ -73,7 +73,7 @@ func serveHTTP(responsewriter http.ResponseWriter, request *http.Request) {
 			default:
 				const code int = http.StatusInternalServerError
 				http.Error(responsewriter, http.StatusText(code), code)
-				log.Errorf("problem getting room: %s", err)
+				log.Errorf("problem getting room %q: %s", roomID, err)
 				return
 			}
 		}
@@ -98,7 +98,7 @@ func serveHTTP(responsewriter http.ResponseWriter, request *http.Request) {
 
 		err := json.NewEncoder(responsewriter).Encode(response)
 		if nil != err {
-			log.Errorf("problem encoding rsponse as JSON: %s", err)
+			log.Errorf("problem encoding response for room %q as JSON: %s", roomID, err)
 			return
 		}
 	}
