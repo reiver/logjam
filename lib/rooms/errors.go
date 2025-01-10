@@ -5,5 +5,6 @@ import (
 )
 
 const (
-	ErrRoomNotFound = erorr.Error("room not found")
+	ErrMemberNotFound = erorr.Error("memeber not found")
+	ErrRoomNotFound   = erorr.Error("room not found")
 )

@@ -154,7 +154,7 @@ func (r *roomRepository) UpdateMemberMeta(roomId string, id uint64, metaKey stri
 		if user, exists := r.rooms[roomId].Members[id]; exists {
 			user.MetaData[metaKey] = value
 		} else {
-			return errors.New("member doesn't exists " + strconv.FormatUint(id, 10))
+			return ErrMemberNotFound
 		}
 	} else {
 		return ErrRoomNotFound
@@ -190,7 +190,7 @@ func (r *roomRepository) UpdateCanConnect(roomId string, id uint64, newState boo
 	r.rooms[roomId].Lock()
 	defer r.rooms[roomId].Unlock()
 	if _, exists := r.rooms[roomId].Members[id]; !exists {
-		return errors.New("no such a member in this room")
+		return ErrMemberNotFound
 	}
 	r.rooms[roomId].Members[id].CanAcceptChild = newState
 	return nil
@@ -266,7 +266,7 @@ func (r *roomRepository) UpdateTurnStatus(roomId string, id uint64, newState boo
 	r.rooms[roomId].Lock()
 	defer r.rooms[roomId].Unlock()
 	if _, exists := r.rooms[roomId].Members[id]; !exists {
-		return errors.New("member doesn't exists")
+		return ErrMemberNotFound
 	}
 	r.rooms[roomId].Members[id].IsUsingTurn = newState
 	return nil
@@ -282,7 +282,7 @@ func (r *roomRepository) UpdateMemberName(roomId string, id uint64, name string)
 	r.rooms[roomId].Lock()
 	defer r.rooms[roomId].Unlock()
 	if _, exists := r.rooms[roomId].Members[id]; !exists {
-		return errors.New("member doesn't exists")
+		return ErrMemberNotFound
 	}
 	r.rooms[roomId].Members[id].Name = name
 	return nil
