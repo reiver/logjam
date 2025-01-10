@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	"github.com/reiver/go-jsonld"
-	libpath "github.com/reiver/go-path"
 
 	"github.com/reiver/logjam/lib/rooms"
 	"github.com/reiver/logjam/srv/http"
@@ -70,7 +69,6 @@ func serveGET(responsewriter http.ResponseWriter, request *http.Request) {
 
 	var bytes []byte
 	{
-
 		var response = struct{
 			NameSpace jsonld.NameSpace `jsonld:"https://www.w3.org/ns/activitystreams"`
 
