@@ -100,7 +100,7 @@ func (c *RoomWSController) OnDisconnect(ctx *WSContext) {
 		if err != nil {
 			c.error(err)
 		}
-		err = c.roomRepo.SetRoomMetaData(ctx.RoomId, map[string]interface{}{})
+		err = c.roomRepo.SetRoomMetaData(ctx.RoomId, map[string]any{})
 		if err != nil {
 			c.error(err)
 		}
@@ -110,7 +110,7 @@ func (c *RoomWSController) OnDisconnect(ctx *WSContext) {
 			if err != nil {
 				c.error(err)
 			}
-			err = c.roomRepo.SetRoomMetaData(ctx.RoomId, map[string]interface{}{})
+			err = c.roomRepo.SetRoomMetaData(ctx.RoomId, map[string]any{})
 			if err != nil {
 				c.error(err)
 			}
@@ -138,7 +138,7 @@ func (c *RoomWSController) Start(ctx *WSContext) {
 	_ = c.socketSVC.Send(resultEvent, ctx.SocketID)
 }
 func (c *RoomWSController) Role(ctx *WSContext) {
-	var eventData map[string]interface{}
+	var eventData map[string]any
 	err := json.Unmarshal(ctx.PureMessage, &eventData)
 	if err != nil {
 
@@ -276,7 +276,7 @@ func (c *RoomWSController) Role(ctx *WSContext) {
 		}
 		if err != nil {
 			c.error(err)
-			_ = c.socketSVC.Send(map[string]interface{}{
+			_ = c.socketSVC.Send(map[string]any{
 				"type": "error",
 				"data": "Insert Child Error : " + err.Error(),
 			}, ctx.SocketID)
@@ -333,7 +333,7 @@ func (c *RoomWSController) Stream(ctx *WSContext) {
 }
 
 func (c *RoomWSController) UpdateStreamId(ctx *WSContext) {
-	payload := make(map[string]interface{})
+	payload := make(map[string]any)
 	err := json.Unmarshal(ctx.PureMessage, &payload)
 	if err != nil {
 		c.error(err)
@@ -386,7 +386,7 @@ func (c *RoomWSController) Tree(ctx *WSContext) {
 }
 
 func (c *RoomWSController) MetadataSet(ctx *WSContext) {
-	metaData := make(map[string]interface{})
+	metaData := make(map[string]any)
 	err := json.Unmarshal([]byte(ctx.ParsedMessage.Data), &metaData)
 	if err != nil {
 		c.error(err)
@@ -526,7 +526,7 @@ func (c *RoomWSController) SendMessage(ctx *WSContext) {
 }
 
 func (c *RoomWSController) SendOfferToAN(ctx *WSContext) {
-	msg := make(map[string]interface{})
+	msg := make(map[string]any)
 	err := json.Unmarshal(ctx.PureMessage, &msg)
 	if err != nil {
 		c.error(err)
@@ -540,7 +540,7 @@ func (c *RoomWSController) SendOfferToAN(ctx *WSContext) {
 }
 
 func (c *RoomWSController) SendAnswerToAN(ctx *WSContext) {
-	msg := make(map[string]interface{})
+	msg := make(map[string]any)
 	err := json.Unmarshal(ctx.PureMessage, &msg)
 	if err != nil {
 		c.error(err)
@@ -554,7 +554,7 @@ func (c *RoomWSController) SendAnswerToAN(ctx *WSContext) {
 }
 
 func (c *RoomWSController) SendICECandidateToAN(ctx *WSContext) {
-	msg := make(map[string]interface{})
+	msg := make(map[string]any)
 	err := json.Unmarshal(ctx.PureMessage, &msg)
 	if err != nil {
 		c.error(err)
@@ -586,7 +586,7 @@ func (c *RoomWSController) DefaultHandler(ctx *WSContext) {
 		//ignoring
 		return
 	}
-	var fullMessage map[string]interface{}
+	var fullMessage map[string]any
 	err = json.Unmarshal(ctx.PureMessage, &fullMessage)
 	if err != nil {
 		c.error(err)

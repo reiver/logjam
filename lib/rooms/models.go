@@ -9,7 +9,7 @@ type MemberModel struct {
 	Name           string
 	Email          string
 	IsUsingTurn    bool
-	MetaData       map[string]interface{}
+	MetaData       map[string]any
 	CanAcceptChild bool
 	IsGoldGorilla  bool
 }
@@ -34,7 +34,7 @@ type RoomModel struct {
 	Title                string
 	PeersTree            *PeerModel
 	Members              map[uint64]*MemberModel
-	MetaData             map[string]interface{}
+	MetaData             map[string]any
 	GoldGorilla          **PeerModel
 	HadGoldGorillaBefore bool
 }

@@ -111,7 +111,7 @@ func (r *roomRepository) CreateRoom(id string) error {
 		Title:     "",
 		PeersTree: &PeerModel{},
 		Members:   make(map[uint64]*MemberModel),
-		MetaData:  make(map[string]interface{}),
+		MetaData:  make(map[string]any),
 	}
 	return nil
 }
@@ -198,7 +198,7 @@ func (r *roomRepository) AddMember(roomId string, id uint64, name, email, stream
 		ID:             id,
 		Name:           name,
 		Email:          email,
-		MetaData:       map[string]interface{}{"streamId": streamId},
+		MetaData:       map[string]any{"streamId": streamId},
 		CanAcceptChild: false,
 		IsGoldGorilla:  isGoldGorilla,
 	}
@@ -366,7 +366,7 @@ func (r *roomRepository) UpdateMemberName(roomId string, id uint64, name string)
 	return nil
 }
 
-func (r *roomRepository) SetRoomMetaData(roomId string, metaData map[string]interface{}) error {
+func (r *roomRepository) SetRoomMetaData(roomId string, metaData map[string]any) error {
 	r.Lock()
 	defer r.Unlock()
 	if !r.doesRoomExists(roomId) {
@@ -414,7 +414,7 @@ func (r *roomRepository) ClearMessageHistory(roomId string) error {
 	return nil
 }
 
-func (r *roomRepository) GetRoomMetaData(roomId string) (map[string]interface{}, error) {
+func (r *roomRepository) GetRoomMetaData(roomId string) (map[string]any, error) {
 	r.Lock()
 	defer r.Unlock()
 	if !r.doesRoomExists(roomId) {
@@ -423,7 +423,7 @@ func (r *roomRepository) GetRoomMetaData(roomId string) (map[string]interface{},
 
 	r.rooms[roomId].Lock()
 	defer r.rooms[roomId].Unlock()
-	copiedMap := make(map[string]interface{})
+	copiedMap := make(map[string]any)
 	for k, v := range r.rooms[roomId].MetaData {
 		copiedMap[k] = v
 	}
