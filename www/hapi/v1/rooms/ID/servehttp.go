@@ -15,7 +15,7 @@ const roomIDname  string = "room-id"
 const pathpattern string = "/hapi/v1/rooms/{"+roomIDname+"}"
 
 func init() {
-	httpsrv.Router.HandleFunc(pathpattern, serveHTTP)
+	httpsrv.Router.HandleFunc(pathpattern, serveHTTP).Methods(http.MethodGet, http.MethodOptions)
 }
 
 func serveHTTP(responsewriter http.ResponseWriter, request *http.Request) {
@@ -85,6 +85,7 @@ func serveHTTP(responsewriter http.ResponseWriter, request *http.Request) {
 		}
 	}
 
+	var bytes []byte
 	{
 		var response = struct{
 			Type string `json:"type"`
@@ -96,9 +97,21 @@ func serveHTTP(responsewriter http.ResponseWriter, request *http.Request) {
 			Name: room.Title,
 		}
 
-		err := json.NewEncoder(responsewriter).Encode(response)
+		var err error
+		bytes, err = json.Marshal(response)
 		if nil != err {
 			log.Errorf("problem encoding response for room %q as JSON: %s", roomID, err)
+			return
+		}
+	}
+
+	{
+		responsewriter.Header().Add("Access-Control-Allow-Origin", "*")
+		responsewriter.Header().Add("Content-Type", "application/activity+json")
+
+		_, err := responsewriter.Write(bytes)
+		if nil != err {
+			log.Errorf("problem sending response: %s", err)
 			return
 		}
 	}
