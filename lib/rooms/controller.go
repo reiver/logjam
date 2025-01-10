@@ -369,7 +369,7 @@ func (c *RoomWSController) Tree(ctx *WSContext) {
 		return
 	}
 	if room == nil {
-		c.error("room doesn't exists")
+		c.error(ErrRoomNotFound)
 		return
 	}
 	tree, err := room.GetTree()

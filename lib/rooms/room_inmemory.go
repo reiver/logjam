@@ -62,7 +62,7 @@ func (r *roomRepository) GetRoom(id string) (*RoomModel, error) {
 	if room, exists := r.rooms[id]; exists {
 		return room, nil
 	} else {
-		return nil, nil
+		return nil, ErrRoomNotFound
 	}
 }
 
