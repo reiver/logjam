@@ -2,7 +2,10 @@ package rooms
 
 import (
 	"errors"
+	"sort"
 	"sync"
+
+	"github.com/reiver/go-erorr"
 )
 
 type roomRepository struct {
@@ -10,11 +13,76 @@ type roomRepository struct {
 	rooms map[string]*RoomModel
 }
 
+var _ Repository = &roomRepository{}
+
 func NewRepository() Repository {
 	return &roomRepository{
 		Mutex: &sync.Mutex{},
 		rooms: make(map[string]*RoomModel),
 	}
+}
+
+func (receiver *roomRepository) NumRooms() int {
+	if nil == receiver {
+		return 0
+	}
+
+	receiver.Lock()
+	defer receiver.Unlock()
+
+	return len(receiver.rooms)
+}
+
+func (receiver *roomRepository) roomIDs() []string {
+	if nil == receiver {
+		return []string{}
+	}
+
+	if len(receiver.rooms) <= 0 {
+		return []string{}
+	}
+
+	var roomIDs []string
+	for roomID, _ := range receiver.rooms {
+		roomIDs = append(roomIDs, roomID)
+	}
+
+	sort.Strings(roomIDs)
+
+	return roomIDs
+}
+
+func (receiver *roomRepository) RoomIDs() []string {
+	if nil == receiver {
+		return []string{}
+	}
+
+	receiver.Lock()
+	defer receiver.Unlock()
+
+	return receiver.roomIDs()
+}
+
+func (receiver *roomRepository) ForEachRoom(fn func(*RoomModel)error) error {
+	if nil == receiver {
+		return nil
+	}
+
+	receiver.Lock()
+	defer receiver.Unlock()
+
+	var roomIDs []string = receiver.roomIDs()
+
+	for _, roomID := range roomIDs {
+		roomModel, err := receiver.getRoom(roomID)
+		if nil != err {
+			return erorr.Errorf("problem getting room with room-id %q: %w", roomID, err)
+		}
+
+		fn(roomModel)
+	}
+
+	return nil
 }
 
 func (r *roomRepository) doesRoomExists(id string) bool {
@@ -39,6 +107,7 @@ func (r *roomRepository) CreateRoom(id string) error {
 
 	r.rooms[id] = &RoomModel{
 		Mutex:     &sync.Mutex{},
+		ID:        id,
 		Title:     "",
 		PeersTree: &PeerModel{},
 		Members:   make(map[uint64]*MemberModel),
@@ -56,14 +125,24 @@ func (r *roomRepository) HadGoldGorillaInTreeBefore(id string) bool {
 	return r.rooms[id].HadGoldGorillaBefore
 }
 
-func (r *roomRepository) GetRoom(id string) (*RoomModel, error) {
-	r.Lock()
-	defer r.Unlock()
-	if room, exists := r.rooms[id]; exists {
-		return room, nil
-	} else {
+func (receiver *roomRepository) getRoom(roomid string) (*RoomModel, error) {
+	if nil == receiver {
 		return nil, ErrRoomNotFound
 	}
+
+	room, found := receiver.rooms[roomid]
+	if !found {
+		return nil, ErrRoomNotFound
+	}
+
+	return room, nil
+}
+
+func (receiver *roomRepository) GetRoom(id string) (*RoomModel, error) {
+	receiver.Lock()
+	defer receiver.Unlock()
+
+	return receiver.getRoom(id)
 }
 
 func (r *roomRepository) SetBroadcaster(roomId string, id uint64) error {

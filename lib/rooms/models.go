@@ -30,6 +30,7 @@ type PeerModel struct {
 
 type RoomModel struct {
 	*sync.Mutex
+	ID                   string
 	Title                string
 	PeersTree            *PeerModel
 	Members              map[uint64]*MemberModel

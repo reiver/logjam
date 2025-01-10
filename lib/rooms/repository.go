@@ -1,6 +1,10 @@
 package rooms
 
 type Repository interface {
+	NumRooms() int
+	RoomIDs() []string
+	ForEachRoom(func(*RoomModel)error) error
+
 	DoesRoomExists(id string) bool
 	CreateRoom(id string) error
 	GetRoom(id string) (*RoomModel, error)
