@@ -2,7 +2,6 @@ package verboten
 
 import (
 	"net/http"
-	"net/url"
 
 	"github.com/reiver/go-jsonld"
 	libpath "github.com/reiver/go-path"
@@ -45,12 +44,7 @@ func serveGET(responsewriter http.ResponseWriter, request *http.Request) {
 	var items []Item
 	{
 		err := roomsrv.Repository.ForEachRoom(func(roomModel *rooms.RoomModel)error{
-			var urloc url.URL
-			urloc.Scheme = "https"
-			urloc.Host   = request.Host
-			urloc.Path   = libpath.Join(path, roomModel.ID)
-
-			var id   string = urloc.String()
+			var id   string = rooms.RoomURL(roomModel.ID, path, request.Host)
 			var name string = roomModel.ID
 
 			var item = Item{
