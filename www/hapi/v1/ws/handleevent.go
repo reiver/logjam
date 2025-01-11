@@ -3,6 +3,8 @@ package verboten
 import (
 	"strconv"
 
+	"github.com/reiver/go-erorr"
+
 	"github.com/reiver/logjam/lib/rooms"
 	"github.com/reiver/logjam/srv/room"
 )
@@ -45,7 +47,7 @@ func handleEvent(ctx *rooms.WSContext) {
 		roomsrv.Controller.SendMessage(ctx)
 	default:
 		room, err := roomsrv.Repository.GetRoom(ctx.RoomId)
-		if err != nil {
+		if err != nil && !erorr.Is(err, rooms.ErrRoomNotFound) {
 			log.Error(err)
 		} else if room != nil {
 			if room.GoldGorilla != nil {

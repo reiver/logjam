@@ -14,6 +14,8 @@ func init() {
 		panic("nil HTTP gorilla mux router")
 	}
 
+	Router.Use(mux.CORSMethodMiddleware(Router))
+
 	Router.Use(func(handler http.Handler) http.Handler {
 		return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 			remoteAddr := request.RemoteAddr

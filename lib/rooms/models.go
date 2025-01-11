@@ -9,7 +9,7 @@ type MemberModel struct {
 	Name           string
 	Email          string
 	IsUsingTurn    bool
-	MetaData       map[string]interface{}
+	MetaData       map[string]any
 	CanAcceptChild bool
 	IsGoldGorilla  bool
 }
@@ -30,10 +30,11 @@ type PeerModel struct {
 
 type RoomModel struct {
 	*sync.Mutex
+	ID                   string
 	Title                string
 	PeersTree            *PeerModel
 	Members              map[uint64]*MemberModel
-	MetaData             map[string]interface{}
+	MetaData             map[string]any
 	GoldGorilla          **PeerModel
 	HadGoldGorillaBefore bool
 }
