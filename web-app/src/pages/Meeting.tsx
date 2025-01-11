@@ -1,5 +1,5 @@
 import { computed, signal } from '@preact/signals'
-import { BottomBar, Button, MeetingBody, TopBar, attendees, attendeesBadge, isMoreOptionsOpen, makeDialog, streamers } from 'components'
+import { BottomBar, Button, MeetingBody, RecordingBar, TopBar, attendees, attendeesBadge, isMoreOptionsOpen, makeDialog, streamers } from 'components'
 import { isAttendeesOpen } from 'components/Attendees'
 import { ToastProvider, destroyDialog, makePreviewDialog } from 'components/Dialog'
 import { Roles, createSparkRTC, getWsUrl } from 'lib/webrtc/common.js'
@@ -22,6 +22,7 @@ export const statsDataOpen = signal(false)
 export const statsData = signal('')
 export const sparkRTC = signal(null)
 export const meetingStatus = signal(true)
+export const recordingStatus = signal(false)
 export const broadcastIsInTheMeeting = signal(true)
 export const raisedHandsCount = signal(0)
 export const raiseHandMaxLimitReached = computed(() => {
@@ -227,7 +228,17 @@ export const leaveMeeting = () => {
   if (sparkRTC.value) {
     sparkRTC.value.leaveMeeting()
     meetingStatus.value = false
+    recordingStatus.value = false
     streamers.value = {}
+  }
+}
+
+export const stopRecording = () => {
+  if (sparkRTC.value) {
+    sparkRTC.value.stopRecording()
+    updateUser({
+      isRecordingStarted: false
+    })
   }
 }
 
@@ -492,6 +503,8 @@ const Meeting = ({ params: { room, displayName, name, _customStyles } }: { param
           updateRecordingUi: (recordersList) => {
             logger.log("Updated Recorders List: ", recordersList)
 
+
+
             // Reset all `isRecordingTheMeeting` values to `false`
             Object.keys(attendees.value).forEach(userId => {
               attendees.value[userId] = {
@@ -499,6 +512,11 @@ const Meeting = ({ params: { room, displayName, name, _customStyles } }: { param
                 isRecordingTheMeeting: false,
               };
             });
+
+            if (recordersList == undefined || recordersList == null) {
+              recordingStatus.value = false
+              return
+            }
 
             recordersList.forEach(element => {
               const userId = parseInt(element, 10)
@@ -512,6 +530,12 @@ const Meeting = ({ params: { room, displayName, name, _customStyles } }: { param
                 },
               }
             });
+
+            if (recordersList.length > 0) {
+              recordingStatus.value = true
+            } else {
+              recordingStatus.value = false
+            }
 
             logger.log("Updated Attendees List: ", attendees.value)
 
@@ -828,6 +852,7 @@ const Meeting = ({ params: { room, displayName, name, _customStyles } }: { param
     )}>
 
       <TopBar customStyles={customStyles ? customStyles : null} />
+      {meetingStatus.value && broadcastIsInTheMeeting.value && recordingStatus.value && <RecordingBar customStyles={customStyles ? customStyles : null} />}
       {meetingStatus.value ? (
         <>
           <MeetingBody customStyles={customStyles ? customStyles : null} />

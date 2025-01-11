@@ -29,6 +29,7 @@ export { HostDialogPool, HostToastProvider } from "../pages/host/hostDialogs";
 export { MeetingBody, streamers } from "./MeetingBody";
 export * from "./ResponsiveModal";
 export { TopBar } from "./TopBar";
+export { RecordingBar } from "./RecordingBar"
 export { Button } from "./common/Button";
 export { Container } from "./common/Container";
 export * from "./common/Icon";

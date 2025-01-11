@@ -375,6 +375,7 @@ export class SparkRTC {
           if (msg.data === "no:broadcast") {
             alert("You are not a broadcaster anymore!");
             this.socket.close();
+            logger.log("CLOSING SOCKET 8")
           } else if (msg.data === "yes:broadcast") {
             this.updateTheStatus(`myName:`, this.myName);
 
@@ -992,15 +993,15 @@ export class SparkRTC {
 
   };
 
-  startRecording = () => {
+  startRecording = async () => {
     logger.log("Start Recording in SparkRTC, room name is: ", this.roomName)
     this.multiStreamRecorder.startRecording(this.roomName, this.remoteStreams)
-    this.notifyOtherUserAboutMeetingRecordingStatus(true)
+    await this.notifyOtherUserAboutMeetingRecordingStatus(true)
   }
 
-  stopRecording = () => {
+  stopRecording = async () => {
     this.multiStreamRecorder.stopRecording()
-    this.notifyOtherUserAboutMeetingRecordingStatus(false)
+    await this.notifyOtherUserAboutMeetingRecordingStatus(false)
   }
 
   //Get Local Stream
@@ -1712,6 +1713,7 @@ export class SparkRTC {
                     this.resetVariables(true);
                   }; //empty on close callback
                   this.socket.close();
+                  logger.log("CLOSING SOCKET 1")
                   this.socket = null;
 
                   return;
@@ -1825,6 +1827,7 @@ export class SparkRTC {
                   this.resetVariables(true);
                 }; //empty on close callback
                 this.socket.close();
+                logger.log("CLOSING SOCKET 2")
                 this.socket = null;
 
                 return;
@@ -1937,6 +1940,7 @@ export class SparkRTC {
                   this.resetVariables(true);
                 }; //empty on close callback
                 this.socket.close();
+                logger.log("CLOSING SOCKET 3")
                 this.socket = null;
 
                 return;
@@ -2920,12 +2924,15 @@ export class SparkRTC {
   };
   setMetadata = async (metadata) => {
     if (await this.checkSocketStatus()) {
-      this.socket.send(
+      const res = this.socket.send(
         JSON.stringify({
           type: "metadata-set",
           data: JSON.stringify(metadata),
         })
       );
+      logger.log("Socket is Active.. Sending MetaData Set: ", res)
+    } else {
+      logger.log("Socket is CLOSED ALREADY!!")
     }
   };
   getMetadata = async () => {
@@ -2947,6 +2954,7 @@ export class SparkRTC {
     }
     if (this.socket) {
       this.socket.close();
+      logger.log("CLOSING SOCKET 4")
     }
   };
 
@@ -2986,6 +2994,7 @@ export class SparkRTC {
         this.metaDataInterVal = null
       }
       this.socket.close();
+      logger.log("CLOSING SOCKET 5")
       this.socket = null;
 
       if (this.startAgain) {
@@ -3023,13 +3032,26 @@ export class SparkRTC {
     }
   };
 
+  sleep = (time) => {
+    return new Promise((resolve) => setTimeout(resolve, time));
+  };
+
   /**
    * To leave the meeting
    */
   leaveMeeting = async () => {
+    logger.log("Leaving meeting!!")
 
-    this.stopRecording()
+    //clear recorders list from meta data if host is leaving
+    if (this.role === this.Roles.BROADCAST) {
+      this.emptyTheRecordersListInMetaData()
+    }
 
+    await this.stopRecording()
+
+    logger.log("SLEEPING FOR 5 SEC")
+    await this.sleep(5000)
+    logger.log("AWAKEN AFTER 5 SEC")
     //check for local stream and stop tracks
     //stop all the sender tracks
     try {
@@ -3049,6 +3071,7 @@ export class SparkRTC {
             this.resetVariables();
           }; //empty on close callback
           this.socket.close();
+          logger.log("CLOSING SOCKET 6")
           this.socket = null;
         }
       }
@@ -3070,6 +3093,7 @@ export class SparkRTC {
           this.resetVariables();
         }; //empty on close callback
         this.socket.close();
+        logger.log("CLOSING SOCKET 7")
         this.socket = null;
       }
     }
@@ -3125,11 +3149,11 @@ export class SparkRTC {
 
   notifyOtherUserAboutMeetingRecordingStatus = async (started) => {
     this.getMetadata();
-    setTimeout(() => {
+    await setTimeout(async () => {
+
       const meta = this.metaData;
 
       //set recorder started statue and also update current user id to recorders list
-
       if (started == true) {
         //just started
         if (meta.recordersList == null || meta.recordersList == undefined) {
@@ -3143,18 +3167,31 @@ export class SparkRTC {
         meta.recordingStarted = started
 
       } else {
+
         //stoped
         if (meta.recordersList != null && meta.recordersList != undefined) {
           meta.recordersList = meta.recordersList.filter(username => username !== this.myUsername);
+
+          if (meta.recordersList.length == 0) {
+            meta.recordingStarted = started
+          }
         }
 
-        if (meta.recordersList.length == 0) {
-          meta.recordingStarted = started
-        }
       }
 
-      this.setMetadata(meta)
+      logger.log("Recording is stopped now... UPdating the META DATA: ", meta)
+      await this.setMetadata(meta)
     }, 1000);
+  }
+
+  emptyTheRecordersListInMetaData = async () => {
+    const meta = this.metaData;
+
+    meta.recordingStarted = false
+    meta.recordersList = []
+
+    this.setMetadata(meta)
+
   }
 
   sendCustomStylesToRoom = async (styles) => {
@@ -3265,24 +3302,6 @@ export class SparkRTC {
         logger.log("Need to update the list.");
         logger.log("Newly added values:", newlyAdded);
         logger.log("Removed values:", removedValues);
-
-        // logger.log("Users list is: ", this.users)
-
-        // if (newlyAdded.length > 0) {
-        //   // Find the user by ID
-
-        //   const userId = parseInt(newlyAdded[0], 10); // Convert to integer
-
-        //   const user = this.users.find(user => user.id === userId);
-
-        //   if (user) {
-        //     // Parse the `name` field to extract the username
-        //     const userName = JSON.parse(user.name).name;
-        //     logger.log("Username:", userName);
-        //   } else {
-        //     logger.error("User not found");
-        //   }
-        // }
 
         //get the new value received in list
         this.recordersList = list
