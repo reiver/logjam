@@ -10,7 +10,7 @@ import (
 const path string = "/hapi/v1/ws"
 
 func init() {
-	httpsrv.Router.HandleFunc(path, serveHTTP)
+	httpsrv.Router.HandleFunc(path, serveHTTP).Methods(http.MethodGet, http.MethodOptions)
 }
 
 func serveHTTP(responsewriter http.ResponseWriter, request *http.Request) {
@@ -24,6 +24,8 @@ func serveHTTP(responsewriter http.ResponseWriter, request *http.Request) {
 		log.Error("nil request")
 		return
 	}
+
+	responsewriter.Header().Add("Access-Control-Allow-Origin", "*")
 
 	wsConn, err := upgrader.Upgrade(responsewriter, request, nil)
 	if err != nil {
