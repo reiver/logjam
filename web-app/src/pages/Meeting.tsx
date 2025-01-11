@@ -433,8 +433,10 @@ const Meeting = ({ params: { room, displayName, name, _customStyles } }: { param
                     ableToRaiseHand: true,
                     isMicrophoneOn: true,
                     isCameraOn: true,
+                    isRecordingStarted: false,
                   })
                   sparkRTC.value.resetAudioVideoState()
+                  sparkRTC.value.stopRecording()
                   log(`broadcasterDC...`)
                 }
               }
