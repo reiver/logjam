@@ -46,8 +46,10 @@ export function convertRoomDataToFormData(roomData) {
 
 export class PocketBaseManager {
   constructor() {
+    this.baseURL = "https://pb.greatape.stream"
+
     // Initialize PocketBase with your base URL
-    this.pocketBase = new PocketBase("https://pb.greatape.stream");
+    this.pocketBase = new PocketBase(this.baseURL);
   }
 
   // Function to create a host entry
@@ -192,5 +194,9 @@ export class PocketBaseManager {
     } catch (error) {
       return error.data;
     }
+  };
+
+  thumbnailUrl = (collectionId, roomId, thumbnail) => {
+    return `${this.baseURL}/api/files/${collectionId}/${roomId}/${thumbnail}`;
   };
 }

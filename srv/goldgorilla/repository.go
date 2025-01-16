@@ -2,8 +2,7 @@ package goldgorillasrv
 
 import (
 	"github.com/reiver/logjam/cfg"
-	"github.com/reiver/logjam/models/contracts"
-	"github.com/reiver/logjam/models/repositories/goldgorilla"
+	"github.com/reiver/logjam/lib/goldgorilla"
 )
 
-var Repository contracts.IGoldGorillaServiceRepository = GoldGorillaRepository.NewHTTPRepository(cfg.Config.GoldGorillaBaseURL())
+var Repository goldgorilla.IGoldGorillaServiceRepository = goldgorilla.NewHTTPRepository(cfg.Config.GoldGorillaBaseURL())

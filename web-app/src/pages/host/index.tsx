@@ -177,7 +177,7 @@ export const HostPage = ({ params: { displayName } }: { params?: { displayName?:
         form.setValue('room', room.name);
 
         if (room.thumbnail != "" && selectedImage.value == null && resetThumbnail == false) {
-          thumbnailUrl.value = `https://pb.greatape.stream/api/files/${room.collectionId}/${room.id}/${room.thumbnail}`
+          thumbnailUrl.value = pbApi.thumbnailUrl(room.collectionId, room.id, room.thumbnail);
           logger.log("thumbnailUrl: ", thumbnailUrl.value)
           var img = document.getElementById("thumbnail")
           img.src = thumbnailUrl.value

@@ -1,47 +1,51 @@
 # LOGJAM
 
-## Running The Project
+**logjam** is a P2P video & audio technology for decentralized social-media (DeSo).
 
----
+<img src="doc/img/greatape-logo.png" style="width:150px" />
 
-first you need to get the binary by one of this ways :
+The documentation for **logjam** is divided up into several files.
 
-1. downloading it from **releases** page
-2. **building** it your self
-3. leaving the build and run to **docker**!
+* [RUNNING.md](doc/RUNNING.md) — Anyone wishing to run **logjam**, please see [RUNNING.md](doc/RUNNING.md) file.
+* [HACKING.md](doc/HACKING.md) — Anyone wishing to contribute to the **logjam** source-code, please see [HACKING.md](doc/HACKING.md) file.
 
-- ### getting the release
-1. download the latest binary from here https://github.com/reiver/logjam/releases
-2. make it executable like `chmod +x ./logjam`
-3. run it! `./logjam`
+## Credits
 
-**note:** default listen host(`0.0.0.0`) or listen port(`8090`) can be changed using the `--listen-host` and `--listen-port` arguments.
+Many people worked on **logjam**.
 
-- ### building
+Some continue to work on it.
+Some are alumni.
 
-first make sure you have golang installed *(>=v1.20)*
-1. clone the repository and `cd` into it.
-2. build it using go like `go build .`
-3. run it! `./logjam`
+In alphabetical order —
 
-- ### using Docker
+### Credits — Back-End Software Engineers
 
-make sure you have docker installed first.
-1. clone the repository and `cd` into it.
-2. if you have docker-compose installed then run `docker-compose up`
-3. if you choose to build and run it with docker itself then :
-   1. build the image: `docker build -t logjam:latest .`
-   2. create and run the container: `docker run --rm logjam:latest`
-
-## Authors
-
-**logjam** was created by:
-
+* Benyamin Azarkhazin
 * [Charles Iliya Krempeaux](http://reiver.link/)
-* Massoud Seifi
 * Mehrdad Mirsamie
+
+### Credits — Front-End Software Engineers
+
+* Massoud Seifi
 * Muhammad Zaid Ali
 * Sal Rahman
+
+### Credits — Logo
+
+* Chet Earl Woodside
+
+### Credits — Product Researchers
+
+* [Charles Iliya Krempeaux](http://reiver.link/)
+
+### Credits — QA Specialists
+
+* Atanaz Ostovar
+* Sepideh Farsi
+
+### Credits — UX/UI Specialists
+
+* Farzaneh Amini
 
 ## Cookie
 

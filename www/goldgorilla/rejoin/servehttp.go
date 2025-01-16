@@ -7,8 +7,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/reiver/logjam/lib/msgs"
 	"github.com/reiver/logjam/lib/rest"
-	"github.com/reiver/logjam/models"
 	"github.com/reiver/logjam/srv/goldgorilla"
 	"github.com/reiver/logjam/srv/http"
 	"github.com/reiver/logjam/srv/room"
@@ -61,7 +61,7 @@ func serveHTTP(responsewriter http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	brDCEvent := models.MessageContract{
+	brDCEvent := msgs.MessageContract{
 		Type: "event-broadcaster-disconnected",
 		Data: strconv.FormatUint(broadcaster.ID, 10),
 	}
@@ -75,7 +75,7 @@ func serveHTTP(responsewriter http.ResponseWriter, request *http.Request) {
 			log.Error(err)
 			return
 		}
-		brIsBackEvent := models.MessageContract{
+		brIsBackEvent := msgs.MessageContract{
 			Type: "broadcasting",
 		}
 

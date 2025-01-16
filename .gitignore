@@ -1,4 +1,5 @@
 .idea
+.vercel
 logjam.exe
 *.exe
 logjam

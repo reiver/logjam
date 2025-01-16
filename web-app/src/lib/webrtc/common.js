@@ -16,6 +16,7 @@ export const isMobile = () => {
 // TODO: set base url
 export function getWsUrl(host = null) {
   let baseUrl = "";
+  let basePath = "/hapi/v1";
 
   if (host) {
     baseUrl = host;
@@ -25,7 +26,11 @@ export function getWsUrl(host = null) {
 
   const protocol =
     window.location.href.split("//")[0] === "http:" ? "ws" : "wss";
-  return `${protocol}://${baseUrl}/ws`;
+
+  const wsURL = `${protocol}://${baseUrl}${basePath}/ws`;
+//  console.log("wsURL:", wsURL);
+
+  return wsURL;
 }
 
 export function createSparkRTC(role, options) {

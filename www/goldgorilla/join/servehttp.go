@@ -8,9 +8,9 @@ import (
 	"time"
 
 	"github.com/reiver/logjam/cfg"
+	"github.com/reiver/logjam/lib/goldgorilla"
+	"github.com/reiver/logjam/lib/msgs"
 	"github.com/reiver/logjam/lib/rest"
-	"github.com/reiver/logjam/models"
-	"github.com/reiver/logjam/models/dto"
 	"github.com/reiver/logjam/srv/goldgorilla"
 	"github.com/reiver/logjam/srv/http"
 	"github.com/reiver/logjam/srv/room"
@@ -37,7 +37,7 @@ func serveHTTP(responsewriter http.ResponseWriter, request *http.Request) {
 	if rest.HandleIfErr(responsewriter, err, 400) {
 		return
 	}
-	var reqModel dto.JoinReqModel
+	var reqModel goldgorilla.JoinReqModel
 	err = json.Unmarshal(reqBody, &reqModel)
 	if rest.HandleIfErr(responsewriter, err, 400) {
 		return
@@ -61,7 +61,7 @@ func serveHTTP(responsewriter http.ResponseWriter, request *http.Request) {
 	if rest.HandleIfErr(responsewriter, err, 503) {
 		return
 	}
-	_ = websocksrv.WebSockSrv.Send(models.MessageContract{
+	_ = websocksrv.WebSockSrv.Send(msgs.MessageContract{
 		Type: "add_audience",
 		Data: strconv.FormatUint(newGGID, 10),
 	}, *parentId)
@@ -75,7 +75,7 @@ func serveHTTP(responsewriter http.ResponseWriter, request *http.Request) {
 	if err != nil {
 		log.Error(err)
 	} else {
-		_ = websocksrv.WebSockSrv.Send(models.MessageContract{Type: "goldgorilla-joined", Data: strconv.FormatUint(newGGID, 10)}, memsId...)
+		_ = websocksrv.WebSockSrv.Send(msgs.MessageContract{Type: "goldgorilla-joined", Data: strconv.FormatUint(newGGID, 10)}, memsId...)
 	}
 	go func(roomId string, svcAddr string, ggId uint64) {
 		for {
@@ -93,7 +93,7 @@ func serveHTTP(responsewriter http.ResponseWriter, request *http.Request) {
 			log.Error(err)
 			return
 		}
-		parentDCEvent := models.MessageContract{
+		parentDCEvent := msgs.MessageContract{
 			Type: "event-parent-dc",
 			Data: strconv.FormatUint(newGGID, 10),
 		}
