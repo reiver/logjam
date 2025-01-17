@@ -1,6 +1,7 @@
 import { computed, signal } from '@preact/signals'
 import AvatarIcon from 'assets/icons/Avatar.svg?react'
 import Camera from 'assets/icons/Camera.svg?react'
+import RecordingAttendeesList from 'assets/icons/RecordingAttendeesList.svg?react'
 import Check from 'assets/icons/Check.svg?react'
 import Hand from 'assets/icons/Hand.svg?react'
 import Loader from 'assets/icons/Loader.svg?react'
@@ -175,17 +176,34 @@ export const Participant = ({ participant }) => {
           </span>
 
           {participant.userId == currentUser.value.userId && participant.isHost ? (
-            <span class="text-gray-1 dark:text-gray-0 text-regular-12 greatape-attendees-item-role">Host (You)</span>
+            // Host View : When Host is recoding 
+            participant.isRecordingTheMeeting == true ? (
+              <span class="text-gray-1 dark:text-gray-0 text-regular-12 greatape-attendees-item-role">Host (You are recording)</span>
+            ) : (
+              // Host View : When Host is not recoding 
+              <span class="text-gray-1 dark:text-gray-0 text-regular-12 greatape-attendees-item-role">Host (You)</span>
+            )
+
           ) : participant.isHost ? (
+
+            // Participent View
             <span class="text-gray-1 dark:text-gray-0 text-regular-12 greatape-attendees-item-role">Host</span>
           ) : participant.userId == currentUser.value.userId ? (
-            <span class="text-gray-1 dark:text-gray-0 text-regular-12 greatape-attendees-item-role">You</span>
+
+            // Participent View : When Participent is recoding 
+            participant.isRecordingTheMeeting == true ? (
+              <span class="text-gray-1 dark:text-gray-0 text-regular-12 greatape-attendees-item-role">You are recording</span>
+            ) : (
+              // Participent View : When Participent is not recoding 
+              <span class="text-gray-1 dark:text-gray-0 text-regular-12 greatape-attendees-item-role">You</span>
+            )
           ) : (
             ''
           )}
 
+          {/* when someone else is recording */}
           {
-            participant.userId != currentUser.value.userId && participant.isRecordingTheMeeting == true ? (
+            participant.isRecordingTheMeeting == true && participant.userId != currentUser.value.userId ? (
               <span class="text-gray-1 dark:text-gray-0 text-regular-12 greatape-attendees-item-role">Is Recording</span>
             ) : ('')
           }
@@ -193,6 +211,11 @@ export const Participant = ({ participant }) => {
         </div>
       </div>
       <div class="flex gap-1 dark:text-gray-0 text-gray-1">
+        {
+          participant.isRecordingTheMeeting && (
+            <Icon class={`${currentUser.value.isHost && currentUser.value.userId != participant.userId ? 'group-hover:hidden' : ''} greatape-attendees-item`} icon={RecordingAttendeesList} width="25" height="25px" />
+          )
+        }
         {!raisedHand && !participant.hasCamera && !participant.actionLoading && currentUser.value.isHost && !isMobile && (
           <Icon class="hidden group-hover:block greatape-attendees-item" icon={Check} width="25" height="25px" />
         )}
@@ -201,6 +224,7 @@ export const Participant = ({ participant }) => {
             <Icon icon={participant.actionLoading ? Loader : raisedHand ? Hand : participant.hasCamera ? Camera : ''} class="greatape-attendees-item" width="25" height="25px" />
           </div>
         )}
+
       </div>
     </div>
   )

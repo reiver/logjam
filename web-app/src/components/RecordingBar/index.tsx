@@ -17,7 +17,7 @@ export const RecordingBar = ({ customStyles }) => {
                     {/* Left Section */}
                     <div className="flex items-center">
                         <Recording />
-                        <span className="text-black dark:text-white text-left hidden ml-1 sm:block">
+                        <span className="text-black dark:text-white text-left ml-1">
                             {'Recording'}
                         </span>
                     </div>
@@ -28,7 +28,7 @@ export const RecordingBar = ({ customStyles }) => {
                             className="flex items-center cursor-pointer"
                             onClick={handleStopRecording}
                         >
-                            <span className="text-black dark:text-white text-left hidden mr-1 sm:block">
+                            <span className="text-black dark:text-white text-left mr-1">
                                 {'Stop Recording'}
                             </span>
                             <StopRecording />
