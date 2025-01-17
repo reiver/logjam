@@ -300,6 +300,11 @@ function keyPressCallback(key) {
   }
 
 }
+
+export const isRecordingInProgress = () => {
+  return meetingStatus.value && broadcastIsInTheMeeting.value && recordingStatus.value
+}
+
 const Meeting = ({ params: { room, displayName, name, _customStyles } }: { params?: { room?: string; displayName?: string; name?: string, _customStyles?: any } }) => {
   detectKeyPress(keyPressCallback)
 
@@ -854,7 +859,7 @@ const Meeting = ({ params: { room, displayName, name, _customStyles } }: { param
     )}>
 
       <TopBar customStyles={customStyles ? customStyles : null} />
-      {meetingStatus.value && broadcastIsInTheMeeting.value && recordingStatus.value && <RecordingBar customStyles={customStyles ? customStyles : null} />}
+      {isRecordingInProgress() && <RecordingBar customStyles={customStyles ? customStyles : null} />}
       {meetingStatus.value ? (
         <>
           <MeetingBody customStyles={customStyles ? customStyles : null} />

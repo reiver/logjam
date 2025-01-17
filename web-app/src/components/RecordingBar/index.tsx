@@ -10,7 +10,7 @@ export const RecordingBar = ({ customStyles }) => {
         <div
             className="w-full bg-white dark:bg-gray-2 py-3"
             style={customStyles ? { backgroundColor: "rgba(255, 255, 255, 0)" } : {}}
-            id="top-bar"
+            id="recording-bar"
         >
             <Container>
                 <div className="flex items-center justify-between">
