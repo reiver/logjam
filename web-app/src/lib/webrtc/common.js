@@ -24,11 +24,17 @@ export function getWsUrl(host = null) {
     baseUrl = window.location.href.split("//")[1].split("/")[0];
   }
 
-  const protocol =
+  var protocol =
     window.location.href.split("//")[0] === "http:" ? "ws" : "wss";
 
+  //create secure wss with deployed backend
+  if (!baseUrl.includes("localhost")) {
+    protocol = "wss"
+  }
+
+
   const wsURL = `${protocol}://${baseUrl}${basePath}/ws`;
-//  console.log("wsURL:", wsURL);
+  //  console.log("wsURL:", wsURL);
 
   return wsURL;
 }
