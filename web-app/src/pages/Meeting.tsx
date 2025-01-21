@@ -510,8 +510,6 @@ const Meeting = ({ params: { room, displayName, name, _customStyles } }: { param
           updateRecordingUi: (recordersList) => {
             logger.log("Updated Recorders List: ", recordersList)
 
-
-
             // Reset all `isRecordingTheMeeting` values to `false`
             Object.keys(attendees.value).forEach(userId => {
               attendees.value[userId] = {

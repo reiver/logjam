@@ -123,19 +123,38 @@ export const Controllers = () => {
 
   const toggleBottomSheet = () => { }
 
+
+  const showStartRecordingDialog = () => {
+
+    makeDialog('start-recording',
+      {
+        message: `Are you sure you want to start recording the screen?`,
+        title: 'Screen Recording',
+      },
+      () => {
+        //on ok
+        sparkRTC.value.startRecording()
+        updateUser({
+          isRecordingStarted: !isRecordingStarted
+        })
+      },
+      () => {
+        //on close
+      }
+    )
+  }
+
   const handleRecording = () => {
     logger.log("Handle Recording: isRecordingStarted: ", isRecordingStarted)
 
-
     if (isRecordingStarted) {
       sparkRTC.value.stopRecording();
+      updateUser({
+        isRecordingStarted: !isRecordingStarted
+      })
     } else {
-      sparkRTC.value.startRecording()
+      showStartRecordingDialog()
     }
-
-    updateUser({
-      isRecordingStarted: !isRecordingStarted
-    })
   }
 
   if (!showControllers) return null

@@ -289,7 +289,7 @@ export class SparkRTC {
     let msg;
     try {
       msg = JSON.parse(event.data);
-      logger.log("HANDLE MESSSAGE: ", msg)
+      // logger.log("HANDLE MESSSAGE: ", msg)
     } catch (e) {
       return;
     }
@@ -544,10 +544,10 @@ export class SparkRTC {
         }
         break;
       case "metadata-get":
-        this.updateTheStatus(`[handleMessage] metadata-get ${msg.type}`);
+        // this.updateTheStatus(`[handleMessage] metadata-get ${msg.type}`);
         if (msg.data) {
           this.metaData = JSON.parse(msg.data);
-          this.updateTheStatus(`MetaData: `, this.metaData);
+          // this.updateTheStatus(`MetaData: `, this.metaData);
           if (this.metaData.muted && this.updateVideosMuteStatus) {
             this.updateVideosMuteStatus(this.metaData.muted);
           }
@@ -2924,7 +2924,7 @@ export class SparkRTC {
   };
   setMetadata = async (metadata) => {
     if (await this.checkSocketStatus()) {
-      const res = this.socket.send(
+      const res = await this.socket.send(
         JSON.stringify({
           type: "metadata-set",
           data: JSON.stringify(metadata),
@@ -3283,15 +3283,15 @@ export class SparkRTC {
 
   //handle video recording status
   handleMetaDataToGetRecordingStatus(metaData) {
-    logger.log("METADATA RECEIVED: ", metaData)
+    // logger.log("METADATA RECEIVED: ", metaData)
 
     const list = metaData.recordersList
 
     if (list.length > 0) {
-      logger.log("Recorder list Received in META DATA: ", list)
+      // logger.log("Recorder list Received in META DATA: ", list)
 
       if (list.length == this.recordersList.length) {
-        logger.log("List is same already no need to modify")
+        // logger.log("List is same already no need to modify")
       } else {
         // Find newly added values
         const newlyAdded = list.filter(item => !this.recordersList.includes(item));

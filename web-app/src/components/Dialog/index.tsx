@@ -855,6 +855,56 @@ export const ConfirmDialog = ({
   )
 }
 
+export const StartRecordingDialog = ({
+  onOk,
+  onClose,
+  message: { message, title },
+  okText = 'Start Recording',
+  cancelText = 'Cancel',
+  okButtonVariant = 'solid',
+  onReject = onClose,
+  showButtons = true,
+  className,
+  contentClassName,
+}) => {
+  return (
+    <div class="absolute top-0 left-0 w-full h-full">
+      <div class="z-10 absolute w-full h-full bg-black bg-opacity-60" onClick={onClose} />
+      <div
+        class={clsx(
+          className,
+          'absolute -translate-y-full z-20 top-full left-0 right-0 sm:right-unset sm:top-1/2 sm:left-1/2 transform sm:-translate-x-1/2 sm:-translate-y-1/2 dark:bg-gray-3 dark:text-gray-0 bg-white text-gray-2 sm:rounded-lg rounded-t-lg w-full sm:max-w-[400px] sm:border dark:border-gray-1 border-gray-0'
+        )}
+      >
+        <div class="flex justify-center items-center p-5 relative">
+          <span class="dark:text-white text-black text-bold-12">{title}</span>
+          <Icon icon={Close} class="absolute top-1/2 sm:right-5 right-[unset] left-5 sm:left-[unset] transform -translate-y-1/2 cursor-pointer" onClick={onClose} />
+        </div>
+        <hr class="dark:border-gray-2 border-gray-0 sm:block hidden" />
+        <div class={clsx(contentClassName, 'text-left text-bold-12 sm:py-8 py-5 p-5')} dangerouslySetInnerHTML={{ __html: message }}></div>
+        {showButtons && (
+          <div class="flex justify-end gap-2 p-5 pt-0">
+            <Button
+              size="lg"
+              variant="outline"
+              class="w-full flex-grow-1"
+              onClick={() => {
+                onReject && onReject()
+                onClose()
+              }}
+            >
+              {cancelText}
+            </Button>
+            <Button size="lg" variant={okButtonVariant} class="w-full flex-grow-1" onClick={onOk}>
+              {okText}
+            </Button>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 export const InfoDialog = ({ onOk, onClose, message: { message, icon, variant }, pointer }) => {
   return (
     <div
@@ -887,6 +937,7 @@ export const DialogPool = () => {
         else if (dialog.type === 'io-devices') return <IODevicesDialog {...dialog} />
         else if (dialog.type === 'video-background') return <VideoBackgroundDialog {...dialog} />
         else if (dialog.type === 'invite') return <InviteDialog {...dialog} />
+        else if (dialog.type === 'start-recording') return <StartRecordingDialog {...dialog} />
       })}
     </>
   )
