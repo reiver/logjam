@@ -7,7 +7,7 @@ import clsx from 'clsx'
 import { Icon, IconButton, attendeesWidth, makeDialog } from 'components'
 import throttle from 'lodash.throttle'
 import { memo, useEffect, useRef, useState } from 'preact/compat'
-import { isIphone } from 'components/Dialog/index'
+import { DialogTypes, isIphone } from 'components/Dialog/index'
 import { userInteractedWithDom } from '../..'
 import { getDeviceConfig } from '../../hooks/use-breakpoint.js'
 import { IODevices } from '../../lib/ioDevices/io-devices.js'
@@ -498,7 +498,7 @@ export const Video = memo(({ stream, isMuted, isHostStream, name, userId, isUser
   }, [])
   const handleRemoveStream = () => {
     makeDialog(
-      'confirm',
+      DialogTypes.CONFIRM,
       {
         message: `Are you sure you want to kick "<strong>${name}</strong>" off the stage?`,
         title: 'Kick Audience Off The Stage',
@@ -507,6 +507,7 @@ export const Video = memo(({ stream, isMuted, isHostStream, name, userId, isUser
         sparkRTC.value.disableAudienceBroadcast(String(userId))
       },
       () => { },
+      false,
       {
         okText: 'Kick',
         okButtonVariant: 'red',

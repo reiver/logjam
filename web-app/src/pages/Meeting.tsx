@@ -1,7 +1,7 @@
 import { computed, signal } from '@preact/signals'
 import { BottomBar, Button, MeetingBody, RecordingBar, TopBar, attendees, attendeesBadge, isMoreOptionsOpen, makeDialog, streamers } from 'components'
 import { isAttendeesOpen } from 'components/Attendees'
-import { ToastProvider, destroyDialog, makePreviewDialog } from 'components/Dialog'
+import { DialogTypes, ToastProvider, destroyDialog, makePreviewDialog } from 'components/Dialog'
 import { Roles, createSparkRTC, getWsUrl } from 'lib/webrtc/common.js'
 import { detectKeyPress } from 'lib/helpers/controls'
 import { lazy } from 'preact-iso'
@@ -573,7 +573,7 @@ const Meeting = ({ params: { room, displayName, name, _customStyles } }: { param
 
               previewDialogId = makePreviewDialog(
                 true,
-                'preview',
+                DialogTypes.PREVIEW,
                 localStream,
                 {
                   message: 'Set the default state of your “Video” and “Audio” before joining the stage please',
@@ -738,7 +738,7 @@ const Meeting = ({ params: { room, displayName, name, _customStyles } }: { param
 
             previewDialogId = makePreviewDialog(
               true,
-              'preview',
+              DialogTypes.PREVIEW,
               localStream,
               {
                 message: 'The host has requested you to come on stage. Set the default state of your “Video” and “Audio” before joining please.',
@@ -885,7 +885,7 @@ const Meeting = ({ params: { room, displayName, name, _customStyles } }: { param
 function showPreviewDialog(str, host, name, room) {
   makePreviewDialog(
     false,
-    'preview',
+    DialogTypes.PREVIEW,
     str,
     {
       message: 'Set the default state of your “Video” and “Audio” before joining the stage please',

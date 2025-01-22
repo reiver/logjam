@@ -8,7 +8,7 @@ import Loader from 'assets/icons/Loader.svg?react'
 import clsx from 'clsx'
 import { BottomSheet, Icon, makeDialog } from 'components'
 import { currentUser, onInviteToStage, onUserRaisedHand, sparkRTC } from 'pages/Meeting'
-import { makeInviteDialog } from '../Dialog'
+import { DialogTypes, makeInviteDialog } from '../Dialog'
 import { deviceSize } from '../MeetingBody/Stage.js'
 import logger from 'lib/logger/logger'
 import { useEffect } from 'preact/hooks'
@@ -51,7 +51,7 @@ export const Participant = ({ participant }) => {
 
     if (res) {
       makeDialog(
-        'confirm',
+        DialogTypes.CONFIRM,
         {
           message: `"<strong>${participant.name}</strong>" has raised their hand, do you want to add them to the stage?`,
           title: 'Accept Raised Hand',
@@ -62,6 +62,7 @@ export const Participant = ({ participant }) => {
           sparkRTC.value.acceptedRequests.push(participant.userId.toString())
         },
         () => { },
+        false,
         {
           onReject: () => {
             participant.acceptRaiseHand(false)
@@ -127,7 +128,7 @@ export const Participant = ({ participant }) => {
 
     if (res && currentUser.value.isHost && participant.userId != currentUser.value.userId) {
       makeInviteDialog(
-        'invite',
+        DialogTypes.INVITE,
         {
           message: `Do you want to request "<strong>${participant.name}</strong>" to come on stage?`,
           title: 'Request To Come On Stage',

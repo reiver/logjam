@@ -4,7 +4,40 @@ import logger from '../logger/logger';
 class MultiStreamRecorder {
     constructor() {
         this.resetRecording()
-        this.videoType = "video/mp4"; // Ensure browser compatibility
+        this.setTheVideoType()
+    }
+
+    setTheVideoType() {
+
+        const videoTypes = ["webm", "ogg", "mp4", "x-matroska"];
+        const audioTypes = ["webm", "ogg", "mp3", "x-matroska"];
+        const codecs = ["should-not-be-supported", "vp9", "vp9.0", "vp8", "vp8.0", "avc1", "av1", "h265", "h.265", "h264", "h.264", "opus", "pcm", "aac", "mpeg", "mp4a"];
+
+        const supportedVideos = this.getSupportedMimeTypes("video", videoTypes, codecs);
+        const supportedAudios = this.getSupportedMimeTypes("audio", audioTypes, codecs);
+
+        //enum for Js
+        const VideoType = Object.freeze({
+            WEBM: "video/webm",
+            MP4: "video/mp4"
+        });
+
+        //check for mp4 and webm in supported video types list
+
+        if (supportedVideos != null && supportedVideos != undefined && supportedVideos.length > 0) {
+            if (supportedVideos.includes(VideoType.MP4)) {
+                this.videoType = VideoType.MP4;
+            }
+            else if (supportedVideos.includes(VideoType.WEBM)) {
+                this.videoType = VideoType.WEBM;
+            } else {
+                //set the first supported video type
+                this.videoType = supportedVideos[0]
+            }
+        } else {
+            //set default value to mp4
+            this.videoType = VideoType.MP4
+        }
     }
 
     resetRecording() {
@@ -253,18 +286,25 @@ class MultiStreamRecorder {
         // Combine video from the canvas and the combined audio stream
         const combinedStream = new MediaStream([...canvasStream.getVideoTracks(), ...this.audioMixer.getMixedStream().getAudioTracks()]);
 
-        this.mediaRecorder = new MediaRecorder(combinedStream, {
-            mimeType: this.videoType,
-        });
+        try {
+            this.mediaRecorder = new MediaRecorder(combinedStream, {
+                mimeType: this.videoType,
+            });
 
-        this.mediaRecorder.ondataavailable = (event) => {
-            if (event.data && event.data.size > 0) {
-                this.recordedBlobs.push(event.data);
-            }
-        };
+            this.mediaRecorder.ondataavailable = (event) => {
+                if (event.data && event.data.size > 0) {
+                    this.recordedBlobs.push(event.data);
+                }
+            };
 
-        this.mediaRecorder.start();
-        logger.log("Recording started");
+            this.mediaRecorder.start();
+            logger.log("Recording started");
+            return true
+        } catch (error) {
+            logger.error("Recording not started: ", error)
+            return false
+        }
+
     }
 
     // Stop Recording
@@ -296,6 +336,29 @@ class MultiStreamRecorder {
 
         this.mediaRecorder.stop();
     }
+
+
+    //check supported mime types
+    getSupportedMimeTypes(media, types, codecs) {
+        const isSupported = MediaRecorder.isTypeSupported;
+        const supported = [];
+        types.forEach((type) => {
+            const mimeType = `${media}/${type}`;
+            codecs.forEach((codec) => [
+                `${mimeType};codecs=${codec}`,
+                `${mimeType};codecs=${codec.toUpperCase()}`,
+                // /!\ false positive /!\
+                // `${mimeType};codecs:${codec}`,
+                // `${mimeType};codecs:${codec.toUpperCase()}` 
+            ].forEach(variation => {
+                if (isSupported(variation))
+                    supported.push(variation);
+            }));
+            if (isSupported(mimeType))
+                supported.push(mimeType);
+        });
+        return supported;
+    };
 }
 
 export default MultiStreamRecorder;

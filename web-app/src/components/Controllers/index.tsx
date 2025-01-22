@@ -20,6 +20,7 @@ import { currentUser, isDebugMode, onStartShareScreen, onStopShareScreen, setUse
 import { useState } from 'preact/compat'
 import { isMobile } from '../../lib/webrtc/common.js'
 import logger from 'lib/logger/logger.js'
+import { DialogTypes } from 'components/Dialog/index.js'
 
 const disableRaiseHandFeat = true
 export const isMoreOptionsOpen = signal(false)
@@ -61,7 +62,7 @@ export const Controllers = () => {
   const onRaiseHand = async () => {
     if (isStreamming) {
       makeDialog(
-        'confirm',
+        DialogTypes.CONFIRM,
         {
           message: `Are you sure you want to leave the stage and get beck to the audience list?`,
           title: 'Leave The Stage',
@@ -76,6 +77,7 @@ export const Controllers = () => {
           sparkRTC.value.leaveStage()
         },
         () => { },
+        false,
         {
           okText: 'Leave the stage',
           okButtonVariant: 'red',
@@ -121,26 +123,43 @@ export const Controllers = () => {
     }
   }
 
-  const toggleBottomSheet = () => { }
+  const showNotAbleToStartRecordingDialog = () => {
 
+    makeDialog(DialogTypes.RECORDING_NOT_STARTED, {
+      message: `Your current browser does not support meeting recording. Please use a supported browser such as Chrome or Safari.`,
+      title: `Screen Recording`
+    },
+      () => {
+        //on ok
+      }, () => {
+        // on close
+      }, false);
+
+  }
 
   const showStartRecordingDialog = () => {
 
-    makeDialog('start-recording',
+    makeDialog(DialogTypes.START_RECORDING,
       {
         message: `Are you sure you want to start recording the screen?`,
         title: 'Screen Recording',
       },
-      () => {
+      async () => {
         //on ok
-        sparkRTC.value.startRecording()
-        updateUser({
-          isRecordingStarted: !isRecordingStarted
-        })
+        const res = await sparkRTC.value.startRecording()
+        if (res === true) {
+          updateUser({
+            isRecordingStarted: !isRecordingStarted
+          })
+        } else {
+          //not able to start recording
+          showNotAbleToStartRecordingDialog()
+        }
       },
       () => {
         //on close
-      }
+      },
+      false
     )
   }
 

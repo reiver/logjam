@@ -995,8 +995,13 @@ export class SparkRTC {
 
   startRecording = async () => {
     logger.log("Start Recording in SparkRTC, room name is: ", this.roomName)
-    this.multiStreamRecorder.startRecording(this.roomName, this.remoteStreams)
+    const res = await this.multiStreamRecorder.startRecording(this.roomName, this.remoteStreams)
+    if (res === false) {
+      logger.log("Not able to start recording");
+      return false
+    }
     await this.notifyOtherUserAboutMeetingRecordingStatus(true)
+    return true
   }
 
   stopRecording = async () => {
