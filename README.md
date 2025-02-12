@@ -2,7 +2,7 @@
 
 **LogJam** is part of the back-end for **GreatApe**.
 
-**GreatApe** is a conversations platform for the **social-web** and **decentralized social-media** (**DeSo**) — including the Fediverse, Bluesky, Farcaster, etc
+**GreatApe** is a conversations platform for the **social-web** and **decentralized social-media** (**DeSo**).
 
 <img src="doc/img/greatape-logo.png" style="width:150px" />
 
