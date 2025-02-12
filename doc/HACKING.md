@@ -26,6 +26,5 @@ With the web-based front-end written in CSS, HTML, JavaScript, and TypeScript.
 * `lib/` — libraries that are decoupled from the rest of the source-code base.
   * see also: [lib/README.md](lib/README.md)
 * `srv/` — contains services that can be `import`ed and usedby the rest of te source-code.
-* `web-app/` — the front-end code.
 * `www/` — contains the HTTP handlers.
   * see also: [www/README.md](www/README.md)
