@@ -1,8 +1,8 @@
 package verboten
 
-import (
-	_ "embed"
-)
+// import (
+// 	_ "embed"
+// )
 
-//go:embed webpage.html
-var webpage string
+// //go:embed webpage.html
+// var webpage string
