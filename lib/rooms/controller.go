@@ -351,7 +351,7 @@ func (c *RoomWSController) UpdateStreamId(ctx *WSContext) {
 }
 
 func (c *RoomWSController) Ping(ctx *WSContext) {
-	_ = c.socketSVC.Send(msgs.MessageContract{Type: "pong"}, ctx.SocketID)
+	_ = c.socketSVC.Send(msgs.MessageContract{Type: "pong", Data: ctx.ParsedMessage.Data}, ctx.SocketID)
 }
 
 func (c *RoomWSController) TurnStatus(ctx *WSContext) {
@@ -607,7 +607,7 @@ func (c *RoomWSController) DefaultHandler(ctx *WSContext) {
 }
 
 func (c *RoomWSController) debug(msg ...any) {
-	 c.logger.Debug(msg...)
+	c.logger.Debug(msg...)
 }
 
 func (c *RoomWSController) error(msg ...any) {
