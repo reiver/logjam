@@ -11,10 +11,12 @@ import (
 )
 
 var (
-	GoldGorillaBaseURL string
-	help bool
-	PocketBaseURL string
-	ProdMode bool
+	GoldGorillaBaseURL  string
+	BlueSkyBaseURL      string
+	NeynarApiKey        string
+	help                bool
+	PocketBaseURL       string
+	ProdMode            bool
 	WebServerTCPAddress string
 )
 
@@ -26,6 +28,8 @@ func init() {
 	var defaultSrc string = fmt.Sprintf(":%s", env.TcpPort)
 
 	flag.StringVar(&GoldGorillaBaseURL, "goldgorilla-svc-addr", "http://localhost:8080", "goldgorilla service address baseurl")
+	flag.StringVar(&BlueSkyBaseURL, "bluesky-base-url", "https://bsky.social", "bluesky node baseurl")
+	flag.StringVar(&NeynarApiKey, "neynar-api-key", "", "neynar api key")
 	flag.BoolVar(&help, "h", false, "print help")
 	flag.StringVar(&PocketBaseURL, pocketBaseURLFlag, env.PocketBaseURL, "pocketbase base API URL")
 	flag.BoolVar(&ProdMode, "prod", false, "enable production mode ( its in dev mode by default )")
@@ -36,6 +40,10 @@ func init() {
 	if help {
 		flag.PrintDefaults()
 		os.Exit(0)
+	}
+
+	if "" == NeynarApiKey {
+		panic("Neynar Api key cannot be empty.")
 	}
 
 	if "" == PocketBaseURL {

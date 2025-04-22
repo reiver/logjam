@@ -1,6 +1,7 @@
 package main
 
 import (
+	dbsrv "github.com/reiver/logjam/srv/db"
 	"net/http"
 
 	"github.com/reiver/logjam/cfg"
@@ -15,6 +16,10 @@ func webserve() {
 	var tcpaddr string = cfg.Config.WebServerTCPAddress()
 	log.Infof("serving HTTP on TCP address: %q", tcpaddr)
 
+	err := dbsrv.Initialize(dbsrv.PocketBase)
+	if err != nil {
+		panic(err)
+	}
 	err := http.ListenAndServe(tcpaddr, httpsrv.Router)
 	if nil != err {
 		log.Errorf("ERROR: problem with serving HTTP on TCP address %q: %s", tcpaddr, err)
