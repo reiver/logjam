@@ -19,11 +19,17 @@ type pocketBaseDBService struct {
 	AdminToken string
 }
 
-func NewPocketBaseDBService(baseURL, adminToken string) IDBService {
+func NewPocketBaseDBService(baseURL, token string) IDBService {
+	//token, err := authenticate(baseURL, username, password)
+	//if err != nil {
+	//	panic(err)
+	//	return nil
+	//}
+
 	return &pocketBaseDBService{
 		BaseURL:    baseURL,
 		Client:     &http.Client{},
-		AdminToken: adminToken,
+		AdminToken: token,
 	}
 }
 
@@ -130,9 +136,35 @@ func (p *pocketBaseDBService) CreateTableIfNotExists(cname string, fields []Fiel
 	// create with minimal required fields
 	url := fmt.Sprintf("%s/api/collections", p.BaseURL)
 	payload := map[string]any{
-		"name":       cname,
-		"type":       "base",
-		"schema":     []any{}, // add fields later via Update
+		"name":   cname,
+		"type":   "base",
+		"fields": []any{
+			/*
+									map[string]any{
+					"id":       "name",
+					"name":     "name",
+					"type":     "text",
+					"required": true,
+					"unique":   false,
+					"options": map[string]any{
+						"min":     1,
+						"max":     0,
+						"pattern": "",
+					},
+				},
+				map[string]any{
+					"id":       "age",
+					"name":     "age",
+					"type":     "number",
+					"required": true,
+					"unique":   false,
+					"options": map[string]any{
+						"min": 0,
+						"max": 0,
+					},
+				},
+			*/
+		},
 		"listRule":   "",
 		"viewRule":   "",
 		"createRule": "",
@@ -140,6 +172,56 @@ func (p *pocketBaseDBService) CreateTableIfNotExists(cname string, fields []Fiel
 		"deleteRule": "",
 		"options":    map[string]any{},
 	}
+
+	getType := func(t TDBFieldType) string {
+		switch t {
+		case StringType:
+			return "text"
+		case EmailType:
+			return "email"
+		case UnsignedInteger64Type, FloatType, IntegerType:
+			return "number"
+		case BooleanType:
+			return "bool"
+		case DateType:
+			return "date"
+		case AutodateType:
+			return "autodate"
+		default:
+			return "text"
+		}
+	}
+	for _, f := range fields {
+		payload["fields"] = append(payload["fields"].([]any), map[string]any{
+			//"id":       f.Name,
+			"name":     f.Name,
+			"type":     getType(f.Type),
+			"required": false,
+			"unique":   f.Unique,
+		})
+	}
+	payload["fields"] = append(payload["fields"].([]any),
+		// created @ record creation
+		map[string]any{
+			"id":       "created",
+			"name":     "created",
+			"type":     getType(AutodateType),
+			"required": false,
+			"unique":   false,
+			"onCreate": true,
+			// PocketBase will auto‑set on create :contentReference[oaicite:0]{index=0}
+		},
+		// updated on every record update
+		map[string]any{
+			"id":       "updated",
+			"name":     "updated",
+			"type":     getType(AutodateType),
+			"required": false,
+			"unique":   false,
+			"onUpdate": true,
+			// PocketBase will auto‑set on update :contentReference[oaicite:1]{index=1}
+		},
+	)
 	return p.post(url, payload)
 }
 
@@ -164,9 +246,27 @@ func (p *pocketBaseDBService) GetByFilter(cname string, filters map[string]any) 
 		default:
 			lit = fmt.Sprintf("%v", t)
 		}
-		parts = append(parts, fmt.Sprintf("(%s=%s)", k, lit))
+
+		if strings.Contains(k, "[") {
+			field := k[:strings.Index(k, "[")]
+			op := k[strings.Index(k, "[")+1 : strings.Index(k, "]")]
+			symbol := map[string]string{
+				"gte": ">=",
+				"lte": "<=",
+				"gt":  ">",
+				"lt":  "<",
+				"ne":  "!=",
+			}[op]
+			if symbol == "" {
+				symbol = "="
+			}
+			parts = append(parts, fmt.Sprintf("(%s %s %s)", field, symbol, lit))
+		} else {
+			parts = append(parts, fmt.Sprintf("(%s = %s)", k, lit))
+		}
+		//parts = append(parts, fmt.Sprintf("(%s=%s)", k, lit))
 	}
-	expr := strings.Join(parts, "&&")
+	expr := strings.Join(parts, " && ")
 	u := fmt.Sprintf("%s/api/collections/%s/records?filter=%s", p.BaseURL, cname, url.QueryEscape(expr))
 
 	var resp struct {
@@ -192,6 +292,23 @@ func (p *pocketBaseDBService) GetAll(cname string) ([]Record, error) {
 func (p *pocketBaseDBService) Update(cname, id string, data map[string]any) error {
 	url := fmt.Sprintf("%s/api/collections/%s/records/%s", p.BaseURL, cname, id)
 	return p.patch(url, data)
+}
+
+func (p *pocketBaseDBService) Insert(cname string, data map[string]any) (string, error) {
+	// Build URL for creating a new record
+	url := fmt.Sprintf("%s/api/collections/%s/records", p.BaseURL, cname)
+
+	// Send POST request with the data
+	var response struct {
+		Record Record `json:"record"`
+	}
+	err := p.post(url, data)
+	if err != nil {
+		return "", err
+	}
+
+	// Return the created record's ID
+	return response.Record["id"].(string), nil
 }
 
 func (p *pocketBaseDBService) Delete(cname, id string) error {

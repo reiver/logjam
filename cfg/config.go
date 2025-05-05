@@ -11,6 +11,8 @@ var config libcfg.Model = libcfg.Model{
 	WebServerTCPAddress: flg.WebServerTCPAddress,
 	BlueSkyBaseURL:      flg.BlueSkyBaseURL,
 	NeynarApiKey:        flg.NeynarApiKey,
+	PocketBaseURL:       flg.PocketBaseURL,
+	PocketBaseAuthToken: flg.PocketBaseAuthToken,
 }
 
 var Config libcfg.Configurer = libcfg.Wrap(config)

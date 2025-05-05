@@ -16,6 +16,7 @@ var (
 	NeynarApiKey        string
 	help                bool
 	PocketBaseURL       string
+	PocketBaseAuthToken string
 	ProdMode            bool
 	WebServerTCPAddress string
 )
@@ -32,6 +33,7 @@ func init() {
 	flag.StringVar(&NeynarApiKey, "neynar-api-key", "", "neynar api key")
 	flag.BoolVar(&help, "h", false, "print help")
 	flag.StringVar(&PocketBaseURL, pocketBaseURLFlag, env.PocketBaseURL, "pocketbase base API URL")
+	flag.StringVar(&PocketBaseAuthToken, "pb-auth-token", "", "pocketbase auth token")
 	flag.BoolVar(&ProdMode, "prod", false, "enable production mode ( its in dev mode by default )")
 	flag.StringVar(&WebServerTCPAddress, "src", defaultSrc, "source listen address")
 

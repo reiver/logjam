@@ -27,6 +27,10 @@ func (receiver wrapper) PocketBaseURL() string {
 	return receiver.internal.PocketBaseURL
 }
 
+func (receiver wrapper) PocketBaseAuthToken() string {
+	return receiver.internal.PocketBaseAuthToken
+}
+
 func (receiver wrapper) ProdMode() bool {
 	return receiver.internal.ProdMode
 }

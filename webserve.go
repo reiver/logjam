@@ -2,6 +2,7 @@ package main
 
 import (
 	dbsrv "github.com/reiver/logjam/srv/db"
+	schedulersrv "github.com/reiver/logjam/srv/scheduler"
 	"net/http"
 
 	"github.com/reiver/logjam/cfg"
@@ -20,7 +21,8 @@ func webserve() {
 	if err != nil {
 		panic(err)
 	}
-	err := http.ListenAndServe(tcpaddr, httpsrv.Router)
+	schedulersrv.SchedulerSrv.Start()
+	err = http.ListenAndServe(tcpaddr, httpsrv.Router)
 	if nil != err {
 		log.Errorf("ERROR: problem with serving HTTP on TCP address %q: %s", tcpaddr, err)
 		panic(err)

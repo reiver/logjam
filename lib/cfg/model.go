@@ -5,6 +5,7 @@ type Model struct {
 	BlueSkyBaseURL      string
 	NeynarApiKey        string
 	PocketBaseURL       string
+	PocketBaseAuthToken string
 	ProdMode            bool
 	WebServerTCPAddress string
 }

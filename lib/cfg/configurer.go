@@ -5,6 +5,7 @@ type Configurer interface {
 	BlueSkyBaseURL() string
 	GoldGorillaBaseURL() string
 	PocketBaseURL() string
+	PocketBaseAuthToken() string
 	ProdMode() bool
 	WebServerTCPAddress() string
 }
