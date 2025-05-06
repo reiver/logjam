@@ -175,7 +175,7 @@ func (p *pocketBaseDBService) CreateTableIfNotExists(cname string, fields []Fiel
 
 	getType := func(t TDBFieldType) string {
 		switch t {
-		case StringType:
+		case StringType, TextType:
 			return "text"
 		case EmailType:
 			return "email"
@@ -187,6 +187,8 @@ func (p *pocketBaseDBService) CreateTableIfNotExists(cname string, fields []Fiel
 			return "date"
 		case AutodateType:
 			return "autodate"
+		case FileType:
+			return string(FileType)
 		default:
 			return "text"
 		}

@@ -188,6 +188,10 @@ func Initialize(dbServiceType TDBService) error {
 				Type: db.StringType,
 			},
 			{
+				Name: "ownerId",
+				Type: db.StringType,
+			},
+			{
 				Name: "data",
 				Type: db.StringType,
 			},
@@ -196,18 +200,18 @@ func Initialize(dbServiceType TDBService) error {
 				Type: db.StringType,
 			},
 			{
-				Name: "filehash",
+				Name: "fileHash",
 				Type: db.StringType,
 			},
 			{
-				Name: "lastused",
+				Name: "lastUsed",
 				Type: db.BooleanType,
 			},
 		})
 		if err != nil {
 			return err
 		}
-		err = Repository.CreateTableIfNotExists("wallet", []db.Field{
+		err = Repository.CreateTableIfNotExists("wallets", []db.Field{
 			{
 				Name: "address",
 				Type: db.StringType,
@@ -225,7 +229,7 @@ func Initialize(dbServiceType TDBService) error {
 				Type: db.StringType,
 			},
 			{
-				Name: "userId",
+				Name: "ownerId",
 				Type: db.StringType,
 			},
 			{

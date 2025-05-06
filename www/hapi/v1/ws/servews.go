@@ -6,17 +6,15 @@ import (
 	"github.com/gorilla/websocket"
 
 	"github.com/reiver/logjam/lib/msgs"
-	"github.com/reiver/logjam/lib/rooms"
-	"github.com/reiver/logjam/srv/room"
+	"github.com/reiver/logjam/lib/rtc-rooms"
 )
-
 
 func serveWS(wsConn *websocket.Conn, socketId uint64, roomId string) {
 	for {
 		messageType, data, readErr := wsConn.ReadMessage()
 		if readErr != nil {
 			log.Error(readErr)
-			go roomsrv.Controller.OnDisconnect(&rooms.WSContext{
+			go rtcroomsrv.Controller.OnDisconnect(&rtc_rooms.WSContext{
 				RoomId:        roomId,
 				SocketID:      socketId,
 				PureMessage:   nil,
@@ -37,7 +35,7 @@ func serveWS(wsConn *websocket.Conn, socketId uint64, roomId string) {
 			continue
 		}
 
-		ctx := &rooms.WSContext{
+		ctx := &rtc_rooms.WSContext{
 			RoomId:        roomId,
 			SocketID:      socketId,
 			PureMessage:   data,
