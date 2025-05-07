@@ -22,10 +22,15 @@ func serveHTTP(responsewriter http.ResponseWriter, request *http.Request) {
 		http.Error(responsewriter, http.StatusText(code), code)
 		return
 	}
-	room, err := roomsrv.Repository.GetRoom(request.URL.Query().Get("roomId"))
+	uid := request.URL.Query().Get("roomUID")
+	room, err := roomsrv.Repository.GetRoom(uid)
 	if rest.HandleIfErr(responsewriter, err, 500) {
 		return
 	}
 
-	_ = rest.Write(responsewriter, room, http.StatusOK)
+	if room == nil {
+		_ = rest.Write(responsewriter, nil, http.StatusNotFound)
+	} else {
+		_ = rest.Write(responsewriter, room, http.StatusOK)
+	}
 }

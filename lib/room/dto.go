@@ -1,6 +1,8 @@
 package room
 
-import "time"
+import (
+	dbsrv "github.com/reiver/logjam/srv/db"
+)
 
 type CreateRoomDTO struct {
 	OwnerID     string `json:"ownerId"`
@@ -11,7 +13,7 @@ type CreateRoomDTO struct {
 }
 
 type UpdateRoomDTO struct {
-	OwnerID     string  `json:"ownerId" validate:"required"`
+	OwnerID     string  `json:"-"`
 	UID         string  `json:"UID" validate:"required"`
 	Title       *string `json:"title,omitempty"`
 	Description *string `json:"description,omitempty"`
@@ -19,12 +21,12 @@ type UpdateRoomDTO struct {
 }
 
 type RoomDTO struct {
-	ID          string    `json:"id"`
-	UID         string    `json:"UID"`
-	OwnerID     string    `json:"ownerId"`
-	Title       string    `json:"title"`
-	Description string    `json:"description"`
-	Thumbnail   string    `json:"thumbnail"`
-	Created     time.Time `json:"created"`
-	Updated     time.Time `json:"updated"`
+	ID          string        `json:"id"`
+	UID         string        `json:"UID"`
+	OwnerID     string        `json:"ownerId"`
+	Title       string        `json:"title"`
+	Description string        `json:"description"`
+	Thumbnail   string        `json:"thumbnail"`
+	Created     dbsrv.PBTime  `json:"created"`
+	Updated     *dbsrv.PBTime `json:"updated"`
 }

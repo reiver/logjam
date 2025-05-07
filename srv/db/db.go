@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"github.com/reiver/logjam/cfg"
 	"github.com/reiver/logjam/lib/db"
+	"strings"
+	"time"
 )
 
 var Repository db.IDBService
@@ -80,7 +82,7 @@ func Initialize(dbServiceType TDBService) error {
 
 		err = Repository.CreateTableIfNotExists("blueskySessions", []db.Field{
 			{
-				Name:   "userId",
+				Name:   "ownerId",
 				Type:   db.TextType,
 				Unique: true,
 			},
@@ -243,5 +245,34 @@ func Initialize(dbServiceType TDBService) error {
 		}
 	}
 
+	return nil
+}
+
+type PBTime time.Time
+
+func (t PBTime) MarshalJSON() ([]byte, error) {
+	// convert back to time.Time
+	tt := time.Time(t)
+	if tt.IsZero() {
+		return []byte(`""`), nil
+	}
+	// format with the same layout PocketBase uses
+	s := tt.Format("2006-01-02T15:04:05.000Z")
+	// wrap in quotes for valid JSON string
+	return []byte(`"` + s + `"`), nil
+}
+func (t *PBTime) UnmarshalJSON(b []byte) error {
+	if len(b) == 2 {
+		return nil
+	}
+	s := strings.Trim(string(b), `"`)
+	// swap the space for a “T”
+	s = strings.Replace(s, " ", "T", 1)
+	// parse with high‑precision RFC3339
+	tt, err := time.Parse(time.RFC3339Nano, s)
+	if err != nil {
+		return err
+	}
+	*t = PBTime(tt)
 	return nil
 }

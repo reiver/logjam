@@ -10,10 +10,10 @@ import (
 	"net/http"
 )
 
-const path string = "/bluesky/refresh"
+const path string = "/hapi/v1/bluesky/refresh"
 
 func init() {
-	httpsrv.Router.HandleFunc(path, serveHTTP).Methods(http.MethodPost, http.MethodOptions)
+	httpsrv.RouterWithAuth.HandleFunc(path, serveHTTP).Methods(http.MethodPost, http.MethodOptions)
 }
 
 func serveHTTP(responsewriter http.ResponseWriter, request *http.Request) {

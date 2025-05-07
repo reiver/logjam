@@ -13,7 +13,7 @@ type TextPostRecord struct {
 	CreatedAt string `json:"createdAt"`
 }
 type IBlueSkyServiceRepository interface {
-	SaveLastTokens(accessKeys AK) error
+	SaveLastTokens(accessKeys AK, ownerId string) error
 	RefreshTokens(accessKeys AK) (AK, error)
 	CreatePost(did, text string) error
 }

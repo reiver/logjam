@@ -22,10 +22,11 @@ const (
 	sessionsTable = "blueSkySessions"
 
 	//keys
-	accessTokenKey  = "accessJwt"
-	refreshTokenKey = "refreshJwt"
+	accessTokenKey  = "accessToken"
+	refreshTokenKey = "refreshToken"
 	handleKey       = "handle"
 	didKey          = "did"
+	ownerIdKey      = "ownerId"
 )
 
 func NewHTTPRepository(svcAddr string) IBlueSkyServiceRepository {
@@ -38,13 +39,26 @@ func NewHTTPRepository(svcAddr string) IBlueSkyServiceRepository {
 	}
 }
 
-func (repo *httpRepository) SaveLastTokens(accessKeys AK) error {
-	return dbsrv.Repository.UpdateByFilter(sessionsTable, map[string]any{didKey: accessKeys.DID}, map[string]any{
+func (repo *httpRepository) SaveLastTokens(accessKeys AK, ownerId string) error {
+	rows, err := dbsrv.Repository.GetByFilter(sessionsTable, map[string]any{
+		ownerIdKey: ownerId,
+	})
+	if err != nil {
+		return err
+	}
+	if rows != nil && len(rows) > 0 {
+		for _, r := range rows {
+			dbsrv.Repository.Delete(sessionsTable, r["id"].(string))
+		}
+	}
+	_, err = dbsrv.Repository.Insert(sessionsTable, map[string]any{
 		accessTokenKey:  accessKeys.AccessToken,
 		refreshTokenKey: accessKeys.RefreshToken,
 		didKey:          accessKeys.DID,
 		handleKey:       accessKeys.Handle,
+		ownerIdKey:      ownerId,
 	})
+	return err
 }
 
 func (repo *httpRepository) RefreshTokens(ak AK) (AK, error) {
@@ -91,11 +105,11 @@ func (repo *httpRepository) RefreshTokens(ak AK) (AK, error) {
 		Handle:       res.Handle,
 		DID:          res.DID,
 	}
-	return ak, repo.SaveLastTokens(ak)
+	return ak, repo.SaveLastTokens(ak, "")
 }
 
-func (repo *httpRepository) getAK(did string) (*AK, error) {
-	recs, err := dbsrv.Repository.GetByFilter(sessionsTable, map[string]any{didKey: did})
+func (repo *httpRepository) getAK(ownerId string) (*AK, error) {
+	recs, err := dbsrv.Repository.GetByFilter(sessionsTable, map[string]any{ownerIdKey: ownerId})
 	if err != nil {
 		return nil, err
 	}
@@ -112,9 +126,9 @@ func (repo *httpRepository) getAK(did string) (*AK, error) {
 }
 
 // CreatePost creates a new post by calling the create post endpoint.
-func (repo *httpRepository) CreatePost(did, text string) error {
+func (repo *httpRepository) CreatePost(ownerId, text string) error {
 	url := fmt.Sprintf("%s/xrpc/com.atproto.repo.createRecord", repo.svcAddr)
-	ak, err := repo.getAK(did)
+	ak, err := repo.getAK(ownerId)
 	if err != nil {
 		return err
 	}
@@ -131,7 +145,7 @@ func (repo *httpRepository) CreatePost(did, text string) error {
 		Collection string      `json:"collection"`
 		Record     interface{} `json:"record"`
 	}{
-		Repo:       did,
+		Repo:       ak.DID,
 		Collection: "app.bsky.feed.post",
 		Record:     post,
 	}

@@ -73,8 +73,8 @@ func (r *roomRepo) UpdateRoom(dto UpdateRoomDTO) error {
 
 func (r *roomRepo) DeleteRoom(UID, ownerId string) error {
 	return dbsrv.Repository.DeleteByFilter(roomTbl, map[string]any{
-		UIDKey:  UID,
-		ownerId: ownerId,
+		UIDKey:     UID,
+		ownerIdKey: ownerId,
 	})
 }
 

@@ -2,7 +2,6 @@ package verboten
 
 import (
 	"encoding/json"
-	"github.com/reiver/logjam/lib/bluesky"
 	"github.com/reiver/logjam/lib/rest"
 	blueskysrv "github.com/reiver/logjam/srv/bluesky"
 	httpsrv "github.com/reiver/logjam/srv/http"
@@ -10,10 +9,15 @@ import (
 	"net/http"
 )
 
-const path string = "/bluesky/submit"
+const path string = "/hapi/v1/bluesky/post"
 
 func init() {
-	httpsrv.Router.HandleFunc(path, serveHTTP).Methods(http.MethodPost, http.MethodOptions)
+	httpsrv.RouterWithAuth.HandleFunc(path, serveHTTP).Methods(http.MethodPost, http.MethodOptions)
+}
+
+type createPostRequestModel struct {
+	DID  string `json:"did"`
+	Text string `json:"text"`
 }
 
 func serveHTTP(responsewriter http.ResponseWriter, request *http.Request) {
@@ -30,16 +34,20 @@ func serveHTTP(responsewriter http.ResponseWriter, request *http.Request) {
 	if rest.HandleIfErr(responsewriter, err, 400) {
 		return
 	}
-	var reqModel bluesky.AK
+	var reqModel createPostRequestModel
 	err = json.Unmarshal(reqBody, &reqModel)
 	if rest.HandleIfErr(responsewriter, err, 400) {
 		return
 	}
-
-	err = blueskysrv.Repository.SaveLastTokens(reqModel)
+	user := rest.GetUser(request)
+	if user == nil {
+		http.Error(responsewriter, "not authenticated", http.StatusInternalServerError)
+		return
+	}
+	err = blueskysrv.Repository.CreatePost(user.ID, reqModel.Text)
 	if rest.HandleIfErr(responsewriter, err, 500) {
 		return
 	}
 
-	_ = rest.Write(responsewriter, nil, 204)
+	_ = rest.Write(responsewriter, nil, http.StatusNoContent)
 }

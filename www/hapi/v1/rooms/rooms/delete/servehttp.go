@@ -27,7 +27,8 @@ func serveHTTP(responsewriter http.ResponseWriter, request *http.Request) {
 		http.Error(responsewriter, "not authenticated", http.StatusInternalServerError)
 		return
 	}
-	err := roomsrv.Repository.DeleteRoom(request.URL.Query().Get("roomId"), user.ID)
+	uid := request.URL.Query().Get("roomUID")
+	err := roomsrv.Repository.DeleteRoom(uid, user.ID)
 	if rest.HandleIfErr(responsewriter, err, 500) {
 		return
 	}

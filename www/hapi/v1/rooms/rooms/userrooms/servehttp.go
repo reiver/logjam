@@ -7,7 +7,7 @@ import (
 	"net/http"
 )
 
-const path string = "/hapi/v1/rooms"
+const path string = "/hapi/v1/rooms/me"
 
 func init() {
 	httpsrv.RouterWithAuth.HandleFunc(path, serveHTTP).Methods(http.MethodGet, http.MethodOptions)
