@@ -3,7 +3,6 @@ package db
 type TDBFieldType string
 
 const (
-	StringType            TDBFieldType = "text"     // single‑line text
 	EmailType             TDBFieldType = "email"    // email address
 	URLType               TDBFieldType = "url"      // URL
 	TextType              TDBFieldType = "text"     // multi‑line/plain text
@@ -36,5 +35,6 @@ type IDBService interface {
 	Update(table, id string, data map[string]any) error
 	UpdateByFilter(table string, filter map[string]any, data map[string]any) error
 	Delete(table, id string) error
+	DeleteByFilter(cname string, filter map[string]any) error
 	Insert(table string, data map[string]any) (id string, err error)
 }

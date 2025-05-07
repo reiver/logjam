@@ -23,7 +23,6 @@ type AddWalletDTO struct {
 }
 
 type UpdateWalletDTO struct {
-	ID          string  `json:"-"`
 	OwnerId     string  `json:"-"`
 	Address     *string `json:"address,omitempty"`
 	Message     *string `json:"message,omitempty"`

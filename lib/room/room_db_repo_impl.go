@@ -1,8 +1,10 @@
 package room
 
 import (
+	"errors"
 	"github.com/reiver/logjam/lib/marshal"
 	dbsrv "github.com/reiver/logjam/srv/db"
+	"strings"
 )
 
 type roomRepo struct {
@@ -11,7 +13,8 @@ type roomRepo struct {
 const (
 	roomTbl = "rooms"
 
-	UIDKey = "UID"
+	UIDKey     = "UID"
+	ownerIdKey = "ownerId"
 )
 
 func NewRoomRepository() IRoomRepository {
@@ -19,6 +22,14 @@ func NewRoomRepository() IRoomRepository {
 }
 
 func (r *roomRepo) CreateRoom(dto CreateRoomDTO) error {
+	if len(dto.UID) < 6 || len(dto.UID) > 32 {
+		return errors.New("invalid UID len. min: 6, max: 32")
+	}
+	room, _ := r.GetRoom(strings.ToLower(dto.UID))
+	if room != nil && len(room.UID) > 0 {
+		return errors.New("this room UID is taken")
+	}
+	dto.UID = strings.ToLower(dto.UID)
 	data, err := marshal.ObjToMap(dto)
 	if err != nil {
 		return err
@@ -27,8 +38,10 @@ func (r *roomRepo) CreateRoom(dto CreateRoomDTO) error {
 	return err
 }
 
-func (r *roomRepo) GetRoom(UID, ownerId string) (result *RoomDTO, err error) {
-	rows, err := dbsrv.Repository.GetByFilter(roomTbl, map[string]any{UIDKey: UID})
+func (r *roomRepo) GetRoom(UID string) (result *RoomDTO, err error) {
+	rows, err := dbsrv.Repository.GetByFilter(roomTbl, map[string]any{
+		UIDKey: UID,
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -41,15 +54,37 @@ func (r *roomRepo) GetRoom(UID, ownerId string) (result *RoomDTO, err error) {
 }
 
 func (r *roomRepo) UpdateRoom(dto UpdateRoomDTO) error {
-	//TODO implement me
-	panic("implement me")
+	room, err := r.GetRoom(dto.UID)
+	if err != nil {
+		return err
+	}
+	if room.OwnerID != dto.OwnerID {
+		return errors.New("access denied")
+	}
+	data, err := marshal.ObjToMap(dto)
+	if err != nil {
+		return err
+	}
+	return dbsrv.Repository.UpdateByFilter(roomTbl, map[string]any{
+		UIDKey:     dto.UID,
+		ownerIdKey: dto.OwnerID,
+	}, data)
 }
 
 func (r *roomRepo) DeleteRoom(UID, ownerId string) error {
-	//TODO implement me
-	panic("implement me")
+	return dbsrv.Repository.DeleteByFilter(roomTbl, map[string]any{
+		UIDKey:  UID,
+		ownerId: ownerId,
+	})
 }
 
-func (r *roomRepo) GetUserRooms(UserId string) ([]RoomDTO, error) {
-	return nil, nil
+func (r *roomRepo) GetUserRooms(UserId string) (result []RoomDTO, err error) {
+	rows, err := dbsrv.Repository.GetByFilter(roomTbl, map[string]any{
+		ownerIdKey: UserId,
+	})
+	if err != nil {
+		return nil, err
+	}
+	err = marshal.MapArrayToObjArray(rows, &result)
+	return
 }

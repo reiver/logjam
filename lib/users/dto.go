@@ -7,14 +7,14 @@ type CreateUserDTO struct {
 	Bio      string `json:"bio"`
 }
 
-type CreateOTPDTO struct {
+type OTPDTO struct {
 	Email string `json:"email" validate:"required,email"`
-	Code  string `json:"code" validate:"required"` // assuming 6-digit numeric
+	OTP   string `json:"otp" validate:"required"` // assuming 6-digit numeric
 }
 
 type CompleteSignUpDTO struct {
 	Email string `json:"email" validate:"required,email"`
-	Code  string `json:"code" validate:"required,numeric"`
+	Code  string `json:"otp" validate:"required,numeric"`
 	Name  string `json:"name" validate:"required"`
 }
 

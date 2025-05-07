@@ -13,7 +13,7 @@ import (
 const path string = "/hapi/v1/layouts"
 
 func init() {
-	httpsrv.Router.HandleFunc(path, serveHTTP).Methods(http.MethodPost, http.MethodOptions)
+	httpsrv.RouterWithAuth.HandleFunc(path, serveHTTP).Methods(http.MethodPost, http.MethodOptions)
 }
 
 func serveHTTP(responsewriter http.ResponseWriter, request *http.Request) {
@@ -23,6 +23,11 @@ func serveHTTP(responsewriter http.ResponseWriter, request *http.Request) {
 	if nil == request {
 		const code int = http.StatusInternalServerError
 		http.Error(responsewriter, http.StatusText(code), code)
+		return
+	}
+	user := rest.GetUser(request)
+	if user == nil {
+		http.Error(responsewriter, "not authenticated", http.StatusInternalServerError)
 		return
 	}
 	reqBody, err := io.ReadAll(request.Body)
@@ -35,7 +40,7 @@ func serveHTTP(responsewriter http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	req.OwnerId = "" //read from token
+	req.OwnerId = user.ID //read from token
 	resp, err := layoutssrv.Repository.Create(req)
 	if rest.HandleIfErr(responsewriter, err, 500) {
 		return

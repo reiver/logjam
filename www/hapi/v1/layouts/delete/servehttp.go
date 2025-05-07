@@ -12,7 +12,7 @@ import (
 const path string = "/hapi/v1/layouts"
 
 func init() {
-	httpsrv.Router.HandleFunc(path, serveHTTP).Methods(http.MethodDelete, http.MethodOptions)
+	httpsrv.RouterWithAuth.HandleFunc(path, serveHTTP).Methods(http.MethodDelete, http.MethodOptions)
 }
 
 type deleteLayoutReqModel struct {
@@ -38,7 +38,12 @@ func serveHTTP(responsewriter http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	err = layoutssrv.Repository.DeleteLayout(req.ID, "")
+	user := rest.GetUser(request)
+	if user == nil {
+		http.Error(responsewriter, "not authenticated", http.StatusInternalServerError)
+		return
+	}
+	err = layoutssrv.Repository.DeleteLayout(req.ID, user.ID)
 	if rest.HandleIfErr(responsewriter, err, 500) {
 		return
 	}

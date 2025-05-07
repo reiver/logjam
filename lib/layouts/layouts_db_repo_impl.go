@@ -39,6 +39,8 @@ func (l *layoutsRepo) GetUserLayouts(userId string) (layouts []LayoutDTO, err er
 }
 
 func (l *layoutsRepo) DeleteLayout(id, ownerId string) error {
-	//TODO implement me
-	panic("implement me")
+	return dbsrv.Repository.DeleteByFilter(layoutsTbl, map[string]any{
+		"id":       id,
+		ownerIdKey: ownerId,
+	})
 }

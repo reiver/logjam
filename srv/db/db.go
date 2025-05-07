@@ -39,11 +39,11 @@ func Initialize(dbServiceType TDBService) error {
 		err := Repository.CreateTableIfNotExists("userstbl", []db.Field{
 			{
 				Name: "name",
-				Type: db.StringType,
+				Type: db.TextType,
 			},
 			{
 				Name:   "username",
-				Type:   db.StringType,
+				Type:   db.TextType,
 				Unique: true,
 			},
 			{
@@ -57,7 +57,7 @@ func Initialize(dbServiceType TDBService) error {
 			},
 			{
 				Name: "bio",
-				Type: db.StringType,
+				Type: db.TextType,
 			},
 		})
 		if err != nil {
@@ -66,8 +66,8 @@ func Initialize(dbServiceType TDBService) error {
 
 		err = Repository.CreateTableIfNotExists("otps", []db.Field{
 			{
-				Name: "userId",
-				Type: db.StringType,
+				Name: "email",
+				Type: db.EmailType,
 			},
 			{
 				Name: "otp",
@@ -81,25 +81,25 @@ func Initialize(dbServiceType TDBService) error {
 		err = Repository.CreateTableIfNotExists("blueskySessions", []db.Field{
 			{
 				Name:   "userId",
-				Type:   db.StringType,
+				Type:   db.TextType,
 				Unique: true,
 			},
 			{
 				Name: "accessToken",
-				Type: db.StringType,
+				Type: db.TextType,
 			},
 			{
 				Name: "refreshToken",
-				Type: db.StringType,
+				Type: db.TextType,
 			},
 			{
 				Name:   "did",
-				Type:   db.StringType,
+				Type:   db.TextType,
 				Unique: true,
 			},
 			{
 				Name: "handle",
-				Type: db.StringType,
+				Type: db.TextType,
 			},
 			{
 				Name: "email",
@@ -107,7 +107,7 @@ func Initialize(dbServiceType TDBService) error {
 			},
 			{
 				Name: "serviceAddress",
-				Type: db.StringType,
+				Type: db.TextType,
 			},
 		})
 		if err != nil {
@@ -117,15 +117,15 @@ func Initialize(dbServiceType TDBService) error {
 		err = Repository.CreateTableIfNotExists("neynarIDs", []db.Field{
 			{
 				Name: "userId",
-				Type: db.StringType,
+				Type: db.TextType,
 			},
 			{
 				Name: "fid",
-				Type: db.StringType,
+				Type: db.TextType,
 			},
 			{
 				Name: "signerUUID",
-				Type: db.StringType,
+				Type: db.TextType,
 			},
 		})
 		if err != nil {
@@ -135,20 +135,20 @@ func Initialize(dbServiceType TDBService) error {
 		err = Repository.CreateTableIfNotExists("rooms", []db.Field{
 			{
 				Name:   "UID",
-				Type:   db.StringType,
+				Type:   db.TextType,
 				Unique: true,
 			},
 			{
 				Name: "ownerId",
-				Type: db.StringType,
+				Type: db.TextType,
 			},
 			{
 				Name: "title",
-				Type: db.StringType,
+				Type: db.TextType,
 			},
 			{
 				Name: "description",
-				Type: db.StringType,
+				Type: db.TextType,
 			},
 			{
 				Name: "thumbnail",
@@ -166,7 +166,7 @@ func Initialize(dbServiceType TDBService) error {
 			},
 			{
 				Name: "roomId",
-				Type: db.StringType,
+				Type: db.TextType,
 			},
 		})
 		if err != nil {
@@ -185,23 +185,23 @@ func Initialize(dbServiceType TDBService) error {
 		err = Repository.CreateTableIfNotExists("layouts", []db.Field{
 			{
 				Name: "name",
-				Type: db.StringType,
+				Type: db.TextType,
 			},
 			{
 				Name: "ownerId",
-				Type: db.StringType,
+				Type: db.TextType,
 			},
 			{
 				Name: "data",
-				Type: db.StringType,
+				Type: db.TextType,
 			},
 			{
 				Name: "type",
-				Type: db.StringType,
+				Type: db.TextType,
 			},
 			{
 				Name: "fileHash",
-				Type: db.StringType,
+				Type: db.TextType,
 			},
 			{
 				Name: "lastUsed",
@@ -214,23 +214,23 @@ func Initialize(dbServiceType TDBService) error {
 		err = Repository.CreateTableIfNotExists("wallets", []db.Field{
 			{
 				Name: "address",
-				Type: db.StringType,
+				Type: db.TextType,
 			},
 			{
 				Name: "message",
-				Type: db.StringType,
+				Type: db.TextType,
 			},
 			{
 				Name: "signature",
-				Type: db.StringType,
+				Type: db.TextType,
 			},
 			{
 				Name: "ens",
-				Type: db.StringType,
+				Type: db.TextType,
 			},
 			{
 				Name: "ownerId",
-				Type: db.StringType,
+				Type: db.TextType,
 			},
 			{
 				Name: "isConnected",

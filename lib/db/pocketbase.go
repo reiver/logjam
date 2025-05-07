@@ -175,7 +175,7 @@ func (p *pocketBaseDBService) CreateTableIfNotExists(cname string, fields []Fiel
 
 	getType := func(t TDBFieldType) string {
 		switch t {
-		case StringType, TextType:
+		case TextType:
 			return "text"
 		case EmailType:
 			return "email"
@@ -326,6 +326,24 @@ func (p *pocketBaseDBService) Delete(cname, id string) error {
 		b, _ := io.ReadAll(res.Body)
 		return errors.New(string(b))
 	}
+	return nil
+}
+func (p *pocketBaseDBService) DeleteByFilter(cname string, filter map[string]any) error {
+	records, err := p.GetByFilter(cname, filter)
+	if err != nil {
+		return err
+	}
+
+	for _, rec := range records {
+		id, ok := rec["id"].(string)
+		if !ok || id == "" {
+			continue
+		}
+		if err := p.Delete(cname, id); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 

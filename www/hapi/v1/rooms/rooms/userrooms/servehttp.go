@@ -10,7 +10,7 @@ import (
 const path string = "/hapi/v1/rooms"
 
 func init() {
-	httpsrv.Router.HandleFunc(path, serveHTTP).Methods(http.MethodGet, http.MethodOptions)
+	httpsrv.RouterWithAuth.HandleFunc(path, serveHTTP).Methods(http.MethodGet, http.MethodOptions)
 }
 
 func serveHTTP(responsewriter http.ResponseWriter, request *http.Request) {
@@ -22,8 +22,12 @@ func serveHTTP(responsewriter http.ResponseWriter, request *http.Request) {
 		http.Error(responsewriter, http.StatusText(code), code)
 		return
 	}
-	id := "" //read from token
-	rooms, err := roomsrv.Repository.GetUserRooms(id)
+	user := rest.GetUser(request)
+	if user == nil {
+		http.Error(responsewriter, "not authenticated", http.StatusInternalServerError)
+		return
+	}
+	rooms, err := roomsrv.Repository.GetUserRooms(user.ID)
 	if rest.HandleIfErr(responsewriter, err, 500) {
 		return
 	}

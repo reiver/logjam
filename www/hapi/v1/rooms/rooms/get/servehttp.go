@@ -22,8 +22,7 @@ func serveHTTP(responsewriter http.ResponseWriter, request *http.Request) {
 		http.Error(responsewriter, http.StatusText(code), code)
 		return
 	}
-	id := "" //read from token
-	room, err := roomsrv.Repository.GetRoom(request.URL.Query().Get("roomId"), id)
+	room, err := roomsrv.Repository.GetRoom(request.URL.Query().Get("roomId"))
 	if rest.HandleIfErr(responsewriter, err, 500) {
 		return
 	}

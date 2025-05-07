@@ -17,6 +17,7 @@ require (
 
 require (
 	github.com/bluesky-social/indigo v0.0.0-20250408072029-63f3f48e1e16 // indirect
+	github.com/golang-jwt/jwt/v5 v5.2.2 // indirect
 	github.com/reiver/go-json v0.0.0-20241213105958-0fd2a5bb4dd8 // indirect
 	github.com/reiver/go-lck v0.0.0-20240808133902-b56df221c39f // indirect
 	golang.org/x/net v0.23.0 // indirect

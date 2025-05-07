@@ -13,7 +13,7 @@ import (
 const path string = "/hapi/v1/rooms"
 
 func init() {
-	httpsrv.Router.HandleFunc(path, serveHTTP).Methods(http.MethodPatch, http.MethodOptions)
+	httpsrv.RouterWithAuth.HandleFunc(path, serveHTTP).Methods(http.MethodPatch, http.MethodOptions)
 }
 
 func serveHTTP(responsewriter http.ResponseWriter, request *http.Request) {
@@ -34,8 +34,12 @@ func serveHTTP(responsewriter http.ResponseWriter, request *http.Request) {
 	if rest.HandleIfErr(responsewriter, err, 400) {
 		return
 	}
-
-	req.OwnerID = "" //read from token
+	user := rest.GetUser(request)
+	if user == nil {
+		http.Error(responsewriter, "not authenticated", http.StatusInternalServerError)
+		return
+	}
+	req.OwnerID = user.ID
 	err = roomsrv.Repository.UpdateRoom(req)
 	if rest.HandleIfErr(responsewriter, err, 500) {
 		return

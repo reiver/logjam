@@ -13,7 +13,7 @@ import (
 const path string = "/hapi/v1/users/profile"
 
 func init() {
-	httpsrv.Router.HandleFunc(path, serveHTTP).Methods(http.MethodPatch, http.MethodOptions)
+	httpsrv.RouterWithAuth.HandleFunc(path, serveHTTP).Methods(http.MethodPatch, http.MethodOptions)
 }
 
 func serveHTTP(responsewriter http.ResponseWriter, request *http.Request) {
@@ -35,8 +35,12 @@ func serveHTTP(responsewriter http.ResponseWriter, request *http.Request) {
 	if rest.HandleIfErr(responsewriter, err, 400) {
 		return
 	}
-
-	req.UserID = "" //read from token
+	user := rest.GetUser(request)
+	if user == nil {
+		http.Error(responsewriter, "not authenticated", http.StatusInternalServerError)
+		return
+	}
+	req.UserID = user.ID
 	err = userssrv.Repository.UpdateProfile(req)
 	if rest.HandleIfErr(responsewriter, err, 500) {
 		return

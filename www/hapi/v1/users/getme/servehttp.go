@@ -23,8 +23,12 @@ func serveHTTP(responsewriter http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	id := "" // get from token
-	resp, err := userssrv.Repository.GetMe(id)
+	user := rest.GetUser(request)
+	if user == nil {
+		http.Error(responsewriter, "not authenticated", http.StatusInternalServerError)
+		return
+	}
+	resp, err := userssrv.Repository.GetMe(user.ID)
 	if rest.HandleIfErr(responsewriter, err, 500) {
 		return
 	}

@@ -40,9 +40,9 @@ func serveHTTP(responsewriter http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	err = userssrv.Repository.CreateOTP(users.CreateOTPDTO{
+	err = userssrv.Repository.CreateOTP(users.OTPDTO{
 		Email: req.Email,
-		Code:  "123456",
+		OTP:   "123456",
 	})
 	if rest.HandleIfErr(responsewriter, err, 500) {
 		return

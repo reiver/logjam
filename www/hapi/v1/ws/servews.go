@@ -2,6 +2,7 @@ package verboten
 
 import (
 	"encoding/json"
+	rtcroomsrv "github.com/reiver/logjam/srv/rtc-rooms"
 
 	"github.com/gorilla/websocket"
 

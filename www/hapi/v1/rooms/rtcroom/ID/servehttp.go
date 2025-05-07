@@ -1,6 +1,7 @@
 package verboten
 
 import (
+	rtcroomsrv "github.com/reiver/logjam/srv/rtc-rooms"
 	"net/http"
 
 	"github.com/reiver/go-erorr"
