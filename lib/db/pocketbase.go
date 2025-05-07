@@ -13,6 +13,8 @@ import (
 
 type Record map[string]any
 
+var uselessMap map[string]any
+
 type pocketBaseDBService struct {
 	BaseURL    string
 	Client     *http.Client
@@ -119,7 +121,7 @@ func (p *pocketBaseDBService) Initialize() error {
 		"options":    map[string]any{},
 	}
 
-	return p.post(url, payload)
+	return p.post(url, payload, &uselessMap)
 }
 func (p *pocketBaseDBService) CreateTableIfNotExists(cname string, fields []Field) error {
 	// check existing
@@ -224,7 +226,7 @@ func (p *pocketBaseDBService) CreateTableIfNotExists(cname string, fields []Fiel
 			// PocketBase will auto‑set on update :contentReference[oaicite:1]{index=1}
 		},
 	)
-	return p.post(url, payload)
+	return p.post(url, payload, &uselessMap)
 }
 
 func (p *pocketBaseDBService) GetById(cname, id string) (Record, error) {
@@ -301,16 +303,14 @@ func (p *pocketBaseDBService) Insert(cname string, data map[string]any) (string,
 	url := fmt.Sprintf("%s/api/collections/%s/records", p.BaseURL, cname)
 
 	// Send POST request with the data
-	var response struct {
-		Record Record `json:"record"`
-	}
-	err := p.post(url, data)
+	var response Record
+	err := p.post(url, data, &response)
 	if err != nil {
 		return "", err
 	}
 
 	// Return the created record's ID
-	return response.Record["id"].(string), nil
+	return response["id"].(string), nil
 }
 
 func (p *pocketBaseDBService) Delete(cname, id string) error {
@@ -371,7 +371,7 @@ func (p *pocketBaseDBService) get(url string, target any) error {
 	return parseResp(res, target)
 }
 
-func (p *pocketBaseDBService) post(url string, body map[string]any) error {
+func (p *pocketBaseDBService) post(url string, body map[string]any, target any) error {
 	buf, _ := json.Marshal(body)
 	req, _ := http.NewRequest("POST", url, bytes.NewReader(buf))
 	p.addAuth(req)
@@ -381,7 +381,11 @@ func (p *pocketBaseDBService) post(url string, body map[string]any) error {
 		return err
 	}
 	defer res.Body.Close()
-	return checkResp(res)
+	b, _ := io.ReadAll(res.Body)
+	if res.StatusCode >= 300 {
+		return errors.New(string(b))
+	}
+	return json.Unmarshal(b, target)
 }
 
 func (p *pocketBaseDBService) patch(url string, body map[string]any) error {

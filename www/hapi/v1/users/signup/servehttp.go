@@ -10,7 +10,7 @@ import (
 	"net/http"
 )
 
-const path string = "/hapi/v1/users/signup"
+const path string = "/hapi/v1/users/getin"
 
 func init() {
 	httpsrv.Router.HandleFunc(path, serveHTTP).Methods(http.MethodPost, http.MethodOptions)
@@ -18,7 +18,7 @@ func init() {
 
 type completeSignUpReqModel struct {
 	Email string `json:"email"`
-	Code  string `json:"code"`
+	Code  string `json:"otp"`
 	Name  string `json:"name"`
 }
 
@@ -42,14 +42,27 @@ func serveHTTP(responsewriter http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	resp, err := userssrv.Repository.CompleteSignUp(users.CompleteSignUpDTO{
-		Email: req.Email,
-		Code:  req.Code,
-		Name:  req.Name,
-	})
-	if rest.HandleIfErr(responsewriter, err, 500) {
-		return
-	}
+	user, _ := userssrv.Repository.GetByEmail(req.Email)
+	if user == nil {
+		resp, err := userssrv.Repository.CompleteSignUp(users.CompleteSignUpDTO{
+			Email: req.Email,
+			Code:  req.Code,
+			Name:  req.Name,
+		})
+		if rest.HandleIfErr(responsewriter, err, 500) {
+			return
+		}
 
-	_ = rest.Write(responsewriter, resp, http.StatusOK)
+		_ = rest.Write(responsewriter, resp, http.StatusOK)
+	} else {
+		resp, err := userssrv.Repository.SignIn(users.SignInDTO{
+			Email: req.Email,
+			Code:  req.Code,
+		})
+		if rest.HandleIfErr(responsewriter, err, 500) {
+			return
+		}
+
+		_ = rest.Write(responsewriter, resp, http.StatusOK)
+	}
 }

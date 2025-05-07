@@ -18,12 +18,13 @@ func webserve() {
 	var tcpaddr string = cfg.Config.WebServerTCPAddress()
 	log.Infof("serving HTTP on TCP address: %q", tcpaddr)
 
-	tokens.Initialize(nil)
+	tokens.Initialize([]byte("a4d624f9d3e503bb8603b49fe4422ac45f36d4d3d089cc64e4b0d72e3962c5a1"))
 	err := dbsrv.Initialize(dbsrv.PocketBase)
 	if err != nil {
 		panic(err)
 	}
 	schedulersrv.SchedulerSrv.Start()
+
 	err = http.ListenAndServe(tcpaddr, httpsrv.Router)
 	if nil != err {
 		log.Errorf("ERROR: problem with serving HTTP on TCP address %q: %s", tcpaddr, err)

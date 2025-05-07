@@ -13,13 +13,31 @@ import (
 var Router *mux.Router = mux.NewRouter()
 var RouterWithAuth *mux.Router
 
+func corsMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Set CORS headers
+		w.Header().Set("Access-Control-Allow-Origin", "*") // or your domain
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, PATCH, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "*")
+
+		// Handle preflight request
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}
+
 func init() {
 	Router = mux.NewRouter()
 	if nil == Router {
 		panic("nil HTTP gorilla mux router")
 	}
 
-	Router.Use(mux.CORSMethodMiddleware(Router))
+	//Router.Use(mux.CORSMethodMiddleware(Router))
+	Router.Use(corsMiddleware)
 
 	Router.Use(func(handler http.Handler) http.Handler {
 		return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
@@ -41,7 +59,7 @@ func init() {
 			if rest.HandleIfErr(w, err, http.StatusUnauthorized) {
 				return
 			}
-			user, err := userssrv.Repository.GetMe(claims["userId"].(string))
+			user, err := userssrv.Repository.GetById(claims["userId"].(string))
 			if rest.HandleIfErr(w, err, http.StatusUnauthorized) {
 				return
 			}

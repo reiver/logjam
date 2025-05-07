@@ -2,6 +2,7 @@ package tokens
 
 import (
 	"crypto/rand"
+	"encoding/hex"
 	"errors"
 	"log"
 	"time"
@@ -23,7 +24,7 @@ func Initialize(inputSecret []byte) {
 	if err != nil {
 		log.Fatalf("failed to generate secret: %v", err)
 	}
-	//log.Printf("JWT secret (hex): %s", hex.EncodeToString(secret))
+	log.Printf("JWT secret (hex): %s", hex.EncodeToString(secret))
 }
 
 // CreateToken creates a JWT for a user ID

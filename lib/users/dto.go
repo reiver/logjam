@@ -14,10 +14,14 @@ type OTPDTO struct {
 
 type CompleteSignUpDTO struct {
 	Email string `json:"email" validate:"required,email"`
-	Code  string `json:"otp" validate:"required,numeric"`
+	Code  string `json:"otp"`
 	Name  string `json:"name" validate:"required"`
 }
 
+type SignInDTO struct {
+	Email string `json:"email" validate:"required,email"`
+	Code  string `json:"otp"`
+}
 type CompleteSignUpResponse struct {
 	UserID string `json:"userId"`
 	Token  string `json:"token"` // session/jwt/etc

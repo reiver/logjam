@@ -71,7 +71,7 @@ func Initialize(dbServiceType TDBService) error {
 			},
 			{
 				Name: "otp",
-				Type: db.IntegerType,
+				Type: db.TextType,
 			},
 		})
 		if err != nil {
