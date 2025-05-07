@@ -10,10 +10,16 @@ import (
 	"net/http"
 )
 
-const path string = "/neynar/submit"
+const path string = "/hapi/v1/neynar/cast"
 
 func init() {
-	httpsrv.Router.HandleFunc(path, serveHTTP).Methods(http.MethodPost, http.MethodOptions)
+	httpsrv.RouterWithAuth.HandleFunc(path, serveHTTP).Methods(http.MethodPost, http.MethodOptions)
+}
+
+type createCastRequestModel struct {
+	Text      string `json:"text"`
+	ParentURL string `json:"parent_url,omitempty"`
+	Embeds    []any  `json:"embeds,omitempty"`
 }
 
 func serveHTTP(responsewriter http.ResponseWriter, request *http.Request) {
@@ -30,13 +36,22 @@ func serveHTTP(responsewriter http.ResponseWriter, request *http.Request) {
 	if rest.HandleIfErr(responsewriter, err, 400) {
 		return
 	}
-	var reqModel neynar.AK
-	err = json.Unmarshal(reqBody, &reqModel)
+	var req createCastRequestModel
+	err = json.Unmarshal(reqBody, &req)
 	if rest.HandleIfErr(responsewriter, err, 400) {
 		return
 	}
 
-	err = neynarsrv.Repository.SaveAccountKeys(reqModel)
+	user := rest.GetUser(request)
+	if user == nil {
+		http.Error(responsewriter, "not authenticated", http.StatusInternalServerError)
+		return
+	}
+	err = neynarsrv.Repository.CreateCast(user.ID, neynar.CastPayload{
+		Text:      req.Text,
+		ParentURL: req.ParentURL,
+		Embeds:    req.Embeds,
+	})
 	if rest.HandleIfErr(responsewriter, err, 500) {
 		return
 	}

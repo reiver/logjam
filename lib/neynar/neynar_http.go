@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/reiver/logjam/lib/marshal"
 	dbsrv "github.com/reiver/logjam/srv/db"
 	"io"
 	"net/http"
@@ -23,6 +24,7 @@ const (
 	///keys
 	FIDKey        = "fid"
 	SignerUUIDKey = "signerUUID"
+	OwnerIdKey    = "ownerId"
 )
 
 func NewHTTPRepository(baseURL, apiKey string) INeynarServiceRepository {
@@ -33,23 +35,40 @@ func NewHTTPRepository(baseURL, apiKey string) INeynarServiceRepository {
 	}
 }
 
-func (repo *httpRepository) SaveAccountKeys(account AK) error {
-	return dbsrv.Repository.UpdateByFilter(neynarIdsTable, map[string]any{FIDKey: account.FID}, map[string]any{FIDKey: account.FID, SignerUUIDKey: account.SignerUUID})
-}
-
-func (repo *httpRepository) CreateCast(FID uint64, content CastPayload) error {
-	url := fmt.Sprintf("%s/v2/farcaster/cast", repo.baseURL)
-
-	account := AK{}
-	recs, err := dbsrv.Repository.GetByFilter(neynarIdsTable, map[string]any{FIDKey: FID})
+func (repo *httpRepository) SaveAccountKeys(account AK, ownerId string) error {
+	rows, err := dbsrv.Repository.GetByFilter(neynarIdsTable, map[string]any{
+		FIDKey: account.FID,
+	})
 	if err != nil {
 		return err
 	}
-	if len(recs) == 0 {
-		return errors.New("no matching fid found, maybe ids are not submitted yet")
+	if rows == nil || len(rows) == 0 {
+		_, err := dbsrv.Repository.Insert(neynarIdsTable, map[string]any{
+			FIDKey:        account.FID,
+			SignerUUIDKey: account.SignerUUID,
+			OwnerIdKey:    ownerId,
+		})
+		return err
 	}
-	account.FID = recs[0][FIDKey].(uint64)
-	account.SignerUUID = recs[0][SignerUUIDKey].(string)
+	return nil
+}
+
+func (repo *httpRepository) CreateCast(userId string, content CastPayload) error {
+	rows, err := dbsrv.Repository.GetByFilter(neynarIdsTable, map[string]any{
+		OwnerIdKey: userId,
+	})
+	if err != nil {
+		return err
+	}
+	if rows == nil || len(rows) == 0 {
+		return errors.New("submit account ids first")
+	}
+	id := NeynarIdDTO{}
+	err = marshal.MapToObj(rows[0], &id)
+
+	url := fmt.Sprintf("%s/v2/farcaster/cast", repo.baseURL)
+
+	account := id.AK
 
 	payload := map[string]interface{}{
 		"text":        content.Text,

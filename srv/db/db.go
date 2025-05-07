@@ -116,12 +116,13 @@ func Initialize(dbServiceType TDBService) error {
 
 		err = Repository.CreateTableIfNotExists("neynarIDs", []db.Field{
 			{
-				Name: "userId",
+				Name: "ownerId",
 				Type: db.TextType,
 			},
 			{
-				Name: "fid",
-				Type: db.TextType,
+				Name:   "fid",
+				Type:   db.UnsignedInteger64Type,
+				Unique: true,
 			},
 			{
 				Name: "signerUUID",

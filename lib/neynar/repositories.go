@@ -1,7 +1,11 @@
 package neynar
 
+type NeynarIdDTO struct {
+	AK
+	OwnerId string `json:"ownerId"`
+}
 type AK struct {
-	SignerUUID string `json:"signer_uuid"`
+	SignerUUID string `json:"signerUUID"`
 	FID        uint64 `json:"fid"`
 }
 
@@ -12,6 +16,6 @@ type CastPayload struct {
 }
 
 type INeynarServiceRepository interface {
-	SaveAccountKeys(account AK) error
-	CreateCast(FID uint64, payload CastPayload) error
+	SaveAccountKeys(account AK, ownerId string) error
+	CreateCast(userId string, payload CastPayload) error
 }

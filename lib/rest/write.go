@@ -14,12 +14,12 @@ func Write(rw http.ResponseWriter, response interface{}, statusCode int) error {
 		rw.WriteHeader(statusCode)
 		_, _ = rw.Write([]byte(strVersion))
 	} else {
-		rw.WriteHeader(statusCode)
 		bytes, err := json.Marshal(response)
 		if err != nil {
 			return err
 		}
 		rw.Header().Add("Content-Type", "application/json")
+		rw.WriteHeader(statusCode)
 		_, _ = rw.Write(bytes)
 	}
 
