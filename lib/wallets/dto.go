@@ -1,17 +1,19 @@
 package wallets
 
-import "time"
+import (
+	dbsrv "github.com/reiver/logjam/srv/db"
+)
 
 type WalletDTO struct {
-	ID          string     `json:"id"`
-	Address     string     `json:"address"`
-	Message     string     `json:"message"`
-	Signature   string     `json:"signature"`
-	ENS         string     `json:"ens"`
-	OwnerId     string     `json:"ownerId"`
-	IsConnected bool       `json:"isConnected"`
-	Created     time.Time  `json:"created"`
-	Updated     *time.Time `json:"updated"`
+	ID          string        `json:"id"`
+	Address     string        `json:"address"`
+	Message     string        `json:"message"`
+	Signature   string        `json:"signature"`
+	ENS         string        `json:"ens"`
+	OwnerId     string        `json:"ownerId"`
+	IsConnected bool          `json:"isConnected"`
+	Created     dbsrv.PBTime  `json:"created"`
+	Updated     *dbsrv.PBTime `json:"updated"`
 }
 type AddWalletDTO struct {
 	Address     string `json:"address"`

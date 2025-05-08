@@ -40,10 +40,10 @@ func serveHTTP(responsewriter http.ResponseWriter, request *http.Request) {
 		return
 	}
 	req.OwnerId = user.ID
-	resp, err := walletssrv.Repository.Add(req)
+	wid, err := walletssrv.Repository.Add(req)
 	if rest.HandleIfErr(responsewriter, err, 500) {
 		return
 	}
 
-	_ = rest.Write(responsewriter, resp, http.StatusOK)
+	_ = rest.Write(responsewriter, map[string]any{"id": wid}, http.StatusOK)
 }

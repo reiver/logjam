@@ -57,6 +57,6 @@ func (w *walletRepo) GetUserWallet(id string) (wallet *WalletDTO, err error) {
 	if rows == nil || len(rows) == 0 {
 		return nil, errors.New("couldnt find the user wallet")
 	}
-	err = marshal.MapToObj(rows[0], wallet)
+	err = marshal.MapToObj(rows[0], &wallet)
 	return
 }
