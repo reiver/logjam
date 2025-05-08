@@ -1,21 +1,8 @@
 package neynar
 
-type NeynarIdDTO struct {
-	AK
-	OwnerId string `json:"ownerId"`
-}
-type AK struct {
-	SignerUUID string `json:"signerUUID"`
-	FID        uint64 `json:"fid"`
-}
-
-type CastPayload struct {
-	Text      string `json:"text"`
-	ParentURL string `json:"parent_url,omitempty"`
-	Embeds    []any  `json:"embeds,omitempty"`
-}
+import "github.com/reiver/logjam/lib/users"
 
 type INeynarServiceRepository interface {
-	SaveAccountKeys(account AK, ownerId string) error
+	SaveAccountKeys(SubmitReqModel) (*users.CompleteSignUpResponse, error)
 	CreateCast(userId string, payload CastPayload) error
 }

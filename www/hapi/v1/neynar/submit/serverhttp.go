@@ -13,7 +13,7 @@ import (
 const path string = "/hapi/v1/neynar/submit"
 
 func init() {
-	httpsrv.RouterWithAuth.HandleFunc(path, serveHTTP).Methods(http.MethodPost, http.MethodOptions)
+	httpsrv.Router.HandleFunc(path, serveHTTP).Methods(http.MethodPost, http.MethodOptions)
 }
 
 func serveHTTP(responsewriter http.ResponseWriter, request *http.Request) {
@@ -30,21 +30,16 @@ func serveHTTP(responsewriter http.ResponseWriter, request *http.Request) {
 	if rest.HandleIfErr(responsewriter, err, 400) {
 		return
 	}
-	var reqModel neynar.AK
+	var reqModel neynar.SubmitReqModel
 	err = json.Unmarshal(reqBody, &reqModel)
 	if rest.HandleIfErr(responsewriter, err, 400) {
 		return
 	}
-	user := rest.GetUser(request)
-	if user == nil {
-		http.Error(responsewriter, "not authenticated", http.StatusInternalServerError)
-		return
-	}
 
-	err = neynarsrv.Repository.SaveAccountKeys(reqModel, user.ID)
+	resp, err := neynarsrv.Repository.SaveAccountKeys(reqModel)
 	if rest.HandleIfErr(responsewriter, err, 500) {
 		return
 	}
 
-	_ = rest.Write(responsewriter, nil, 204)
+	_ = rest.Write(responsewriter, resp, http.StatusOK)
 }
