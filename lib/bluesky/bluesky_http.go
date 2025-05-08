@@ -153,6 +153,19 @@ func (repo *httpRepository) getAK(ownerId string) (*AK, error) {
 	}, nil
 }
 
+func (repo *httpRepository) AccountExists(userId string) (bool, error) {
+	rows, err := dbsrv.Repository.GetByFilter(sessionsTable, map[string]any{
+		ownerIdKey: userId,
+	})
+	if err != nil {
+		return false, err
+	}
+	if rows != nil && len(rows) == 0 {
+		return false, nil
+	}
+	return true, nil
+}
+
 // CreatePost creates a new post by calling the create post endpoint.
 func (repo *httpRepository) CreatePost(ownerId, text string) error {
 	url := fmt.Sprintf("%s/xrpc/com.atproto.repo.createRecord", repo.svcAddr)

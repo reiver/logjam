@@ -168,8 +168,11 @@ func Initialize(dbServiceType TDBService) error {
 				Type: db.DateType,
 			},
 			{
-				Name: "roomId",
+				Name: "roomUID",
 				Type: db.TextType,
+			}, {
+				Name: "sent",
+				Type: db.BooleanType,
 			},
 		})
 		if err != nil {

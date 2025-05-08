@@ -1,9 +1,16 @@
 package scheduler
 
 import (
+	"errors"
 	"fmt"
 	"github.com/reiver/logjam/lib/db"
+	"github.com/reiver/logjam/lib/marshal"
+	"github.com/reiver/logjam/lib/neynar"
+	"github.com/reiver/logjam/lib/room"
+	blueskysrv "github.com/reiver/logjam/srv/bluesky"
 	dbsrv "github.com/reiver/logjam/srv/db"
+	neynarsrv "github.com/reiver/logjam/srv/neynar"
+	roomsrv "github.com/reiver/logjam/srv/room"
 	"time"
 )
 
@@ -16,7 +23,8 @@ const (
 
 	//keys
 	scheduledTimeKey = "scheduledTime"
-	roomIdKey        = "roomId"
+	roomUIDKey       = "roomUID"
+	sentKey          = "sent"
 
 	nameKey = "name"
 )
@@ -25,8 +33,42 @@ func NewSchedulerSrv() *Scheduler {
 	return &Scheduler{}
 }
 
-func (s *Scheduler) CreateSchedule(reqModel CreateScheduleRequestModel) error {
-	_, err := dbsrv.Repository.Insert(schedulesTbl, map[string]any{scheduledTimeKey: reqModel.DateTime, roomIdKey: reqModel.RoomID})
+func (s *Scheduler) sendToSocials(userId string, text string) error {
+	haveNenarAcc, err := neynarsrv.Repository.NeynarAccountExists(userId)
+	if err != nil {
+		return err
+	}
+	if haveNenarAcc {
+		return neynarsrv.Repository.CreateCast(userId, neynar.CastPayload{
+			Text:      text,
+			ParentURL: "",
+			Embeds:    nil,
+		})
+	}
+
+	haveBlueSkyAcc, err := blueskysrv.Repository.AccountExists(userId)
+	if err != nil {
+		return nil
+	}
+	if haveBlueSkyAcc {
+		return blueskysrv.Repository.CreatePost(userId, text)
+	}
+
+	return nil
+}
+
+func (s *Scheduler) CreateSchedule(input CreateScheduleRequestModel) error {
+	room, err := roomsrv.Repository.GetRoom(input.RoomUID)
+	if err != nil {
+		return err
+	}
+	if room == nil {
+		return errors.New("couldnt find a room with this UID")
+	}
+	if room.OwnerID != input.UserId {
+		return errors.New("access denied")
+	}
+	_, err = dbsrv.Repository.Insert(schedulesTbl, map[string]any{scheduledTimeKey: input.DateTime, roomUIDKey: input.RoomUID})
 	return err
 }
 
@@ -62,17 +104,29 @@ func (s *Scheduler) Start() {
 				panic(err)
 			}
 			for _, rec := range recs {
-				roomId := rec[roomIdKey].(string)
+				roomUID := rec[roomUIDKey].(string)
 				scheduledTime := rec[scheduledTimeKey].(time.Time)
+				if rec[sentKey].(bool) {
+					continue
+				}
 
-				room, err := dbsrv.Repository.GetById(roomTbl, roomId)
+				rooms, err := dbsrv.Repository.GetByFilter(roomTbl, map[string]any{
+					"UID": roomUID,
+				})
 				if err != nil {
 					panic(err)
 				}
-				roomLink := fmt.Sprintf("https://logjam.vercel.app/log/%s", room[nameKey])
+				roomData := room.RoomDTO{}
+				err = marshal.MapToObj(rooms[0], &roomData)
+				if err != nil {
+					panic(err)
+				}
+				roomLink := fmt.Sprintf("https://logjam.vercel.app/log/%s", roomData.UID)
 
-				_ = scheduledTime
-				_ = roomLink
+				err = s.sendToSocials(roomData.OwnerID, "meeting at "+scheduledTime.GoString()+".\nlink: "+roomLink)
+				if err != nil {
+					panic(err)
+				}
 			}
 		}
 	}()

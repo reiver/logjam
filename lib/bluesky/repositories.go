@@ -24,4 +24,5 @@ type IBlueSkyServiceRepository interface {
 	SaveLastTokens(SubmitReqModel) (*users.CompleteSignUpResponse, error)
 	RefreshTokens(accessKeys AK) (AK, error)
 	CreatePost(userId, text string) error
+	AccountExists(userId string) (bool, error)
 }

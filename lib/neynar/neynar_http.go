@@ -38,6 +38,19 @@ func NewHTTPRepository(baseURL, apiKey string) INeynarServiceRepository {
 	}
 }
 
+func (repo *httpRepository) NeynarAccountExists(userId string) (bool, error) {
+	rows, err := dbsrv.Repository.GetByFilter(neynarIdsTable, map[string]any{
+		OwnerIdKey: userId,
+	})
+	if err != nil {
+		return false, err
+	}
+	if rows == nil || len(rows) == 0 {
+		return false, nil
+	}
+	return true, nil
+}
+
 func (repo *httpRepository) SaveAccountKeys(input SubmitReqModel) (*users.CompleteSignUpResponse, error) {
 	rows, err := dbsrv.Repository.GetByFilter(neynarIdsTable, map[string]any{
 		FIDKey: input.FID,
