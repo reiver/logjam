@@ -2,9 +2,11 @@ package users
 
 import (
 	"errors"
+	cErrors "github.com/reiver/logjam/lib/errors"
 	"github.com/reiver/logjam/lib/marshal"
 	"github.com/reiver/logjam/lib/tokens"
 	dbsrv "github.com/reiver/logjam/srv/db"
+	"net/http"
 )
 
 type userRepo struct {
@@ -43,8 +45,8 @@ func (u *userRepo) CreateOTP(input OTPDTO) error {
 
 func (u *userRepo) SignIn(input SignInDTO) (*CompleteSignUpResponse, error) {
 	user, err := u.GetByEmail(input.Email)
-	if err != nil {
-		return nil, errors.New("couldnt find user with this email")
+	if err != nil || user == nil {
+		return nil, cErrors.NewErrorWithMsg(http.StatusUnauthorized, "couldnt find user with this email")
 	}
 	rows, err := dbsrv.Repository.GetByFilter(otpTbl, map[string]any{
 		emailKey: input.Email,
@@ -54,7 +56,7 @@ func (u *userRepo) SignIn(input SignInDTO) (*CompleteSignUpResponse, error) {
 		return nil, err
 	}
 	if rows == nil || len(rows) == 0 {
-		return nil, errors.New("invalid email or code")
+		return nil, cErrors.NewErrorWithMsg(http.StatusUnauthorized, "invalid email or code")
 	}
 	rec := rows[0]
 	var otpDTO OTPDTO
@@ -63,7 +65,7 @@ func (u *userRepo) SignIn(input SignInDTO) (*CompleteSignUpResponse, error) {
 		return nil, err
 	}
 	if len(otpDTO.Email) == 0 {
-		return nil, errors.New("invalid email, try again or call support")
+		return nil, cErrors.NewErrorWithMsg(http.StatusUnauthorized, "invalid email, try again or call support")
 	}
 	token, err := tokens.CreateToken(user.ID, nil)
 	response := CompleteSignUpResponse{
@@ -82,7 +84,7 @@ func (u *userRepo) CompleteSignUp(input CompleteSignUpDTO) (*CompleteSignUpRespo
 		return nil, err
 	}
 	if rows == nil || len(rows) == 0 {
-		return nil, errors.New("invalid email or code")
+		return nil, cErrors.NewErrorWithMsg(http.StatusUnauthorized, "invalid email or code")
 	}
 	rec := rows[0]
 	var otpDTO OTPDTO
@@ -91,7 +93,7 @@ func (u *userRepo) CompleteSignUp(input CompleteSignUpDTO) (*CompleteSignUpRespo
 		return nil, err
 	}
 	if len(otpDTO.Email) == 0 {
-		return nil, errors.New("invalid email, try again or call support")
+		return nil, cErrors.NewErrorWithMsg(http.StatusUnauthorized, "invalid email, try again or call support")
 	}
 	userId, err := u.Create(CreateUserDTO{
 		Email:    input.Email,
@@ -113,7 +115,7 @@ func (u *userRepo) GetById(id string) (*UserDTO, error) {
 		return nil, err
 	}
 	if row == nil {
-		return nil, errors.New("user not found")
+		return nil, cErrors.NewErrorWithMsg(http.StatusNotFound, "user not found")
 	}
 	var user UserDTO
 	err = marshal.MapToObj(row, &user)
@@ -134,7 +136,7 @@ func (u *userRepo) GetByEmail(email string) (*UserDTO, error) {
 		return nil, err
 	}
 	if rows == nil || len(rows) == 0 {
-		return nil, errors.New("user not found")
+		return nil, nil
 	}
 	var user UserDTO
 	err = marshal.MapToObj(rows[0], &user)
@@ -156,7 +158,7 @@ func (u *userRepo) UpdateProfile(input UpdateProfileDTO) error {
 			return err
 		}
 		if existingUserNameRows != nil && len(existingUserNameRows) > 0 {
-			return errors.New("username is taken")
+			return cErrors.NewErrorWithMsg(http.StatusConflict, "username is taken")
 		}
 	}
 	data, err := marshal.ObjToMap(input)

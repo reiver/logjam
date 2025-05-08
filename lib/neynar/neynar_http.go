@@ -3,8 +3,8 @@ package neynar
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
+	cErrors "github.com/reiver/logjam/lib/errors"
 	"github.com/reiver/logjam/lib/marshal"
 	"github.com/reiver/logjam/lib/tokens"
 	"github.com/reiver/logjam/lib/users"
@@ -119,7 +119,7 @@ func (repo *httpRepository) CreateCast(userId string, content CastPayload) error
 		return err
 	}
 	if rows == nil || len(rows) == 0 {
-		return errors.New("submit account ids first")
+		return cErrors.NewErrorWithMsg(http.StatusUnauthorized, "submit account ids first")
 	}
 	id := NeynarIdDTO{}
 	err = marshal.MapToObj(rows[0], &id)
@@ -142,12 +142,12 @@ func (repo *httpRepository) CreateCast(userId string, content CastPayload) error
 
 	body, err := json.Marshal(payload)
 	if err != nil {
-		return fmt.Errorf("failed to marshal cast payload: %w", err)
+		return cErrors.NewErrorFromErr(http.StatusInternalServerError, fmt.Errorf("failed to marshal cast payload: %w", err))
 	}
 
 	req, err := http.NewRequest("POST", url, bytes.NewReader(body))
 	if err != nil {
-		return fmt.Errorf("failed to create request: %w", err)
+		return cErrors.NewErrorFromErr(http.StatusInternalServerError, fmt.Errorf("failed to create request: %w", err))
 	}
 
 	req.Header.Set("Content-Type", "application/json")
@@ -155,13 +155,13 @@ func (repo *httpRepository) CreateCast(userId string, content CastPayload) error
 
 	resp, err := repo.client.Do(req)
 	if err != nil {
-		return fmt.Errorf("request failed: %w", err)
+		return cErrors.NewErrorFromErr(http.StatusInternalServerError, fmt.Errorf("request failed: %w", err))
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		respBody, _ := io.ReadAll(resp.Body)
-		return fmt.Errorf("cast failed (%d): %s", resp.StatusCode, respBody)
+		return cErrors.NewErrorFromErr(http.StatusInternalServerError, fmt.Errorf("cast failed (%d): %s", resp.StatusCode, respBody))
 	}
 
 	return nil

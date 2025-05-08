@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	cErrors "github.com/reiver/logjam/lib/errors"
 	"github.com/reiver/logjam/lib/tokens"
 	"github.com/reiver/logjam/lib/users"
 	dbsrv "github.com/reiver/logjam/srv/db"
@@ -93,18 +94,18 @@ func (repo *httpRepository) RefreshTokens(ak AK) (AK, error) {
 
 	req, err := http.NewRequest("POST", url, nil)
 	if err != nil {
-		return AK{}, fmt.Errorf("error creating HTTP request: %w", err)
+		return AK{}, cErrors.NewErrorFromErr(http.StatusInternalServerError, fmt.Errorf("error creating HTTP request: %w", err))
 	}
 	client := &http.Client{Timeout: 16 * time.Second}
 	resp, err := client.Do(req)
 	if err != nil {
-		return AK{}, fmt.Errorf("error sending HTTP request: %w", err)
+		return AK{}, cErrors.NewErrorFromErr(http.StatusInternalServerError, fmt.Errorf("error sending HTTP request: %w", err))
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
-		return AK{}, fmt.Errorf("refresh token request failed with status %d: %s", resp.StatusCode, string(body))
+		return AK{}, cErrors.NewErrorFromErr(http.StatusInternalServerError, fmt.Errorf("refresh token request failed with status %d: %s", resp.StatusCode, string(body)))
 	}
 
 	// Parse the response.
@@ -118,12 +119,12 @@ func (repo *httpRepository) RefreshTokens(ak AK) (AK, error) {
 	}
 
 	if err := json.NewDecoder(resp.Body).Decode(&res); err != nil {
-		return AK{}, fmt.Errorf("error decoding refresh response: %w", err)
+		return AK{}, cErrors.NewErrorFromErr(http.StatusInternalServerError, fmt.Errorf("error decoding refresh response: %w", err))
 	}
 
 	// Verify the response contains new tokens.
 	if res.AccessJWT == "" || res.RefreshJWT == "" {
-		return AK{}, errors.New("invalid refresh response: missing tokens")
+		return AK{}, cErrors.NewErrorFromErr(http.StatusInternalServerError, errors.New("invalid refresh response: missing tokens"))
 	}
 
 	ak = AK{
@@ -174,7 +175,7 @@ func (repo *httpRepository) CreatePost(ownerId, text string) error {
 		return err
 	}
 	if ak == nil {
-		return errors.New("couldn't find account keys, maybe not submitted yet")
+		return cErrors.NewErrorFromErr(http.StatusUnauthorized, errors.New("couldn't find account keys, maybe not submitted yet"))
 	}
 	post := TextPostRecord{
 		Type:      "app.bsky.feed.post",
@@ -192,13 +193,13 @@ func (repo *httpRepository) CreatePost(ownerId, text string) error {
 	}
 	payloadBytes, err := json.Marshal(payload)
 	if err != nil {
-		return fmt.Errorf("error marshaling payload: %w", err)
+		return cErrors.NewErrorFromErr(http.StatusInternalServerError, fmt.Errorf("error marshaling payload: %w", err))
 	}
 
 	// Prepare the request.
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(payloadBytes))
 	if err != nil {
-		return fmt.Errorf("error creating HTTP request: %w", err)
+		return cErrors.NewErrorFromErr(http.StatusInternalServerError, fmt.Errorf("error creating HTTP request: %w", err))
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+ak.AccessToken)
@@ -206,14 +207,14 @@ func (repo *httpRepository) CreatePost(ownerId, text string) error {
 	client := &http.Client{Timeout: 10 * time.Second}
 	resp, err := client.Do(req)
 	if err != nil {
-		return fmt.Errorf("error sending HTTP request: %w", err)
+		return cErrors.NewErrorFromErr(http.StatusInternalServerError, fmt.Errorf("error sending HTTP request: %w", err))
 	}
 	defer resp.Body.Close()
 
 	// Check for non-200 status codes.
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
-		return fmt.Errorf("create post failed (status %d): %s", resp.StatusCode, string(body))
+		return cErrors.NewErrorFromErr(resp.StatusCode, fmt.Errorf("create post failed (status %d): %s", resp.StatusCode, string(body)))
 	}
 
 	// Optionally, decode and use the response data here.

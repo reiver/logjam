@@ -1,9 +1,9 @@
 package scheduler
 
 import (
-	"errors"
 	"fmt"
 	"github.com/reiver/logjam/lib/db"
+	cErrors "github.com/reiver/logjam/lib/errors"
 	"github.com/reiver/logjam/lib/marshal"
 	"github.com/reiver/logjam/lib/neynar"
 	"github.com/reiver/logjam/lib/room"
@@ -11,6 +11,7 @@ import (
 	dbsrv "github.com/reiver/logjam/srv/db"
 	neynarsrv "github.com/reiver/logjam/srv/neynar"
 	roomsrv "github.com/reiver/logjam/srv/room"
+	"net/http"
 	"time"
 )
 
@@ -71,10 +72,10 @@ func (s *Scheduler) CreateSchedule(input CreateScheduleRequestModel) error {
 		return err
 	}
 	if room == nil {
-		return errors.New("couldnt find a room with this UID")
+		return cErrors.NewErrorWithMsg(http.StatusNotFound, "couldnt find a room with this UID")
 	}
 	if room.OwnerID != input.UserId {
-		return errors.New("access denied")
+		return cErrors.NewError(http.StatusForbidden)
 	}
 	_, err = dbsrv.Repository.Insert(schedulesTbl, map[string]any{scheduledTimeKey: input.DateTime, roomUIDKey: input.RoomUID})
 	return err

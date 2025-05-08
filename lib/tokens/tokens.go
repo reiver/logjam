@@ -3,8 +3,9 @@ package tokens
 import (
 	"crypto/rand"
 	"encoding/hex"
-	"errors"
+	cErrors "github.com/reiver/logjam/lib/errors"
 	"log"
+	"net/http"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -46,17 +47,17 @@ func CreateToken(userID string, extraData map[string]any) (string, error) {
 func ParseToken(tokenStr string) (map[string]any, error) {
 	token, err := jwt.Parse(tokenStr, func(t *jwt.Token) (interface{}, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, errors.New("invalid signing method")
+			return nil, cErrors.NewErrorWithMsg(http.StatusUnauthorized, "invalid signing method")
 		}
 		return secret, nil
 	})
 	if err != nil || !token.Valid {
-		return nil, errors.New("invalid token")
+		return nil, cErrors.NewErrorWithMsg(http.StatusUnauthorized, "invalid token")
 	}
 
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok || claims["userId"] == nil {
-		return claims, errors.New("invalid claims")
+		return claims, cErrors.NewErrorWithMsg(http.StatusUnauthorized, "invalid claims")
 	}
 
 	return claims, nil

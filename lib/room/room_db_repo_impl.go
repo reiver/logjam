@@ -1,9 +1,10 @@
 package room
 
 import (
-	"errors"
+	cErrors "github.com/reiver/logjam/lib/errors"
 	"github.com/reiver/logjam/lib/marshal"
 	dbsrv "github.com/reiver/logjam/srv/db"
+	"net/http"
 	"strings"
 )
 
@@ -23,11 +24,11 @@ func NewRoomRepository() IRoomRepository {
 
 func (r *roomRepo) CreateRoom(dto CreateRoomDTO) error {
 	if len(dto.UID) < 6 || len(dto.UID) > 32 {
-		return errors.New("invalid UID len. min: 6, max: 32")
+		return cErrors.NewErrorWithMsg(http.StatusBadRequest, "invalid UID len. min: 6, max: 32")
 	}
 	room, _ := r.GetRoom(strings.ToLower(dto.UID))
 	if room != nil && len(room.UID) > 0 {
-		return errors.New("this room UID is taken")
+		return cErrors.NewErrorWithMsg(http.StatusConflict, "this room UID is taken")
 	}
 	dto.UID = strings.ToLower(dto.UID)
 	data, err := marshal.ObjToMap(dto)
@@ -59,7 +60,7 @@ func (r *roomRepo) UpdateRoom(dto UpdateRoomDTO) error {
 		return err
 	}
 	if room.OwnerID != dto.OwnerID {
-		return errors.New("access denied")
+		return cErrors.NewError(http.StatusForbidden)
 	}
 	data, err := marshal.ObjToMap(dto)
 	if err != nil {
@@ -72,6 +73,13 @@ func (r *roomRepo) UpdateRoom(dto UpdateRoomDTO) error {
 }
 
 func (r *roomRepo) DeleteRoom(UID, ownerId string) error {
+	room, err := r.GetRoom(UID)
+	if err != nil {
+		return err
+	}
+	if room.OwnerID != ownerId {
+		return cErrors.NewError(http.StatusForbidden)
+	}
 	return dbsrv.Repository.DeleteByFilter(roomTbl, map[string]any{
 		UIDKey:     UID,
 		ownerIdKey: ownerId,
