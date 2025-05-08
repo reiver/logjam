@@ -5,7 +5,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/reiver/logjam/lib/tokens"
+	"github.com/reiver/logjam/lib/users"
 	dbsrv "github.com/reiver/logjam/srv/db"
+	userssrv "github.com/reiver/logjam/srv/users"
 	"io"
 	"net/http"
 	"sync"
@@ -39,26 +42,50 @@ func NewHTTPRepository(svcAddr string) IBlueSkyServiceRepository {
 	}
 }
 
-func (repo *httpRepository) SaveLastTokens(accessKeys AK, ownerId string) error {
+func (repo *httpRepository) SaveLastTokens(input SubmitReqModel) (*users.CompleteSignUpResponse, error) {
 	rows, err := dbsrv.Repository.GetByFilter(sessionsTable, map[string]any{
-		ownerIdKey: ownerId,
+		didKey: input.DID,
 	})
 	if err != nil {
-		return err
+		return nil, err
 	}
+	ownerId := ""
 	if rows != nil && len(rows) > 0 {
+		ownerId = rows[0][ownerIdKey].(string)
 		for _, r := range rows {
 			dbsrv.Repository.Delete(sessionsTable, r["id"].(string))
 		}
+	} else {
+		uid, err := userssrv.Repository.Create(users.CreateUserDTO{
+			Email:    "",
+			Name:     input.Name,
+			UserName: "",
+			Bio:      input.Bio,
+		})
+		if err != nil {
+			return nil, err
+		}
+		ownerId = uid
 	}
+
 	_, err = dbsrv.Repository.Insert(sessionsTable, map[string]any{
-		accessTokenKey:  accessKeys.AccessToken,
-		refreshTokenKey: accessKeys.RefreshToken,
-		didKey:          accessKeys.DID,
-		handleKey:       accessKeys.Handle,
+		accessTokenKey:  input.AccessToken,
+		refreshTokenKey: input.RefreshToken,
+		didKey:          input.DID,
+		handleKey:       input.Handle,
 		ownerIdKey:      ownerId,
 	})
-	return err
+	if err != nil {
+		return nil, err
+	}
+	token, err := tokens.CreateToken(ownerId, nil)
+	if err != nil {
+		return nil, err
+	}
+	return &users.CompleteSignUpResponse{
+		UserID: ownerId,
+		Token:  token,
+	}, nil
 }
 
 func (repo *httpRepository) RefreshTokens(ak AK) (AK, error) {
@@ -105,7 +132,8 @@ func (repo *httpRepository) RefreshTokens(ak AK) (AK, error) {
 		Handle:       res.Handle,
 		DID:          res.DID,
 	}
-	return ak, repo.SaveLastTokens(ak, "")
+	_, err = repo.SaveLastTokens(SubmitReqModel{AK: ak})
+	return ak, err
 }
 
 func (repo *httpRepository) getAK(ownerId string) (*AK, error) {

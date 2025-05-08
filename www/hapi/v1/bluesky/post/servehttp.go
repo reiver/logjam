@@ -16,7 +16,6 @@ func init() {
 }
 
 type createPostRequestModel struct {
-	DID  string `json:"did"`
 	Text string `json:"text"`
 }
 

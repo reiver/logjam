@@ -46,5 +46,5 @@ func serveHTTP(responsewriter http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	_ = rest.Write(responsewriter, resp, http.StatusOK)
+	_ = rest.Write(responsewriter, map[string]any{"id": resp}, http.StatusOK)
 }

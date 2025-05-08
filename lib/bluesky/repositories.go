@@ -1,9 +1,17 @@
 package bluesky
 
+import "github.com/reiver/logjam/lib/users"
+
+type SubmitReqModel struct {
+	AK
+	Name string
+	Bio  string
+}
+
 // AK Access Keys
 type AK struct {
-	AccessToken  string `json:"access_token"`
-	RefreshToken string `json:"refresh_token"`
+	AccessToken  string `json:"accessToken"`
+	RefreshToken string `json:"refreshToken"`
 	Handle       string `json:"handle"`
 	DID          string `json:"did"`
 }
@@ -13,7 +21,7 @@ type TextPostRecord struct {
 	CreatedAt string `json:"createdAt"`
 }
 type IBlueSkyServiceRepository interface {
-	SaveLastTokens(accessKeys AK, ownerId string) error
+	SaveLastTokens(SubmitReqModel) (*users.CompleteSignUpResponse, error)
 	RefreshTokens(accessKeys AK) (AK, error)
-	CreatePost(did, text string) error
+	CreatePost(userId, text string) error
 }

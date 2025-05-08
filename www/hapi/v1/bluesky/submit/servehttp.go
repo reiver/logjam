@@ -13,7 +13,7 @@ import (
 const path string = "/hapi/v1/bluesky/submit"
 
 func init() {
-	httpsrv.RouterWithAuth.HandleFunc(path, serveHTTP).Methods(http.MethodPost, http.MethodOptions)
+	httpsrv.Router.HandleFunc(path, serveHTTP).Methods(http.MethodPost, http.MethodOptions)
 }
 
 func serveHTTP(responsewriter http.ResponseWriter, request *http.Request) {
@@ -30,20 +30,16 @@ func serveHTTP(responsewriter http.ResponseWriter, request *http.Request) {
 	if rest.HandleIfErr(responsewriter, err, 400) {
 		return
 	}
-	var reqModel bluesky.AK
+	var reqModel bluesky.SubmitReqModel
 	err = json.Unmarshal(reqBody, &reqModel)
 	if rest.HandleIfErr(responsewriter, err, 400) {
 		return
 	}
-	user := rest.GetUser(request)
-	if user == nil {
-		http.Error(responsewriter, "not authenticated", http.StatusInternalServerError)
-		return
-	}
-	err = blueskysrv.Repository.SaveLastTokens(reqModel, user.ID)
+
+	resp, err := blueskysrv.Repository.SaveLastTokens(reqModel)
 	if rest.HandleIfErr(responsewriter, err, 500) {
 		return
 	}
 
-	_ = rest.Write(responsewriter, nil, 204)
+	_ = rest.Write(responsewriter, resp, http.StatusOK)
 }
