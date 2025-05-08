@@ -33,7 +33,15 @@ func NewSchedulerSrv() *Scheduler {
 	return &Scheduler{}
 }
 
-func (s *Scheduler) sendToSocials(userId string, text string) error {
+func (s *Scheduler) sendToSocials(userId, text, schedId string) error {
+	defer func(sId string) {
+		err := dbsrv.Repository.Update(schedulesTbl, sId, map[string]any{
+			sentKey: true,
+		})
+		if err != nil {
+			panic(err)
+		}
+	}(schedId)
 	haveNenarAcc, err := neynarsrv.Repository.NeynarAccountExists(userId)
 	if err != nil {
 		return err
@@ -123,7 +131,7 @@ func (s *Scheduler) Start() {
 				}
 				roomLink := fmt.Sprintf("https://logjam.vercel.app/log/%s", roomData.UID)
 
-				err = s.sendToSocials(roomData.OwnerID, "meeting at "+scheduledTime.GoString()+".\nlink: "+roomLink)
+				err = s.sendToSocials(roomData.OwnerID, "meeting at "+scheduledTime.GoString()+".\nlink: "+roomLink, rec["id"].(string))
 				if err != nil {
 					panic(err)
 				}

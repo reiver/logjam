@@ -35,7 +35,12 @@ func serveHTTP(responsewriter http.ResponseWriter, request *http.Request) {
 	if rest.HandleIfErr(responsewriter, err, 400) {
 		return
 	}
-
+	user := rest.GetUser(request)
+	if user == nil {
+		http.Error(responsewriter, "not authenticated", http.StatusInternalServerError)
+		return
+	}
+	reqModel.UserId = user.ID
 	err = schedulersrv.SchedulerSrv.CreateSchedule(reqModel)
 	if rest.HandleIfErr(responsewriter, err, 500) {
 		return
