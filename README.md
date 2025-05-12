@@ -30,6 +30,7 @@ In alphabetical order —
 
 * Massoud Seifi
 * Muhammad Zaid Ali
+* Nariman Movaffaghi
 * Sal Rahman
 
 ### Credits — Logo
