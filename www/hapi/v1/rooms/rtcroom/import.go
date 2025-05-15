@@ -1,0 +1,5 @@
+package rtcroom
+
+import (
+	_ "github.com/reiver/logjam/www/hapi/v1/rooms/rtcroom/ID"
+)

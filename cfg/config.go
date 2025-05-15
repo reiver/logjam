@@ -6,9 +6,13 @@ import (
 )
 
 var config libcfg.Model = libcfg.Model{
-	GoldGorillaBaseURL:flg.GoldGorillaBaseURL,
-	ProdMode:flg.ProdMode,
-	WebServerTCPAddress:flg.WebServerTCPAddress,
+	GoldGorillaBaseURL:  flg.GoldGorillaBaseURL,
+	ProdMode:            flg.ProdMode,
+	WebServerTCPAddress: flg.WebServerTCPAddress,
+	BlueSkyBaseURL:      flg.BlueSkyBaseURL,
+	NeynarApiKey:        flg.NeynarApiKey,
+	PocketBaseURL:       flg.PocketBaseURL,
+	PocketBaseAuthToken: flg.PocketBaseAuthToken,
 }
 
 var Config libcfg.Configurer = libcfg.Wrap(config)

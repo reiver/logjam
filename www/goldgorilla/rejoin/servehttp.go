@@ -11,14 +11,14 @@ import (
 	"github.com/reiver/logjam/lib/rest"
 	"github.com/reiver/logjam/srv/goldgorilla"
 	"github.com/reiver/logjam/srv/http"
-	"github.com/reiver/logjam/srv/room"
+	"github.com/reiver/logjam/srv/rtc-rooms"
 	"github.com/reiver/logjam/srv/websock"
 )
 
 const path string = "/goldgorilla/rejoin"
 
 func init() {
-        httpsrv.Router.HandleFunc(path, serveHTTP)
+	httpsrv.Router.HandleFunc(path, serveHTTP)
 }
 
 func serveHTTP(responsewriter http.ResponseWriter, request *http.Request) {
@@ -43,7 +43,7 @@ func serveHTTP(responsewriter http.ResponseWriter, request *http.Request) {
 	if rest.HandleIfErr(responsewriter, err, 400) {
 		return
 	}
-	broadcaster, err := roomsrv.Repository.GetBroadcaster(reqModel.RoomId)
+	broadcaster, err := rtcroomsrv.Repository.GetBroadcaster(reqModel.RoomId)
 	if rest.HandleIfErr(responsewriter, err, 500) {
 		return
 	}
@@ -52,11 +52,11 @@ func serveHTTP(responsewriter http.ResponseWriter, request *http.Request) {
 		_ = rest.Write(responsewriter, nil, 503)
 		return
 	}
-	_, _, err = roomsrv.Repository.RemoveMember(reqModel.RoomId, reqModel.GGID)
+	_, _, err = rtcroomsrv.Repository.RemoveMember(reqModel.RoomId, reqModel.GGID)
 	if rest.HandleIfErr(responsewriter, err, 500) {
 		return
 	}
-	roomMembersIdList, err := roomsrv.Repository.GetAllMembersId(reqModel.RoomId, true)
+	roomMembersIdList, err := rtcroomsrv.Repository.GetAllMembersId(reqModel.RoomId, true)
 	if rest.HandleIfErr(responsewriter, err, 500) {
 		return
 	}

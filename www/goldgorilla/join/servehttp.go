@@ -2,6 +2,7 @@ package verboten
 
 import (
 	"encoding/json"
+	rtcroomsrv "github.com/reiver/logjam/srv/rtc-rooms"
 	"io"
 	"net/http"
 	"strconv"
@@ -13,14 +14,13 @@ import (
 	"github.com/reiver/logjam/lib/rest"
 	"github.com/reiver/logjam/srv/goldgorilla"
 	"github.com/reiver/logjam/srv/http"
-	"github.com/reiver/logjam/srv/room"
 	"github.com/reiver/logjam/srv/websock"
 )
 
 const path string = "/goldgorilla/join"
 
 func init() {
-        httpsrv.Router.HandleFunc(path, serveHTTP)
+	httpsrv.Router.HandleFunc(path, serveHTTP)
 }
 
 func serveHTTP(responsewriter http.ResponseWriter, request *http.Request) {
@@ -44,17 +44,17 @@ func serveHTTP(responsewriter http.ResponseWriter, request *http.Request) {
 	}
 	//ctrl.conf.GoldGorillaSVCAddr = reqModel.ServiceAddr
 	newGGID := websocksrv.WebSockSrv.GetNewID()
-	err = roomsrv.Repository.AddMember(reqModel.RoomId, newGGID, "{}", "", "", true)
+	err = rtcroomsrv.Repository.AddMember(reqModel.RoomId, newGGID, "{}", "", "", true)
 	if rest.HandleIfErr(responsewriter, err, 500) {
 		return
 	}
-	err = roomsrv.Repository.UpdateCanConnect(reqModel.RoomId, newGGID, true)
+	err = rtcroomsrv.Repository.UpdateCanConnect(reqModel.RoomId, newGGID, true)
 	if rest.HandleIfErr(responsewriter, err, 500) {
 		return
 	}
-	parentId, err := roomsrv.Repository.InsertMemberToTree(reqModel.RoomId, newGGID, true)
+	parentId, err := rtcroomsrv.Repository.InsertMemberToTree(reqModel.RoomId, newGGID, true)
 	if rest.HandleIfErr(responsewriter, err, 500) {
-		_, _, _ = roomsrv.Repository.RemoveMember(reqModel.RoomId, newGGID)
+		_, _, _ = rtcroomsrv.Repository.RemoveMember(reqModel.RoomId, newGGID)
 		return
 	}
 	err = goldgorillasrv.Repository.CreatePeer(reqModel.RoomId, *parentId, true, true, newGGID)
@@ -71,7 +71,7 @@ func serveHTTP(responsewriter http.ResponseWriter, request *http.Request) {
 	}{
 		ID: newGGID,
 	}, 200)
-	memsId, err := roomsrv.Repository.GetAllMembersId(reqModel.RoomId, false)
+	memsId, err := rtcroomsrv.Repository.GetAllMembersId(reqModel.RoomId, false)
 	if err != nil {
 		log.Error(err)
 	} else {
@@ -88,7 +88,7 @@ func serveHTTP(responsewriter http.ResponseWriter, request *http.Request) {
 			}
 			time.Sleep(2 * time.Second)
 		}
-		_, childrenIdList, err := roomsrv.Repository.RemoveMember(roomId, newGGID)
+		_, childrenIdList, err := rtcroomsrv.Repository.RemoveMember(roomId, newGGID)
 		if err != nil {
 			log.Error(err)
 			return

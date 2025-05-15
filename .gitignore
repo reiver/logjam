@@ -5,3 +5,4 @@ logjam.exe
 logjam
 web-app/node_modules
 web-app/dist
+go_build_github_com_reiver_logjam
