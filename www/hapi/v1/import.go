@@ -1,12 +1,8 @@
 package verboten
 
 import (
-	_ "github.com/reiver/logjam/www/hapi/v1/bluesky"
-	_ "github.com/reiver/logjam/www/hapi/v1/layouts"
 	_ "github.com/reiver/logjam/www/hapi/v1/neynar"
 	_ "github.com/reiver/logjam/www/hapi/v1/rooms"
 	_ "github.com/reiver/logjam/www/hapi/v1/schedule"
-	_ "github.com/reiver/logjam/www/hapi/v1/users"
-	_ "github.com/reiver/logjam/www/hapi/v1/wallets"
 	_ "github.com/reiver/logjam/www/hapi/v1/ws"
 )

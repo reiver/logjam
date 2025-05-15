@@ -6,10 +6,8 @@ import (
 	"errors"
 	"fmt"
 	cErrors "github.com/reiver/logjam/lib/errors"
-	"github.com/reiver/logjam/lib/tokens"
-	"github.com/reiver/logjam/lib/users"
+	"github.com/reiver/logjam/lib/marshal"
 	dbsrv "github.com/reiver/logjam/srv/db"
-	userssrv "github.com/reiver/logjam/srv/users"
 	"io"
 	"net/http"
 	"sync"
@@ -26,11 +24,10 @@ const (
 	sessionsTable = "blueSkySessions"
 
 	//keys
-	accessTokenKey  = "accessToken"
-	refreshTokenKey = "refreshToken"
+	accessTokenKey  = "accessJwt"
+	refreshTokenKey = "refreshJwt"
 	handleKey       = "handle"
 	didKey          = "did"
-	ownerIdKey      = "ownerId"
 )
 
 func NewHTTPRepository(svcAddr string) IBlueSkyServiceRepository {
@@ -43,53 +40,7 @@ func NewHTTPRepository(svcAddr string) IBlueSkyServiceRepository {
 	}
 }
 
-func (repo *httpRepository) SaveLastTokens(input SubmitReqModel) (*users.CompleteSignUpResponse, error) {
-	rows, err := dbsrv.Repository.GetByFilter(sessionsTable, map[string]any{
-		didKey: input.DID,
-	})
-	if err != nil {
-		return nil, err
-	}
-	ownerId := ""
-	if rows != nil && len(rows) > 0 {
-		ownerId = rows[0][ownerIdKey].(string)
-		for _, r := range rows {
-			dbsrv.Repository.Delete(sessionsTable, r["id"].(string))
-		}
-	} else {
-		uid, err := userssrv.Repository.Create(users.CreateUserDTO{
-			Email:    "",
-			Name:     input.Name,
-			UserName: "",
-			Bio:      input.Bio,
-		})
-		if err != nil {
-			return nil, err
-		}
-		ownerId = uid
-	}
-
-	_, err = dbsrv.Repository.Insert(sessionsTable, map[string]any{
-		accessTokenKey:  input.AccessToken,
-		refreshTokenKey: input.RefreshToken,
-		didKey:          input.DID,
-		handleKey:       input.Handle,
-		ownerIdKey:      ownerId,
-	})
-	if err != nil {
-		return nil, err
-	}
-	token, err := tokens.CreateToken(ownerId, nil)
-	if err != nil {
-		return nil, err
-	}
-	return &users.CompleteSignUpResponse{
-		UserID: ownerId,
-		Token:  token,
-	}, nil
-}
-
-func (repo *httpRepository) RefreshTokens(ak AK) (AK, error) {
+func (repo *httpRepository) RefreshTokens(did string) (AK, error) {
 	url := fmt.Sprintf("%s/xrpc/com.atproto.server.refreshSession", repo.svcAddr)
 
 	req, err := http.NewRequest("POST", url, nil)
@@ -97,6 +48,20 @@ func (repo *httpRepository) RefreshTokens(ak AK) (AK, error) {
 		return AK{}, cErrors.NewErrorFromErr(http.StatusInternalServerError, fmt.Errorf("error creating HTTP request: %w", err))
 	}
 	client := &http.Client{Timeout: 16 * time.Second}
+
+	rows, err := dbsrv.Repository.GetByFilter(sessionsTable, map[string]any{didKey: did})
+	if err != nil {
+		return AK{}, err
+	}
+	if len(rows) == 0 {
+		return AK{}, cErrors.NewErrorWithMsg(http.StatusNotFound, "couldnt find tokens for this account did")
+	}
+	var ak AK
+	err = marshal.MapToObj(rows[0], &ak)
+	if err != nil {
+		return AK{}, nil
+	}
+	req.Header.Set("Authorization", "Bearer "+ak.RefreshToken)
 	resp, err := client.Do(req)
 	if err != nil {
 		return AK{}, cErrors.NewErrorFromErr(http.StatusInternalServerError, fmt.Errorf("error sending HTTP request: %w", err))
@@ -133,12 +98,15 @@ func (repo *httpRepository) RefreshTokens(ak AK) (AK, error) {
 		Handle:       res.Handle,
 		DID:          res.DID,
 	}
-	_, err = repo.SaveLastTokens(SubmitReqModel{AK: ak})
+	err = dbsrv.Repository.UpdateByFilter(sessionsTable, map[string]any{didKey: ak.DID}, map[string]any{
+		accessTokenKey:  res.AccessJWT,
+		refreshTokenKey: res.RefreshJWT,
+	})
 	return ak, err
 }
 
-func (repo *httpRepository) getAK(ownerId string) (*AK, error) {
-	recs, err := dbsrv.Repository.GetByFilter(sessionsTable, map[string]any{ownerIdKey: ownerId})
+func (repo *httpRepository) getAK(did string) (*AK, error) {
+	recs, err := dbsrv.Repository.GetByFilter(sessionsTable, map[string]any{didKey: did})
 	if err != nil {
 		return nil, err
 	}
@@ -154,9 +122,9 @@ func (repo *httpRepository) getAK(ownerId string) (*AK, error) {
 	}, nil
 }
 
-func (repo *httpRepository) AccountExists(userId string) (bool, error) {
+func (repo *httpRepository) AccountExists(did string) (bool, error) {
 	rows, err := dbsrv.Repository.GetByFilter(sessionsTable, map[string]any{
-		ownerIdKey: userId,
+		didKey: did,
 	})
 	if err != nil {
 		return false, err
@@ -168,9 +136,9 @@ func (repo *httpRepository) AccountExists(userId string) (bool, error) {
 }
 
 // CreatePost creates a new post by calling the create post endpoint.
-func (repo *httpRepository) CreatePost(ownerId, text string) error {
+func (repo *httpRepository) CreatePost(did, text string) error {
 	url := fmt.Sprintf("%s/xrpc/com.atproto.repo.createRecord", repo.svcAddr)
-	ak, err := repo.getAK(ownerId)
+	ak, err := repo.getAK(did)
 	if err != nil {
 		return err
 	}

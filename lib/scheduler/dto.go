@@ -3,7 +3,8 @@ package scheduler
 import "time"
 
 type CreateScheduleRequestModel struct {
-	UserId   string    `json:"-"`
-	DateTime time.Time `json:"dateTime"`
-	RoomUID  string    `json:"roomUID"`
+	DateTime        time.Time      `json:"dateTime"`
+	Text            string         `json:"text"`
+	SocialAccountId string         `json:"socialAccountId"`
+	SCAccessKeys    map[string]any `json:"SCAccessKeys"`
 }

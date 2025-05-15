@@ -13,13 +13,13 @@ import (
 const path string = "/hapi/v1/neynar/cast"
 
 func init() {
-	httpsrv.RouterWithAuth.HandleFunc(path, serveHTTP).Methods(http.MethodPost, http.MethodOptions)
+	httpsrv.Router.HandleFunc(path, serveHTTP).Methods(http.MethodPost, http.MethodOptions)
 }
 
 type createCastRequestModel struct {
-	Text      string `json:"text"`
-	ParentURL string `json:"parent_url,omitempty"`
-	Embeds    []any  `json:"embeds,omitempty"`
+	neynar.CastPayload
+	FID        int64  `json:"fid"`
+	SignerUUID string `json:"refreshToken"`
 }
 
 func serveHTTP(responsewriter http.ResponseWriter, request *http.Request) {
@@ -42,16 +42,11 @@ func serveHTTP(responsewriter http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	user := rest.GetUser(request)
-	if user == nil {
-		http.Error(responsewriter, "not authenticated", http.StatusInternalServerError)
-		return
-	}
-	err = neynarsrv.Repository.CreateCast(user.ID, neynar.CastPayload{
+	err = neynarsrv.Repository.CreateCast(req.FID, neynar.CastPayload{
 		Text:      req.Text,
 		ParentURL: req.ParentURL,
 		Embeds:    req.Embeds,
-	})
+	}, req.SignerUUID)
 	if rest.HandleIfErr(responsewriter, err, 500) {
 		return
 	}

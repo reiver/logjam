@@ -6,10 +6,7 @@ import (
 	"fmt"
 	cErrors "github.com/reiver/logjam/lib/errors"
 	"github.com/reiver/logjam/lib/marshal"
-	"github.com/reiver/logjam/lib/tokens"
-	"github.com/reiver/logjam/lib/users"
 	dbsrv "github.com/reiver/logjam/srv/db"
-	userssrv "github.com/reiver/logjam/srv/users"
 	"io"
 	"net/http"
 	"time"
@@ -27,7 +24,6 @@ const (
 	///keys
 	FIDKey        = "fid"
 	SignerUUIDKey = "signerUUID"
-	OwnerIdKey    = "ownerId"
 )
 
 func NewHTTPRepository(baseURL, apiKey string) INeynarServiceRepository {
@@ -38,9 +34,9 @@ func NewHTTPRepository(baseURL, apiKey string) INeynarServiceRepository {
 	}
 }
 
-func (repo *httpRepository) NeynarAccountExists(userId string) (bool, error) {
+func (repo *httpRepository) NeynarAccountExists(fid int64) (bool, error) {
 	rows, err := dbsrv.Repository.GetByFilter(neynarIdsTable, map[string]any{
-		OwnerIdKey: userId,
+		FIDKey: fid,
 	})
 	if err != nil {
 		return false, err
@@ -51,82 +47,61 @@ func (repo *httpRepository) NeynarAccountExists(userId string) (bool, error) {
 	return true, nil
 }
 
-func (repo *httpRepository) SaveAccountKeys(input SubmitReqModel) (*users.CompleteSignUpResponse, error) {
+func (repo *httpRepository) SaveAccountKeys(input AK) error {
 	rows, err := dbsrv.Repository.GetByFilter(neynarIdsTable, map[string]any{
 		FIDKey: input.FID,
 	})
 	if err != nil {
-		return nil, err
+		return err
 	}
 	if rows == nil || len(rows) == 0 {
-		uid, err := userssrv.Repository.Create(users.CreateUserDTO{
-			Email:    "",
-			Name:     input.Name,
-			UserName: "",
-			Bio:      input.Bio,
-		})
-		if err != nil {
-			return nil, err
-		}
 		_, err = dbsrv.Repository.Insert(neynarIdsTable, map[string]any{
 			FIDKey:        input.FID,
 			SignerUUIDKey: input.SignerUUID,
-			OwnerIdKey:    uid,
 		})
 		if err != nil {
-			return nil, err
-		}
-		token, err := tokens.CreateToken(uid, nil)
-		if err != nil {
-			return nil, err
+			return err
 		}
 
-		return &users.CompleteSignUpResponse{
-			UserID: uid,
-			Token:  token,
-		}, nil
+		return nil
 	} else {
-		d := NeynarIdDTO{}
+		d := AK{}
 		err = marshal.MapToObj(rows[0], &d)
 		if err != nil {
-			return nil, err
+			return err
 		}
 		err = dbsrv.Repository.Update(neynarIdsTable, rows[0]["id"].(string), map[string]any{
 			FIDKey:        input.FID,
 			SignerUUIDKey: input.SignerUUID,
-			OwnerIdKey:    d.OwnerId,
 		})
 		if err != nil {
-			return nil, err
-		}
-		token, err := tokens.CreateToken(d.OwnerId, nil)
-		if err != nil {
-			return nil, err
+			return err
 		}
 
-		return &users.CompleteSignUpResponse{
-			UserID: d.OwnerId,
-			Token:  token,
-		}, nil
+		return nil
 	}
 }
 
-func (repo *httpRepository) CreateCast(userId string, content CastPayload) error {
-	rows, err := dbsrv.Repository.GetByFilter(neynarIdsTable, map[string]any{
-		OwnerIdKey: userId,
-	})
+func (repo *httpRepository) CreateCast(fid int64, content CastPayload, signerUUID string) error {
+	filter := map[string]any{
+		FIDKey: fid,
+	}
+	if len(signerUUID) > 0 {
+		filter[SignerUUIDKey] = signerUUID
+	}
+	rows, err := dbsrv.Repository.GetByFilter(neynarIdsTable, filter)
 	if err != nil {
 		return err
 	}
 	if rows == nil || len(rows) == 0 {
 		return cErrors.NewErrorWithMsg(http.StatusUnauthorized, "submit account ids first")
 	}
-	id := NeynarIdDTO{}
+	id := AK{}
 	err = marshal.MapToObj(rows[0], &id)
 
 	url := fmt.Sprintf("%s/v2/farcaster/cast", repo.baseURL)
 
-	account := id.AK
+	account := id
 
 	payload := map[string]interface{}{
 		"text":        content.Text,

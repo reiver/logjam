@@ -1,7 +1,6 @@
 package main
 
 import (
-	"github.com/reiver/logjam/lib/tokens"
 	dbsrv "github.com/reiver/logjam/srv/db"
 	schedulersrv "github.com/reiver/logjam/srv/scheduler"
 	"net/http"
@@ -18,7 +17,6 @@ func webserve() {
 	var tcpaddr string = cfg.Config.WebServerTCPAddress()
 	log.Infof("serving HTTP on TCP address: %q", tcpaddr)
 
-	tokens.Initialize([]byte("a4d624f9d3e503bb8603b49fe4422ac45f36d4d3d089cc64e4b0d72e3962c5a1"))
 	err := dbsrv.Initialize(dbsrv.PocketBase)
 	if err != nil {
 		panic(err)

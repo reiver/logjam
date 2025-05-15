@@ -1,9 +1,7 @@
 package neynar
 
-import "github.com/reiver/logjam/lib/users"
-
 type INeynarServiceRepository interface {
-	SaveAccountKeys(SubmitReqModel) (*users.CompleteSignUpResponse, error)
-	CreateCast(userId string, payload CastPayload) error
-	NeynarAccountExists(userId string) (bool, error)
+	SaveAccountKeys(ak AK) error
+	CreateCast(fid int64, payload CastPayload, signerUUID string) error
+	NeynarAccountExists(fid int64) (bool, error)
 }

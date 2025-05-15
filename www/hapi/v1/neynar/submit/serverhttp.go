@@ -30,16 +30,16 @@ func serveHTTP(responsewriter http.ResponseWriter, request *http.Request) {
 	if rest.HandleIfErr(responsewriter, err, 400) {
 		return
 	}
-	var reqModel neynar.SubmitReqModel
+	var reqModel neynar.AK
 	err = json.Unmarshal(reqBody, &reqModel)
 	if rest.HandleIfErr(responsewriter, err, 400) {
 		return
 	}
 
-	resp, err := neynarsrv.Repository.SaveAccountKeys(reqModel)
+	err = neynarsrv.Repository.SaveAccountKeys(reqModel)
 	if rest.HandleIfErr(responsewriter, err, 500) {
 		return
 	}
 
-	_ = rest.Write(responsewriter, resp, http.StatusOK)
+	_ = rest.Write(responsewriter, nil, http.StatusCreated)
 }

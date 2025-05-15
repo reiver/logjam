@@ -37,7 +37,7 @@ func Initialize(dbServiceType TDBService) error {
 	}
 
 	//table initializations here
-	{
+	/*{
 		err := Repository.CreateTableIfNotExists("userstbl", []db.Field{
 			{
 				Name: "name",
@@ -168,7 +168,7 @@ func Initialize(dbServiceType TDBService) error {
 				Type: db.DateType,
 			},
 			{
-				Name: "roomUID",
+				Name: "text",
 				Type: db.TextType,
 			}, {
 				Name: "sent",
@@ -246,7 +246,7 @@ func Initialize(dbServiceType TDBService) error {
 		if err != nil {
 			return err
 		}
-	}
+	}*/
 
 	return nil
 }
