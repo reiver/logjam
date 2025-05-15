@@ -2,6 +2,7 @@ package verboten
 
 import (
 	"encoding/json"
+	"errors"
 	"github.com/reiver/logjam/lib/neynar"
 	"github.com/reiver/logjam/lib/rest"
 	httpsrv "github.com/reiver/logjam/srv/http"
@@ -41,7 +42,14 @@ func serveHTTP(responsewriter http.ResponseWriter, request *http.Request) {
 	if rest.HandleIfErr(responsewriter, err, 400) {
 		return
 	}
-
+	ok, err := neynarsrv.Repository.VerifySigner(req.SignerUUID)
+	if rest.HandleIfErr(responsewriter, err, http.StatusInternalServerError) {
+		return
+	}
+	if !ok {
+		rest.Error(responsewriter, errors.New("invalid signerUUID"), http.StatusUnauthorized)
+		return
+	}
 	err = neynarsrv.Repository.CreateCast(req.FID, neynar.CastPayload{
 		Text:      req.Text,
 		ParentURL: req.ParentURL,

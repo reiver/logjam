@@ -40,7 +40,7 @@ func NewHTTPRepository(svcAddr string) IBlueSkyServiceRepository {
 	}
 }
 
-func (repo *httpRepository) RefreshTokens(did string) (AK, error) {
+func (repo *httpRepository) RefreshTokens(did string, accessKey, refreshKey string) (AK, error) {
 	url := fmt.Sprintf("%s/xrpc/com.atproto.server.refreshSession", repo.svcAddr)
 
 	req, err := http.NewRequest("POST", url, nil)
@@ -49,12 +49,17 @@ func (repo *httpRepository) RefreshTokens(did string) (AK, error) {
 	}
 	client := &http.Client{Timeout: 16 * time.Second}
 
-	rows, err := dbsrv.Repository.GetByFilter(sessionsTable, map[string]any{didKey: did})
+	filters := map[string]any{didKey: did}
+	if len(accessKey) > 0 && len(refreshKey) > 0 {
+		filters[accessTokenKey] = accessKey
+		filters[refreshTokenKey] = refreshKey
+	}
+	rows, err := dbsrv.Repository.GetByFilter(sessionsTable, filters)
 	if err != nil {
 		return AK{}, err
 	}
 	if len(rows) == 0 {
-		return AK{}, cErrors.NewErrorWithMsg(http.StatusNotFound, "couldnt find tokens for this account did")
+		return AK{}, cErrors.NewErrorWithMsg(http.StatusNotFound, "couldnt find tokens for this account did/at/rt")
 	}
 	var ak AK
 	err = marshal.MapToObj(rows[0], &ak)

@@ -82,6 +82,31 @@ func (repo *httpRepository) SaveAccountKeys(input AK) error {
 	}
 }
 
+func (repo *httpRepository) VerifySigner(signerUUID string) (ok bool, err error) {
+	url := fmt.Sprintf("%s/v2/farcaster/signer?signer_uuid="+signerUUID, repo.baseURL)
+
+	req, err := http.NewRequest("POST", url, nil)
+	if err != nil {
+		return false, cErrors.NewErrorFromErr(http.StatusInternalServerError, fmt.Errorf("failed to create request: %w", err))
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("x-api-key", repo.apiKey)
+
+	resp, err := repo.client.Do(req)
+	if err != nil {
+		return false, cErrors.NewErrorFromErr(http.StatusInternalServerError, fmt.Errorf("request failed: %w", err))
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode > 204 {
+		respBody, _ := io.ReadAll(resp.Body)
+		return false, cErrors.NewErrorFromErr(http.StatusInternalServerError, fmt.Errorf("verify failed (%d): %s", resp.StatusCode, respBody))
+	}
+
+	return true, nil
+}
+
 func (repo *httpRepository) CreateCast(fid int64, content CastPayload, signerUUID string) error {
 	filter := map[string]any{
 		FIDKey: fid,

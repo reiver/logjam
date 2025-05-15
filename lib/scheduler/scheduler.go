@@ -2,10 +2,12 @@ package scheduler
 
 import (
 	"github.com/reiver/logjam/lib/db"
+	cErrors "github.com/reiver/logjam/lib/errors"
 	"github.com/reiver/logjam/lib/neynar"
 	blueskysrv "github.com/reiver/logjam/srv/bluesky"
 	dbsrv "github.com/reiver/logjam/srv/db"
 	neynarsrv "github.com/reiver/logjam/srv/neynar"
+	"net/http"
 	"strconv"
 	"time"
 )
@@ -56,7 +58,7 @@ func (s *Scheduler) sendToSocials(socialAccountId, text, schedId string) error {
 		return nil
 	}
 	if haveBlueSkyAcc {
-		_, err = blueskysrv.Repository.RefreshTokens(socialAccountId)
+		_, err = blueskysrv.Repository.RefreshTokens(socialAccountId, "", "")
 		if err != nil {
 			return err
 		}
@@ -67,6 +69,36 @@ func (s *Scheduler) sendToSocials(socialAccountId, text, schedId string) error {
 }
 
 func (s *Scheduler) CreateSchedule(input CreateScheduleRequestModel) error {
+	if input.SCAccessKeys == nil {
+		return cErrors.NewErrorWithMsg(http.StatusForbidden, "social account access keys are required")
+	}
+	accessOk := false
+	if suuid, isNeynar := input.SCAccessKeys["signerUUID"]; isNeynar {
+		ok, err := neynarsrv.Repository.VerifySigner(suuid.(string))
+		if err != nil {
+			return err
+		}
+		if !ok {
+			return cErrors.NewErrorWithMsg(http.StatusUnauthorized, "invalid signer uuid for "+input.SocialAccountId)
+		}
+		accessOk = true
+	}
+	if did, isNeynar := input.SCAccessKeys["did"]; isNeynar {
+		at, atThere := input.SCAccessKeys["accessJwt"]
+		rt, rtThere := input.SCAccessKeys["refreshJwt"]
+		if !atThere || !rtThere || (len(at.(string)) == 0 || len(rt.(string)) == 0) {
+			return cErrors.NewErrorWithMsg(http.StatusUnauthorized, "accessJwt and refreshJwt are required in social account access keys")
+		}
+		_, err := blueskysrv.Repository.RefreshTokens(did.(string), at.(string), rt.(string))
+		if err != nil {
+			return err
+		}
+		accessOk = true
+	}
+	if !accessOk {
+		return cErrors.NewErrorWithMsg(http.StatusForbidden, "couldnt verify user access to social account with this id :"+input.SocialAccountId)
+	}
+
 	_, err := dbsrv.Repository.Insert(schedulesTbl, map[string]any{
 		dateTimeKey: input.DateTime, textKey: input.Text,
 		socialAccKey: input.SocialAccountId,

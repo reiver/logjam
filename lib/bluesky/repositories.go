@@ -14,7 +14,7 @@ type TextPostRecord struct {
 }
 
 type IBlueSkyServiceRepository interface {
-	RefreshTokens(did string) (AK, error)
+	RefreshTokens(did string, accessKey, refreshKey string) (AK, error)
 	CreatePost(did, text string) error
 	AccountExists(did string) (bool, error)
 }
