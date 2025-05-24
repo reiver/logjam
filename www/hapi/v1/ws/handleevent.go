@@ -5,6 +5,7 @@ import (
 
 	"github.com/reiver/go-erorr"
 
+	"github.com/reiver/logjam/lib/msgs"
 	"github.com/reiver/logjam/lib/rooms"
 	"github.com/reiver/logjam/srv/room"
 )
@@ -17,33 +18,33 @@ func handleEvent(ctx *rooms.WSContext) {
 		log.Debugf("ID[%d] event: %s", ctx.SocketID, ctx.ParsedMessage.Type)
 	}
 	switch ctx.ParsedMessage.Type {
-	case "start":
+	case msgs.TypeStart:
 		roomsrv.Controller.Start(ctx)
-	case "role":
+	case  msgs.TypeRole:
 		roomsrv.Controller.Role(ctx)
-	case "stream":
+	case  msgs.TypeStream:
 		roomsrv.Controller.Stream(ctx)
-	case "updateStreamId":
+	case  msgs.TypeUpdateStreamID:
 		roomsrv.Controller.UpdateStreamId(ctx)
-	case "ping":
+	case  msgs.TypePing:
 		roomsrv.Controller.Ping(ctx)
-	case "turn_status":
+	case  msgs.TypeTurnStatus:
 		roomsrv.Controller.TurnStatus(ctx)
-	case "tree":
+	case  msgs.TypeTree:
 		roomsrv.Controller.Tree(ctx)
-	case "metadata-set":
+	case  msgs.TypeMetaDataSet:
 		roomsrv.Controller.MetadataSet(ctx)
-	case "metadata-get":
+	case  msgs.TypeMetaDataGet:
 		roomsrv.Controller.MetadataGet(ctx)
-	case "user-by-stream":
+	case  msgs.TypeUserByStream:
 		roomsrv.Controller.UserByStream(ctx)
-	case "muted":
+	case  msgs.TypeMuted:
 		roomsrv.Controller.Muted(ctx)
-	case "get-latest-user-list":
+	case  msgs.TypeGetLatestUserList:
 		roomsrv.Controller.GetLatestUserList(ctx)
-	case "reconnect-children":
+	case  msgs.TypeReconnectChildren:
 		roomsrv.Controller.ReconnectChildren(ctx)
-	case "send-message":
+	case  msgs.TypeSendMessage:
 		roomsrv.Controller.SendMessage(ctx)
 	default:
 		room, err := roomsrv.Repository.GetRoom(ctx.RoomId)
@@ -53,11 +54,11 @@ func handleEvent(ctx *rooms.WSContext) {
 			if room.GoldGorilla != nil {
 				if ctx.ParsedMessage.Target == strconv.FormatUint((*room.GoldGorilla).ID, 10) {
 					switch ctx.ParsedMessage.Type {
-					case "video-answer":
+					case  msgs.TypeVideoAnswer:
 						roomsrv.Controller.SendAnswerToAN(ctx)
-					case "video-offer":
+					case  msgs.TypeVideoOffer:
 						roomsrv.Controller.SendOfferToAN(ctx)
-					case "new-ice-candidate":
+					case  msgs.TypeNewIceCandidate:
 						roomsrv.Controller.SendICECandidateToAN(ctx)
 					default:
 						roomsrv.Controller.DefaultHandler(ctx)
