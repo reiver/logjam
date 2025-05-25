@@ -415,7 +415,7 @@ func (c *RoomWSController) MetadataGet(ctx *WSContext) {
 		return
 	}
 	resultEvent := msgs.MessageContract{
-		Type: "metadata-get",
+		Type: msgs.TypeMetaDataGet,
 		Data: string(jsonBytes),
 	}
 	_ = c.socketSVC.Send(resultEvent, ctx.SocketID)
