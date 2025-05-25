@@ -435,7 +435,7 @@ func (c *RoomWSController) UserByStream(ctx *WSContext) {
 		c.error(err)
 	}
 	resultEvent := msgs.MessageContract{
-		Type: "user-by-stream",
+		Type: msgs.TypeUserByStream,
 	}
 	userRole := "audience"
 	if isBroadcaster {
