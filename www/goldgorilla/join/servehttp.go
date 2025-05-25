@@ -62,7 +62,7 @@ func serveHTTP(responsewriter http.ResponseWriter, request *http.Request) {
 		return
 	}
 	_ = websocksrv.WebSockSrv.Send(msgs.MessageContract{
-		Type: "add_audience",
+		Type: msgs.TypeAddAudience,
 		Data: strconv.FormatUint(newGGID, 10),
 	}, *parentId)
 

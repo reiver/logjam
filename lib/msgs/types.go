@@ -2,6 +2,7 @@ package msgs
 
 // lib/msgs.MessageContract.Type
 const (
+	TypeAddAudience                  = "add_audience"
 	TypeAltBroadcast                 = "alt-broadcast"
 	TypeBroadcasting                 = "broadcasting"
 	TypeEventBroadcasterDisconnected = "event-broadcaster-disconnected"

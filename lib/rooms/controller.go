@@ -284,7 +284,7 @@ func (c *RoomWSController) Role(ctx *WSContext) {
 		}
 		if !c.roomRepo.IsGGInstance(ctx.RoomId, *parentId) {
 			_ = c.socketSVC.Send(msgs.MessageContract{
-				Type: "add_audience",
+				Type: msgs.TypeAddAudience,
 				Data: strconv.FormatUint(ctx.SocketID, 10),
 			}, *parentId)
 		} else {
