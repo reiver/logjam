@@ -261,7 +261,7 @@ func (c *RoomWSController) Role(ctx *WSContext) {
 		}
 		if broadcaster == nil {
 			_ = c.socketSVC.Send(msgs.MessageContract{
-				Type: "role",
+				Type: msgs.TypeRole,
 				Data: "no:audience",
 			}, ctx.SocketID)
 			return
