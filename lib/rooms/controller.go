@@ -120,7 +120,7 @@ func (c *RoomWSController) OnDisconnect(ctx *WSContext) {
 
 func (c *RoomWSController) Start(ctx *WSContext) {
 	resultEvent := msgs.MessageContract{
-		Type:   "start",
+		Type:   msgs.TypeStart,
 		Data:   strconv.FormatInt(int64(ctx.SocketID), 10),
 		Target: "",
 		Name:   "",
