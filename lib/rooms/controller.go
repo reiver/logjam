@@ -498,7 +498,7 @@ func (c *RoomWSController) ReconnectChildren(ctx *WSContext) {
 		return
 	}
 	event := msgs.MessageContract{
-		Type: "reconnect",
+		Type: msgs.TypeReconnect,
 		Data: strconv.FormatUint(ctx.SocketID, 10),
 	}
 	_ = c.socketSVC.Send(event, childrenIdList...)
