@@ -232,13 +232,13 @@ func (c *RoomWSController) Role(ctx *WSContext) {
 		}
 		if broadcaster == nil {
 			_ = c.socketSVC.Send(msgs.MessageContract{
-				Type: "alt-broadcast",
+				Type: msgs.TypeAltBroadcast,
 				Data: "no-broadcaster",
 			}, ctx.SocketID)
 			return
 		}
 
-		resultEvent.Type = "alt-broadcast"
+		resultEvent.Type = msgs.TypeAltBroadcast
 		resultEvent.Data = strconv.FormatUint(broadcaster.ID, 10)
 		_ = c.socketSVC.Send(resultEvent, ctx.SocketID)
 
