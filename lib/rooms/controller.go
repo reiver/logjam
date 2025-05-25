@@ -178,7 +178,7 @@ func (c *RoomWSController) Role(ctx *WSContext) {
 			}
 			if currentUser.Name != br.Name {
 				_ = c.socketSVC.Send(msgs.MessageContract{
-					Type: "role",
+					Type: msgs.TypeRole,
 					Data: "no:broadcast",
 				}, ctx.SocketID)
 				return
