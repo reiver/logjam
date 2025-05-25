@@ -512,7 +512,7 @@ func (c *RoomWSController) SendMessage(ctx *WSContext) {
 		return
 	}
 	_ = c.socketSVC.Send(msgs.MessageContract{
-		Type:   "new-message",
+		Type:   msgs.TypeNewMessage,
 		Data:   ctx.ParsedMessage.Data,
 		Target: "",
 		Name:   strconv.FormatUint(ctx.SocketID, 10),

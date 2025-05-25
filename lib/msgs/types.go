@@ -14,6 +14,7 @@ const (
 	TypeMetaDataSet                  = "metadata-set"
 	TypeMuted                        = "muted"
 	TypeNewIceCandidate              = "new-ice-candidate"
+	TypeNewMessage                   = "new-message"
 	TypePing                         = "ping"
 	TypeReconnectChildren            = "reconnect-children"
 	TypeRole                         = "role"
