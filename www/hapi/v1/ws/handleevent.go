@@ -14,7 +14,7 @@ func handleEvent(ctx *rooms.WSContext) {
 	if ctx.ParsedMessage == nil || len(ctx.PureMessage) <= 2 {
 		return
 	}
-	if ctx.ParsedMessage.Type != "tree" && ctx.ParsedMessage.Type != "ping" && ctx.ParsedMessage.Type != "metadata-get" {
+	if ctx.ParsedMessage.Type != msgs.TypeTree && ctx.ParsedMessage.Type != msgs.TypePing && ctx.ParsedMessage.Type != msgs.TypeMetaDataGet {
 		log.Debugf("ID[%d] event: %s", ctx.SocketID, ctx.ParsedMessage.Type)
 	}
 	switch ctx.ParsedMessage.Type {
