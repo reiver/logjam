@@ -155,7 +155,7 @@ func (c *RoomWSController) Role(ctx *WSContext) {
 	}
 
 	resultEvent := msgs.MessageContract{
-		Type:   "role",
+		Type:   msgs.TypeRole,
 		Data:   "",
 		Target: "",
 		Name:   "",
