@@ -66,7 +66,7 @@ func (c *RoomWSController) OnDisconnect(ctx *WSContext) {
 		}
 	} else {
 		parentDCEvent := msgs.MessageContract{
-			Type: "event-parent-dc",
+			Type: msgs.TypeEventParentDC,
 			Data: strconv.FormatUint(ctx.SocketID, 10),
 		}
 		_ = c.socketSVC.Send(parentDCEvent, childrenIdList...)

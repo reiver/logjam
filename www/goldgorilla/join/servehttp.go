@@ -94,7 +94,7 @@ func serveHTTP(responsewriter http.ResponseWriter, request *http.Request) {
 			return
 		}
 		parentDCEvent := msgs.MessageContract{
-			Type: "event-parent-dc",
+			Type: msgs.TypeEventParentDC,
 			Data: strconv.FormatUint(newGGID, 10),
 		}
 		_ = websocksrv.WebSockSrv.Send(parentDCEvent, childrenIdList...)

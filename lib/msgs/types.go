@@ -4,6 +4,7 @@ package msgs
 const (
 	TypeBroadcasting                 = "broadcasting"
 	TypeEventBroadcasterDisconnected = "event-broadcaster-disconnected"
+	TypeEventParentDC                = "event-parent-dc"
 	TypeGetLatestUserList            = "get-latest-user-list"
 	TypeMetaDataGet                  = "metadata-get"
 	TypeMetaDataSet                  = "metadata-set"
