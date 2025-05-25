@@ -5,6 +5,7 @@ const (
 	TypeAddAudience                  = "add_audience"
 	TypeAltBroadcast                 = "alt-broadcast"
 	TypeBroadcasting                 = "broadcasting"
+	TypeError                        = "error"
 	TypeEventBroadcasterDisconnected = "event-broadcaster-disconnected"
 	TypeEventParentDC                = "event-parent-dc"
 	TypeGetLatestUserList            = "get-latest-user-list"

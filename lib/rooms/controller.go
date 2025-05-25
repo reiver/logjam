@@ -301,7 +301,7 @@ func (c *RoomWSController) Role(ctx *WSContext) {
 			err = c.ggRepo.CreatePeer(ctx.RoomId, ctx.SocketID, true, false, *ggid)
 			if err != nil {
 				_ = c.socketSVC.Send(msgs.MessageContract{
-					Type: "error",
+					Type: msgs.TypeError,
 					Data: err.Error(),
 				}, ctx.SocketID)
 			}
