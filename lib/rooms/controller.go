@@ -379,7 +379,7 @@ func (c *RoomWSController) Tree(ctx *WSContext) {
 	}
 	buffer, err := json.Marshal(tree)
 	resultEvent := msgs.MessageContract{
-		Type: "tree",
+		Type: msgs.TypeTree,
 		Data: string(buffer),
 	}
 	_ = c.socketSVC.Send(resultEvent, ctx.SocketID)
