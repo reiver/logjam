@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"github.com/reiver/logjam/lib/goldgorilla"
+	"github.com/reiver/logjam/lib/msgs"
 	"github.com/reiver/logjam/lib/rest"
 	"github.com/reiver/logjam/srv/http"
 	"github.com/reiver/logjam/srv/websock"
@@ -38,7 +39,7 @@ func serveHTTP(responsewriter http.ResponseWriter, request *http.Request) {
 		return
 	}
 	websocksrv.WebSockSrv.Send(map[string]interface{}{
-		"type":   "video-answer",
+		"type":   msgs.TypeVideoAnswer,
 		"target": strconv.FormatUint(reqModel.ID, 10),
 		"name":   strconv.FormatUint(reqModel.GGID, 10),
 		"sdp":    reqModel.SDP,
