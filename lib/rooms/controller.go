@@ -248,7 +248,7 @@ func (c *RoomWSController) Role(ctx *WSContext) {
 			return
 		}
 		broadcasterReceivingEvent := map[string]string{
-			"Type": `alt-broadcast`,
+			"Type": msgs.TypeAltBroadcast,
 			"Data": strconv.FormatUint(ctx.SocketID, 10),
 			"name": userInfo.Name,
 		}
