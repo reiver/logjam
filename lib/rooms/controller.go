@@ -224,7 +224,7 @@ func (c *RoomWSController) Role(ctx *WSContext) {
 				}
 			}()
 		}
-	} else if ctx.ParsedMessage.Data == "alt-broadcast" {
+	} else if ctx.ParsedMessage.Data == msgs.TypeAltBroadcast {
 		broadcaster, err := c.roomRepo.GetBroadcaster(ctx.RoomId)
 		if err != nil {
 			c.error(err)
