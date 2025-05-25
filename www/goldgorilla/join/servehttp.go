@@ -75,7 +75,7 @@ func serveHTTP(responsewriter http.ResponseWriter, request *http.Request) {
 	if err != nil {
 		log.Error(err)
 	} else {
-		_ = websocksrv.WebSockSrv.Send(msgs.MessageContract{Type: "goldgorilla-joined", Data: strconv.FormatUint(newGGID, 10)}, memsId...)
+		_ = websocksrv.WebSockSrv.Send(msgs.MessageContract{Type: msgs.TypeGoldGorillaJoined, Data: strconv.FormatUint(newGGID, 10)}, memsId...)
 	}
 	go func(roomId string, svcAddr string, ggId uint64) {
 		for {

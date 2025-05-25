@@ -8,6 +8,7 @@ const (
 	TypeEventBroadcasterDisconnected = "event-broadcaster-disconnected"
 	TypeEventParentDC                = "event-parent-dc"
 	TypeGetLatestUserList            = "get-latest-user-list"
+	TypeGoldGorillaJoined            = "goldgorilla-joined"
 	TypeMetaDataGet                  = "metadata-get"
 	TypeMetaDataSet                  = "metadata-set"
 	TypeMuted                        = "muted"
