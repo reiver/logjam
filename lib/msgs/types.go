@@ -16,6 +16,7 @@ const (
 	TypeNewIceCandidate              = "new-ice-candidate"
 	TypeNewMessage                   = "new-message"
 	TypePing                         = "ping"
+	TypePong                         = "pong"
 	TypeReconnect                    = "reconnect"
 	TypeReconnectChildren            = "reconnect-children"
 	TypeRole                         = "role"
