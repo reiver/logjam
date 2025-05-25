@@ -203,7 +203,7 @@ func (c *RoomWSController) Role(ctx *WSContext) {
 		}
 
 		err = c.socketSVC.Send(msgs.MessageContract{
-			Type: "broadcasting",
+			Type: msgs.TypeBroadcasting,
 			Data: strconv.FormatUint(ctx.SocketID, 10),
 		}, memberIds...)
 		if err != nil {

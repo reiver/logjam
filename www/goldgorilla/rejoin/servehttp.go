@@ -76,7 +76,7 @@ func serveHTTP(responsewriter http.ResponseWriter, request *http.Request) {
 			return
 		}
 		brIsBackEvent := msgs.MessageContract{
-			Type: "broadcasting",
+			Type: msgs.TypeBroadcasting,
 		}
 
 		_ = websocksrv.WebSockSrv.Send(brIsBackEvent, membersIdList...)

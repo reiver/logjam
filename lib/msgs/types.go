@@ -2,6 +2,7 @@ package msgs
 
 // lib/msgs.MessageContract.Type
 const (
+	TypeBroadcasting                 = "broadcasting"
 	TypeEventBroadcasterDisconnected = "event-broadcaster-disconnected"
 	TypeGetLatestUserList            = "get-latest-user-list"
 	TypeMetaDataGet                  = "metadata-get"
