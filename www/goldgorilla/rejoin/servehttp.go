@@ -62,7 +62,7 @@ func serveHTTP(responsewriter http.ResponseWriter, request *http.Request) {
 	}
 
 	brDCEvent := msgs.MessageContract{
-		Type: "event-broadcaster-disconnected",
+		Type: msgs.TypeEventBroadcasterDisconnected,
 		Data: strconv.FormatUint(broadcaster.ID, 10),
 	}
 

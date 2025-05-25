@@ -52,7 +52,7 @@ func (c *RoomWSController) OnDisconnect(ctx *WSContext) {
 			return
 		}
 		brDCEvent := msgs.MessageContract{
-			Type: "event-broadcaster-disconnected",
+			Type: msgs.TypeEventBroadcasterDisconnected,
 			Data: strconv.FormatUint(ctx.SocketID, 10),
 		}
 		_ = c.socketSVC.Send(brDCEvent, membersIdList...)
