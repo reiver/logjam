@@ -26,6 +26,7 @@ const (
 	TypeTurnStatus                   = "turn_status"
 	TypeUpdateStreamID               = "updateStreamId"
 	TypeUserByStream                 = "user-by-stream"
+	TypeUserEvent                    = "user-event"
 	TypeVideoAnswer                  = "video-answer"
 	TypeVideoOffer                   = "video-offer"
 )

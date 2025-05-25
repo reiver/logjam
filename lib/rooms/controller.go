@@ -485,7 +485,7 @@ func (c *RoomWSController) emitUserList(roomId string) {
 		return
 	}
 	event := msgs.MessageContract{
-		Type: "user-event",
+		Type: msgs.TypeUserEvent,
 		Data: string(buffer),
 	}
 	_ = c.socketSVC.Send(event, roomMembersIdList...)
