@@ -61,7 +61,7 @@ func serveHTTP(responsewriter http.ResponseWriter, request *http.Request) {
 	if rest.HandleIfErr(responsewriter, err, 503) {
 		return
 	}
-	_ = websocksrv.WebSockSrv.Send(msgs.MessageContract{
+	_ = websocksrv.WebSockSrv.Send(msgs.Message{
 		Type: msgs.TypeAddAudience,
 		Data: strconv.FormatUint(newGGID, 10),
 	}, *parentId)
@@ -75,7 +75,7 @@ func serveHTTP(responsewriter http.ResponseWriter, request *http.Request) {
 	if err != nil {
 		log.Error(err)
 	} else {
-		_ = websocksrv.WebSockSrv.Send(msgs.MessageContract{Type: msgs.TypeGoldGorillaJoined, Data: strconv.FormatUint(newGGID, 10)}, memsId...)
+		_ = websocksrv.WebSockSrv.Send(msgs.Message{Type: msgs.TypeGoldGorillaJoined, Data: strconv.FormatUint(newGGID, 10)}, memsId...)
 	}
 	go func(roomId string, svcAddr string, ggId uint64) {
 		for {
@@ -93,7 +93,7 @@ func serveHTTP(responsewriter http.ResponseWriter, request *http.Request) {
 			log.Error(err)
 			return
 		}
-		parentDCEvent := msgs.MessageContract{
+		parentDCEvent := msgs.Message{
 			Type: msgs.TypeEventParentDC,
 			Data: strconv.FormatUint(newGGID, 10),
 		}

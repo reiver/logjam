@@ -30,7 +30,7 @@ func serveWS(wsConn *websocket.Conn, socketId uint64, roomId string) {
 			continue
 		}
 
-		var msg msgs.MessageContract
+		var msg msgs.Message
 		err := json.Unmarshal(data, &msg)
 		if err != nil {
 			log.Error(err)

@@ -1,6 +1,6 @@
 package msgs
 
-// lib/msgs.MessageContract.Type
+// lib/msgs.Message.Type
 const (
 	TypeAddAudience                  = "add_audience"
 	TypeAltBroadcast                 = "alt-broadcast"

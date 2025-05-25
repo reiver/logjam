@@ -61,7 +61,7 @@ func serveHTTP(responsewriter http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	brDCEvent := msgs.MessageContract{
+	brDCEvent := msgs.Message{
 		Type: msgs.TypeEventBroadcasterDisconnected,
 		Data: strconv.FormatUint(broadcaster.ID, 10),
 	}
@@ -75,7 +75,7 @@ func serveHTTP(responsewriter http.ResponseWriter, request *http.Request) {
 			log.Error(err)
 			return
 		}
-		brIsBackEvent := msgs.MessageContract{
+		brIsBackEvent := msgs.Message{
 			Type: msgs.TypeBroadcasting,
 		}
 
