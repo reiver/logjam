@@ -1,31 +1,5 @@
 # RUNNING logjam
 
-## PocketBase Base URL
-
-To run **logjam** you need to tell it where your **PocketBase** server is, using a **PocketBase base-URL**.
-
-You can set this using 2 different methods.
-
-### PocketBase Base URL — environment-variable
-
-Method №1 is to use the `POCKETBASE_URL` **environment-variable**.
-
-For example, if you wanted to change the **PocketBase base-URL** TCP port to `http://example.com/api` then you could do something similar to the following:
-
-```
-POCKETBASE_URL="http://example.com/api" ./logjam
-```
-
-### PocketBase Base URL — command-line switch / flag
-
-Method №2 is to use the `--pburl` **command-line** switch/flag.
-
-For example, if you wanted to change the **PocketBase base-URL** TCP port to `http://example.com/api` then you could do something similar to the following:
-
-```
-./logjam --pburl='http://example.com/api'
-```
-
 ## Running The Project
 
 ---
