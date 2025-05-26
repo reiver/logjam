@@ -32,6 +32,13 @@ const (
 
 // lib/msgs.Message.Type
 //
+// Event
+const (
+	TypeLeave                        = "Leave"
+)
+
+// lib/msgs.Message.Type
+//
 // Query
 const (
 	TypeGetLatestUserList            = "get-latest-user-list"
