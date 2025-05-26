@@ -39,7 +39,7 @@ func serveHTTP(responsewriter http.ResponseWriter, request *http.Request) {
 		return
 	}
 	_ = websocksrv.WebSockSrv.Send(map[string]interface{}{
-		"Type":      msgs.TypeNewIceCandidate,
+		"type":      msgs.TypeNewIceCandidate,
 		"Target":    strconv.FormatUint(reqModel.ID, 10),
 		"candidate": reqModel.ICECandidate,
 		"data":      strconv.FormatUint(reqModel.GGID, 10),
