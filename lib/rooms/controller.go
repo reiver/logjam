@@ -385,7 +385,7 @@ func (c *RoomWSController) Tree(ctx *WSContext) {
 	_ = c.socketSVC.Send(resultEvent, ctx.SocketID)
 }
 
-func (c *RoomWSController) MetadataSet(ctx *WSContext) {
+func (c *RoomWSController) MetaDataSet(ctx *WSContext) {
 	metaData := make(map[string]any)
 	err := json.Unmarshal([]byte(ctx.ParsedMessage.Data), &metaData)
 	if err != nil {
@@ -403,7 +403,7 @@ func (c *RoomWSController) MetadataSet(ctx *WSContext) {
 	}
 }
 
-func (c *RoomWSController) MetadataGet(ctx *WSContext) {
+func (c *RoomWSController) MetaDataGet(ctx *WSContext) {
 	meta, err := c.roomRepo.GetRoomMetaData(ctx.RoomId)
 	if err != nil {
 		c.error(err)

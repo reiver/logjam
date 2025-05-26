@@ -33,9 +33,9 @@ func handleEvent(ctx *rooms.WSContext) {
 	case  msgs.TypeTree:
 		roomsrv.Controller.Tree(ctx)
 	case  msgs.TypeMetaDataSet:
-		roomsrv.Controller.MetadataSet(ctx)
+		roomsrv.Controller.MetaDataSet(ctx)
 	case  msgs.TypeMetaDataGet:
-		roomsrv.Controller.MetadataGet(ctx)
+		roomsrv.Controller.MetaDataGet(ctx)
 	case  msgs.TypeUserByStream:
 		roomsrv.Controller.UserByStream(ctx)
 	case  msgs.TypeMuted:
