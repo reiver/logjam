@@ -8,7 +8,6 @@ const (
 	TypeError                        = "error"
 	TypeEventBroadcasterDisconnected = "event-broadcaster-disconnected"
 	TypeEventParentDC                = "event-parent-dc"
-	TypeGetLatestUserList            = "get-latest-user-list"
 	TypeGoldGorillaJoined            = "goldgorilla-joined"
 	TypeMetaDataGet                  = "metadata-get"
 	TypeMetaDataSet                  = "metadata-set"
@@ -27,7 +26,20 @@ const (
 	TypeTurnStatus                   = "turn_status"
 	TypeUpdateStreamID               = "updateStreamId"
 	TypeUserByStream                 = "user-by-stream"
-	TypeUserEvent                    = "user-event"
 	TypeVideoAnswer                  = "video-answer"
 	TypeVideoOffer                   = "video-offer"
+)
+
+// lib/msgs.Message.Type
+//
+// Query
+const (
+	TypeGetLatestUserList            = "get-latest-user-list"
+)
+
+// lib/msgs.Message.Type
+//
+// Response
+const (
+	TypeUserEvent                    = "user-event"
 )
