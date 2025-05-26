@@ -2,11 +2,12 @@ package goldgorilla
 
 import (
 	"bytes"
-	"encoding/json"
 	"errors"
 	"io"
 	"net/http"
 	"time"
+
+	"github.com/reiver/go-json"
 )
 
 type HTTPRepository struct {

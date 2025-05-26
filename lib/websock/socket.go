@@ -1,11 +1,11 @@
 package websock
 
 import (
-	"encoding/json"
 	"sync"
 	"time"
 
 	"github.com/gorilla/websocket"
+	"github.com/reiver/go-json"
 
 	"github.com/reiver/logjam/lib/logs"
 )

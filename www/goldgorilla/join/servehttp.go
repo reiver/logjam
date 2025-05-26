@@ -1,11 +1,12 @@
 package verboten
 
 import (
-	"encoding/json"
 	"io"
 	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/reiver/go-json"
 
 	"github.com/reiver/logjam/cfg"
 	"github.com/reiver/logjam/lib/goldgorilla"

@@ -1,9 +1,8 @@
 package verboten
 
 import (
-	"encoding/json"
-
 	"github.com/gorilla/websocket"
+	"github.com/reiver/go-json"
 
 	"github.com/reiver/logjam/lib/msgs"
 	"github.com/reiver/logjam/lib/rooms"

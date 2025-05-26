@@ -1,9 +1,10 @@
 package rooms
 
 import (
-	"encoding/json"
 	"strconv"
 	"time"
+
+	"github.com/reiver/go-json"
 
 	"github.com/reiver/logjam/lib/goldgorilla"
 	"github.com/reiver/logjam/lib/logs"
