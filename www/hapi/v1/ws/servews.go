@@ -13,27 +13,27 @@ import (
 
 func serveWS(wsConn *websocket.Conn, socketId uint64, roomId string) {
 	for {
-		messageType, data, readErr := wsConn.ReadMessage()
-		if readErr != nil {
-			log.Error(readErr)
+		messageType, data, err := wsConn.ReadMessage()
+		if nil != err {
+			log.Error(err)
 			go roomsrv.Controller.OnDisconnect(&rooms.WSContext{
 				RoomId:        roomId,
 				SocketID:      socketId,
 				PureMessage:   nil,
 				ParsedMessage: nil,
 			})
-			_ = wsConn.CloseHandler()(1001, readErr.Error())
+			_ = wsConn.CloseHandler()(1001, err.Error())
 			break
 		}
 		if messageType != websocket.TextMessage {
-			log.Debugf("ignoring a message of type: %d", messageType)
+			log.Debugf("ignoring websocket message of type: %d", messageType)
 			continue
 		}
 
 		var msg msgs.Message
-		err := json.Unmarshal(data, &msg)
-		if err != nil {
-			log.Error(err)
+		err = json.Unmarshal(data, &msg)
+		if nil != err {
+			log.Errorf("problem json-unmarshaling data from websocket as %T: %s", msg, err)
 			continue
 		}
 
