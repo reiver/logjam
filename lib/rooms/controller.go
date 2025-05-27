@@ -5,7 +5,11 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/reiver/go-actcon"
+	"github.com/reiver/go-fediverseid"
+
 	"github.com/reiver/logjam/lib/goldgorilla"
+	"github.com/reiver/logjam/lib/logjamlink"
 	"github.com/reiver/logjam/lib/logs"
 	"github.com/reiver/logjam/lib/msgs"
 	"github.com/reiver/logjam/lib/websock"
@@ -136,6 +140,37 @@ func (c *RoomWSController) Start(ctx *WSContext) {
 		c.error(err)
 	}
 	_ = c.socketSVC.Send(resultEvent, ctx.SocketID)
+
+	{
+		var acctURI string
+		var id string
+		{
+			// The room-id is the fediverse-id of the actor who created the room.
+			var fediverseIDString string = ctx.RoomId
+
+			fediverseID, err := fediverseid.ParseFediverseIDString(fediverseIDString)
+			if nil == err {
+				acctURI = fediverseID.AcctURI()
+				id = logjamlink.LogJamLink(fediverseID.HostElse(""), fediverseID.NameElse(""))
+			}
+		}
+
+		var activity = actcon.Create{
+			Actor:  acctURI,
+			Object: actcon.Conference{
+				Actor:     acctURI,
+				ID:        id,
+				Origin: []string{
+					acctURI,
+				},
+				To:     []string{
+					acctURI,
+				},
+			},
+		}
+		_ = c.socketSVC.Send(activity, ctx.SocketID)
+		c.debugf("[actcon] %T\n%s", activity, activity)
+	}
 }
 func (c *RoomWSController) Role(ctx *WSContext) {
 	var eventData map[string]any
@@ -608,6 +643,10 @@ func (c *RoomWSController) DefaultHandler(ctx *WSContext) {
 
 func (c *RoomWSController) debug(msg ...any) {
 	c.logger.Debug(msg...)
+}
+
+func (c *RoomWSController) debugf(format string, msg ...any) {
+	c.logger.Debugf(format, msg...)
 }
 
 func (c *RoomWSController) error(msg ...any) {
