@@ -39,7 +39,7 @@ func serveHTTP(responsewriter http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	roomId := request.URL.Query().Get("room")
-	log.Debugf("room-id (fediverse-id): %q", roomId)
-	go serveWS(wsConn, socketId, roomId)
+	roomID := request.URL.Query().Get("room")
+	log.Debugf("room-id (fediverse-id): %q", roomID)
+	go serveWS(wsConn, socketId, roomID)
 }
