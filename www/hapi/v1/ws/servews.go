@@ -11,14 +11,14 @@ import (
 )
 
 
-func serveWS(wsConn *websocket.Conn, socketId uint64, roomID string) {
+func serveWS(wsConn *websocket.Conn, socketID uint64, roomID string) {
 	for {
 		messageType, data, err := wsConn.ReadMessage()
 		if nil != err {
 			log.Error(err)
 			go roomsrv.Controller.OnDisconnect(&rooms.WSContext{
 				RoomId:        roomID,
-				SocketID:      socketId,
+				SocketID:      socketID,
 				PureMessage:   nil,
 				ParsedMessage: nil,
 			})
@@ -39,7 +39,7 @@ func serveWS(wsConn *websocket.Conn, socketId uint64, roomID string) {
 
 		ctx := &rooms.WSContext{
 			RoomId:        roomID,
-			SocketID:      socketId,
+			SocketID:      socketID,
 			PureMessage:   data,
 			ParsedMessage: &msg,
 		}
