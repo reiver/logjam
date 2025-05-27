@@ -32,7 +32,7 @@ func serveHTTP(responsewriter http.ResponseWriter, request *http.Request) {
 		log.Errorf("problem upgrading to websocket: %s", err)
 		return
 	}
-	socketId, err := websocksrv.WebSockSrv.OnConnect(wsConn)
+	socketID, err := websocksrv.WebSockSrv.OnConnect(wsConn)
 	if err != nil {
 		log.Error(err)
 		_ = wsConn.Close()
@@ -41,5 +41,5 @@ func serveHTTP(responsewriter http.ResponseWriter, request *http.Request) {
 
 	roomID := request.URL.Query().Get("room")
 	log.Debugf("room-id (fediverse-id): %q", roomID)
-	go serveWS(wsConn, socketId, roomID)
+	go serveWS(wsConn, socketID, roomID)
 }
