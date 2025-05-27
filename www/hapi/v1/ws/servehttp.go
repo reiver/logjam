@@ -40,5 +40,6 @@ func serveHTTP(responsewriter http.ResponseWriter, request *http.Request) {
 	}
 
 	roomId := request.URL.Query().Get("room")
+	log.Debugf("room-id (fediverse-id): %q", roomId)
 	go serveWS(wsConn, socketId, roomId)
 }
