@@ -28,18 +28,20 @@ const (
 	TypeUserByStream                 = "user-by-stream"
 	TypeVideoAnswer                  = "video-answer"
 	TypeVideoOffer                   = "video-offer"
+	TypeLeave                        = "leave"
+	TypeBroadcasterLeft              = "broadcaster-left"
 )
 
 // lib/msgs.Message.Type
 //
 // Query
 const (
-	TypeGetLatestUserList            = "get-latest-user-list"
+	TypeGetLatestUserList = "get-latest-user-list"
 )
 
 // lib/msgs.Message.Type
 //
 // Response
 const (
-	TypeUserEvent                    = "user-event"
+	TypeUserEvent = "user-event"
 )

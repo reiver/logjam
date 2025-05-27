@@ -118,6 +118,29 @@ func (c *RoomWSController) OnDisconnect(ctx *WSContext) {
 	}
 }
 
+func (c *RoomWSController) Leave(ctx *WSContext) {
+	isBroadcaster, err := c.roomRepo.IsBroadcaster(ctx.RoomId, ctx.SocketID)
+	if err != nil {
+		c.error(err)
+	}
+	if isBroadcaster {
+		memberIds, err := c.roomRepo.GetAllMembersId(ctx.RoomId, true)
+		if err != nil {
+			c.error(err)
+			return
+		}
+
+		err = c.socketSVC.Send(msgs.Message{
+			Type: msgs.TypeBroadcasterLeft,
+		}, memberIds...)
+		go c.socketSVC.Disconnect(ctx.SocketID)
+		if err != nil {
+			c.error(err)
+			return
+		}
+	}
+}
+
 func (c *RoomWSController) Start(ctx *WSContext) {
 	resultEvent := msgs.Message{
 		Type:   msgs.TypeStart,
@@ -442,7 +465,7 @@ func (c *RoomWSController) UserByStream(ctx *WSContext) {
 		userRole = "broadcast"
 	}
 	resultEvent.Data = strconv.FormatUint(userInfo.ID, 10) + "," + userInfo.Name + "," + ctx.ParsedMessage.Data + "," + userRole
-	_ = c.socketSVC.Send(ctx.SocketID)
+	_ = c.socketSVC.Send(resultEvent, ctx.SocketID)
 }
 
 func (c *RoomWSController) GetLatestUserList(ctx *WSContext) {
