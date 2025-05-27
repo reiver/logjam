@@ -28,13 +28,13 @@ func serveHTTP(responsewriter http.ResponseWriter, request *http.Request) {
 	responsewriter.Header().Add("Access-Control-Allow-Origin", "*")
 
 	wsConn, err := upgrader.Upgrade(responsewriter, request, nil)
-	if err != nil {
+	if nil != err {
 		log.Errorf("problem upgrading to websocket: %s", err)
 		return
 	}
 	socketID, err := websocksrv.WebSockSrv.OnConnect(wsConn)
-	if err != nil {
-		log.Error(err)
+	if nil != err {
+		log.Errorf("problem on-connecting websocket: %s", err)
 		_ = wsConn.Close()
 		return
 	}
