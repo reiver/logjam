@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/reiver/go-actcon"
+	"github.com/reiver/go-actsock"
 	"github.com/reiver/go-fediverseid"
 
 	"github.com/reiver/logjam/lib/goldgorilla"
@@ -155,9 +155,9 @@ func (c *RoomWSController) Start(ctx *WSContext) {
 			}
 		}
 
-		var activity = actcon.Create{
+		var activity = actsock.Create{
 			Actor:  acctURI,
-			Object: actcon.Conference{
+			Object: actsock.Conference{
 				Actor:     acctURI,
 				ID:        id,
 				Origin: []string{
@@ -169,7 +169,7 @@ func (c *RoomWSController) Start(ctx *WSContext) {
 			},
 		}
 		_ = c.socketSVC.Send(activity, ctx.SocketID)
-		c.debugf("[actcon] %T\n%s", activity, activity)
+		c.debugf("[actsock] %T\n%s", activity, activity)
 	}
 }
 func (c *RoomWSController) Role(ctx *WSContext) {

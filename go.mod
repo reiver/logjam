@@ -11,7 +11,7 @@ require (
 )
 
 require (
-	github.com/reiver/go-actcon v0.0.0-20250527160820-d24790368b89
+	github.com/reiver/go-actsock v0.0.0-20250528050037-fdd924639ca2
 	github.com/reiver/go-etag v0.0.0-20241130123934-1a98d29fda6e
 	github.com/reiver/go-fediverseid v0.0.0-20250403113622-694e7caca2d7
 	github.com/reiver/go-jsonld v0.0.0-20241216235649-e851bd7e3ab6
