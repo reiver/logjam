@@ -122,6 +122,7 @@ func (c *RoomWSController) Leave(ctx *WSContext) {
 	isBroadcaster, err := c.roomRepo.IsBroadcaster(ctx.RoomId, ctx.SocketID)
 	if err != nil {
 		c.error(err)
+		return
 	}
 	if isBroadcaster {
 		memberIds, err := c.roomRepo.GetAllMembersId(ctx.RoomId, true)
