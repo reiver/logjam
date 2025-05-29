@@ -20,32 +20,34 @@ func handleEvent(ctx *rooms.WSContext) {
 	switch ctx.ParsedMessage.Type {
 	case msgs.TypeStart:
 		roomsrv.Controller.Start(ctx)
-	case  msgs.TypeRole:
+	case msgs.TypeRole:
 		roomsrv.Controller.Role(ctx)
-	case  msgs.TypeStream:
+	case msgs.TypeStream:
 		roomsrv.Controller.Stream(ctx)
-	case  msgs.TypeUpdateStreamID:
+	case msgs.TypeUpdateStreamID:
 		roomsrv.Controller.UpdateStreamId(ctx)
-	case  msgs.TypePing:
+	case msgs.TypePing:
 		roomsrv.Controller.Ping(ctx)
-	case  msgs.TypeTurnStatus:
+	case msgs.TypeTurnStatus:
 		roomsrv.Controller.TurnStatus(ctx)
-	case  msgs.TypeTree:
+	case msgs.TypeTree:
 		roomsrv.Controller.Tree(ctx)
-	case  msgs.TypeMetaDataSet:
+	case msgs.TypeMetaDataSet:
 		roomsrv.Controller.MetaDataSet(ctx)
-	case  msgs.TypeMetaDataGet:
+	case msgs.TypeMetaDataGet:
 		roomsrv.Controller.MetaDataGet(ctx)
-	case  msgs.TypeUserByStream:
+	case msgs.TypeUserByStream:
 		roomsrv.Controller.UserByStream(ctx)
-	case  msgs.TypeMuted:
+	case msgs.TypeMuted:
 		roomsrv.Controller.Muted(ctx)
-	case  msgs.TypeGetLatestUserList:
+	case msgs.TypeGetLatestUserList:
 		roomsrv.Controller.GetLatestUserList(ctx)
-	case  msgs.TypeReconnectChildren:
+	case msgs.TypeReconnectChildren:
 		roomsrv.Controller.ReconnectChildren(ctx)
-	case  msgs.TypeSendMessage:
+	case msgs.TypeSendMessage:
 		roomsrv.Controller.SendMessage(ctx)
+	case msgs.TypeLeave:
+		roomsrv.Controller.Leave(ctx)
 	default:
 		room, err := roomsrv.Repository.GetRoom(ctx.RoomId)
 		if err != nil && !erorr.Is(err, rooms.ErrRoomNotFound) {
@@ -54,11 +56,11 @@ func handleEvent(ctx *rooms.WSContext) {
 			if room.GoldGorilla != nil {
 				if ctx.ParsedMessage.Target == strconv.FormatUint((*room.GoldGorilla).ID, 10) {
 					switch ctx.ParsedMessage.Type {
-					case  msgs.TypeVideoAnswer:
+					case msgs.TypeVideoAnswer:
 						roomsrv.Controller.SendAnswerToAN(ctx)
-					case  msgs.TypeVideoOffer:
+					case msgs.TypeVideoOffer:
 						roomsrv.Controller.SendOfferToAN(ctx)
-					case  msgs.TypeNewIceCandidate:
+					case msgs.TypeNewIceCandidate:
 						roomsrv.Controller.SendICECandidateToAN(ctx)
 					default:
 						roomsrv.Controller.DefaultHandler(ctx)
