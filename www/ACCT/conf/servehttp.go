@@ -1,9 +1,15 @@
 package verboten
 
 import (
+	"fmt"
+	"io"
 	"net/http"
 
+	"github.com/gorilla/websocket"
+	"github.com/reiver/go-actsock"
+	"github.com/reiver/go-fediverseid"
 	"github.com/reiver/go-http400"
+	"github.com/reiver/go-http500"
 
 	"github.com/reiver/logjam/srv/http"
 	"github.com/reiver/logjam/srv/websock"
@@ -23,25 +29,12 @@ func ServeHTTP(responsewriter http.ResponseWriter, request *http.Request) {
 		return
 	}
 	if nil == request {
-		const code int = http.StatusInternalServerError
-		http.Error(responsewriter, http.StatusText(code), code)
+		http500.InternalServerError(responsewriter, request)
 		log.Error("nil request")
 		return
 	}
 
 	responsewriter.Header().Add("Access-Control-Allow-Origin", "*")
-
-	wsConn, err := upgrader.Upgrade(responsewriter, request, nil)
-	if nil != err {
-		log.Errorf("problem upgrading to websocket: %s", err)
-		return
-	}
-	socketID, err := websocksrv.WebSockSrv.OnConnect(wsConn)
-	if nil != err {
-		log.Errorf("problem on-connecting websocket: %s", err)
-		_ = wsConn.Close()
-		return
-	}
 
 	var account string
 	{
@@ -55,15 +48,84 @@ func ServeHTTP(responsewriter http.ResponseWriter, request *http.Request) {
 		if "" == account {
 			account = request.URL.Query().Get("room")
 		}
+
+		if "" == account {
+			http400.BadRequest(responsewriter, request)
+			log.Debugf("HTTP Bad Request — acct == %q", account)
+			return
+		}
+
+		log.Debugf("account (fediverse-id): %q", account)
 	}
 
-	if "" == account {
-		http400.BadRequest(responsewriter, request)
-		log.Debugf("HTTP Bad Request — acct == %q", account)
+	switch {
+	case websocket.IsWebSocketUpgrade(request):
+		wsConn, err := upgrader.Upgrade(responsewriter, request, nil)
+		if nil != err {
+			log.Errorf("problem upgrading to websocket: %s", err)
+			return
+		}
+
+		socketID, err := websocksrv.WebSockSrv.OnConnect(wsConn)
+		if nil != err {
+			log.Errorf("problem on-connecting websocket: %s", err)
+			_ = wsConn.Close()
+			return
+		}
+
+		roomID := account
+		go serveWS(wsConn, socketID, roomID)
+
+	default:
+		serveHTTP(responsewriter, request, account)
+		return
+	}
+}
+
+func serveHTTP(responsewriter http.ResponseWriter, request *http.Request, account string) {
+	if nil == responsewriter {
+		log.Error("nil response-writer")
+		return
+	}
+	if nil == request {
+		http500.InternalServerError(responsewriter, request)
+		log.Error("nil request")
+		return
+	}
+	if nil == request.URL {
+		http500.InternalServerError(responsewriter, request)
+		log.Error("nil request-url")
 		return
 	}
 
-	log.Debugf("account (fediverse-id): %q", account)
-	roomID := account
-	go serveWS(wsConn, socketID, roomID)
+	var acctURI string
+	{
+		fediverseID, err := fediverseid.ParseFediverseIDString(account)
+		if nil != err {
+			http400.BadRequest(responsewriter, request)
+			log.Debugf("HTTP Bad Request — bad account — acct == %q: %s", account, err)
+			return
+		}
+
+		acctURI = fediverseID.AcctURI()
+	}
+
+	var id string
+	{
+		var uri = *request.URL
+		uri.User = nil
+		uri.Scheme = "https"
+		uri.Host = request.Host
+
+		id = uri.String()
+	}
+
+	var object = actsock.Conference{
+		Actor: acctURI,
+		ID: id,
+		Name: fmt.Sprintf("%s — GreatApe", account),
+	}
+
+	responsewriter.Header().Set("Content-Type", "application/activity+json")
+	io.WriteString(responsewriter, object.String())
 }

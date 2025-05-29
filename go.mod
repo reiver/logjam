@@ -14,11 +14,12 @@ require (
 	github.com/reiver/go-actsock v0.0.0-20250528050037-fdd924639ca2
 	github.com/reiver/go-etag v0.0.0-20241130123934-1a98d29fda6e
 	github.com/reiver/go-fediverseid v0.0.0-20250403113622-694e7caca2d7
+	github.com/reiver/go-http400 v0.0.0-20250528125814-c9872b77629f
+	github.com/reiver/go-http500 v0.0.0-20250331114301-bf7c804c79ea
 	github.com/reiver/go-jsonld v0.0.0-20241216235649-e851bd7e3ab6
 )
 
 require (
-	github.com/reiver/go-http400 v0.0.0-20250528125814-c9872b77629f // indirect
 	github.com/reiver/go-json v0.0.0-20250330153804-8f52e0beba6c // indirect
 	github.com/reiver/go-lck v0.0.0-20240808133902-b56df221c39f // indirect
 	github.com/reiver/go-opt v0.0.0-20240809035328-1ff08dec9bc4 // indirect
