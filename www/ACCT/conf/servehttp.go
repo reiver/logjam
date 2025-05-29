@@ -67,32 +67,3 @@ func ServeHTTP(responsewriter http.ResponseWriter, request *http.Request) {
 	roomID := account
 	go serveWS(wsConn, socketID, roomID)
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
