@@ -18,6 +18,7 @@ require (
 )
 
 require (
+	github.com/reiver/go-http400 v0.0.0-20250528125814-c9872b77629f // indirect
 	github.com/reiver/go-json v0.0.0-20250330153804-8f52e0beba6c // indirect
 	github.com/reiver/go-lck v0.0.0-20240808133902-b56df221c39f // indirect
 	github.com/reiver/go-opt v0.0.0-20240809035328-1ff08dec9bc4 // indirect

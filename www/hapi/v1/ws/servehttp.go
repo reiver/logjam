@@ -4,42 +4,11 @@ import (
 	"net/http"
 
 	"github.com/reiver/logjam/srv/http"
-	"github.com/reiver/logjam/srv/websock"
+	tempTODO "github.com/reiver/logjam/www/ACCT/conf"
 )
 
 const path string = "/hapi/v1/ws"
 
 func init() {
-	httpsrv.Router.HandleFunc(path, serveHTTP).Methods(http.MethodGet, http.MethodOptions)
-}
-
-func serveHTTP(responsewriter http.ResponseWriter, request *http.Request) {
-	if nil == responsewriter {
-		log.Error("nil response-writer")
-		return
-	}
-	if nil == request {
-		const code int = http.StatusInternalServerError
-		http.Error(responsewriter, http.StatusText(code), code)
-		log.Error("nil request")
-		return
-	}
-
-	responsewriter.Header().Add("Access-Control-Allow-Origin", "*")
-
-	wsConn, err := upgrader.Upgrade(responsewriter, request, nil)
-	if nil != err {
-		log.Errorf("problem upgrading to websocket: %s", err)
-		return
-	}
-	socketID, err := websocksrv.WebSockSrv.OnConnect(wsConn)
-	if nil != err {
-		log.Errorf("problem on-connecting websocket: %s", err)
-		_ = wsConn.Close()
-		return
-	}
-
-	roomID := request.URL.Query().Get("room")
-	log.Debugf("room-id (fediverse-id): %q", roomID)
-	go serveWS(wsConn, socketID, roomID)
+	httpsrv.Router.HandleFunc(path, tempTODO.ServeHTTP).Methods(http.MethodGet, http.MethodOptions)
 }

@@ -10,6 +10,8 @@ github.com/reiver/go-etag v0.0.0-20241130123934-1a98d29fda6e h1:2FJeuK9Uc6BGLnXz
 github.com/reiver/go-etag v0.0.0-20241130123934-1a98d29fda6e/go.mod h1:TGoPFV3b4+PE2rF27XiFZLu6dg4faIEx7AUITCKyj4c=
 github.com/reiver/go-fediverseid v0.0.0-20250403113622-694e7caca2d7 h1:Hihr6cb93jDa1JkdGnzW8t8opmGQBvq1IZFiOcHQnFs=
 github.com/reiver/go-fediverseid v0.0.0-20250403113622-694e7caca2d7/go.mod h1:c2iT0wQYBegVeWsC8D9SCLgQgRRlP0q0WQYvbdcLH3A=
+github.com/reiver/go-http400 v0.0.0-20250528125814-c9872b77629f h1:HYwyot06pIjhAPUBbYP8L4aUSeM/4q8b97c3Pfq2xEo=
+github.com/reiver/go-http400 v0.0.0-20250528125814-c9872b77629f/go.mod h1:x9w6wkwDkUAlagyX340F4mUFLOILDP2p2svNpeooLdk=
 github.com/reiver/go-json v0.0.0-20250330153804-8f52e0beba6c h1:ieAQj7AfGOq3g4s5tYB1wyib8DIPr3PG4Z88g5bJMVE=
 github.com/reiver/go-json v0.0.0-20250330153804-8f52e0beba6c/go.mod h1:ns4kpzbK+OyMUZYT8UmBxrsYWNmvB/irZGmyIh99cxY=
 github.com/reiver/go-jsonld v0.0.0-20241216235649-e851bd7e3ab6 h1:TSKZsxbubNUfECSRpiePBIyJwe4ak0XCC1HNHC5Wsns=
