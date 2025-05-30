@@ -16,10 +16,14 @@ github.com/reiver/go-http500 v0.0.0-20250331114301-bf7c804c79ea h1:wwQj6mPCCI3iO
 github.com/reiver/go-http500 v0.0.0-20250331114301-bf7c804c79ea/go.mod h1:n5g92CfMaJKAFuJ6gkWS9UgAiQJxsUNoLe15U7RWtpI=
 github.com/reiver/go-json v0.0.0-20250529225843-4e6beb4c28e8 h1:42KV3+ahH6k9kAUCx3EDWYZ3ftZQqhL8yepel17J0tU=
 github.com/reiver/go-json v0.0.0-20250529225843-4e6beb4c28e8/go.mod h1:ns4kpzbK+OyMUZYT8UmBxrsYWNmvB/irZGmyIh99cxY=
+github.com/reiver/go-jsonint v0.0.0-20241119162208-a71145908f18 h1:aLDu6q/QjNRYx6GUYWYgjbynxLXDDl2NUzdBgXY/nOo=
+github.com/reiver/go-jsonint v0.0.0-20241119162208-a71145908f18/go.mod h1:1lW12ILqOxqtylQBMezy6oRuMQWlzFjeWF/Wbz/9U8g=
 github.com/reiver/go-jsonld v0.0.0-20241216235649-e851bd7e3ab6 h1:TSKZsxbubNUfECSRpiePBIyJwe4ak0XCC1HNHC5Wsns=
 github.com/reiver/go-jsonld v0.0.0-20241216235649-e851bd7e3ab6/go.mod h1:sE1mTJZa0fGhHDlpATNcVNAzuCnvtUxahVSGkYjz0r4=
 github.com/reiver/go-lck v0.0.0-20240808133902-b56df221c39f h1:KBVWBoNIM8mHkUR3dP64hm2p2vxoD5xHZ6wUllCjFTc=
 github.com/reiver/go-lck v0.0.0-20240808133902-b56df221c39f/go.mod h1:PFseSi8S0CBkc+YB6jYWtogPk83LumclnYJZZBQJJhs=
+github.com/reiver/go-nodeinfo v0.0.0-20250530210552-ff6eb58969d6 h1:o3BMuX+RWtDEquhahmtUd1WZ1bA1BKn1c4T5Fs5SZuQ=
+github.com/reiver/go-nodeinfo v0.0.0-20250530210552-ff6eb58969d6/go.mod h1:ynTNT66bFWekH085q36f2DMYC7ehZD9mFXHRqaDMcxs=
 github.com/reiver/go-opt v0.0.0-20240809035328-1ff08dec9bc4 h1:KQ/PDBRaJb69hmMmOs/jM8q679y9v51lY7tjX2FUkog=
 github.com/reiver/go-opt v0.0.0-20240809035328-1ff08dec9bc4/go.mod h1:3lRqhDIwZ4OaMNN6Z5rmHCX8up18IkLGuw2rxP9GrYo=
 github.com/reiver/go-path v0.0.0-20240327181650-5f2ee05890d8 h1:8JFCnRV4GVjP8XUFuXvCH42o4fXHSkGcUkfsloB+LeY=

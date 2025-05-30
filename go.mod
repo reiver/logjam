@@ -17,10 +17,12 @@ require (
 	github.com/reiver/go-http400 v0.0.0-20250528125814-c9872b77629f
 	github.com/reiver/go-http500 v0.0.0-20250331114301-bf7c804c79ea
 	github.com/reiver/go-jsonld v0.0.0-20241216235649-e851bd7e3ab6
+	github.com/reiver/go-nodeinfo v0.0.0-20250530210552-ff6eb58969d6
+	github.com/reiver/go-opt v0.0.0-20240809035328-1ff08dec9bc4
 )
 
 require (
 	github.com/reiver/go-json v0.0.0-20250529225843-4e6beb4c28e8 // indirect
+	github.com/reiver/go-jsonint v0.0.0-20241119162208-a71145908f18 // indirect
 	github.com/reiver/go-lck v0.0.0-20240808133902-b56df221c39f // indirect
-	github.com/reiver/go-opt v0.0.0-20240809035328-1ff08dec9bc4 // indirect
 )
