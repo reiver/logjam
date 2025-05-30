@@ -9,7 +9,7 @@ var InstanceName string = instanceName()
 func instanceName() string {
 	value := os.Getenv("INSTANCE_NAME")
 	if "" == value  {
-		value = "A GreatApe instance server"
+		value = "GreatApe"
 	}
 
 	return value
