@@ -8,6 +8,7 @@ import (
 	"github.com/reiver/go-opt"
 
 	"github.com/reiver/logjam/srv/http"
+	nodeinfo2dot2 "github.com/reiver/logjam/www/well-known/nodeinfo/2.2"
 )
 
 const path string = nodeinfo.DefaultPath
@@ -18,7 +19,7 @@ func init() {
 		NodeInfo1Dot1: opt.Something(libpath.Join(nodeinfo.DefaultPath, "1.1")),
 		NodeInfo2:     opt.Something(libpath.Join(nodeinfo.DefaultPath, "2.0")),
 		NodeInfo2Dot1: opt.Something(libpath.Join(nodeinfo.DefaultPath, "2.1")),
-		NodeInfo2Dot2: opt.Something(libpath.Join(nodeinfo.DefaultPath, "2.2")),
+		NodeInfo2Dot2: opt.Something(nodeinfo2dot2.Path()),
 	}
 
 	httpsrv.Router.Handle(path, httphandler)
