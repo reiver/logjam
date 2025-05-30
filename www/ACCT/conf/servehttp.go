@@ -111,6 +111,7 @@ func serveHTTP(responsewriter http.ResponseWriter, request *http.Request, accoun
 	}
 
 	var id string
+	var inoutbox string
 	{
 		var uri = *request.URL
 		uri.User = nil
@@ -118,10 +119,16 @@ func serveHTTP(responsewriter http.ResponseWriter, request *http.Request, accoun
 		uri.Host = request.Host
 
 		id = uri.String()
+
+		uri.Scheme  = "wss"
+		inoutbox = uri.String()
 	}
 
 	var object = actsock.Conference{
 		Actor: acctURI,
+		EndPoints: map[string]string{
+			"inoutbox":inoutbox,
+		},
 		ID: id,
 		Name: fmt.Sprintf("%s — GreatApe", account),
 	}
