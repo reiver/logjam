@@ -18,9 +18,9 @@ func Path() string {
 
 func init() {
 	var httphandler http.Handler = nodeinfo2dot2.NodeInfo{
-		MetaData: map[string]any{
-			"nodeName":        cfg.InstanceName(),
-			"nodeDescription": cfg.InstanceDescription(),
+		Instance: nodeinfo2dot2.Instance{
+			Name:        opt.Something(cfg.InstanceName()),
+			Description: opt.Something(cfg.InstanceDescription()),
 		},
 		Protocols: cfg.ProtocolsText(),
 		Software: nodeinfo2dot2.Software{
