@@ -10,6 +10,7 @@ import (
 	"github.com/reiver/go-fediverseid"
 	"github.com/reiver/go-http400"
 	"github.com/reiver/go-http500"
+	libpath "github.com/reiver/go-path"
 
 	"github.com/reiver/logjam/srv/http"
 	"github.com/reiver/logjam/srv/websock"
@@ -121,6 +122,7 @@ func serveHTTP(responsewriter http.ResponseWriter, request *http.Request, accoun
 		id = uri.String()
 
 		uri.Scheme  = "wss"
+		uri.Path = libpath.Canonical(uri.Path)
 		inoutbox = uri.String()
 	}
 
