@@ -1,11 +1,10 @@
 package rooms
 
-type MemberDTO struct {
-	Id       uint64 `json:"id"`
-	Name     string `json:"name"`
-	Role     string `json:"role"`
-	StreamId string `json:"streamId"`
-}
+import (
+	"github.com/reiver/logjam/lib/members"
+)
+
+type MemberDTO = libmembers.DTO
 
 type UserMessageModel struct {
 	Message  string `json:"message"`
