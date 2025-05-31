@@ -1,5 +1,9 @@
 package rooms
 
+import (
+	"github.com/reiver/logjam/lib/members"
+)
+
 type Repository interface {
 	NumRooms() int
 	RoomIDs() []string
@@ -26,7 +30,7 @@ type Repository interface {
 	ClearMessageHistory(roomId string) error
 	GetUserByStreamId(roomId string, streamId string) (*MemberModel, error)
 	IsBroadcaster(roomId string, id uint64) (bool, error)
-	GetMembersList(roomId string) ([]MemberDTO, error)
+	GetMembersList(roomId string) ([]libmembers.DTO, error)
 	GetChildrenIdList(roomId string, id uint64) ([]uint64, error)
 	IsGGInstance(roomId string, id uint64) bool
 	GetRoomGoldGorillaId(roomId string) (*uint64, error)

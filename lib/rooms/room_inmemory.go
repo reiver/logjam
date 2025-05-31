@@ -6,6 +6,8 @@ import (
 	"sync"
 
 	"github.com/reiver/go-erorr"
+
+	"github.com/reiver/logjam/lib/members"
 )
 
 type roomRepository struct {
@@ -465,7 +467,7 @@ func (r *roomRepository) IsBroadcaster(roomId string, id uint64) (bool, error) {
 	return r.rooms[roomId].PeersTree.ID == id, nil
 }
 
-func (r *roomRepository) GetMembersList(roomId string) ([]MemberDTO, error) {
+func (r *roomRepository) GetMembersList(roomId string) ([]libmembers.DTO, error) {
 	r.Lock()
 	defer r.Unlock()
 	if !r.doesRoomExists(roomId) {
@@ -474,7 +476,7 @@ func (r *roomRepository) GetMembersList(roomId string) ([]MemberDTO, error) {
 
 	r.rooms[roomId].Lock()
 	defer r.rooms[roomId].Unlock()
-	var list []MemberDTO
+	var list []libmembers.DTO
 	for _, member := range r.rooms[roomId].Members {
 		role := "audience"
 		if r.rooms[roomId].PeersTree.ID == member.ID {
@@ -488,7 +490,7 @@ func (r *roomRepository) GetMembersList(roomId string) ([]MemberDTO, error) {
 				streamId = strStreamId
 			}
 		}
-		list = append(list, MemberDTO{
+		list = append(list, libmembers.DTO{
 			ID:       member.ID,
 			Name:     member.Name,
 			Role:     role,
