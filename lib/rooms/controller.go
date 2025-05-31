@@ -530,7 +530,7 @@ func (c *RoomWSController) emitUserList(roomId string) {
 	}
 	index := -1
 	for i, v := range list {
-		if c.roomRepo.IsGGInstance(roomId, v.Id) {
+		if c.roomRepo.IsGGInstance(roomId, v.ID) {
 			index = i
 			break
 		}

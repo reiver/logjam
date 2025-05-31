@@ -489,7 +489,7 @@ func (r *roomRepository) GetMembersList(roomId string) ([]MemberDTO, error) {
 			}
 		}
 		list = append(list, MemberDTO{
-			Id:       member.ID,
+			ID:       member.ID,
 			Name:     member.Name,
 			Role:     role,
 			StreamId: streamId,
