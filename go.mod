@@ -15,9 +15,9 @@ require (
 	github.com/reiver/go-etag v0.0.0-20241130123934-1a98d29fda6e
 	github.com/reiver/go-fediverseid v0.0.0-20250403113622-694e7caca2d7
 	github.com/reiver/go-http400 v0.0.0-20250528125814-c9872b77629f
-	github.com/reiver/go-http500 v0.0.0-20250331114301-bf7c804c79ea
+	github.com/reiver/go-http500 v0.0.0-20250531141625-af98f83e19aa
 	github.com/reiver/go-jsonld v0.0.0-20241216235649-e851bd7e3ab6
-	github.com/reiver/go-nodeinfo v0.0.0-20250530210552-ff6eb58969d6
+	github.com/reiver/go-nodeinfo v0.0.0-20250531142305-cd6b8629bc3a
 	github.com/reiver/go-opt v0.0.0-20240809035328-1ff08dec9bc4
 )
 
