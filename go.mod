@@ -17,7 +17,7 @@ require (
 	github.com/reiver/go-http400 v0.0.0-20250528125814-c9872b77629f
 	github.com/reiver/go-http500 v0.0.0-20250531141625-af98f83e19aa
 	github.com/reiver/go-jsonld v0.0.0-20241216235649-e851bd7e3ab6
-	github.com/reiver/go-nodeinfo v0.0.0-20250531142305-cd6b8629bc3a
+	github.com/reiver/go-nodeinfo v0.0.0-20250531144354-36946ae80480
 	github.com/reiver/go-opt v0.0.0-20240809035328-1ff08dec9bc4
 )
 
