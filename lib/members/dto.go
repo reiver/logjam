@@ -4,5 +4,5 @@ type DTO struct {
 	ID       uint64 `json:"id"`
 	Name     string `json:"name"`
 	Role     string `json:"role"`
-	StreamID string `json:"streamId"`
+	StreamID string `json:"streamId"` // StreamID is the WebRTC stream.id
 }

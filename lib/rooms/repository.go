@@ -4,6 +4,7 @@ import (
 	"github.com/reiver/logjam/lib/members"
 )
 
+// streamId is the WebRTC stream.id
 type Repository interface {
 	NumRooms() int
 	RoomIDs() []string
