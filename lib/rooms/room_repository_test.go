@@ -56,7 +56,7 @@ func Test_CreationAndExistence(t *testing.T) {
 		t.Error(err)
 		return
 	}
-	if len(membersList) != 1 || membersList[0].Id != memberId {
+	if len(membersList) != 1 || membersList[0].ID != memberId {
 		t.Error("[repo.GetMembersList()] failed, list length doesnt match or member is not in the list")
 		return
 	}
