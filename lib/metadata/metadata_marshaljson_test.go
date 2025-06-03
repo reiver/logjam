@@ -1,4 +1,4 @@
-package metadata_test
+package libmetadata_test
 
 import (
 	"testing"
@@ -13,7 +13,7 @@ import (
 func TestMetaData_MarshalJSON(t *testing.T) {
 
 	tests := []struct{
-		MetaData metadata.MetaData
+		MetaData libmetadata.MetaData
 		Expected []byte
 	}{
 		{
@@ -23,7 +23,7 @@ func TestMetaData_MarshalJSON(t *testing.T) {
 
 
 		{
-			MetaData: metadata.MetaData{
+			MetaData: libmetadata.MetaData{
 				Muted: nil,
 			},
 			Expected: []byte(
@@ -37,7 +37,7 @@ func TestMetaData_MarshalJSON(t *testing.T) {
 			),
 		},
 		{
-			MetaData: metadata.MetaData{
+			MetaData: libmetadata.MetaData{
 				Muted: map[string]bool(nil),
 			},
 			Expected: []byte(
@@ -51,7 +51,7 @@ func TestMetaData_MarshalJSON(t *testing.T) {
 			),
 		},
 		{
-			MetaData: metadata.MetaData{
+			MetaData: libmetadata.MetaData{
 				Muted: map[string]bool{},
 			},
 			Expected: []byte(
@@ -65,7 +65,7 @@ func TestMetaData_MarshalJSON(t *testing.T) {
 			),
 		},
 		{
-			MetaData: metadata.MetaData{
+			MetaData: libmetadata.MetaData{
 				Muted: map[string]bool{
 					"30511117-4063-4b2f-8e30-99400eb5f719":false,
 				},
@@ -83,7 +83,7 @@ func TestMetaData_MarshalJSON(t *testing.T) {
 			),
 		},
 		{
-			MetaData: metadata.MetaData{
+			MetaData: libmetadata.MetaData{
 				Muted: map[string]bool{
 					"0ed1d891-629d-44d8-9274-b8b9d1d4e6f3":true,
 					"30511117-4063-4b2f-8e30-99400eb5f719":false,
@@ -104,7 +104,7 @@ func TestMetaData_MarshalJSON(t *testing.T) {
 			),
 		},
 		{
-			MetaData: metadata.MetaData{
+			MetaData: libmetadata.MetaData{
 				Muted: map[string]bool{
 					"0ed1d891-629d-44d8-9274-b8b9d1d4e6f3":true,
 					"30511117-4063-4b2f-8e30-99400eb5f719":false,
@@ -128,7 +128,7 @@ func TestMetaData_MarshalJSON(t *testing.T) {
 			),
 		},
 		{
-			MetaData: metadata.MetaData{
+			MetaData: libmetadata.MetaData{
 				Muted: map[string]bool{
 					"0ed1d891-629d-44d8-9274-b8b9d1d4e6f3":true,
 					"30511117-4063-4b2f-8e30-99400eb5f719":false,
@@ -155,7 +155,7 @@ func TestMetaData_MarshalJSON(t *testing.T) {
 			),
 		},
 		{
-			MetaData: metadata.MetaData{
+			MetaData: libmetadata.MetaData{
 				Muted: map[string]bool{
 					"0ed1d891-629d-44d8-9274-b8b9d1d4e6f3":true,
 					"39fa5b20-6a19-4530-bc02-4d04ffce314c":true,
@@ -188,7 +188,7 @@ func TestMetaData_MarshalJSON(t *testing.T) {
 
 
 		{
-			MetaData: metadata.MetaData{
+			MetaData: libmetadata.MetaData{
 				RecordersList: nil,
 			},
 			Expected: []byte(
@@ -202,7 +202,7 @@ func TestMetaData_MarshalJSON(t *testing.T) {
 			),
 		},
 		{
-			MetaData: metadata.MetaData{
+			MetaData: libmetadata.MetaData{
 				RecordersList: []string(nil),
 			},
 			Expected: []byte(
@@ -216,7 +216,7 @@ func TestMetaData_MarshalJSON(t *testing.T) {
 			),
 		},
 		{
-			MetaData: metadata.MetaData{
+			MetaData: libmetadata.MetaData{
 				RecordersList: []string{},
 			},
 			Expected: []byte(
@@ -230,7 +230,7 @@ func TestMetaData_MarshalJSON(t *testing.T) {
 			),
 		},
 		{
-			MetaData: metadata.MetaData{
+			MetaData: libmetadata.MetaData{
 				RecordersList: []string{"1"},
 			},
 			Expected: []byte(
@@ -246,7 +246,7 @@ func TestMetaData_MarshalJSON(t *testing.T) {
 			),
 		},
 		{
-			MetaData: metadata.MetaData{
+			MetaData: libmetadata.MetaData{
 				RecordersList: []string{"1","2"},
 			},
 			Expected: []byte(
@@ -262,7 +262,7 @@ func TestMetaData_MarshalJSON(t *testing.T) {
 			),
 		},
 		{
-			MetaData: metadata.MetaData{
+			MetaData: libmetadata.MetaData{
 				RecordersList: []string{"1","2","3"},
 			},
 			Expected: []byte(
@@ -278,7 +278,7 @@ func TestMetaData_MarshalJSON(t *testing.T) {
 			),
 		},
 		{
-			MetaData: metadata.MetaData{
+			MetaData: libmetadata.MetaData{
 				RecordersList: []string{"1","2","3","4"},
 			},
 			Expected: []byte(
@@ -294,7 +294,7 @@ func TestMetaData_MarshalJSON(t *testing.T) {
 			),
 		},
 		{
-			MetaData: metadata.MetaData{
+			MetaData: libmetadata.MetaData{
 				RecordersList: []string{"1","2","3","4","5"},
 			},
 			Expected: []byte(
@@ -313,7 +313,7 @@ func TestMetaData_MarshalJSON(t *testing.T) {
 
 
 		{
-			MetaData: metadata.MetaData{
+			MetaData: libmetadata.MetaData{
 				Styles: opt.Nothing[string](),
 			},
 			Expected: []byte(
@@ -327,7 +327,7 @@ func TestMetaData_MarshalJSON(t *testing.T) {
 			),
 		},
 		{
-			MetaData: metadata.MetaData{
+			MetaData: libmetadata.MetaData{
 				Styles: opt.Something(""),
 			},
 			Expected: []byte(
@@ -341,7 +341,7 @@ func TestMetaData_MarshalJSON(t *testing.T) {
 			),
 		},
 		{
-			MetaData: metadata.MetaData{
+			MetaData: libmetadata.MetaData{
 				Styles: opt.Something(".something {\n\tfont-weight:bold;\n}\n"),
 			},
 			Expected: []byte(

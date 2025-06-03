@@ -1,4 +1,4 @@
-package metadata_test
+package libmetadata_test
 
 import (
 	"testing"
@@ -14,18 +14,18 @@ func TestMetaData_UnmarshalJSON(t *testing.T) {
 
 	tests := []struct{
 		Bytes []byte
-		Expected metadata.MetaData
+		Expected libmetadata.MetaData
 	}{
 		{
 			Bytes: []byte(`null`),
-			Expected: metadata.MetaData{},
+			Expected: libmetadata.MetaData{},
 		},
 
 
 
 		{
 			Bytes: []byte(`{}`),
-			Expected: metadata.MetaData{},
+			Expected: libmetadata.MetaData{},
 		},
 
 
@@ -38,7 +38,7 @@ func TestMetaData_UnmarshalJSON(t *testing.T) {
 					`"styles":null`+
 				`}`,
 			),
-			Expected: metadata.MetaData{
+			Expected: libmetadata.MetaData{
 				Muted: map[string]bool(nil),
 			},
 		},
@@ -52,7 +52,7 @@ func TestMetaData_UnmarshalJSON(t *testing.T) {
 					`"styles":null`+
 				`}`,
 			),
-			Expected: metadata.MetaData{
+			Expected: libmetadata.MetaData{
 				Muted: map[string]bool(nil),
 			},
 		},
@@ -66,7 +66,7 @@ func TestMetaData_UnmarshalJSON(t *testing.T) {
 					`"styles":null`+
 				`}`,
 			),
-			Expected: metadata.MetaData{
+			Expected: libmetadata.MetaData{
 				Muted: map[string]bool(nil),
 			},
 		},
@@ -82,7 +82,7 @@ func TestMetaData_UnmarshalJSON(t *testing.T) {
 					`"styles":null`+
 				`}`,
 			),
-			Expected: metadata.MetaData{
+			Expected: libmetadata.MetaData{
 				Muted: map[string]bool{
 					"30511117-4063-4b2f-8e30-99400eb5f719":false,
 				},
@@ -102,7 +102,7 @@ func TestMetaData_UnmarshalJSON(t *testing.T) {
 					`"styles":null`+
 				`}`,
 			),
-			Expected: metadata.MetaData{
+			Expected: libmetadata.MetaData{
 				Muted: map[string]bool{
 					"0ed1d891-629d-44d8-9274-b8b9d1d4e6f3":true,
 					"30511117-4063-4b2f-8e30-99400eb5f719":false,
@@ -125,7 +125,7 @@ func TestMetaData_UnmarshalJSON(t *testing.T) {
 					`"styles":null`+
 				`}`,
 			),
-			Expected: metadata.MetaData{
+			Expected: libmetadata.MetaData{
 				Muted: map[string]bool{
 					"0ed1d891-629d-44d8-9274-b8b9d1d4e6f3":true,
 					"30511117-4063-4b2f-8e30-99400eb5f719":false,
@@ -151,7 +151,7 @@ func TestMetaData_UnmarshalJSON(t *testing.T) {
 					`"styles":null`+
 				`}`,
 			),
-			Expected: metadata.MetaData{
+			Expected: libmetadata.MetaData{
 				Muted: map[string]bool{
 					"0ed1d891-629d-44d8-9274-b8b9d1d4e6f3":true,
 					"30511117-4063-4b2f-8e30-99400eb5f719":false,
@@ -180,7 +180,7 @@ func TestMetaData_UnmarshalJSON(t *testing.T) {
 					`"styles":null`+
 				`}`,
 			),
-			Expected: metadata.MetaData{
+			Expected: libmetadata.MetaData{
 				Muted: map[string]bool{
 					"0ed1d891-629d-44d8-9274-b8b9d1d4e6f3":true,
 					"39fa5b20-6a19-4530-bc02-4d04ffce314c":true,
@@ -203,7 +203,7 @@ func TestMetaData_UnmarshalJSON(t *testing.T) {
 					`"styles":null`+
 				`}`,
 			),
-			Expected: metadata.MetaData{
+			Expected: libmetadata.MetaData{
 				RecordersList: []string(nil),
 			},
 		},
@@ -219,7 +219,7 @@ func TestMetaData_UnmarshalJSON(t *testing.T) {
 					`"styles":null`+
 				`}`,
 			),
-			Expected: metadata.MetaData{
+			Expected: libmetadata.MetaData{
 				RecordersList: []string(nil),
 			},
 		},
@@ -235,7 +235,7 @@ func TestMetaData_UnmarshalJSON(t *testing.T) {
 					`"styles":null`+
 				`}`,
 			),
-			Expected: metadata.MetaData{
+			Expected: libmetadata.MetaData{
 				RecordersList: []string(nil),
 			},
 		},
@@ -251,7 +251,7 @@ func TestMetaData_UnmarshalJSON(t *testing.T) {
 					`"styles":null`+
 				`}`,
 			),
-			Expected: metadata.MetaData{
+			Expected: libmetadata.MetaData{
 				RecordersList: []string{"1"},
 			},
 		},
@@ -267,7 +267,7 @@ func TestMetaData_UnmarshalJSON(t *testing.T) {
 					`"styles":null`+
 				`}`,
 			),
-			Expected: metadata.MetaData{
+			Expected: libmetadata.MetaData{
 				RecordersList: []string{"1","2"},
 			},
 		},
@@ -283,7 +283,7 @@ func TestMetaData_UnmarshalJSON(t *testing.T) {
 					`"styles":null`+
 				`}`,
 			),
-			Expected: metadata.MetaData{
+			Expected: libmetadata.MetaData{
 				RecordersList: []string{"1","2","3"},
 			},
 		},
@@ -299,7 +299,7 @@ func TestMetaData_UnmarshalJSON(t *testing.T) {
 					`"styles":null`+
 				`}`,
 			),
-			Expected: metadata.MetaData{
+			Expected: libmetadata.MetaData{
 				RecordersList: []string{"1","2","3","4"},
 			},
 		},
@@ -315,7 +315,7 @@ func TestMetaData_UnmarshalJSON(t *testing.T) {
 					`"styles":null`+
 				`}`,
 			),
-			Expected: metadata.MetaData{
+			Expected: libmetadata.MetaData{
 				RecordersList: []string{"1","2","3","4","5"},
 			},
 		},
@@ -330,7 +330,7 @@ func TestMetaData_UnmarshalJSON(t *testing.T) {
 					`"recordingStarted":false`+
 				`}`,
 			),
-			Expected: metadata.MetaData{
+			Expected: libmetadata.MetaData{
 				Styles: opt.Nothing[string](),
 			},
 		},
@@ -344,7 +344,7 @@ func TestMetaData_UnmarshalJSON(t *testing.T) {
 					`"styles":null`+
 				`}`,
 			),
-			Expected: metadata.MetaData{
+			Expected: libmetadata.MetaData{
 				Styles: opt.Nothing[string](),
 			},
 		},
@@ -358,7 +358,7 @@ func TestMetaData_UnmarshalJSON(t *testing.T) {
 					`"styles":""`+
 				`}`,
 			),
-			Expected: metadata.MetaData{
+			Expected: libmetadata.MetaData{
 				Styles: opt.Something(""),
 			},
 		},
@@ -372,7 +372,7 @@ func TestMetaData_UnmarshalJSON(t *testing.T) {
 					`"styles":".something {\n\tfont-weight:bold;\n}\n"`+
 				`}`,
 			),
-			Expected: metadata.MetaData{
+			Expected: libmetadata.MetaData{
 				Styles: opt.Something(".something {\n\tfont-weight:bold;\n}\n"),
 			},
 		},
@@ -380,7 +380,7 @@ func TestMetaData_UnmarshalJSON(t *testing.T) {
 
 	for testNumber, test := range tests {
 
-		var actual metadata.MetaData
+		var actual libmetadata.MetaData
 
 		err := actual.UnmarshalJSON(test.Bytes)
 		if nil != err {
@@ -409,101 +409,101 @@ func TestMetaData_UnmarshalJSON_fail(t *testing.T) {
 		ExpectedError string
 	}{
 		{
-			ExpectedError: `problem json-unmarshaling into a map[string]interface {} (which would eventually be used to load a metadata.MetaData): unexpected end of JSON input`,
+			ExpectedError: `problem json-unmarshaling into a map[string]interface {} (which would eventually be used to load a libmetadata.MetaData): unexpected end of JSON input`,
 		},
 
 
 
 		{
 			Bytes: []byte(`false`),
-			ExpectedError: `problem json-unmarshaling into a map[string]interface {} (which would eventually be used to load a metadata.MetaData): json: cannot unmarshal bool into Go value of type map[string]interface {}`,
+			ExpectedError: `problem json-unmarshaling into a map[string]interface {} (which would eventually be used to load a libmetadata.MetaData): json: cannot unmarshal bool into Go value of type map[string]interface {}`,
 		},
 		{
 			Bytes: []byte(`true`),
-			ExpectedError: `problem json-unmarshaling into a map[string]interface {} (which would eventually be used to load a metadata.MetaData): json: cannot unmarshal bool into Go value of type map[string]interface {}`,
+			ExpectedError: `problem json-unmarshaling into a map[string]interface {} (which would eventually be used to load a libmetadata.MetaData): json: cannot unmarshal bool into Go value of type map[string]interface {}`,
 		},
 
 
 
 		{
 			Bytes: []byte(`-1`),
-			ExpectedError: `problem json-unmarshaling into a map[string]interface {} (which would eventually be used to load a metadata.MetaData): json: cannot unmarshal number into Go value of type map[string]interface {}`,
+			ExpectedError: `problem json-unmarshaling into a map[string]interface {} (which would eventually be used to load a libmetadata.MetaData): json: cannot unmarshal number into Go value of type map[string]interface {}`,
 		},
 		{
 			Bytes: []byte(`0`),
-			ExpectedError: `problem json-unmarshaling into a map[string]interface {} (which would eventually be used to load a metadata.MetaData): json: cannot unmarshal number into Go value of type map[string]interface {}`,
+			ExpectedError: `problem json-unmarshaling into a map[string]interface {} (which would eventually be used to load a libmetadata.MetaData): json: cannot unmarshal number into Go value of type map[string]interface {}`,
 		},
 		{
 			Bytes: []byte(`1`),
-			ExpectedError: `problem json-unmarshaling into a map[string]interface {} (which would eventually be used to load a metadata.MetaData): json: cannot unmarshal number into Go value of type map[string]interface {}`,
+			ExpectedError: `problem json-unmarshaling into a map[string]interface {} (which would eventually be used to load a libmetadata.MetaData): json: cannot unmarshal number into Go value of type map[string]interface {}`,
 		},
 
 
 
 		{
 			Bytes: []byte(`""`),
-			ExpectedError: `problem json-unmarshaling into a map[string]interface {} (which would eventually be used to load a metadata.MetaData): json: cannot unmarshal string into Go value of type map[string]interface {}`,
+			ExpectedError: `problem json-unmarshaling into a map[string]interface {} (which would eventually be used to load a libmetadata.MetaData): json: cannot unmarshal string into Go value of type map[string]interface {}`,
 		},
 		{
 			Bytes: []byte(`"once"`),
-			ExpectedError: `problem json-unmarshaling into a map[string]interface {} (which would eventually be used to load a metadata.MetaData): json: cannot unmarshal string into Go value of type map[string]interface {}`,
+			ExpectedError: `problem json-unmarshaling into a map[string]interface {} (which would eventually be used to load a libmetadata.MetaData): json: cannot unmarshal string into Go value of type map[string]interface {}`,
 		},
 		{
 			Bytes: []byte(`"twice"`),
-			ExpectedError: `problem json-unmarshaling into a map[string]interface {} (which would eventually be used to load a metadata.MetaData): json: cannot unmarshal string into Go value of type map[string]interface {}`,
+			ExpectedError: `problem json-unmarshaling into a map[string]interface {} (which would eventually be used to load a libmetadata.MetaData): json: cannot unmarshal string into Go value of type map[string]interface {}`,
 		},
 		{
 			Bytes: []byte(`"thrice"`),
-			ExpectedError: `problem json-unmarshaling into a map[string]interface {} (which would eventually be used to load a metadata.MetaData): json: cannot unmarshal string into Go value of type map[string]interface {}`,
+			ExpectedError: `problem json-unmarshaling into a map[string]interface {} (which would eventually be used to load a libmetadata.MetaData): json: cannot unmarshal string into Go value of type map[string]interface {}`,
 		},
 		{
 			Bytes: []byte(`"fource"`),
-			ExpectedError: `problem json-unmarshaling into a map[string]interface {} (which would eventually be used to load a metadata.MetaData): json: cannot unmarshal string into Go value of type map[string]interface {}`,
+			ExpectedError: `problem json-unmarshaling into a map[string]interface {} (which would eventually be used to load a libmetadata.MetaData): json: cannot unmarshal string into Go value of type map[string]interface {}`,
 		},
 
 
 
 		{
 			Bytes: []byte(`[]`),
-			ExpectedError: `problem json-unmarshaling into a map[string]interface {} (which would eventually be used to load a metadata.MetaData): json: cannot unmarshal array into Go value of type map[string]interface {}`,
+			ExpectedError: `problem json-unmarshaling into a map[string]interface {} (which would eventually be used to load a libmetadata.MetaData): json: cannot unmarshal array into Go value of type map[string]interface {}`,
 		},
 		{
 			Bytes: []byte(`[false]`),
-			ExpectedError: `problem json-unmarshaling into a map[string]interface {} (which would eventually be used to load a metadata.MetaData): json: cannot unmarshal array into Go value of type map[string]interface {}`,
+			ExpectedError: `problem json-unmarshaling into a map[string]interface {} (which would eventually be used to load a libmetadata.MetaData): json: cannot unmarshal array into Go value of type map[string]interface {}`,
 		},
 		{
 			Bytes: []byte(`[true]`),
-			ExpectedError: `problem json-unmarshaling into a map[string]interface {} (which would eventually be used to load a metadata.MetaData): json: cannot unmarshal array into Go value of type map[string]interface {}`,
+			ExpectedError: `problem json-unmarshaling into a map[string]interface {} (which would eventually be used to load a libmetadata.MetaData): json: cannot unmarshal array into Go value of type map[string]interface {}`,
 		},
 		{
 			Bytes: []byte(`[false,true]`),
-			ExpectedError: `problem json-unmarshaling into a map[string]interface {} (which would eventually be used to load a metadata.MetaData): json: cannot unmarshal array into Go value of type map[string]interface {}`,
+			ExpectedError: `problem json-unmarshaling into a map[string]interface {} (which would eventually be used to load a libmetadata.MetaData): json: cannot unmarshal array into Go value of type map[string]interface {}`,
 		},
 		{
 			Bytes: []byte(`[-1]`),
-			ExpectedError: `problem json-unmarshaling into a map[string]interface {} (which would eventually be used to load a metadata.MetaData): json: cannot unmarshal array into Go value of type map[string]interface {}`,
+			ExpectedError: `problem json-unmarshaling into a map[string]interface {} (which would eventually be used to load a libmetadata.MetaData): json: cannot unmarshal array into Go value of type map[string]interface {}`,
 		},
 		{
 			Bytes: []byte(`[0]`),
-			ExpectedError: `problem json-unmarshaling into a map[string]interface {} (which would eventually be used to load a metadata.MetaData): json: cannot unmarshal array into Go value of type map[string]interface {}`,
+			ExpectedError: `problem json-unmarshaling into a map[string]interface {} (which would eventually be used to load a libmetadata.MetaData): json: cannot unmarshal array into Go value of type map[string]interface {}`,
 		},
 		{
 			Bytes: []byte(`[1]`),
-			ExpectedError: `problem json-unmarshaling into a map[string]interface {} (which would eventually be used to load a metadata.MetaData): json: cannot unmarshal array into Go value of type map[string]interface {}`,
+			ExpectedError: `problem json-unmarshaling into a map[string]interface {} (which would eventually be used to load a libmetadata.MetaData): json: cannot unmarshal array into Go value of type map[string]interface {}`,
 		},
 		{
 			Bytes: []byte(`[-1,0,1]`),
-			ExpectedError: `problem json-unmarshaling into a map[string]interface {} (which would eventually be used to load a metadata.MetaData): json: cannot unmarshal array into Go value of type map[string]interface {}`,
+			ExpectedError: `problem json-unmarshaling into a map[string]interface {} (which would eventually be used to load a libmetadata.MetaData): json: cannot unmarshal array into Go value of type map[string]interface {}`,
 		},
 		{
 			Bytes: []byte(`["once","twice","thrice", "fource"]`),
-			ExpectedError: `problem json-unmarshaling into a map[string]interface {} (which would eventually be used to load a metadata.MetaData): json: cannot unmarshal array into Go value of type map[string]interface {}`,
+			ExpectedError: `problem json-unmarshaling into a map[string]interface {} (which would eventually be used to load a libmetadata.MetaData): json: cannot unmarshal array into Go value of type map[string]interface {}`,
 		},
 	}
 
 	for testNumber, test := range tests {
 
-		var metaData metadata.MetaData
+		var metaData libmetadata.MetaData
 
 		err := metaData.UnmarshalJSON(test.Bytes)
 		if nil == err {

@@ -36,7 +36,7 @@ type RoomModel struct {
 	Title                string
 	PeersTree            *PeerModel
 	Members              map[uint64]*MemberModel
-	MetaData             metadata.MetaData
+	MetaData             libmetadata.MetaData
 	GoldGorilla          **PeerModel
 	HadGoldGorillaBefore bool
 }

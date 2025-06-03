@@ -1,4 +1,4 @@
-package metadata
+package libmetadata
 
 import (
 	"github.com/reiver/go-erorr"

@@ -115,7 +115,7 @@ func (r *roomRepository) CreateRoom(id string) error {
 		Title:     "",
 		PeersTree: &PeerModel{},
 		Members:   make(map[uint64]*MemberModel),
-		MetaData:  metadata.MetaData{},
+		MetaData:  libmetadata.MetaData{},
 	}
 	return nil
 }
@@ -370,7 +370,7 @@ func (r *roomRepository) UpdateMemberName(roomId string, id uint64, name string)
 	return nil
 }
 
-func (r *roomRepository) SetRoomMetaData(roomId string, metaData metadata.MetaData) error {
+func (r *roomRepository) SetRoomMetaData(roomId string, metaData libmetadata.MetaData) error {
 	r.Lock()
 	defer r.Unlock()
 	if !r.doesRoomExists(roomId) {
@@ -418,11 +418,11 @@ func (r *roomRepository) ClearMessageHistory(roomId string) error {
 	return nil
 }
 
-func (r *roomRepository) GetRoomMetaData(roomId string) (clone metadata.MetaData, err error) {
+func (r *roomRepository) GetRoomMetaData(roomId string) (clone libmetadata.MetaData, err error) {
 	r.Lock()
 	defer r.Unlock()
 	if !r.doesRoomExists(roomId) {
-		var nada metadata.MetaData
+		var nada libmetadata.MetaData
 		return nada, ErrRoomNotFound
 	}
 

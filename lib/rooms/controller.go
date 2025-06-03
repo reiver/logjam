@@ -105,7 +105,7 @@ func (c *RoomWSController) OnDisconnect(ctx *WSContext) {
 		if err != nil {
 			c.error(err)
 		}
-		err = c.roomRepo.SetRoomMetaData(ctx.RoomId, metadata.MetaData{})
+		err = c.roomRepo.SetRoomMetaData(ctx.RoomId, libmetadata.MetaData{})
 		if err != nil {
 			c.error(err)
 		}
@@ -115,7 +115,7 @@ func (c *RoomWSController) OnDisconnect(ctx *WSContext) {
 			if err != nil {
 				c.error(err)
 			}
-			err = c.roomRepo.SetRoomMetaData(ctx.RoomId, metadata.MetaData{})
+			err = c.roomRepo.SetRoomMetaData(ctx.RoomId, libmetadata.MetaData{})
 			if err != nil {
 				c.error(err)
 			}
@@ -446,7 +446,7 @@ func (c *RoomWSController) Tree(ctx *WSContext) {
 }
 
 func (c *RoomWSController) MetaDataSet(ctx *WSContext) {
-	var metaData metadata.MetaData
+	var metaData libmetadata.MetaData
 	err := json.Unmarshal([]byte(ctx.ParsedMessage.Data), &metaData)
 	if nil != err {
 		c.error(err)
