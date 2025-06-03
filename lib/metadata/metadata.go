@@ -10,6 +10,7 @@ import (
 
 const (
 	errNilReceiver = erorr.Error("nil receiver")
+	errNilSource = erorr.Error("nil source")
 )
 
 type MetaData struct {
@@ -27,7 +28,7 @@ func (receiver *MetaData) CloneFrom(src *MetaData) error {
 		return errNilReceiver
 	}
 	if nil == src {
-		return errNilReceiver
+		return errNilSource
 	}
 
 	receiver.Messages = append([]libreply.UserMessageModel(nil), src.Messages...)
