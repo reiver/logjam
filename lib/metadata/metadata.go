@@ -6,6 +6,10 @@ import (
 	"github.com/reiver/go-opt"
 )
 
+const (
+	errNilReceiver = erorr.Error("nil receiver")
+)
+
 type MetaData struct {
 	Muted         map[string]bool
 	RecordersList []string
@@ -13,6 +17,7 @@ type MetaData struct {
 }
 
 var _ json.Marshaler = MetaData{}
+var _ json.Unmarshaler = &MetaData{}
 
 func (receiver MetaData) MarshalJSON() ([]byte, error) {
 	var buffer [512]byte
@@ -79,4 +84,58 @@ func (receiver MetaData) MarshalJSON() ([]byte, error) {
 	p = append(p, '}')
 
 	return p, nil
+}
+
+func (receiver *MetaData) UnmarshalJSON(bytes []byte) error {
+	if nil == receiver {
+		return errNilReceiver
+	}
+
+	var data map[string]any = map[string]any{}
+
+	err := json.Unmarshal(bytes, &data)
+	if nil != err {
+		return erorr.Errorf("problem json-unmarshaling into a %T (which would eventually be used to load a metadata.MetaData): %w", data, err)
+	}
+
+	if mutedAny, found := data["muted"]; found {
+		if muted, casted := mutedAny.(map[string]any); casted {
+
+			var values map[string]bool = map[string]bool{}
+
+			for streamID, isMutedAny := range muted {
+				if isMuted, isBool := isMutedAny.(bool); isBool {
+					values[streamID] = isMuted
+				} else {
+					return erorr.Errorf("problem unmarshaling metadata — muted.%q is NOT a bool but is instead a %T (%#v)", streamID, isMutedAny, isMutedAny)
+				}
+			}
+
+			if 0 < len(values) {
+				receiver.Muted = values
+			}
+		}
+	}
+
+	if recordersListAny, found := data["recordersList"]; found {
+		if recordersList, casted := recordersListAny.([]any); casted {
+			var strings []string
+
+			for _, recorder := range recordersList {
+				if str, isString := recorder.(string); isString {
+					strings = append(strings, str)
+				}
+			}
+
+			receiver.RecordersList = strings
+		}
+	}
+
+	if stylesAny, found := data["styles"]; found {
+		if styles, casted := stylesAny.(string); casted {
+			receiver.Styles = opt.Something(styles)
+		}
+	}
+
+	return nil
 }
