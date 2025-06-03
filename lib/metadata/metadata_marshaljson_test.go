@@ -24,6 +24,34 @@ func TestMetaData_MarshalJSON(t *testing.T) {
 
 		{
 			MetaData: metadata.MetaData{
+				Muted: nil,
+			},
+			Expected: []byte(
+				`{`+
+					`"muted":{}`+
+					`,`+
+					`"recordingStarted":false`+
+					`,`+
+					`"styles":null`+
+				`}`,
+			),
+		},
+		{
+			MetaData: metadata.MetaData{
+				Muted: map[string]bool(nil),
+			},
+			Expected: []byte(
+				`{`+
+					`"muted":{}`+
+					`,`+
+					`"recordingStarted":false`+
+					`,`+
+					`"styles":null`+
+				`}`,
+			),
+		},
+		{
+			MetaData: metadata.MetaData{
 				Muted: map[string]bool{},
 			},
 			Expected: []byte(
