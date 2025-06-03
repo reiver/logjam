@@ -128,7 +128,7 @@ func (receiver *MetaData) UnmarshalJSON(bytes []byte) error {
 
 	err := json.Unmarshal(bytes, &data)
 	if nil != err {
-		return erorr.Errorf("problem json-unmarshaling into a %T (which would eventually be used to load a metadata.MetaData): %w", data, err)
+		return erorr.Errorf("problem json-unmarshaling into a %T (which would eventually be used to load a %T): %w", data, *receiver, err)
 	}
 
 	if mutedAny, found := data["muted"]; found {
