@@ -17,12 +17,33 @@ func TestMetaData_UnmarshalJSON(t *testing.T) {
 		Expected metadata.MetaData
 	}{
 		{
+			Bytes: []byte(`null`),
+			Expected: metadata.MetaData{},
+		},
+
+
+
+		{
 			Bytes: []byte(`{}`),
 			Expected: metadata.MetaData{},
 		},
 
 
 
+		{
+			Bytes: []byte(
+				`{`+
+					`"muted":null`+
+					`,`+
+					`"recordingStarted":false`+
+					`,`+
+					`"styles":null`+
+				`}`,
+			),
+			Expected: metadata.MetaData{
+				Muted: map[string]bool(nil),
+			},
+		},
 		{
 			Bytes: []byte(
 				`{`+
