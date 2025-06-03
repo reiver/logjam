@@ -2,6 +2,8 @@ package rooms
 
 import (
 	"sync"
+
+	"github.com/reiver/logjam/lib/metadata"
 )
 
 type MemberModel struct {
@@ -34,7 +36,7 @@ type RoomModel struct {
 	Title                string
 	PeersTree            *PeerModel
 	Members              map[uint64]*MemberModel
-	MetaData             map[string]any
+	MetaData             metadata.MetaData
 	GoldGorilla          **PeerModel
 	HadGoldGorillaBefore bool
 }

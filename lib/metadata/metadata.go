@@ -4,6 +4,8 @@ import (
 	"github.com/reiver/go-erorr"
 	"github.com/reiver/go-json"
 	"github.com/reiver/go-opt"
+
+	"github.com/reiver/logjam/lib/reply"
 )
 
 const (
@@ -11,6 +13,7 @@ const (
 )
 
 type MetaData struct {
+	Messages      []libreply.UserMessageModel
 	Muted         map[string]bool
 	RecordersList []string
 	Styles        opt.Optional[string]
@@ -18,6 +21,35 @@ type MetaData struct {
 
 var _ json.Marshaler = MetaData{}
 var _ json.Unmarshaler = &MetaData{}
+
+func (receiver *MetaData) CloneFrom(src *MetaData) error {
+	if nil == receiver {
+		return errNilReceiver
+	}
+	if nil == src {
+		return errNilReceiver
+	}
+
+	receiver.Messages = append([]libreply.UserMessageModel(nil), src.Messages...)
+
+	{
+		receiver.Muted = nil
+		if nil != src.Muted {
+			receiver.Muted = map[string]bool{}
+		}
+
+		for key, value := range src.Muted {
+			receiver.Muted[key] = value
+		}
+	}
+
+	receiver.RecordersList = append([]string(nil), src.RecordersList...)
+
+	receiver.Styles = src.Styles
+
+	return nil
+
+}
 
 func (receiver MetaData) MarshalJSON() ([]byte, error) {
 	var buffer [512]byte
