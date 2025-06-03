@@ -12,6 +12,8 @@ type MetaData struct {
 	Styles        opt.Optional[string]
 }
 
+var _ json.Marshaler = MetaData{}
+
 func (receiver MetaData) MarshalJSON() ([]byte, error) {
 	var buffer [512]byte
 	var p []byte = buffer[0:0]
