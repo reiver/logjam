@@ -11,6 +11,7 @@ import (
 	"github.com/reiver/logjam/lib/goldgorilla"
 	"github.com/reiver/logjam/lib/logjamlink"
 	"github.com/reiver/logjam/lib/logs"
+	"github.com/reiver/logjam/lib/metadata"
 	"github.com/reiver/logjam/lib/msgs"
 	"github.com/reiver/logjam/lib/websock"
 )
@@ -104,7 +105,7 @@ func (c *RoomWSController) OnDisconnect(ctx *WSContext) {
 		if err != nil {
 			c.error(err)
 		}
-		err = c.roomRepo.SetRoomMetaData(ctx.RoomId, map[string]any{})
+		err = c.roomRepo.SetRoomMetaData(ctx.RoomId, libmetadata.MetaData{})
 		if err != nil {
 			c.error(err)
 		}
@@ -114,7 +115,7 @@ func (c *RoomWSController) OnDisconnect(ctx *WSContext) {
 			if err != nil {
 				c.error(err)
 			}
-			err = c.roomRepo.SetRoomMetaData(ctx.RoomId, map[string]any{})
+			err = c.roomRepo.SetRoomMetaData(ctx.RoomId, libmetadata.MetaData{})
 			if err != nil {
 				c.error(err)
 			}
@@ -445,14 +446,10 @@ func (c *RoomWSController) Tree(ctx *WSContext) {
 }
 
 func (c *RoomWSController) MetaDataSet(ctx *WSContext) {
-	metaData := make(map[string]any)
+	var metaData libmetadata.MetaData
 	err := json.Unmarshal([]byte(ctx.ParsedMessage.Data), &metaData)
-	if err != nil {
+	if nil != err {
 		c.error(err)
-		return
-	}
-	if _, exists := metaData[RoomMessagesMetaDataKey]; exists {
-		c.socketSVC.Send(map[string]string{"error": "can't overwrite message history"}, ctx.SocketID)
 		return
 	}
 	err = c.roomRepo.SetRoomMetaData(ctx.RoomId, metaData)

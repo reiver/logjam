@@ -2,6 +2,7 @@ package rooms
 
 import (
 	"github.com/reiver/logjam/lib/members"
+	"github.com/reiver/logjam/lib/metadata"
 )
 
 // streamId is the WebRTC stream.id
@@ -25,8 +26,8 @@ type Repository interface {
 	GetAllMembersId(roomId string, excludeBroadcaster bool) ([]uint64, error)
 	InsertMemberToTree(roomId string, memberId uint64, isGoldGorilla bool) (parentId *uint64, err error)
 	RemoveMember(roomId string, memberId uint64) (wasBroadcaster bool, nodeChildrenIdList []uint64, err error)
-	SetRoomMetaData(roomId string, metaData map[string]any) error
-	GetRoomMetaData(roomId string) (map[string]any, error)
+	SetRoomMetaData(roomId string, metaData libmetadata.MetaData) error
+	GetRoomMetaData(roomId string) (libmetadata.MetaData, error)
 	AddMessageToHistory(roomId string, senderId uint64, msg string) error
 	ClearMessageHistory(roomId string) error
 	GetUserByStreamId(roomId string, streamId string) (*MemberModel, error)
