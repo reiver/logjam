@@ -12,6 +12,17 @@ type SocketKeeper struct {
 	id     uint64
 }
 
+func newSocketKeeper(wsConn *websocket.Conn, id uint64) *SocketKeeper {
+	if nil == wsConn {
+		return nil
+	}
+
+	return &SocketKeeper{
+		wsConn:wsConn,
+		id:id,
+	}
+}
+
 func (receiver *SocketKeeper) ID() uint64 {
 	if nil == receiver {
 		var nada uint64

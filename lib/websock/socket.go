@@ -62,10 +62,7 @@ func (s *socketService) OnConnect(conn *websocket.Conn) (uint64, error) {
 	defer s.Unlock()
 
 	id := s.getNewId()
-	s.sockets[conn] = &SocketKeeper{
-		wsConn: conn,
-		id:     id,
-	}
+	s.sockets[conn] = newSocketKeeper(conn, id)
 	s.socketsById[id] = conn
 	conn.SetCloseHandler(func(code int, text string) error {
 		_ = s.OnDisconnect(conn, code, text)
