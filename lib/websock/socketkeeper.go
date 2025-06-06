@@ -7,8 +7,7 @@ import (
 )
 
 type SocketKeeper struct {
-//@TODO: why is this a pointer to a mutex, rather than just a mutex.
-	*sync.Mutex
+	mutex sync.Mutex
 	wsConn *websocket.Conn
 	ID     uint64
 }
@@ -18,8 +17,8 @@ func (receiver *SocketKeeper) WriteTextMessage(data []byte) error {
 		return errNilReceiver
 	}
 
-	receiver.Lock()
-	defer receiver.Unlock()
+	receiver.mutex.Lock()
+	defer receiver.mutex.Unlock()
 
 	err := receiver.wsConn.WriteMessage(websocket.TextMessage, data)
 	return err
@@ -30,8 +29,8 @@ func (receiver *SocketKeeper) WriteMessage(messageType int, data []byte) error {
 		return errNilReceiver
 	}
 
-	receiver.Lock()
-	defer receiver.Unlock()
+	receiver.mutex.Lock()
+	defer receiver.mutex.Unlock()
 
 	err := receiver.wsConn.WriteMessage(messageType, data)
 	return err

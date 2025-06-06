@@ -63,7 +63,6 @@ func (s *socketService) OnConnect(conn *websocket.Conn) (uint64, error) {
 
 	id := s.getNewId()
 	s.sockets[conn] = &SocketKeeper{
-		Mutex:  &sync.Mutex{},
 		wsConn: conn,
 		ID:     id,
 	}
