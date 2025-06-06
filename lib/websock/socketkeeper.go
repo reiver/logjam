@@ -13,15 +13,25 @@ type SocketKeeper struct {
 }
 
 func (s *SocketKeeper) WriteTextMessage(data []byte) error {
+	if nil == s {
+		return errNilReceiver
+	}
+
 	s.Lock()
 	defer s.Unlock()
+
 	err := s.wsConn.WriteMessage(websocket.TextMessage, data)
 	return err
 }
 
 func (s *SocketKeeper) WriteMessage(messageType int, data []byte) error {
+	if nil == s {
+		return errNilReceiver
+	}
+
 	s.Lock()
 	defer s.Unlock()
+
 	err := s.wsConn.WriteMessage(messageType, data)
 	return err
 }
