@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
+	"github.com/reiver/go-autoinc"
 
 	"github.com/reiver/logjam/lib/logs"
 )
@@ -13,7 +14,7 @@ import (
 type socketService struct {
 	*sync.Mutex
 	logger      logs.Logger
-	lastId      uint64
+	socketIDAutoIncrement autoinc.AutoInc[uint64]
 	sockets     map[*websocket.Conn]*SocketKeeper
 	socketsById map[uint64]*websocket.Conn
 	pingTimeout time.Duration
@@ -26,7 +27,6 @@ func NewSocketService(logger logs.TaggedLogger) SocketService {
 	return &socketService{
 		Mutex:       &sync.Mutex{},
 		logger:      logger.Tag(logtag),
-		lastId:      0,
 		sockets:     make(map[*websocket.Conn]*SocketKeeper),
 		socketsById: make(map[uint64]*websocket.Conn),
 		pingTimeout: 5 * time.Second,
@@ -97,8 +97,7 @@ func (s *socketService) OnConnect(conn *websocket.Conn) (uint64, error) {
 }
 
 func (s *socketService) getNewId() uint64 {
-	id := s.lastId
-	s.lastId++
+	id, _ := s.socketIDAutoIncrement.Next()
 	return id
 }
 func (s *socketService) GetNewID() uint64 {

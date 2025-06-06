@@ -4,6 +4,8 @@ github.com/gorilla/websocket v1.5.0 h1:PPwGk2jz7EePpoHN/+ClbZu8SPxiqlu12wZP/3sWm
 github.com/gorilla/websocket v1.5.0/go.mod h1:YR8l580nyteQvAITg2hZ9XVh4b55+EU/adAjf1fMHhE=
 github.com/reiver/go-actsock v0.0.0-20250529230157-8f2644949176 h1:zqndmiya01uH75kPhnpkCmSJo7ig+rg6BQeICdEXjc8=
 github.com/reiver/go-actsock v0.0.0-20250529230157-8f2644949176/go.mod h1:B4qy0o3N26iO7nPfD36TQZPdHWo7y+G2MmXQCmqLfTM=
+github.com/reiver/go-autoinc v0.0.0-20250606132935-eab5e8fb7641 h1:9iXE3CESC4XSJcZBfkcZAWHGHhoIdRHp7oISmUYE8NI=
+github.com/reiver/go-autoinc v0.0.0-20250606132935-eab5e8fb7641/go.mod h1:plMjzq1InOxuiVq7QN1hgSAOBMDi+wpf0xrKnfHM71Y=
 github.com/reiver/go-erorr v0.0.0-20240801233437-8cbde6d1fa3f h1:D1QSxKHm8U73XhjsW3SFLkT0zT5pKJi+1KGboMhY1Rk=
 github.com/reiver/go-erorr v0.0.0-20240801233437-8cbde6d1fa3f/go.mod h1:F0HbBf+Ak2ZlE8YkDW4Y+KxaUmT0KaaIJK6CXY3cJxE=
 github.com/reiver/go-etag v0.0.0-20241130123934-1a98d29fda6e h1:2FJeuK9Uc6BGLnXz4QOyfPefILfXGoPxiyCpgwz0WMU=

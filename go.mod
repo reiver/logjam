@@ -12,6 +12,7 @@ require (
 
 require (
 	github.com/reiver/go-actsock v0.0.0-20250529230157-8f2644949176
+	github.com/reiver/go-autoinc v0.0.0-20250606132935-eab5e8fb7641
 	github.com/reiver/go-etag v0.0.0-20241130123934-1a98d29fda6e
 	github.com/reiver/go-fediverseid v0.0.0-20250403113622-694e7caca2d7
 	github.com/reiver/go-http400 v0.0.0-20250528125814-c9872b77629f
