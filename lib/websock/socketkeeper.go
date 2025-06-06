@@ -12,26 +12,26 @@ type SocketKeeper struct {
 	ID     uint64
 }
 
-func (s *SocketKeeper) WriteTextMessage(data []byte) error {
-	if nil == s {
+func (receiver *SocketKeeper) WriteTextMessage(data []byte) error {
+	if nil == receiver {
 		return errNilReceiver
 	}
 
-	s.Lock()
-	defer s.Unlock()
+	receiver.Lock()
+	defer receiver.Unlock()
 
-	err := s.wsConn.WriteMessage(websocket.TextMessage, data)
+	err := receiver.wsConn.WriteMessage(websocket.TextMessage, data)
 	return err
 }
 
-func (s *SocketKeeper) WriteMessage(messageType int, data []byte) error {
-	if nil == s {
+func (receiver *SocketKeeper) WriteMessage(messageType int, data []byte) error {
+	if nil == receiver {
 		return errNilReceiver
 	}
 
-	s.Lock()
-	defer s.Unlock()
+	receiver.Lock()
+	defer receiver.Unlock()
 
-	err := s.wsConn.WriteMessage(messageType, data)
+	err := receiver.wsConn.WriteMessage(messageType, data)
 	return err
 }
