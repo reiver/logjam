@@ -64,7 +64,7 @@ func (s *socketService) OnConnect(conn *websocket.Conn) (uint64, error) {
 	id := s.getNewId()
 	s.sockets[conn] = &SocketKeeper{
 		wsConn: conn,
-		ID:     id,
+		id:     id,
 	}
 	s.socketsById[id] = conn
 	conn.SetCloseHandler(func(code int, text string) error {
@@ -115,7 +115,7 @@ func (s *socketService) OnDisconnect(conn *websocket.Conn, code int, error strin
 	defer s.Unlock()
 	if keeper, exists := s.sockets[conn]; exists {
 		s.logger.Debugf("a socket got disconnected [%d] %d : %s", keeper.ID, code, error)
-		delete(s.socketsById, keeper.ID)
+		delete(s.socketsById, keeper.ID())
 		delete(s.sockets, conn)
 	}
 
