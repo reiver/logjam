@@ -33,13 +33,6 @@ func NewSocketService(logger logs.TaggedLogger) SocketService {
 	}
 }
 
-func (s *socketService) GetSocketId(conn *websocket.Conn) (*uint64, error) {
-	if socket, exists := s.sockets[conn]; exists {
-		return &socket.ID, nil
-	}
-	return nil, nil
-}
-
 func (s *socketService) Send(data interface{}, receiverIds ...uint64) error {
 	var jsonData []byte
 	var err error
