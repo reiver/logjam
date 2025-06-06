@@ -5,5 +5,6 @@ import (
 )
 
 const (
-	errNilReceiver = erorr.Error("websock: nil receiver")
+	errNilReceiver            = erorr.Error("websock: nil receiver")
+	errNilWebSocketConnection = erorr.Error("websock: nil websocket connection")
 )

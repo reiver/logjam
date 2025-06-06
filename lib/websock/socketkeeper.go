@@ -40,6 +40,10 @@ func (receiver *SocketKeeper) WriteTextMessage(data []byte) error {
 	receiver.mutex.Lock()
 	defer receiver.mutex.Unlock()
 
+	if nil == receiver.wsConn {
+		return errNilWebSocketConnection
+	}
+
 	err := receiver.wsConn.WriteMessage(websocket.TextMessage, data)
 	return err
 }
@@ -51,6 +55,10 @@ func (receiver *SocketKeeper) WriteMessage(messageType int, data []byte) error {
 
 	receiver.mutex.Lock()
 	defer receiver.mutex.Unlock()
+
+	if nil == receiver.wsConn {
+		return errNilWebSocketConnection
+	}
 
 	err := receiver.wsConn.WriteMessage(messageType, data)
 	return err
