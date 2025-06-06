@@ -110,7 +110,7 @@ func (s *socketService) OnDisconnect(conn *websocket.Conn, code int, error strin
 	s.Lock()
 	defer s.Unlock()
 	if keeper, exists := s.sockets[conn]; exists {
-		s.logger.Debugf("a socket got disconnected [%d] %d : %s", keeper.ID, code, error)
+		s.logger.Debugf("a socket got disconnected [%d] %d : %s", keeper.ID(), code, error)
 		delete(s.socketsById, keeper.ID())
 		delete(s.sockets, conn)
 	}
