@@ -70,21 +70,19 @@ func (receiver MetaData) MarshalJSON() ([]byte, error) {
 		p = append(p, marshaled...)
 	}
 
-	if 0 < len(receiver.RecordersList) {
-		p = append(p, ',')
+	p = append(p, ',')
 
-		{
-			const prefix string = `"recordersList":[`
+	{
+		const prefix string = `"recordersList":[`
 
-			p = append(p, prefix...)
-			for index, recorder := range receiver.RecordersList {
-				if 0 < index {
-					p = append(p, ',')
-				}
-				p = append(p, json.MarshalString(recorder)...)
+		p = append(p, prefix...)
+		for index, recorder := range receiver.RecordersList {
+			if 0 < index {
+				p = append(p, ',')
 			}
-			p = append(p, ']')
+			p = append(p, json.MarshalString(recorder)...)
 		}
+		p = append(p, ']')
 	}
 
 	p = append(p, ',')

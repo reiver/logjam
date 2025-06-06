@@ -17,7 +17,7 @@ func TestMetaData_MarshalJSON(t *testing.T) {
 		Expected []byte
 	}{
 		{
-			Expected: []byte(`{"muted":{},"recordingStarted":false,"styles":null}`),
+			Expected: []byte(`{"muted":{},"recordersList":[],"recordingStarted":false,"styles":null}`),
 		},
 
 
@@ -29,6 +29,8 @@ func TestMetaData_MarshalJSON(t *testing.T) {
 			Expected: []byte(
 				`{`+
 					`"muted":{}`+
+					`,`+
+					`"recordersList":[]`+
 					`,`+
 					`"recordingStarted":false`+
 					`,`+
@@ -44,6 +46,8 @@ func TestMetaData_MarshalJSON(t *testing.T) {
 				`{`+
 					`"muted":{}`+
 					`,`+
+					`"recordersList":[]`+
+					`,`+
 					`"recordingStarted":false`+
 					`,`+
 					`"styles":null`+
@@ -57,6 +61,8 @@ func TestMetaData_MarshalJSON(t *testing.T) {
 			Expected: []byte(
 				`{`+
 					`"muted":{}`+
+					`,`+
+					`"recordersList":[]`+
 					`,`+
 					`"recordingStarted":false`+
 					`,`+
@@ -75,6 +81,8 @@ func TestMetaData_MarshalJSON(t *testing.T) {
 					`"muted":{`+
 						`"30511117-4063-4b2f-8e30-99400eb5f719":false`+
 					`}`+
+					`,`+
+					`"recordersList":[]`+
 					`,`+
 					`"recordingStarted":false`+
 					`,`+
@@ -96,6 +104,8 @@ func TestMetaData_MarshalJSON(t *testing.T) {
 						`,`+
 						`"30511117-4063-4b2f-8e30-99400eb5f719":false`+
 					`}`+
+					`,`+
+					`"recordersList":[]`+
 					`,`+
 					`"recordingStarted":false`+
 					`,`+
@@ -120,6 +130,8 @@ func TestMetaData_MarshalJSON(t *testing.T) {
 						`,`+
 						`"595661ff-862b-42e6-8989-9e48158e6cf5":false`+
 					`}`+
+					`,`+
+					`"recordersList":[]`+
 					`,`+
 					`"recordingStarted":false`+
 					`,`+
@@ -147,6 +159,8 @@ func TestMetaData_MarshalJSON(t *testing.T) {
 						`,`+
 						`"8a94aaec-db1a-48b7-a892-baf2cd17c51b":false`+
 					`}`+
+					`,`+
+					`"recordersList":[]`+
 					`,`+
 					`"recordingStarted":false`+
 					`,`+
@@ -178,6 +192,8 @@ func TestMetaData_MarshalJSON(t *testing.T) {
 						`"8a94aaec-db1a-48b7-a892-baf2cd17c51b":false`+
 					`}`+
 					`,`+
+					`"recordersList":[]`+
+					`,`+
 					`"recordingStarted":false`+
 					`,`+
 					`"styles":null`+
@@ -195,6 +211,8 @@ func TestMetaData_MarshalJSON(t *testing.T) {
 				`{`+
 					`"muted":{}`+
 					`,`+
+					`"recordersList":[]`+
+					`,`+
 					`"recordingStarted":false`+
 					`,`+
 					`"styles":null`+
@@ -209,6 +227,8 @@ func TestMetaData_MarshalJSON(t *testing.T) {
 				`{`+
 					`"muted":{}`+
 					`,`+
+					`"recordersList":[]`+
+					`,`+
 					`"recordingStarted":false`+
 					`,`+
 					`"styles":null`+
@@ -222,6 +242,8 @@ func TestMetaData_MarshalJSON(t *testing.T) {
 			Expected: []byte(
 				`{`+
 					`"muted":{}`+
+					`,`+
+					`"recordersList":[]`+
 					`,`+
 					`"recordingStarted":false`+
 					`,`+
@@ -320,6 +342,8 @@ func TestMetaData_MarshalJSON(t *testing.T) {
 				`{`+
 					`"muted":{}`+
 					`,`+
+					`"recordersList":[]`+
+					`,`+
 					`"recordingStarted":false`+
 					`,`+
 					`"styles":null`+
@@ -334,6 +358,8 @@ func TestMetaData_MarshalJSON(t *testing.T) {
 				`{`+
 					`"muted":{}`+
 					`,`+
+					`"recordersList":[]`+
+					`,`+
 					`"recordingStarted":false`+
 					`,`+
 					`"styles":""`+
@@ -347,6 +373,8 @@ func TestMetaData_MarshalJSON(t *testing.T) {
 			Expected: []byte(
 				`{`+
 					`"muted":{}`+
+					`,`+
+					`"recordersList":[]`+
 					`,`+
 					`"recordingStarted":false`+
 					`,`+
