@@ -7,6 +7,7 @@ import (
 )
 
 type SocketKeeper struct {
+//@TODO: why is this a pointer to a mutex, rather than just a mutex.
 	*sync.Mutex
 	wsConn *websocket.Conn
 	ID     uint64
