@@ -9,7 +9,7 @@ import (
 type Repository interface {
 	NumRooms() int
 	RoomIDs() []string
-	ForEachRoom(func(*RoomModel)error) error
+	ForEachRoom(func(*RoomModel) error) error
 
 	DoesRoomExists(id string) bool
 	CreateRoom(id string) error
@@ -24,7 +24,7 @@ type Repository interface {
 	UpdateMemberMeta(roomId string, id uint64, metaKey string, value string) error
 	UpdateMemberName(roomId string, id uint64, name string) error
 	GetAllMembersId(roomId string, excludeBroadcaster bool) ([]uint64, error)
-	InsertMemberToTree(roomId string, memberId uint64, isGoldGorilla bool) (parentId *uint64, err error)
+	InsertMemberToTree(roomId string, memberId uint64, isGoldGorilla, isBroadcaster bool) (parentId *uint64, err error)
 	RemoveMember(roomId string, memberId uint64) (wasBroadcaster bool, nodeChildrenIdList []uint64, err error)
 	SetRoomMetaData(roomId string, metaData libmetadata.MetaData) error
 	GetRoomMetaData(roomId string) (libmetadata.MetaData, error)

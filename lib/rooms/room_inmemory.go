@@ -7,9 +7,9 @@ import (
 
 	"github.com/reiver/go-erorr"
 
-	"github.com/reiver/logjam/lib/members"
-	"github.com/reiver/logjam/lib/metadata"
-	"github.com/reiver/logjam/lib/reply"
+	libmembers "github.com/reiver/logjam/lib/members"
+	libmetadata "github.com/reiver/logjam/lib/metadata"
+	libreply "github.com/reiver/logjam/lib/reply"
 )
 
 type roomRepository struct {
@@ -67,7 +67,7 @@ func (receiver *roomRepository) RoomIDs() []string {
 	return receiver.roomIDs()
 }
 
-func (receiver *roomRepository) ForEachRoom(fn func(*RoomModel)error) error {
+func (receiver *roomRepository) ForEachRoom(fn func(*RoomModel) error) error {
 	if nil == receiver {
 		return nil
 	}
@@ -155,8 +155,12 @@ func (r *roomRepository) SetBroadcaster(roomId string, id uint64) error {
 	if r.doesRoomExists(roomId) {
 		r.rooms[roomId].Lock()
 		defer r.rooms[roomId].Unlock()
-		r.rooms[roomId].PeersTree.ID = id
-		r.rooms[roomId].PeersTree.IsConnected = true
+
+		if r.rooms[roomId].GoldGorilla == nil {
+			r.rooms[roomId].PeersTree.ID = id
+			r.rooms[roomId].PeersTree.IsConnected = true
+		}
+		r.rooms[roomId].Broadcaster = &r.rooms[roomId].PeersTree
 	} else {
 		return ErrRoomNotFound
 	}
@@ -171,8 +175,12 @@ func (r *roomRepository) GetBroadcaster(roomId string) (*MemberModel, error) {
 	}
 	r.rooms[roomId].Lock()
 	defer r.rooms[roomId].Unlock()
-	if r.rooms[roomId].PeersTree.IsConnected {
-		return r.rooms[roomId].Members[r.rooms[roomId].PeersTree.ID], nil
+	if r.rooms[roomId].Broadcaster != nil {
+		if member, exists := r.rooms[roomId].Members[(*r.rooms[roomId].Broadcaster).ID]; exists {
+			return member, nil
+		} else {
+			return nil, nil
+		}
 	} else {
 		return nil, nil
 	}
@@ -184,8 +192,10 @@ func (r *roomRepository) ClearBroadcasterSeat(roomId string) error {
 	if r.doesRoomExists(roomId) {
 		r.rooms[roomId].Lock()
 		defer r.rooms[roomId].Unlock()
-		r.rooms[roomId].PeersTree.ID = 0
-		r.rooms[roomId].PeersTree.IsConnected = false
+
+		r.rooms[roomId].Broadcaster = nil
+		//r.rooms[roomId].PeersTree.ID = 0
+		//r.rooms[roomId].PeersTree.IsConnected = false
 	}
 	return nil
 }
@@ -255,9 +265,12 @@ func (r *roomRepository) GetAllMembersId(roomId string, excludeBroadcaster bool)
 	defer r.rooms[roomId].Unlock()
 	memberIds := make([]uint64, 0, len(r.rooms[roomId].Members))
 	for id := range r.rooms[roomId].Members {
-		if excludeBroadcaster && id == r.rooms[roomId].PeersTree.ID {
-			continue
+		if excludeBroadcaster && r.rooms[roomId].Broadcaster != nil {
+			if id == (*r.rooms[roomId].Broadcaster).ID {
+				continue
+			}
 		}
+
 		memberIds = append(memberIds, id)
 	}
 	return memberIds, nil
@@ -278,7 +291,7 @@ func (r *roomRepository) UpdateCanConnect(roomId string, id uint64, newState boo
 	return nil
 }
 
-func (r *roomRepository) InsertMemberToTree(roomId string, memberId uint64, isGoldGorilla bool) (parentId *uint64, err error) {
+func (r *roomRepository) InsertMemberToTree(roomId string, memberId uint64, isGoldGorilla bool, isBroadcaster bool) (parentId *uint64, err error) {
 	r.Lock()
 	defer r.Unlock()
 	if !r.doesRoomExists(roomId) {
@@ -291,14 +304,33 @@ func (r *roomRepository) InsertMemberToTree(roomId string, memberId uint64, isGo
 		go r.RemoveMember(roomId, gid)
 		r.rooms[roomId].GoldGorilla = nil
 	}
+	if r.rooms[roomId].GoldGorilla == nil && isGoldGorilla {
+		ggPeer := &PeerModel{
+			ID:            memberId,
+			IsConnected:   true,
+			Children:      []*PeerModel{},
+			IsGoldGorilla: isGoldGorilla,
+		}
+		r.rooms[roomId].GoldGorilla = &ggPeer
+		r.rooms[roomId].HadGoldGorillaBefore = true
+		r.rooms[roomId].PeersTree.ID = memberId
+		r.rooms[roomId].PeersTree.IsConnected = true
+		r.rooms[roomId].PeersTree.IsGoldGorilla = true
+		return
+	}
 	if r.rooms[roomId].GoldGorilla != nil {
-		(*r.rooms[roomId].GoldGorilla).Children = append((*r.rooms[roomId].GoldGorilla).Children, &PeerModel{
+		newPeer := &PeerModel{
 			ID:            memberId,
 			IsConnected:   true,
 			Children:      []*PeerModel{},
 			IsGoldGorilla: false,
-		})
+		}
+		(*r.rooms[roomId].GoldGorilla).Children = append((*r.rooms[roomId].GoldGorilla).Children, newPeer)
 		parentId = &(*r.rooms[roomId].GoldGorilla).ID
+		if isBroadcaster {
+			r.rooms[roomId].Broadcaster = &newPeer
+		}
+
 		return parentId, nil
 	}
 	lastCheckedLevel := uint(0)
@@ -326,6 +358,9 @@ start:
 			if isGoldGorilla {
 				r.rooms[roomId].GoldGorilla = &newChild
 				r.rooms[roomId].HadGoldGorillaBefore = true
+			}
+			if isBroadcaster {
+				r.rooms[roomId].Broadcaster = &newChild
 			}
 		}
 		if found {
@@ -469,7 +504,10 @@ func (r *roomRepository) IsBroadcaster(roomId string, id uint64) (bool, error) {
 
 	r.rooms[roomId].Lock()
 	defer r.rooms[roomId].Unlock()
-	return r.rooms[roomId].PeersTree.ID == id, nil
+	if r.rooms[roomId].Broadcaster == nil {
+		return false, nil
+	}
+	return (*r.rooms[roomId].Broadcaster).ID == id, nil
 }
 
 func (r *roomRepository) GetMembersList(roomId string) ([]libmembers.DTO, error) {
@@ -481,11 +519,17 @@ func (r *roomRepository) GetMembersList(roomId string) ([]libmembers.DTO, error)
 
 	r.rooms[roomId].Lock()
 	defer r.rooms[roomId].Unlock()
+	var brId *uint64
+	if r.rooms[roomId].Broadcaster != nil {
+		brId = &((*r.rooms[roomId].Broadcaster).ID)
+	}
 	var list []libmembers.DTO
 	for _, member := range r.rooms[roomId].Members {
 		role := "audience"
-		if r.rooms[roomId].PeersTree.ID == member.ID {
-			role = "broadcaster"
+		if brId != nil {
+			if member.ID == *brId {
+				role = "broadcaster"
+			}
 		}
 		streamId := ""
 		_streamId, exists := member.MetaData["streamId"]
@@ -516,15 +560,17 @@ func (r *roomRepository) RemoveMember(roomId string, memberId uint64) (wasBroadc
 	}()
 	r.rooms[roomId].Lock()
 	defer r.rooms[roomId].Unlock()
-	if r.rooms[roomId].PeersTree.ID == memberId {
-		if len(r.rooms[roomId].PeersTree.Children) > 0 {
-			nodeChildrenIdList = append(nodeChildrenIdList, r.rooms[roomId].PeersTree.Children[0].ID)
+	if r.rooms[roomId].Broadcaster != nil {
+		if (*r.rooms[roomId].Broadcaster).ID == memberId {
+			if len(r.rooms[roomId].PeersTree.Children) > 0 {
+				nodeChildrenIdList = append(nodeChildrenIdList, r.rooms[roomId].PeersTree.Children[0].ID)
+			}
+			if len(r.rooms[roomId].PeersTree.Children) > 1 {
+				nodeChildrenIdList = append(nodeChildrenIdList, r.rooms[roomId].PeersTree.Children[1].ID)
+			}
+			r.rooms[roomId].PeersTree.IsConnected = false
+			return true, nodeChildrenIdList, nil
 		}
-		if len(r.rooms[roomId].PeersTree.Children) > 1 {
-			nodeChildrenIdList = append(nodeChildrenIdList, r.rooms[roomId].PeersTree.Children[1].ID)
-		}
-		r.rooms[roomId].PeersTree.IsConnected = false
-		return true, nodeChildrenIdList, nil
 	}
 	var lastNodesList []**PeerModel
 	//var targetNode ***PeerModel
@@ -545,7 +591,11 @@ start:
 				}
 				//if memberId == GetGoldGorillaId() {
 				if nodeChild.IsGoldGorilla {
-					r.rooms[roomId].GoldGorilla = nil
+					if r.rooms[roomId].GoldGorilla != nil {
+						if nodeChild.ID == (*r.rooms[roomId].GoldGorilla).ID {
+							r.rooms[roomId].GoldGorilla = nil
+						}
+					}
 				}
 				(*node).Children = append((*node).Children[:i], (*node).Children[i+1:]...)
 

@@ -2,6 +2,8 @@ package rooms
 
 import (
 	"encoding/json"
+	"fmt"
+	"slices"
 	"strconv"
 	"time"
 
@@ -11,9 +13,10 @@ import (
 	"github.com/reiver/logjam/lib/goldgorilla"
 	"github.com/reiver/logjam/lib/logjamlink"
 	"github.com/reiver/logjam/lib/logs"
-	"github.com/reiver/logjam/lib/metadata"
+	libmetadata "github.com/reiver/logjam/lib/metadata"
 	"github.com/reiver/logjam/lib/msgs"
 	"github.com/reiver/logjam/lib/websock"
+	goldgorillasrv "github.com/reiver/logjam/srv/goldgorilla"
 )
 
 type RoomWSController struct {
@@ -26,11 +29,24 @@ type RoomWSController struct {
 func NewRoomWSController(socketSVC websock.SocketService, roomRepo Repository, ggRepo goldgorilla.IGoldGorillaServiceRepository, logger logs.TaggedLogger) *RoomWSController {
 	const logtag string = "room_ws_ctrl"
 
-	return &RoomWSController{
+	ctrl := &RoomWSController{
 		logger:    logger.Tag(logtag),
 		socketSVC: socketSVC,
 		roomRepo:  roomRepo,
 		ggRepo:    ggRepo,
+	}
+
+	go ctrl.tick()
+	return ctrl
+}
+
+func (c *RoomWSController) tick() {
+	ticker := time.NewTicker(1 * time.Second)
+	defer ticker.Stop()
+
+	for range ticker.C {
+		i := 1 + 1
+		_ = i
 	}
 }
 
@@ -181,14 +197,14 @@ func (c *RoomWSController) Start(ctx *WSContext) {
 		}
 
 		var activity = actsock.Create{
-			Actor:  acctURI,
+			Actor: acctURI,
 			Object: actsock.Conference{
-				Actor:     acctURI,
-				ID:        id,
+				Actor: acctURI,
+				ID:    id,
 				Origin: []string{
 					acctURI,
 				},
-				To:     []string{
+				To: []string{
 					acctURI,
 				},
 			},
@@ -251,11 +267,50 @@ func (c *RoomWSController) Role(ctx *WSContext) {
 			c.error(err)
 			return
 		}
-		err = c.roomRepo.SetBroadcaster(ctx.RoomId, ctx.SocketID)
-		if err != nil {
-			c.error(err)
-			return
+		ggEnabled := true
+		ggEnabledInReqBody, exists := eventData["ggEnabled"]
+		if exists && ggEnabledInReqBody == false {
+			ggEnabled = false
 		}
+		if ggEnabled {
+			err := c.ggRepo.Start(ctx.RoomId)
+			if err != nil {
+				c.error(err)
+				ggEnabled = false
+				//return
+			}
+		}
+		if ggEnabled {
+			brParentId, err := c.roomRepo.InsertMemberToTree(ctx.RoomId, ctx.SocketID, false, true)
+			if brParentId != nil {
+				println(fmt.Sprintf(`brParentId: %d`, brParentId))
+			}
+			if err != nil {
+				c.error(err)
+				return
+			}
+			ggid, err := c.roomRepo.GetRoomGoldGorillaId(ctx.RoomId)
+			if err != nil {
+				c.error(err)
+				return
+			}
+			err = goldgorillasrv.Repository.CreatePeer(ctx.RoomId, ctx.SocketID, true, true, *ggid)
+			if err != nil {
+				c.error(err)
+				return
+			}
+			_ = c.socketSVC.Send(msgs.Message{
+				Type: msgs.TypeAddAudience,
+				Data: strconv.FormatUint(*ggid, 10),
+			}, ctx.SocketID)
+		} else {
+			err = c.roomRepo.SetBroadcaster(ctx.RoomId, ctx.SocketID)
+			if err != nil {
+				c.error(err)
+				return
+			}
+		}
+
 		memberIds, err := c.roomRepo.GetAllMembersId(ctx.RoomId, true)
 		if err != nil {
 			c.error(err)
@@ -270,20 +325,6 @@ func (c *RoomWSController) Role(ctx *WSContext) {
 			c.error(err)
 		}
 		_ = c.socketSVC.Send(resultEvent, ctx.SocketID)
-		ggEnabled := true
-		ggEnabledInReqBody, exists := eventData["ggEnabled"]
-		if exists && ggEnabledInReqBody == false {
-			ggEnabled = false
-		}
-		if ggEnabled == true {
-			go func() {
-				err := c.ggRepo.Start(ctx.RoomId)
-				if err != nil {
-					c.error(err)
-					return
-				}
-			}()
-		}
 	} else if ctx.ParsedMessage.Data == msgs.TypeAltBroadcast {
 		broadcaster, err := c.roomRepo.GetBroadcaster(ctx.RoomId)
 		if err != nil {
@@ -328,7 +369,7 @@ func (c *RoomWSController) Role(ctx *WSContext) {
 		}
 		tryCount := 0
 	start:
-		parentId, err := c.roomRepo.InsertMemberToTree(ctx.RoomId, ctx.SocketID, false)
+		parentId, err := c.roomRepo.InsertMemberToTree(ctx.RoomId, ctx.SocketID, false, false)
 		if err != nil && tryCount <= 20 {
 			time.Sleep(500 * time.Millisecond)
 			tryCount++
@@ -343,6 +384,7 @@ func (c *RoomWSController) Role(ctx *WSContext) {
 			return
 		}
 		if !c.roomRepo.IsGGInstance(ctx.RoomId, *parentId) {
+			println("guy id", *parentId)
 			_ = c.socketSVC.Send(msgs.Message{
 				Type: msgs.TypeAddAudience,
 				Data: strconv.FormatUint(ctx.SocketID, 10),
@@ -437,7 +479,7 @@ func (c *RoomWSController) Tree(ctx *WSContext) {
 		c.error(err)
 		return
 	}
-	buffer, err := json.Marshal(tree)
+	buffer, _ := json.Marshal(tree)
 	resultEvent := msgs.Message{
 		Type: msgs.TypeTree,
 		Data: string(buffer),
@@ -511,7 +553,7 @@ func (c *RoomWSController) Muted(ctx *WSContext) {
 		c.error(err)
 		return
 	}
-	err = c.socketSVC.Send(ctx.PureMessage, list...)
+	_ = c.socketSVC.Send(ctx.PureMessage, list...)
 }
 
 func (c *RoomWSController) emitUserList(roomId string) {
@@ -629,6 +671,11 @@ func (c *RoomWSController) DefaultHandler(ctx *WSContext) {
 		c.error(err)
 		return
 	}
+	roomGGID, err := c.roomRepo.GetRoomGoldGorillaId(ctx.RoomId)
+	if err != nil {
+		c.error(err)
+	}
+
 	if c.roomRepo.IsGGInstance(ctx.RoomId, id) {
 		return // as there is no GoldGorilla in tree(as a browser user!!), we ignore messages that targets it
 	}
@@ -659,6 +706,16 @@ func (c *RoomWSController) DefaultHandler(ctx *WSContext) {
 	}
 	fullMessage["username"] = userInfo.Name
 	fullMessage["data"] = strconv.FormatUint(ctx.SocketID, 10)
+	if slices.Index([]string{
+		"invite-to-stage",
+		"",
+		"",
+		"",
+	}, ctx.ParsedMessage.Type) >= 0 {
+		if roomGGID != nil {
+			fullMessage["goldgorillaID"] = strconv.FormatUint(*roomGGID, 10)
+		}
+	}
 	_ = c.socketSVC.Send(fullMessage, targetMember.ID)
 }
 

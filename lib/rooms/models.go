@@ -38,13 +38,19 @@ type RoomModel struct {
 	Members              map[uint64]*MemberModel
 	MetaData             libmetadata.MetaData
 	GoldGorilla          **PeerModel
+	Broadcaster          **PeerModel
 	HadGoldGorillaBefore bool
 }
 
 func (r *RoomModel) GetBroadcaster() *MemberModel {
-	if r.PeersTree.IsConnected {
-		return r.Members[r.PeersTree.ID]
+	if r.Broadcaster != nil {
+		if br, exists := r.Members[(*r.Broadcaster).ID]; exists {
+			return br
+		}
 	}
+	//if r.PeersTree.IsConnected {
+	//	return r.Members[r.PeersTree.ID]
+	//}
 	return nil
 }
 
