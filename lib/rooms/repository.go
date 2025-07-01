@@ -1,8 +1,8 @@
 package rooms
 
 import (
-	"github.com/reiver/logjam/lib/members"
-	"github.com/reiver/logjam/lib/metadata"
+	libmembers "github.com/reiver/logjam/lib/members"
+	libmetadata "github.com/reiver/logjam/lib/metadata"
 )
 
 // streamId is the WebRTC stream.id
@@ -36,4 +36,14 @@ type Repository interface {
 	GetChildrenIdList(roomId string, id uint64) ([]uint64, error)
 	IsGGInstance(roomId string, id uint64) bool
 	GetRoomGoldGorillaId(roomId string) (*uint64, error)
+
+	AddOnStageMember(roomId string, id uint64) error
+	DelMemberFromStage(roomId string, id uint64) error
+	GetOnStageMembersList(roomId string) ([]uint64, error)
+
+	StartBroadcasterReconnectionTimer(roomId string, onTimeout func()) error
+	OnBroadcasterConnectedBack(roomId string) error
+
+	SetBroadcasterLeftState(roomId string, state bool) error
+	GetBroadcasterLeftState(roomId string) (bool, error)
 }

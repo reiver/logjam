@@ -2,8 +2,10 @@ package rooms
 
 import (
 	"errors"
+	"fmt"
 	"sort"
 	"sync"
+	"time"
 
 	"github.com/reiver/go-erorr"
 
@@ -110,12 +112,13 @@ func (r *roomRepository) CreateRoom(id string) error {
 	}
 
 	r.rooms[id] = &RoomModel{
-		Mutex:     &sync.Mutex{},
-		ID:        id,
-		Title:     "",
-		PeersTree: &PeerModel{},
-		Members:   make(map[uint64]*MemberModel),
-		MetaData:  libmetadata.MetaData{},
+		Mutex:                      &sync.Mutex{},
+		ID:                         id,
+		Title:                      "",
+		PeersTree:                  &PeerModel{},
+		Members:                    make(map[uint64]*MemberModel),
+		MetaData:                   libmetadata.MetaData{},
+		BroadcasterConnectedBackCh: make(chan any),
 	}
 	return nil
 }
@@ -147,6 +150,115 @@ func (receiver *roomRepository) GetRoom(id string) (*RoomModel, error) {
 	defer receiver.Unlock()
 
 	return receiver.getRoom(id)
+}
+
+func (r *roomRepository) GetOnStageMembersList(roomId string) ([]uint64, error) {
+	r.Lock()
+	defer r.Unlock()
+	if room, err := r.getRoom(roomId); err == nil && room != nil {
+		room.Lock()
+		defer room.Unlock()
+		return room.OnStageMembers, nil
+	} else if err != nil {
+		return nil, err
+	}
+
+	return nil, nil
+}
+
+func (r *roomRepository) AddOnStageMember(roomId string, id uint64) error {
+	r.Lock()
+	defer r.Unlock()
+	if room, err := r.getRoom(roomId); err == nil && room != nil {
+		room.Lock()
+		defer room.Unlock()
+		room.OnStageMembers = append(room.OnStageMembers, id)
+	} else {
+		return ErrRoomNotFound
+	}
+	return nil
+}
+
+func (r *roomRepository) DelMemberFromStage(roomId string, id uint64) error {
+	r.Lock()
+	defer r.Unlock()
+	if room, err := r.getRoom(roomId); err == nil && room != nil {
+		room.Lock()
+		defer room.Unlock()
+		for i, v := range room.OnStageMembers {
+			if v == id {
+				room.OnStageMembers = append(room.OnStageMembers[:i], room.OnStageMembers[i+1:]...)
+			}
+		}
+	} else {
+		return ErrRoomNotFound
+	}
+	return nil
+}
+
+func (r *roomRepository) StartBroadcasterReconnectionTimer(roomId string, onTimeout func()) error {
+	r.Lock()
+	defer r.Unlock()
+	if room, err := r.getRoom(roomId); err == nil && room != nil {
+		if room.BroadcasterReconnectionTimer != nil {
+			return errors.New("broadcaster reconnection handler timer has been created already")
+		}
+
+		timer := time.NewTimer(600 * time.Second)
+		room.Lock()
+		room.BroadcasterReconnectionTimer = timer
+		room.Unlock()
+		go func() {
+			select {
+			case <-room.BroadcasterConnectedBackCh:
+				fmt.Println("Broadcaster reconnected within 60s")
+			case <-timer.C:
+				fmt.Println("triggering onTimeout")
+				onTimeout()
+			}
+			timer.Stop()
+			room.Lock()
+			room.BroadcasterReconnectionTimer = nil
+			room.Unlock()
+		}()
+		return nil
+	}
+	return ErrRoomNotFound
+}
+
+func (r *roomRepository) SetBroadcasterLeftState(roomId string, state bool) error {
+	if room, err := r.getRoom(roomId); err == nil && room != nil {
+		room.Lock()
+		defer room.Unlock()
+		room.BroadcasterLeft = state
+		return nil
+	} else {
+		return err
+	}
+}
+
+func (r *roomRepository) GetBroadcasterLeftState(roomId string) (bool, error) {
+	if room, err := r.getRoom(roomId); err == nil && room != nil {
+		room.Lock()
+		defer room.Unlock()
+		left := room.BroadcasterLeft
+		return left, nil
+	} else {
+		return false, err
+	}
+}
+
+func (r *roomRepository) OnBroadcasterConnectedBack(roomId string) error {
+	if room, err := r.getRoom(roomId); err == nil && room != nil {
+		if room.BroadcasterReconnectionTimer != nil {
+			room.BroadcasterConnectedBackCh <- "guess whos back!?"
+			return nil
+		} else {
+			return errors.New("we are not waiting for br to comeback, his gone")
+		}
+	} else {
+		return err
+	}
 }
 
 func (r *roomRepository) SetBroadcaster(roomId string, id uint64) error {

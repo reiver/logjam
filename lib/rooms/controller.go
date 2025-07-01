@@ -67,24 +67,42 @@ func (c *RoomWSController) OnDisconnect(ctx *WSContext) {
 			c.error(err)
 			return
 		}
-		membersIdList, err := c.roomRepo.GetAllMembersId(ctx.RoomId, true)
-		if err != nil {
-			c.error(err)
-			return
-		}
-		brDCEvent := msgs.Message{
-			Type: msgs.TypeEventBroadcasterDisconnected,
-			Data: strconv.FormatUint(ctx.SocketID, 10),
-		}
-		_ = c.socketSVC.Send(brDCEvent, membersIdList...)
-		oldggId, err := c.ggRepo.ResetRoom(ctx.RoomId)
+		brLeft, err := c.roomRepo.GetBroadcasterLeftState(ctx.RoomId)
 		if err != nil {
 			c.error(err)
 			//return
 		}
-		if oldggId != nil {
-			c.roomRepo.RemoveMember(ctx.RoomId, *oldggId)
+		onBrLeft := func() {
+			membersIdList, err := c.roomRepo.GetAllMembersId(ctx.RoomId, true)
+			if err != nil {
+				c.error(err)
+				return
+			}
+			brDCEvent := msgs.Message{
+				Type: msgs.TypeEventBroadcasterDisconnected,
+				Data: strconv.FormatUint(ctx.SocketID, 10),
+			}
+			_ = c.socketSVC.Send(brDCEvent, membersIdList...)
+			oldggId, err := c.ggRepo.ResetRoom(ctx.RoomId)
+			if err != nil {
+				c.error(err)
+				//return
+			}
+			if oldggId != nil {
+				c.roomRepo.RemoveMember(ctx.RoomId, *oldggId)
+			}
 		}
+		if brLeft {
+			onBrLeft()
+		} else {
+			// so br is just reconnecting, lets give him some time
+			err = c.roomRepo.StartBroadcasterReconnectionTimer(ctx.RoomId, onBrLeft)
+			if err != nil {
+				c.error(err)
+				//return
+			}
+		}
+
 	} else {
 		parentDCEvent := msgs.Message{
 			Type: msgs.TypeEventParentDC,
@@ -137,6 +155,7 @@ func (c *RoomWSController) OnDisconnect(ctx *WSContext) {
 			}
 		}
 	}
+	c.roomRepo.DelMemberFromStage(ctx.RoomId, ctx.SocketID)
 }
 
 func (c *RoomWSController) Leave(ctx *WSContext) {
@@ -151,7 +170,7 @@ func (c *RoomWSController) Leave(ctx *WSContext) {
 			c.error(err)
 			return
 		}
-
+		_ = c.roomRepo.SetBroadcasterLeftState(ctx.RoomId, true)
 		err = c.socketSVC.Send(msgs.Message{
 			Type: msgs.TypeBroadcasterLeft,
 		}, memberIds...)
@@ -217,7 +236,6 @@ func (c *RoomWSController) Role(ctx *WSContext) {
 	var eventData map[string]any
 	err := json.Unmarshal(ctx.PureMessage, &eventData)
 	if err != nil {
-
 		return
 	}
 	streamId, exists := eventData["streamId"]
@@ -228,6 +246,16 @@ func (c *RoomWSController) Role(ctx *WSContext) {
 			c.error(err)
 			return
 		}
+	}
+	ggid, err := c.roomRepo.GetRoomGoldGorillaId(ctx.RoomId)
+	if err != nil {
+		c.error(err)
+		return
+	}
+	peopleAreOnStage := false
+	onStageMembers, err := c.roomRepo.GetOnStageMembersList(ctx.RoomId)
+	if err == nil && onStageMembers != nil && len(onStageMembers) > 0 {
+		peopleAreOnStage = true
 	}
 
 	resultEvent := msgs.Message{
@@ -272,7 +300,8 @@ func (c *RoomWSController) Role(ctx *WSContext) {
 		if exists && ggEnabledInReqBody == false {
 			ggEnabled = false
 		}
-		if ggEnabled {
+
+		if ggid == nil && ggEnabled {
 			err := c.ggRepo.Start(ctx.RoomId)
 			if err != nil {
 				c.error(err)
@@ -283,13 +312,13 @@ func (c *RoomWSController) Role(ctx *WSContext) {
 		if ggEnabled {
 			brParentId, err := c.roomRepo.InsertMemberToTree(ctx.RoomId, ctx.SocketID, false, true)
 			if brParentId != nil {
-				println(fmt.Sprintf(`brParentId: %d`, brParentId))
+				println(fmt.Sprintf(`brParentId: %d`, *brParentId))
 			}
 			if err != nil {
 				c.error(err)
 				return
 			}
-			ggid, err := c.roomRepo.GetRoomGoldGorillaId(ctx.RoomId)
+			ggid, err = c.roomRepo.GetRoomGoldGorillaId(ctx.RoomId)
 			if err != nil {
 				c.error(err)
 				return
@@ -311,18 +340,26 @@ func (c *RoomWSController) Role(ctx *WSContext) {
 			}
 		}
 
-		memberIds, err := c.roomRepo.GetAllMembersId(ctx.RoomId, true)
-		if err != nil {
-			c.error(err)
-			return
-		}
+		if !peopleAreOnStage {
+			memberIds, err := c.roomRepo.GetAllMembersId(ctx.RoomId, true)
+			if err != nil {
+				c.error(err)
+				return
+			}
 
-		err = c.socketSVC.Send(msgs.Message{
-			Type: msgs.TypeBroadcasting,
-			Data: strconv.FormatUint(ctx.SocketID, 10),
-		}, memberIds...)
-		if err != nil {
-			c.error(err)
+			err = c.socketSVC.Send(msgs.Message{
+				Type: msgs.TypeBroadcasting,
+				Data: strconv.FormatUint(ctx.SocketID, 10),
+			}, memberIds...)
+			if err != nil {
+				c.error(err)
+			}
+		} else {
+			// then this is the br reconnection
+			err = c.roomRepo.OnBroadcasterConnectedBack(ctx.RoomId)
+			if err != nil {
+				c.error(err)
+			}
 		}
 		_ = c.socketSVC.Send(resultEvent, ctx.SocketID)
 	} else if ctx.ParsedMessage.Data == msgs.TypeAltBroadcast {
@@ -361,11 +398,13 @@ func (c *RoomWSController) Role(ctx *WSContext) {
 			return
 		}
 		if broadcaster == nil {
-			_ = c.socketSVC.Send(msgs.Message{
-				Type: msgs.TypeRole,
-				Data: "no:audience",
-			}, ctx.SocketID)
-			return
+			if !peopleAreOnStage {
+				_ = c.socketSVC.Send(msgs.Message{
+					Type: msgs.TypeRole,
+					Data: "no:audience",
+				}, ctx.SocketID)
+				return
+			}
 		}
 		tryCount := 0
 	start:
@@ -384,17 +423,12 @@ func (c *RoomWSController) Role(ctx *WSContext) {
 			return
 		}
 		if !c.roomRepo.IsGGInstance(ctx.RoomId, *parentId) {
-			println("guy id", *parentId)
+			println("parent id", *parentId)
 			_ = c.socketSVC.Send(msgs.Message{
 				Type: msgs.TypeAddAudience,
 				Data: strconv.FormatUint(ctx.SocketID, 10),
 			}, *parentId)
 		} else {
-			ggid, err := c.roomRepo.GetRoomGoldGorillaId(ctx.RoomId)
-			if err != nil {
-				c.error(err)
-				return
-			}
 			if ggid == nil {
 				c.socketSVC.Disconnect(ctx.SocketID) // so aud will reconnect
 				go c.roomRepo.RemoveMember(ctx.RoomId, *parentId)
@@ -689,8 +723,8 @@ func (c *RoomWSController) DefaultHandler(ctx *WSContext) {
 		//ignoring
 		return
 	}
-	var fullMessage map[string]any
-	err = json.Unmarshal(ctx.PureMessage, &fullMessage)
+	var payload map[string]any
+	err = json.Unmarshal(ctx.PureMessage, &payload)
 	if err != nil {
 		c.error(err)
 		return
@@ -704,19 +738,36 @@ func (c *RoomWSController) DefaultHandler(ctx *WSContext) {
 		//ignoring
 		return
 	}
-	fullMessage["username"] = userInfo.Name
-	fullMessage["data"] = strconv.FormatUint(ctx.SocketID, 10)
+	payload["username"] = userInfo.Name
+	payload["data"] = strconv.FormatUint(ctx.SocketID, 10)
 	if slices.Index([]string{
 		"invite-to-stage",
-		"",
-		"",
-		"",
+		"alt-broadcast-approve",
+		"-",
 	}, ctx.ParsedMessage.Type) >= 0 {
 		if roomGGID != nil {
-			fullMessage["goldgorillaID"] = strconv.FormatUint(*roomGGID, 10)
+			payload["goldgorillaID"] = strconv.FormatUint(*roomGGID, 10)
 		}
 	}
-	_ = c.socketSVC.Send(fullMessage, targetMember.ID)
+	if ctx.ParsedMessage.Type == "audience-broadcasting" {
+		if joinedStage, exists := payload["joinedStage"]; exists {
+			if joinedStageState, isBoolean := joinedStage.(bool); isBoolean {
+				if joinedStageState {
+					err = c.roomRepo.AddOnStageMember(ctx.RoomId, ctx.SocketID)
+					if err != nil {
+						c.error(err)
+					}
+				} else {
+					err = c.roomRepo.DelMemberFromStage(ctx.RoomId, ctx.SocketID)
+					if err != nil {
+						c.error(err)
+					}
+				}
+
+			}
+		}
+	}
+	_ = c.socketSVC.Send(payload, targetMember.ID)
 }
 
 func (c *RoomWSController) debug(msg ...any) {

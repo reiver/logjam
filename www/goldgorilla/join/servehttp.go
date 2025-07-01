@@ -87,7 +87,7 @@ func serveHTTP(responsewriter http.ResponseWriter, request *http.Request) {
 			}
 			time.Sleep(2 * time.Second)
 		}
-		_, childrenIdList, err := roomsrv.Repository.RemoveMember(roomId, newGGID)
+		/*_, childrenIdList, err := roomsrv.Repository.RemoveMember(roomId, newGGID)
 		if err != nil {
 			log.Error(err)
 			return
@@ -96,7 +96,7 @@ func serveHTTP(responsewriter http.ResponseWriter, request *http.Request) {
 			Type: msgs.TypeEventParentDC,
 			Data: strconv.FormatUint(newGGID, 10),
 		}
-		_ = websocksrv.WebSockSrv.Send(parentDCEvent, childrenIdList...)
-		log.Info("deleted a goldgorilla instance from tree")
+		_ = websocksrv.WebSockSrv.Send(parentDCEvent, childrenIdList...)*/ //TODO: FIX IT
+		// log.Info("deleted a goldgorilla instance from tree")
 	}(reqModel.RoomId, cfg.Config.GoldGorillaBaseURL(), newGGID)
 }
