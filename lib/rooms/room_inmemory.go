@@ -204,7 +204,7 @@ func (r *roomRepository) StartBroadcasterReconnectionTimer(roomId string, onTime
 			return errors.New("broadcaster reconnection handler timer has been created already")
 		}
 
-		timer := time.NewTimer(600 * time.Second)
+		timer := time.NewTimer(60 * time.Second)
 		room.Lock()
 		room.BroadcasterReconnectionTimer = timer
 		room.Unlock()
