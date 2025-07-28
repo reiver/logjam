@@ -9,8 +9,8 @@ import (
 	"github.com/reiver/logjam/lib/goldgorilla"
 	"github.com/reiver/logjam/lib/msgs"
 	"github.com/reiver/logjam/lib/rest"
-	"github.com/reiver/logjam/srv/http"
-	"github.com/reiver/logjam/srv/websock"
+	httpsrv "github.com/reiver/logjam/srv/http"
+	websocksrv "github.com/reiver/logjam/srv/websock"
 )
 
 const path string = "/goldgorilla/answer"
@@ -39,11 +39,12 @@ func serveHTTP(responsewriter http.ResponseWriter, request *http.Request) {
 		return
 	}
 	websocksrv.WebSockSrv.Send(map[string]interface{}{
-		"type":   msgs.TypeVideoAnswer,
-		"target": strconv.FormatUint(reqModel.ID, 10),
-		"name":   strconv.FormatUint(reqModel.GGID, 10),
-		"sdp":    reqModel.SDP,
-		"data":   strconv.FormatUint(reqModel.GGID, 10),
+		"type":                msgs.TypeVideoAnswer,
+		"target":              strconv.FormatUint(reqModel.ID, 10),
+		"name":                strconv.FormatUint(reqModel.GGID, 10),
+		"sdp":                 reqModel.SDP,
+		"data":                strconv.FormatUint(reqModel.GGID, 10),
+		"connectionDirection": reqModel.ConnDirection,
 	}, reqModel.ID)
 	_ = rest.Write(responsewriter, nil, 204)
 }

@@ -211,9 +211,9 @@ func (r *roomRepository) StartBroadcasterReconnectionTimer(roomId string, onTime
 		go func() {
 			select {
 			case <-room.BroadcasterConnectedBackCh:
-				fmt.Println("Broadcaster reconnected within 60s")
+				fmt.Println("[connBack] Broadcaster reconnected within 60secs")
 			case <-timer.C:
-				fmt.Println("triggering onTimeout")
+				fmt.Println("[onTimeout] br didnt connect back within 60secs")
 				onTimeout()
 			}
 			timer.Stop()
@@ -682,6 +682,11 @@ func (r *roomRepository) RemoveMember(roomId string, memberId uint64) (wasBroadc
 			}
 			r.rooms[roomId].PeersTree.IsConnected = false
 			return true, nodeChildrenIdList, nil
+		}
+	}
+	if r.rooms[roomId].GoldGorilla != nil {
+		if (*r.rooms[roomId].GoldGorilla).ID == memberId {
+			r.rooms[roomId].GoldGorilla = nil
 		}
 	}
 	var lastNodesList []**PeerModel

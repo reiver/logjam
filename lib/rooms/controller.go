@@ -16,7 +16,6 @@ import (
 	libmetadata "github.com/reiver/logjam/lib/metadata"
 	"github.com/reiver/logjam/lib/msgs"
 	"github.com/reiver/logjam/lib/websock"
-	goldgorillasrv "github.com/reiver/logjam/srv/goldgorilla"
 )
 
 type RoomWSController struct {
@@ -91,8 +90,15 @@ func (c *RoomWSController) OnDisconnect(ctx *WSContext) {
 			if oldggId != nil {
 				c.roomRepo.RemoveMember(ctx.RoomId, *oldggId)
 			}
+
 		}
-		if brLeft {
+
+		peopleAreOnStage := false
+		onStageMembers, err := c.roomRepo.GetOnStageMembersList(ctx.RoomId)
+		if err == nil && onStageMembers != nil && len(onStageMembers) > 0 {
+			peopleAreOnStage = true
+		}
+		if brLeft || !peopleAreOnStage {
 			onBrLeft()
 		} else {
 			// so br is just reconnecting, lets give him some time
@@ -323,14 +329,27 @@ func (c *RoomWSController) Role(ctx *WSContext) {
 				c.error(err)
 				return
 			}
-			err = goldgorillasrv.Repository.CreatePeer(ctx.RoomId, ctx.SocketID, true, true, *ggid)
+			err = c.ggRepo.CreatePeer(ctx.RoomId, ctx.SocketID, true, true, *ggid, goldgorilla.CDSend)
 			if err != nil {
 				c.error(err)
 				return
 			}
-			_ = c.socketSVC.Send(msgs.Message{
-				Type: msgs.TypeAddAudience,
-				Data: strconv.FormatUint(*ggid, 10),
+			err = c.ggRepo.CreatePeer(ctx.RoomId, ctx.SocketID, true, true, *ggid, goldgorilla.CDRecv)
+			if err != nil {
+				c.error(err)
+				return
+			}
+
+			type customMsg struct {
+				msgs.Message
+				IsGG bool `json:"isGoldGorilla"`
+			}
+			_ = c.socketSVC.Send(customMsg{
+				Message: msgs.Message{
+					Type: msgs.TypeAddAudience,
+					Data: strconv.FormatUint(*ggid, 10),
+				},
+				IsGG: true,
 			}, ctx.SocketID)
 		} else {
 			err = c.roomRepo.SetBroadcaster(ctx.RoomId, ctx.SocketID)
@@ -373,6 +392,12 @@ func (c *RoomWSController) Role(ctx *WSContext) {
 				Type: msgs.TypeAltBroadcast,
 				Data: "no-broadcaster",
 			}, ctx.SocketID)
+			return
+		}
+
+		err = c.ggRepo.CreatePeer(ctx.RoomId, ctx.SocketID, true, true, *ggid, goldgorilla.CDSend)
+		if err != nil {
+			c.error(err)
 			return
 		}
 
@@ -434,7 +459,7 @@ func (c *RoomWSController) Role(ctx *WSContext) {
 				go c.roomRepo.RemoveMember(ctx.RoomId, *parentId)
 				return
 			}
-			err = c.ggRepo.CreatePeer(ctx.RoomId, ctx.SocketID, true, false, *ggid)
+			err = c.ggRepo.CreatePeer(ctx.RoomId, ctx.SocketID, true, false, *ggid, goldgorilla.CDRecv)
 			if err != nil {
 				_ = c.socketSVC.Send(msgs.Message{
 					Type: msgs.TypeError,
@@ -664,7 +689,7 @@ func (c *RoomWSController) SendOfferToAN(ctx *WSContext) {
 		c.error(err)
 		return
 	}
-	err = c.ggRepo.SendOffer(ctx.RoomId, ctx.SocketID, msg["sdp"])
+	err = c.ggRepo.SendOffer(ctx.RoomId, ctx.SocketID, msg["sdp"], goldgorilla.CDSend)
 	if err != nil {
 		c.error(err)
 		return
@@ -678,7 +703,7 @@ func (c *RoomWSController) SendAnswerToAN(ctx *WSContext) {
 		c.error(err)
 		return
 	}
-	err = c.ggRepo.SendAnswer(ctx.RoomId, ctx.SocketID, msg["sdp"])
+	err = c.ggRepo.SendAnswer(ctx.RoomId, ctx.SocketID, msg["sdp"], goldgorilla.CDRecv)
 	if err != nil {
 		c.error(err)
 		return
@@ -692,7 +717,14 @@ func (c *RoomWSController) SendICECandidateToAN(ctx *WSContext) {
 		c.error(err)
 		return
 	}
-	err = c.ggRepo.SendICECandidate(ctx.RoomId, ctx.SocketID, msg["candidate"])
+	var dir goldgorilla.ConnectionDirection
+	dir = goldgorilla.CDRecv
+	if cdir, exists := msg["connectionDirection"]; exists {
+		if cdir == goldgorilla.CDSend {
+			dir = goldgorilla.CDSend
+		}
+	}
+	err = c.ggRepo.SendICECandidate(ctx.RoomId, ctx.SocketID, msg["candidate"], dir)
 	if err != nil {
 		c.error(err)
 		return

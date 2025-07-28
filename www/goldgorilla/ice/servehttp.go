@@ -9,14 +9,14 @@ import (
 	"github.com/reiver/logjam/lib/goldgorilla"
 	"github.com/reiver/logjam/lib/msgs"
 	"github.com/reiver/logjam/lib/rest"
-	"github.com/reiver/logjam/srv/http"
-	"github.com/reiver/logjam/srv/websock"
+	httpsrv "github.com/reiver/logjam/srv/http"
+	websocksrv "github.com/reiver/logjam/srv/websock"
 )
 
 const path string = "/goldgorilla/ice"
 
 func init() {
-        httpsrv.Router.HandleFunc(path, serveHTTP)
+	httpsrv.Router.HandleFunc(path, serveHTTP)
 }
 
 func serveHTTP(responsewriter http.ResponseWriter, request *http.Request) {
@@ -39,10 +39,11 @@ func serveHTTP(responsewriter http.ResponseWriter, request *http.Request) {
 		return
 	}
 	_ = websocksrv.WebSockSrv.Send(map[string]interface{}{
-		"type":      msgs.TypeNewIceCandidate,
-		"Target":    strconv.FormatUint(reqModel.ID, 10),
-		"candidate": reqModel.ICECandidate,
-		"data":      strconv.FormatUint(reqModel.GGID, 10),
+		"type":                msgs.TypeNewIceCandidate,
+		"Target":              strconv.FormatUint(reqModel.ID, 10),
+		"candidate":           reqModel.ICECandidate,
+		"data":                strconv.FormatUint(reqModel.GGID, 10),
+		"connectionDirection": reqModel.ConnDirection,
 	}, reqModel.ID)
 	_ = rest.Write(responsewriter, nil, 204)
 }
