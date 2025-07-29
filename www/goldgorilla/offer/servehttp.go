@@ -39,12 +39,11 @@ func serveHTTP(responsewriter http.ResponseWriter, request *http.Request) {
 		return
 	}
 	_ = websocksrv.WebSockSrv.Send(map[string]interface{}{
-		"type":                msgs.TypeVideoOffer,
-		"target":              strconv.FormatUint(reqModel.ID, 10),
-		"name":                strconv.FormatUint(reqModel.GGID, 10),
-		"sdp":                 reqModel.SDP,
-		"data":                strconv.FormatUint(reqModel.GGID, 10),
-		"connectionDirection": reqModel.ConnDirection,
+		"type":   msgs.TypeVideoOffer,
+		"target": strconv.FormatUint(reqModel.ID, 10),
+		"name":   strconv.FormatUint(reqModel.GGID, 10),
+		"sdp":    reqModel.SDP,
+		"data":   strconv.FormatUint(reqModel.GGID, 10),
 	}, reqModel.ID)
 	_ = rest.Write(responsewriter, nil, 204)
 }

@@ -36,5 +36,4 @@ type SetSDPRPCModel struct {
 	RoomPeerDTO
 	GGID          uint64              `json:"ggid"`
 	SDP           interface{}         `json:"sdp"`
-	ConnDirection ConnectionDirection `json:"connectionDirection"`
 }

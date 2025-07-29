@@ -682,35 +682,35 @@ func (c *RoomWSController) SendMessage(ctx *WSContext) {
 
 }
 
-func (c *RoomWSController) SendOfferToAN(ctx *WSContext) {
+func (c *RoomWSController) SendOfferToGG(ctx *WSContext) {
 	msg := make(map[string]any)
 	err := json.Unmarshal(ctx.PureMessage, &msg)
 	if err != nil {
 		c.error(err)
 		return
 	}
-	err = c.ggRepo.SendOffer(ctx.RoomId, ctx.SocketID, msg["sdp"], goldgorilla.CDSend)
+	err = c.ggRepo.SendOffer(ctx.RoomId, ctx.SocketID, msg["sdp"])
 	if err != nil {
 		c.error(err)
 		return
 	}
 }
 
-func (c *RoomWSController) SendAnswerToAN(ctx *WSContext) {
+func (c *RoomWSController) SendAnswerToGG(ctx *WSContext) {
 	msg := make(map[string]any)
 	err := json.Unmarshal(ctx.PureMessage, &msg)
 	if err != nil {
 		c.error(err)
 		return
 	}
-	err = c.ggRepo.SendAnswer(ctx.RoomId, ctx.SocketID, msg["sdp"], goldgorilla.CDRecv)
+	err = c.ggRepo.SendAnswer(ctx.RoomId, ctx.SocketID, msg["sdp"])
 	if err != nil {
 		c.error(err)
 		return
 	}
 }
 
-func (c *RoomWSController) SendICECandidateToAN(ctx *WSContext) {
+func (c *RoomWSController) SendICECandidateToGG(ctx *WSContext) {
 	msg := make(map[string]any)
 	err := json.Unmarshal(ctx.PureMessage, &msg)
 	if err != nil {

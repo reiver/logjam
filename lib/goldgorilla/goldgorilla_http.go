@@ -86,7 +86,7 @@ func (a *HTTPRepository) SendICECandidate(roomId string, id uint64, iceCandidate
 	return nil
 }
 
-func (a *HTTPRepository) SendAnswer(roomId string, peerId uint64, answer interface{}, connDirection ConnectionDirection) error {
+func (a *HTTPRepository) SendAnswer(roomId string, peerId uint64, answer interface{}) error {
 	if !a.isConfigured() {
 		return errors.New("gg repository not initialized yet")
 	}
@@ -95,8 +95,7 @@ func (a *HTTPRepository) SendAnswer(roomId string, peerId uint64, answer interfa
 			RoomId: roomId,
 			ID:     peerId,
 		},
-		SDP:           answer,
-		ConnDirection: connDirection,
+		SDP: answer,
 	})
 	if err != nil {
 		return err
@@ -111,7 +110,7 @@ func (a *HTTPRepository) SendAnswer(roomId string, peerId uint64, answer interfa
 	return nil
 }
 
-func (a *HTTPRepository) SendOffer(roomId string, peerId uint64, offer interface{}, connDirection ConnectionDirection) error {
+func (a *HTTPRepository) SendOffer(roomId string, peerId uint64, offer interface{}) error {
 	if !a.isConfigured() {
 		return errors.New("gg repository not initialized yet")
 	}
@@ -120,8 +119,7 @@ func (a *HTTPRepository) SendOffer(roomId string, peerId uint64, offer interface
 			RoomId: roomId,
 			ID:     peerId,
 		},
-		SDP:           offer,
-		ConnDirection: connDirection,
+		SDP: offer,
 	})
 	if err != nil {
 		return err
@@ -194,7 +192,7 @@ func (a *HTTPRepository) ResetRoom(roomId string) (*uint64, error) {
 
 func (a *HTTPRepository) Start(roomId string) error {
 	if a.svcAddr == "" {
-		return errors.New("HTTPRepository instance is not initialized yet(waiting for goldgorilla hook)...")
+		return errors.New("HTTPRepository instance is not initialized yet(waiting for goldgorilla hook)")
 	}
 
 	body, _ := getReader(map[string]string{"roomId": roomId})
