@@ -35,18 +35,7 @@ func NewRoomWSController(socketSVC websock.SocketService, roomRepo Repository, g
 		ggRepo:    ggRepo,
 	}
 
-	go ctrl.tick()
 	return ctrl
-}
-
-func (c *RoomWSController) tick() {
-	ticker := time.NewTicker(1 * time.Second)
-	defer ticker.Stop()
-
-	for range ticker.C {
-		i := 1 + 1
-		_ = i
-	}
 }
 
 func (c *RoomWSController) OnConnect(ctx *WSContext) {
