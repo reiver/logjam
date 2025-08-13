@@ -2,8 +2,9 @@ package rooms
 
 import (
 	"sync"
+	"time"
 
-	"github.com/reiver/logjam/lib/metadata"
+	libmetadata "github.com/reiver/logjam/lib/metadata"
 )
 
 type MemberModel struct {
@@ -32,19 +33,29 @@ type PeerModel struct {
 
 type RoomModel struct {
 	*sync.Mutex
-	ID                   string
-	Title                string
-	PeersTree            *PeerModel
-	Members              map[uint64]*MemberModel
-	MetaData             libmetadata.MetaData
-	GoldGorilla          **PeerModel
-	HadGoldGorillaBefore bool
+	ID                           string
+	Title                        string
+	PeersTree                    *PeerModel
+	Members                      map[uint64]*MemberModel
+	MetaData                     libmetadata.MetaData
+	GoldGorilla                  **PeerModel
+	Broadcaster                  **PeerModel
+	HadGoldGorillaBefore         bool
+	OnStageMembers               []uint64
+	BroadcasterReconnectionTimer *time.Timer
+	BroadcasterConnectedBackCh   chan any
+	BroadcasterLeft              bool
 }
 
 func (r *RoomModel) GetBroadcaster() *MemberModel {
-	if r.PeersTree.IsConnected {
-		return r.Members[r.PeersTree.ID]
+	if r.Broadcaster != nil {
+		if br, exists := r.Members[(*r.Broadcaster).ID]; exists {
+			return br
+		}
 	}
+	//if r.PeersTree.IsConnected {
+	//	return r.Members[r.PeersTree.ID]
+	//}
 	return nil
 }
 

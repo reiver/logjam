@@ -7,7 +7,7 @@ import (
 
 	"github.com/reiver/logjam/lib/msgs"
 	"github.com/reiver/logjam/lib/rooms"
-	"github.com/reiver/logjam/srv/room"
+	roomsrv "github.com/reiver/logjam/srv/room"
 )
 
 func handleEvent(ctx *rooms.WSContext) {
@@ -57,11 +57,11 @@ func handleEvent(ctx *rooms.WSContext) {
 				if ctx.ParsedMessage.Target == strconv.FormatUint((*room.GoldGorilla).ID, 10) {
 					switch ctx.ParsedMessage.Type {
 					case msgs.TypeVideoAnswer:
-						roomsrv.Controller.SendAnswerToAN(ctx)
+						roomsrv.Controller.SendAnswerToGG(ctx)
 					case msgs.TypeVideoOffer:
-						roomsrv.Controller.SendOfferToAN(ctx)
+						roomsrv.Controller.SendOfferToGG(ctx)
 					case msgs.TypeNewIceCandidate:
-						roomsrv.Controller.SendICECandidateToAN(ctx)
+						roomsrv.Controller.SendICECandidateToGG(ctx)
 					default:
 						roomsrv.Controller.DefaultHandler(ctx)
 					}

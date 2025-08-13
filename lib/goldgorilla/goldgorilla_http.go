@@ -32,7 +32,7 @@ func (a *HTTPRepository) isConfigured() bool {
 	return len(a.svcAddr) > 0
 }
 
-func (a *HTTPRepository) CreatePeer(roomId string, id uint64, canPublish bool, isCaller bool, ggid uint64) error {
+func (a *HTTPRepository) CreatePeer(roomId string, id uint64, canPublish bool, isCaller bool, ggid uint64, connDirection ConnectionDirection) error {
 	if !a.isConfigured() {
 		return errors.New("gg repository not initialized yet")
 	}
@@ -42,9 +42,10 @@ func (a *HTTPRepository) CreatePeer(roomId string, id uint64, canPublish bool, i
 				RoomId: roomId,
 				ID:     id,
 			},
-			CanPublish: canPublish,
-			IsCaller:   isCaller,
-			GGID:       ggid,
+			CanPublish:    canPublish,
+			IsCaller:      isCaller,
+			GGID:          ggid,
+			ConnDirection: connDirection,
 		})
 	if err != nil {
 		return err
@@ -59,7 +60,7 @@ func (a *HTTPRepository) CreatePeer(roomId string, id uint64, canPublish bool, i
 	return nil
 }
 
-func (a *HTTPRepository) SendICECandidate(roomId string, id uint64, iceCandidate interface{}) error {
+func (a *HTTPRepository) SendICECandidate(roomId string, id uint64, iceCandidate interface{}, connDirection ConnectionDirection) error {
 	if !a.isConfigured() {
 		return errors.New("gg repository not initialized yet")
 	}
@@ -69,7 +70,8 @@ func (a *HTTPRepository) SendICECandidate(roomId string, id uint64, iceCandidate
 				RoomId: roomId,
 				ID:     id,
 			},
-			ICECandidate: iceCandidate,
+			ICECandidate:  iceCandidate,
+			ConnDirection: connDirection,
 		})
 	if err != nil {
 		return err
@@ -190,7 +192,7 @@ func (a *HTTPRepository) ResetRoom(roomId string) (*uint64, error) {
 
 func (a *HTTPRepository) Start(roomId string) error {
 	if a.svcAddr == "" {
-		return errors.New("HTTPRepository instance is not initialized yet(waiting for goldgorilla hook)...")
+		return errors.New("HTTPRepository instance is not initialized yet(waiting for goldgorilla hook)")
 	}
 
 	body, _ := getReader(map[string]string{"roomId": roomId})

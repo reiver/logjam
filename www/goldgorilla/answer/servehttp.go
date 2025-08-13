@@ -9,8 +9,8 @@ import (
 	"github.com/reiver/logjam/lib/goldgorilla"
 	"github.com/reiver/logjam/lib/msgs"
 	"github.com/reiver/logjam/lib/rest"
-	"github.com/reiver/logjam/srv/http"
-	"github.com/reiver/logjam/srv/websock"
+	httpsrv "github.com/reiver/logjam/srv/http"
+	websocksrv "github.com/reiver/logjam/srv/websock"
 )
 
 const path string = "/goldgorilla/answer"

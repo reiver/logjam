@@ -11,16 +11,15 @@ import (
 	"github.com/reiver/logjam/lib/goldgorilla"
 	"github.com/reiver/logjam/lib/msgs"
 	"github.com/reiver/logjam/lib/rest"
-	"github.com/reiver/logjam/srv/goldgorilla"
-	"github.com/reiver/logjam/srv/http"
-	"github.com/reiver/logjam/srv/room"
-	"github.com/reiver/logjam/srv/websock"
+	httpsrv "github.com/reiver/logjam/srv/http"
+	roomsrv "github.com/reiver/logjam/srv/room"
+	websocksrv "github.com/reiver/logjam/srv/websock"
 )
 
 const path string = "/goldgorilla/join"
 
 func init() {
-        httpsrv.Router.HandleFunc(path, serveHTTP)
+	httpsrv.Router.HandleFunc(path, serveHTTP)
 }
 
 func serveHTTP(responsewriter http.ResponseWriter, request *http.Request) {
@@ -52,19 +51,19 @@ func serveHTTP(responsewriter http.ResponseWriter, request *http.Request) {
 	if rest.HandleIfErr(responsewriter, err, 500) {
 		return
 	}
-	parentId, err := roomsrv.Repository.InsertMemberToTree(reqModel.RoomId, newGGID, true)
+	_, err = roomsrv.Repository.InsertMemberToTree(reqModel.RoomId, newGGID, true, false)
 	if rest.HandleIfErr(responsewriter, err, 500) {
 		_, _, _ = roomsrv.Repository.RemoveMember(reqModel.RoomId, newGGID)
 		return
 	}
-	err = goldgorillasrv.Repository.CreatePeer(reqModel.RoomId, *parentId, true, true, newGGID)
+	/*err = goldgorillasrv.Repository.CreatePeer(reqModel.RoomId, parentId, true, true, newGGID)
 	if rest.HandleIfErr(responsewriter, err, 503) {
 		return
 	}
 	_ = websocksrv.WebSockSrv.Send(msgs.Message{
 		Type: msgs.TypeAddAudience,
 		Data: strconv.FormatUint(newGGID, 10),
-	}, *parentId)
+	}, *parentId)*/
 
 	_ = rest.Write(responsewriter, struct {
 		ID uint64 `json:"id"`
@@ -88,7 +87,7 @@ func serveHTTP(responsewriter http.ResponseWriter, request *http.Request) {
 			}
 			time.Sleep(2 * time.Second)
 		}
-		_, childrenIdList, err := roomsrv.Repository.RemoveMember(roomId, newGGID)
+		/*_, childrenIdList, err := roomsrv.Repository.RemoveMember(roomId, newGGID)
 		if err != nil {
 			log.Error(err)
 			return
@@ -97,7 +96,7 @@ func serveHTTP(responsewriter http.ResponseWriter, request *http.Request) {
 			Type: msgs.TypeEventParentDC,
 			Data: strconv.FormatUint(newGGID, 10),
 		}
-		_ = websocksrv.WebSockSrv.Send(parentDCEvent, childrenIdList...)
-		log.Info("deleted a goldgorilla instance from tree")
+		_ = websocksrv.WebSockSrv.Send(parentDCEvent, childrenIdList...)*/ //TODO: FIX IT
+		// log.Info("deleted a goldgorilla instance from tree")
 	}(reqModel.RoomId, cfg.Config.GoldGorillaBaseURL(), newGGID)
 }

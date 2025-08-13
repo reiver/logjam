@@ -9,16 +9,16 @@ import (
 
 	"github.com/reiver/logjam/lib/msgs"
 	"github.com/reiver/logjam/lib/rest"
-	"github.com/reiver/logjam/srv/goldgorilla"
-	"github.com/reiver/logjam/srv/http"
-	"github.com/reiver/logjam/srv/room"
-	"github.com/reiver/logjam/srv/websock"
+	goldgorillasrv "github.com/reiver/logjam/srv/goldgorilla"
+	httpsrv "github.com/reiver/logjam/srv/http"
+	roomsrv "github.com/reiver/logjam/srv/room"
+	websocksrv "github.com/reiver/logjam/srv/websock"
 )
 
 const path string = "/goldgorilla/rejoin"
 
 func init() {
-        httpsrv.Router.HandleFunc(path, serveHTTP)
+	httpsrv.Router.HandleFunc(path, serveHTTP)
 }
 
 func serveHTTP(responsewriter http.ResponseWriter, request *http.Request) {

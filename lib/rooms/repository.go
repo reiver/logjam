@@ -1,15 +1,15 @@
 package rooms
 
 import (
-	"github.com/reiver/logjam/lib/members"
-	"github.com/reiver/logjam/lib/metadata"
+	libmembers "github.com/reiver/logjam/lib/members"
+	libmetadata "github.com/reiver/logjam/lib/metadata"
 )
 
 // streamId is the WebRTC stream.id
 type Repository interface {
 	NumRooms() int
 	RoomIDs() []string
-	ForEachRoom(func(*RoomModel)error) error
+	ForEachRoom(func(*RoomModel) error) error
 
 	DoesRoomExists(id string) bool
 	CreateRoom(id string) error
@@ -24,7 +24,7 @@ type Repository interface {
 	UpdateMemberMeta(roomId string, id uint64, metaKey string, value string) error
 	UpdateMemberName(roomId string, id uint64, name string) error
 	GetAllMembersId(roomId string, excludeBroadcaster bool) ([]uint64, error)
-	InsertMemberToTree(roomId string, memberId uint64, isGoldGorilla bool) (parentId *uint64, err error)
+	InsertMemberToTree(roomId string, memberId uint64, isGoldGorilla, isBroadcaster bool) (parentId *uint64, err error)
 	RemoveMember(roomId string, memberId uint64) (wasBroadcaster bool, nodeChildrenIdList []uint64, err error)
 	SetRoomMetaData(roomId string, metaData libmetadata.MetaData) error
 	GetRoomMetaData(roomId string) (libmetadata.MetaData, error)
@@ -36,4 +36,14 @@ type Repository interface {
 	GetChildrenIdList(roomId string, id uint64) ([]uint64, error)
 	IsGGInstance(roomId string, id uint64) bool
 	GetRoomGoldGorillaId(roomId string) (*uint64, error)
+
+	AddOnStageMember(roomId string, id uint64) error
+	DelMemberFromStage(roomId string, id uint64) error
+	GetOnStageMembersList(roomId string) ([]uint64, error)
+
+	StartBroadcasterReconnectionTimer(roomId string, onTimeout func()) error
+	OnBroadcasterConnectedBack(roomId string) error
+
+	SetBroadcasterLeftState(roomId string, state bool) error
+	GetBroadcasterLeftState(roomId string) (bool, error)
 }
