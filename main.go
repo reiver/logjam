@@ -1,10 +1,10 @@
 package main
 
 import (
-	"github.com/reiver/logjam/srv/log"
+	"codeberg.org/greatape/logjam/srv/log"
 
 	// This import enables all the HTTP handlers.
-	_ "github.com/reiver/logjam/www"
+	_ "codeberg.org/greatape/logjam/www"
 )
 
 func main() {

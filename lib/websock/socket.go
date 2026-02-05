@@ -8,7 +8,7 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/reiver/go-autoinc"
 
-	"github.com/reiver/logjam/lib/logs"
+	"codeberg.org/greatape/logjam/lib/logs"
 )
 
 type socketService struct {

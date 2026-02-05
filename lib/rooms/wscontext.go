@@ -1,7 +1,7 @@
 package rooms
 
 import (
-	"github.com/reiver/logjam/lib/msgs"
+	"codeberg.org/greatape/logjam/lib/msgs"
 )
 
 type WSContext struct {

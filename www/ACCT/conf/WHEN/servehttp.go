@@ -11,7 +11,7 @@ import (
 	"github.com/reiver/go-http500"
 	libpath "github.com/reiver/go-path"
 
-	"github.com/reiver/logjam/srv/http"
+	"codeberg.org/greatape/logjam/srv/http"
 )
 
 const acct string = "acct"

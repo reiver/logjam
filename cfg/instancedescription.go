@@ -1,7 +1,7 @@
 package cfg
 
 import (
-	"github.com/reiver/logjam/flg"
+	"codeberg.org/greatape/logjam/flg"
 )
 
 func InstanceDescription() string {

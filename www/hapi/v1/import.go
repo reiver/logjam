@@ -1,6 +1,6 @@
 package verboten
 
 import (
-	_ "github.com/reiver/logjam/www/hapi/v1/rooms"
-	_ "github.com/reiver/logjam/www/hapi/v1/ws"
+	_ "codeberg.org/greatape/logjam/www/hapi/v1/rooms"
+	_ "codeberg.org/greatape/logjam/www/hapi/v1/ws"
 )

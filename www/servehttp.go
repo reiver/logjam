@@ -9,7 +9,7 @@ import (
 
 	"github.com/reiver/go-etag"
 
-	"github.com/reiver/logjam/srv/http"
+	"codeberg.org/greatape/logjam/srv/http"
 )
 
 const path string = "/"

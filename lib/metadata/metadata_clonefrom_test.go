@@ -7,8 +7,8 @@ import (
 
 	"github.com/reiver/go-opt"
 
-	"github.com/reiver/logjam/lib/metadata"
-	"github.com/reiver/logjam/lib/reply"
+	"codeberg.org/greatape/logjam/lib/metadata"
+	"codeberg.org/greatape/logjam/lib/reply"
 )
 
 func TestMetaData_CloneFrom(t *testing.T) {

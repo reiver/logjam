@@ -1,8 +1,8 @@
 package logsrv
 
 import (
-	"github.com/reiver/logjam/cfg"
-	"github.com/reiver/logjam/lib/logs"
+	"codeberg.org/greatape/logjam/cfg"
+	"codeberg.org/greatape/logjam/lib/logs"
 )
 
 var Logger logs.TaggedLogger = logs.NewStdOutLogger(cfg.Config.ProdMode())

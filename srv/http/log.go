@@ -1,7 +1,7 @@
 package httpsrv
 
 import (
-	"github.com/reiver/logjam/srv/log"
+	"codeberg.org/greatape/logjam/srv/log"
 )
 
 const logtag string = "httpsrv"

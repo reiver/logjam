@@ -7,7 +7,7 @@ import (
 
 	"github.com/reiver/go-opt"
 
-	"github.com/reiver/logjam/lib/metadata"
+	"codeberg.org/greatape/logjam/lib/metadata"
 )
 
 func TestMetaData_UnmarshalJSON(t *testing.T) {

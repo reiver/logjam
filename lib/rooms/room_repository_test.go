@@ -3,7 +3,7 @@ package rooms
 import (
 	"testing"
 
-	"github.com/reiver/logjam/lib/random"
+	"codeberg.org/greatape/logjam/lib/random"
 )
 
 func Test_CreationAndExistence(t *testing.T) {

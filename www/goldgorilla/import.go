@@ -1,9 +1,9 @@
 package verboten
 
 import (
-	_ "github.com/reiver/logjam/www/goldgorilla/answer"
-	_ "github.com/reiver/logjam/www/goldgorilla/ice"
-	_ "github.com/reiver/logjam/www/goldgorilla/join"
-	_ "github.com/reiver/logjam/www/goldgorilla/offer"
-	_ "github.com/reiver/logjam/www/goldgorilla/rejoin"
+	_ "codeberg.org/greatape/logjam/www/goldgorilla/answer"
+	_ "codeberg.org/greatape/logjam/www/goldgorilla/ice"
+	_ "codeberg.org/greatape/logjam/www/goldgorilla/join"
+	_ "codeberg.org/greatape/logjam/www/goldgorilla/offer"
+	_ "codeberg.org/greatape/logjam/www/goldgorilla/rejoin"
 )

@@ -1,10 +1,10 @@
 package roomsrv
 
 import (
-	"github.com/reiver/logjam/lib/rooms"
-	"github.com/reiver/logjam/srv/goldgorilla"
-	"github.com/reiver/logjam/srv/log"
-	"github.com/reiver/logjam/srv/websock"
+	"codeberg.org/greatape/logjam/lib/rooms"
+	"codeberg.org/greatape/logjam/srv/goldgorilla"
+	"codeberg.org/greatape/logjam/srv/log"
+	"codeberg.org/greatape/logjam/srv/websock"
 )
 
 var Controller = rooms.NewRoomWSController(websocksrv.WebSockSrv, Repository, goldgorillasrv.Repository, logsrv.Logger)

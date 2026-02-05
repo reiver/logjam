@@ -1,7 +1,7 @@
 package verboten
 
 import (
-	"github.com/reiver/logjam/srv/log"
+	"codeberg.org/greatape/logjam/srv/log"
 )
 
 const logtag string = "ws_router"

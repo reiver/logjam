@@ -8,12 +8,12 @@ import (
 	"github.com/reiver/go-actsock"
 	"github.com/reiver/go-fediverseid"
 
-	"github.com/reiver/logjam/lib/goldgorilla"
-	"github.com/reiver/logjam/lib/logjamlink"
-	"github.com/reiver/logjam/lib/logs"
-	"github.com/reiver/logjam/lib/metadata"
-	"github.com/reiver/logjam/lib/msgs"
-	"github.com/reiver/logjam/lib/websock"
+	"codeberg.org/greatape/logjam/lib/goldgorilla"
+	"codeberg.org/greatape/logjam/lib/logjamlink"
+	"codeberg.org/greatape/logjam/lib/logs"
+	"codeberg.org/greatape/logjam/lib/metadata"
+	"codeberg.org/greatape/logjam/lib/msgs"
+	"codeberg.org/greatape/logjam/lib/websock"
 )
 
 type RoomWSController struct {

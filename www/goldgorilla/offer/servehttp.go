@@ -6,11 +6,11 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/reiver/logjam/lib/goldgorilla"
-	"github.com/reiver/logjam/lib/msgs"
-	"github.com/reiver/logjam/lib/rest"
-	"github.com/reiver/logjam/srv/http"
-	"github.com/reiver/logjam/srv/websock"
+	"codeberg.org/greatape/logjam/lib/goldgorilla"
+	"codeberg.org/greatape/logjam/lib/msgs"
+	"codeberg.org/greatape/logjam/lib/rest"
+	"codeberg.org/greatape/logjam/srv/http"
+	"codeberg.org/greatape/logjam/srv/websock"
 )
 
 const path string = "/goldgorilla/offer"

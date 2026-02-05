@@ -7,9 +7,9 @@ import (
 
 	"github.com/reiver/go-erorr"
 
-	"github.com/reiver/logjam/lib/members"
-	"github.com/reiver/logjam/lib/metadata"
-	"github.com/reiver/logjam/lib/reply"
+	"codeberg.org/greatape/logjam/lib/members"
+	"codeberg.org/greatape/logjam/lib/metadata"
+	"codeberg.org/greatape/logjam/lib/reply"
 )
 
 type roomRepository struct {

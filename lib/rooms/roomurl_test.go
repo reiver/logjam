@@ -3,7 +3,7 @@ package rooms_test
 import (
 	"testing"
 
-	"github.com/reiver/logjam/lib/rooms"
+	"codeberg.org/greatape/logjam/lib/rooms"
 )
 
 func TestRoomURL(t *testing.T) {

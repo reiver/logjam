@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/reiver/logjam/env"
+	"codeberg.org/greatape/logjam/env"
 )
 
 var (

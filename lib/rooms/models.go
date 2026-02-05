@@ -3,7 +3,7 @@ package rooms
 import (
 	"sync"
 
-	"github.com/reiver/logjam/lib/metadata"
+	"codeberg.org/greatape/logjam/lib/metadata"
 )
 
 type MemberModel struct {

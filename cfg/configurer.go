@@ -1,7 +1,7 @@
 package cfg
 
 import (
-	libcfg "github.com/reiver/logjam/lib/cfg"
+	libcfg "codeberg.org/greatape/logjam/lib/cfg"
 )
 
 type Configurer = libcfg.Configurer

@@ -5,7 +5,7 @@ import (
 	"github.com/reiver/go-json"
 	"github.com/reiver/go-opt"
 
-	"github.com/reiver/logjam/lib/reply"
+	"codeberg.org/greatape/logjam/lib/reply"
 )
 
 const (

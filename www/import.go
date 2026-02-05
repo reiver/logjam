@@ -1,10 +1,10 @@
 package verboten
 
 import (
-	_ "github.com/reiver/logjam/www/ACCT"
-	_ "github.com/reiver/logjam/www/favicon"
-	_ "github.com/reiver/logjam/www/goldgorilla"
-	_ "github.com/reiver/logjam/www/hapi"
-	_ "github.com/reiver/logjam/www/ogimage"
-	_ "github.com/reiver/logjam/www/well-known"
+	_ "codeberg.org/greatape/logjam/www/ACCT"
+	_ "codeberg.org/greatape/logjam/www/favicon"
+	_ "codeberg.org/greatape/logjam/www/goldgorilla"
+	_ "codeberg.org/greatape/logjam/www/hapi"
+	_ "codeberg.org/greatape/logjam/www/ogimage"
+	_ "codeberg.org/greatape/logjam/www/well-known"
 )

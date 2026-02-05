@@ -1,5 +1,5 @@
 package verboten
 
 import (
-	_ "github.com/reiver/logjam/www/hapi/v1/rooms/ID"
+	_ "codeberg.org/greatape/logjam/www/hapi/v1/rooms/ID"
 )

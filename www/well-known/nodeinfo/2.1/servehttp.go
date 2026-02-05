@@ -8,8 +8,8 @@ import (
 	"github.com/reiver/go-opt"
 	"github.com/reiver/go-path"
 
-	"github.com/reiver/logjam/cfg"
-	"github.com/reiver/logjam/srv/http"
+	"codeberg.org/greatape/logjam/cfg"
+	"codeberg.org/greatape/logjam/srv/http"
 )
 
 func Path() string {

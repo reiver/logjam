@@ -1,8 +1,8 @@
 package rooms
 
 import (
-	"github.com/reiver/logjam/lib/members"
-	"github.com/reiver/logjam/lib/metadata"
+	"codeberg.org/greatape/logjam/lib/members"
+	"codeberg.org/greatape/logjam/lib/metadata"
 )
 
 // streamId is the WebRTC stream.id

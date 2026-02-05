@@ -1,8 +1,8 @@
 package cfg
 
 import (
-	"github.com/reiver/logjam/flg"
-	libcfg "github.com/reiver/logjam/lib/cfg"
+	"codeberg.org/greatape/logjam/flg"
+	libcfg "codeberg.org/greatape/logjam/lib/cfg"
 )
 
 var config libcfg.Model = libcfg.Model{

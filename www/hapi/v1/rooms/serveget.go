@@ -5,9 +5,9 @@ import (
 
 	"github.com/reiver/go-jsonld"
 
-	"github.com/reiver/logjam/lib/rooms"
-	"github.com/reiver/logjam/srv/http"
-	"github.com/reiver/logjam/srv/room"
+	"codeberg.org/greatape/logjam/lib/rooms"
+	"codeberg.org/greatape/logjam/srv/http"
+	"codeberg.org/greatape/logjam/srv/room"
 )
 
 const path string = "/hapi/v1/rooms"

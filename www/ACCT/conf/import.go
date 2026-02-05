@@ -1,5 +1,5 @@
 package verboten
 
 import (
-	_ "github.com/reiver/logjam/www/ACCT/conf/WHEN"
+	_ "codeberg.org/greatape/logjam/www/ACCT/conf/WHEN"
 )

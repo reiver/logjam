@@ -3,10 +3,10 @@ package main
 import (
 	"net/http"
 
-	"github.com/reiver/logjam/cfg"
-	"github.com/reiver/logjam/srv/http"
-	"github.com/reiver/logjam/srv/log"
-	_ "github.com/reiver/logjam/www"
+	"codeberg.org/greatape/logjam/cfg"
+	"codeberg.org/greatape/logjam/srv/http"
+	"codeberg.org/greatape/logjam/srv/log"
+	_ "codeberg.org/greatape/logjam/www"
 )
 
 func webserve() {

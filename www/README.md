@@ -21,7 +21,7 @@ To have all the code under this directory activate and work, something needs to 
 I.e.:
 
 ```golang
-import _ "github.com/reiver/logjam/www"
+import _ "codeberg.org/greatape/logjam/www"
 ```
 
 Note the underscore (_).

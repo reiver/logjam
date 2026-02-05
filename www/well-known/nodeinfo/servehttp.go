@@ -6,11 +6,11 @@ import (
 	"github.com/reiver/go-nodeinfo"
 	"github.com/reiver/go-opt"
 
-	"github.com/reiver/logjam/cfg"
-	"github.com/reiver/logjam/srv/http"
-	nodeinfo2     "github.com/reiver/logjam/www/well-known/nodeinfo/2.0"
-	nodeinfo2dot1 "github.com/reiver/logjam/www/well-known/nodeinfo/2.1"
-	nodeinfo2dot2 "github.com/reiver/logjam/www/well-known/nodeinfo/2.2"
+	"codeberg.org/greatape/logjam/cfg"
+	"codeberg.org/greatape/logjam/srv/http"
+	nodeinfo2     "codeberg.org/greatape/logjam/www/well-known/nodeinfo/2.0"
+	nodeinfo2dot1 "codeberg.org/greatape/logjam/www/well-known/nodeinfo/2.1"
+	nodeinfo2dot2 "codeberg.org/greatape/logjam/www/well-known/nodeinfo/2.2"
 )
 
 const path string = nodeinfo.DefaultPath

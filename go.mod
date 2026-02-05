@@ -1,4 +1,4 @@
-module github.com/reiver/logjam
+module codeberg.org/greatape/logjam
 
 go 1.24.0
 

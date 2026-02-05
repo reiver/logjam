@@ -5,9 +5,9 @@ import (
 
 	"github.com/reiver/go-erorr"
 
-	"github.com/reiver/logjam/lib/msgs"
-	"github.com/reiver/logjam/lib/rooms"
-	"github.com/reiver/logjam/srv/room"
+	"codeberg.org/greatape/logjam/lib/msgs"
+	"codeberg.org/greatape/logjam/lib/rooms"
+	"codeberg.org/greatape/logjam/srv/room"
 )
 
 func handleEvent(ctx *rooms.WSContext) {
